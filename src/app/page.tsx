@@ -1,65 +1,82 @@
-import Image from "next/image";
+'use client';
+
+import { useState } from 'react';
+import { DashboardLayout }  from '@/components/dashboard/DashboardLayout';
+import { OfficeScene }      from '@/components/three/OfficeScene';
+import { RoomNavigator }    from '@/components/ui/RoomNavigator';
+import { SidePanel }        from '@/components/ui/SidePanel';
 
 export default function Home() {
+  const [view, setView] = useState<'dashboard' | '3d'>('dashboard');
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
+    <>
+      {/* ── Toggle button — always on top ── */}
+      <div className="fixed top-3 right-4 z-50">
+        <button
+          onClick={() => setView(v => v === 'dashboard' ? '3d' : 'dashboard')}
+          className="flex items-center gap-2 px-3 py-1.5 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all"
+          style={{
+            background: view === '3d' ? 'rgba(6,182,212,0.2)' : 'rgba(2,6,23,0.8)',
+            border: '1px solid rgba(6,182,212,0.3)',
+            color: '#06b6d4',
+            backdropFilter: 'blur(12px)',
+            boxShadow: '0 0 12px rgba(6,182,212,0.15)',
+          }}
+        >
+          {view === 'dashboard' ? '⬡ 3D Scene' : '⊞ Dashboard'}
+        </button>
+      </div>
+
+      {/* ── Dashboard view (primary) ── */}
+      {view === 'dashboard' && <DashboardLayout />}
+
+      {/* ── 3D scene view (preserved) ── */}
+      {view === '3d' && (
+        <main className="relative w-screen h-screen overflow-hidden bg-black">
+          <OfficeScene />
+          <div className="absolute inset-0 pointer-events-none">
+            <header
+              className="absolute top-0 left-0 right-0 px-6 pt-4 pb-3 flex items-center justify-between pointer-events-auto"
+              style={{ background: 'linear-gradient(to bottom, rgba(2,6,23,0.85) 0%, rgba(2,6,23,0) 100%)' }}
             >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
+              <div className="flex items-center gap-4">
+                <div>
+                  <h1 className="text-base font-black text-white tracking-widest uppercase leading-none">
+                    Head Office
+                  </h1>
+                  <p className="text-[10px] text-white/40 tracking-widest uppercase mt-0.5">
+                    Global Command Center
+                  </p>
+                </div>
+                <div className="flex items-center gap-1.5 px-3 py-1 rounded-full border border-emerald-500/30 bg-emerald-500/10 backdrop-blur-sm">
+                  <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                  <span className="text-[10px] font-bold tracking-widest text-emerald-400 uppercase">Online</span>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                {[
+                  { label: 'Projects',  value: '8',     color: '#4ade80' },
+                  { label: 'Approvals', value: '5',     color: '#facc15' },
+                  { label: 'Pipeline',  value: '$1.2M', color: '#22d3ee' },
+                  { label: 'P1 Today',  value: '3',     color: '#c084fc' },
+                ].map(({ label, value, color }) => (
+                  <div
+                    key={label}
+                    className="flex items-center gap-2 px-3 py-1.5 rounded-lg backdrop-blur-md"
+                    style={{ background: 'rgba(2,6,23,0.6)', border: `1px solid ${color}33` }}
+                  >
+                    <span className="text-[10px] text-white/40 font-semibold uppercase tracking-wider hidden sm:block">{label}</span>
+                    <span className="text-sm font-bold" style={{ color }}>{value}</span>
+                  </div>
+                ))}
+              </div>
+            </header>
+            <SidePanel />
+            <RoomNavigator />
+          </div>
+        </main>
+      )}
+    </>
   );
 }
