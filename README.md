@@ -22,10 +22,8 @@ npm run build
 npm run start
 ```
 
-### Push changes
+### Push to GitHub
 
-```bash
-git add src/app/page.tsx src/app/prd/page.tsx README.md
-git commit -m "Add full-screen Figma PRD embed page"
-git push -u origin main
-```
+1. `git add src/app/page.tsx src/app/prd/page.tsx README.md`
+2. `git commit -m "Add full-screen Figma PRD embed page"`
+3. `git push`
