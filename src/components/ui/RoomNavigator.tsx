@@ -1,7 +1,7 @@
 'use client';
 
 import { useOfficeStore } from '@/store/officeStore';
-import { roomList } from '@/data/mockData';
+import { dynamic3DRooms } from '@/data/officeDashboard';
 import { cn } from '@/lib/utils';
 import { Compass } from 'lucide-react';
 
@@ -16,7 +16,7 @@ export function RoomNavigator() {
       </div>
       
       <div className="flex items-center justify-center gap-2 flex-wrap bg-black/40 backdrop-blur-xl border border-white/10 p-2 rounded-2xl w-full pointer-events-auto shadow-2xl">
-        {roomList.map((room) => (
+        {dynamic3DRooms.map((room) => (
           <button
             key={room.id}
             onClick={() => setRoom(room.id)}

@@ -13,5 +13,6 @@ export interface RoomData {
   name: string;
   description: string;
   position: [number, number, number];
+  accent?: string;
   objects: InteractiveObject[];
 }

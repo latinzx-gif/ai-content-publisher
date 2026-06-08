@@ -1,7 +1,7 @@
 'use client';
 
 import { useOfficeStore } from '@/store/officeStore';
-import { officeRooms } from '@/data/mockData';
+import { dynamic3DRoomsById } from '@/data/officeDashboard';
 import { X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -45,7 +45,7 @@ const TYPE_LABELS: Record<string, string> = {
 export function SidePanel() {
   const { isPanelOpen, activeObjectId, closePanel, activeRoomId } = useOfficeStore();
 
-  const room         = officeRooms[activeRoomId];
+  const room         = dynamic3DRoomsById[activeRoomId];
   const activeObject = room?.objects.find(obj => obj.id === activeObjectId);
 
   const accentColor = activeObject?.color ?? '#3b82f6';

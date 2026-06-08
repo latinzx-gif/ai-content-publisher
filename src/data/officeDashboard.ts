@@ -1,5 +1,7 @@
 // ─── Types ─────────────────────────────────────────────────────────────────
 
+import { RoomData, InteractiveObject } from '@/types/office';
+
 export type AgentStatus       = 'active' | 'idle' | 'busy' | 'offline' | 'review';
 export type RiskLevel         = 'low' | 'medium' | 'high';
 export type IntegrationStatus = 'connected' | 'warning' | 'offline';
@@ -517,3 +519,65 @@ export const weeklyReportSections: ReportSection[] = [
 
 export const agentsById = Object.fromEntries(dashboardAgents.map(a => [a.id, a]));
 export const roomsById  = Object.fromEntries(dashboardRooms.map(r => [r.id, r]));
+
+// ─── Dynamic 3D Scene Mapper ──────────────────────────────────────────────────
+
+const ROOM_POSITIONS: Record<string, [number, number, number]> = {
+  executive: [0, 0, 0],
+  codex:     [-15, 0, 0],
+  gemini:    [15, 0, 0],
+  dataclaw:  [15, 0, -15],
+  fastwork:  [-15, 0, -15],
+  client:    [0, 0, 15],
+};
+
+function build3DRooms(): RoomData[] {
+  return dashboardRooms.map(room => {
+    const agents = room.agentIds.map(id => agentsById[id]).filter(Boolean);
+    
+    const objects: InteractiveObject[] = agents.map((agent, i) => {
+      const angle = agents.length > 0 ? (i / agents.length) * Math.PI * 2 : 0;
+      const radius = 3;
+      const x = Math.sin(angle) * radius;
+      const z = Math.cos(angle) * radius;
+
+      let type: InteractiveObject['type'] = 'desk';
+      if (agent.role.includes('Orchestrator')) type = 'ring';
+      else if (agent.role.includes('Intelligence')) type = 'hologram';
+      else if (agent.role.includes('Code')) type = 'console';
+      else if (agent.role.includes('Research')) type = 'radar';
+      
+      return {
+        id: agent.id,
+        name: agent.name.split(' ')[0],
+        description: agent.currentTask,
+        type,
+        position: [x, type === 'ring' ? 1.5 : 0.5, z],
+        color: agent.accentColor,
+        data: { status: agent.status, queue: agent.queue, risk: agent.risk }
+      };
+    });
+
+    objects.push({
+      id: `${room.id}-mainboard`,
+      name: room.shortName,
+      description: room.tooltip,
+      type: 'board',
+      position: [0, 1.5, -4],
+      color: room.accent,
+      data: { desks: room.desks }
+    });
+
+    return {
+      id: room.id,
+      name: room.name,
+      description: room.tooltip,
+      position: ROOM_POSITIONS[room.id] ?? [0, 0, 0],
+      accent: room.accent,
+      objects,
+    };
+  });
+}
+
+export const dynamic3DRooms = build3DRooms();
+export const dynamic3DRoomsById = dynamic3DRooms.reduce((acc, r) => { acc[r.id] = r; return acc; }, {} as Record<string, RoomData>);

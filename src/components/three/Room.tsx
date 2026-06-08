@@ -4,17 +4,6 @@ import { RoomData } from '@/types/office';
 import { ClickableObject } from './ClickableObject';
 import { Html } from '@react-three/drei';
 
-// Corner glows give each room a unique accent colour so boundaries are felt
-const ROOM_ACCENT: Record<string, string> = {
-  lobby:      '#0ea5e9',
-  executive:  '#06b6d4',
-  fastwork:   '#22c55e',
-  dataclaw:   '#a855f7',
-  investment: '#ef4444',
-  agents:     '#3b82f6',
-  client:     '#eab308',
-};
-
 interface RoomProps {
   data: RoomData;
 }
@@ -22,7 +11,7 @@ interface RoomProps {
 const HALF = 6; // half of 12-unit room side
 
 export function Room({ data }: RoomProps) {
-  const accent = ROOM_ACCENT[data.id] ?? '#06b6d4';
+  const accent = data.accent ?? '#06b6d4';
 
   return (
     <group position={data.position}>
