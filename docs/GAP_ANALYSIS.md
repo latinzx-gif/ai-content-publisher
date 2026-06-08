@@ -19,10 +19,10 @@ Source documents:
   - review / approval support
   - publishing support
   - logs / runtime monitoring
-- `/editor-canvas2`:
-  - present in repository
+- `editor-canvas2`:
+  - removed from the repository working tree
   - excluded from V1 main flow
-  - only relevant later if explicitly integrated
+  - must not be restored or referenced unless explicitly requested
 
 ## 2. V1 Goal
 
@@ -337,7 +337,7 @@ The realistic V1 goal is to deliver a dependable `/login` -> `/prd` operating fl
 - Multi-tenant enterprise expansion
 - Full campaign factory
 - Google Drive RAG expansion
-- `/editor-canvas2` integration unless explicitly requested
+- restoring or integrating `editor-canvas2` unless explicitly requested
 
 ## 11. Fix Priority
 1. Provider/storage bridge for generated image output

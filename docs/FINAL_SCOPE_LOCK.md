@@ -25,4 +25,4 @@ Primary entry: `/login`
 - Multi-tenant enterprise
 - Full campaign factory
 - Google Drive RAG expansion
-- `/editor-canvas2` integration unless explicitly requested
+- restoring or integrating `editor-canvas2` unless explicitly requested

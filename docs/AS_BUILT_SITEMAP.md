@@ -40,10 +40,11 @@ Source documents:
 - Settings
 - Knowledge Base
 
-### Excluded repo artifact
-- `src/app/editor-canvas2/page.tsx`
-  - present in repository
+### Removed artifact
+- `editor-canvas2`
+  - removed from the repository working tree
   - not part of the `/prd` V1 product flow
+  - must not be restored or referenced unless explicitly requested
 
 ## 2. Route Map
 

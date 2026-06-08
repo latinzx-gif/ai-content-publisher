@@ -45,11 +45,11 @@ Mode: Inventory only / documentation only
 | `/login` | Auth entry page | Sign in/sign up form, password visibility toggle, local credential persistence | Working | Uses bearer-token session flow and redirects to `/prd` when a token exists. | `src/app/login/page.tsx`, `src/app/api/auth/sign-in/route.ts`, `src/app/api/auth/sign-up/route.ts`, `src/lib/server/authAccounts.ts` |
 | `/prd` | Main product shell / command center | Dashboard, Calendar, Publishing, Create Post, Review Queue, Content Library, Analytics, Knowledge Base, Rules & Brand, Agents, Logs, Settings, content job drawer | Partial | Main live surface exists, but the page still mixes live APIs with fallback data and many mode-specific UI states. | `src/app/prd/page.tsx` |
  
-### Repo artifacts excluded from this product inventory
+### Removed artifacts excluded from this product inventory
 
 | Route / file | Reason excluded | Related files |
 |---|---|---|
-| `/editor-canvas2` | Treated as a separate project artifact and excluded from the Head Office `/prd` product scope. | `src/app/editor-canvas2/page.tsx` |
+| `editor-canvas2` | Removed from the repository working tree and excluded from the Head Office `/prd` product scope. Do not restore or reference it unless explicitly requested. | None in current working tree |
 
 ### API routes
 

@@ -17,8 +17,8 @@ This version has breaking changes. Read the relevant guide in `node_modules/next
 
 Scope rules:
 - `/prd` is the main operating surface
-- `/editor-canvas2` is not part of the V1 main flow unless the user explicitly asks for it
-- If `/editor-canvas2` appears in the repo or request context, treat it as a secondary artifact or possible Phase 2 creative canvas only
+- `editor-canvas2` has been removed from this project
+- Do not reference, restore, rebuild, or include `editor-canvas2` unless the user explicitly asks for it
 
 ## 2. Current Product Goal
 
@@ -150,7 +150,7 @@ General rules:
 Special route rules:
 - `/prd` is the primary product surface
 - `/login` is the primary entry
-- `/editor-canvas2` is excluded from the V1 main product flow unless explicitly requested
+- `editor-canvas2` is removed and out of scope unless explicitly requested
 
 ## 8. Image / Asset Rules
 
@@ -287,6 +287,6 @@ Do not drift into:
 - multi-tenant enterprise expansion
 - full campaign factory work
 - Google Drive RAG expansion
-- `/editor-canvas2` redesign
+- restoring or redesigning `editor-canvas2`
 - UI polish before critical flow stability
 - writing tests before target behavior is stable

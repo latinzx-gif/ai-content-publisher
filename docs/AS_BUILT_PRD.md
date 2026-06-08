@@ -67,7 +67,7 @@ This document does not treat marketplace, payments, multi-tenant expansion, or f
   - Content Job Detail
 
 Excluded from V1 main flow:
-- `src/app/editor-canvas2/page.tsx` exists in the repository, but it is not part of the `/prd` product scope unless explicitly requested later
+- `editor-canvas2` has been removed from the repository working tree and is not part of the `/prd` product scope. Do not restore or reference it unless explicitly requested later.
 
 ---
 
@@ -209,7 +209,7 @@ Affected or high-risk user-facing surfaces:
 - Advanced account management
 - Marketplace/payment capabilities
 - Multi-tenant enterprise workflow expansion
-- `/editor-canvas2` integration
+- restoring or integrating `editor-canvas2`
 
 ---
 
