@@ -290,3 +290,14 @@ Do not drift into:
 - restoring or redesigning `editor-canvas2`
 - UI polish before critical flow stability
 - writing tests before target behavior is stable
+
+## 15. Graphify Gate Workflow
+
+Before any feature implementation or surgical code change, the following workflow is mandatory:
+
+1. **Gate Review**: Codex must read the relevant task gate file at `graphify-out/gates/TASK-XXX_IMPLEMENTATION_GATE.md`.
+2. **Boundary Compliance**: Codex must strictly follow the **Allowed Files** and **Forbidden Files** sections of the gate.
+3. **Scope Control**: Codex must not broaden the scope or refactor unrelated code.
+4. **Pre-Implementation Audit**: Run a quick audit of the allowed files to confirm the analysis remains accurate before making edits.
+5. **Handoff Documentation**: Codex must return a summary of changed files and verification results (lint, build, diff) upon completion.
+6. **Role Separation**: Gemini handles File Ops, Docs, and Gate Preparation. Codex is the primary agent for source code implementation.
