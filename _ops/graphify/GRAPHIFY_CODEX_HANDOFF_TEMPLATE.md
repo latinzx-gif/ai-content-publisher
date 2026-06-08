@@ -8,6 +8,8 @@ Use this template to generate the final prompt for the implementation phase.
 >
 > **Objective**: [Clear 1-sentence goal]
 >
+> **Target Workflow**: [Target workflow description]
+>
 > **Context**:
 > Read `AGENTS.md` and `.codex/skills/README.md`.
 > Use the `[REQUIRED_SKILL]` skill.
@@ -15,7 +17,7 @@ Use this template to generate the final prompt for the implementation phase.
 > **Strict Boundaries**:
 > - **Allowed Files**: [File 1], [File 2]
 > - **Forbidden Files**: `src/app/prd/page.tsx`, `supabase/migrations/*`
-> - **Rules**: Do not redesign UI. Do not install packages. Keep changes minimal.
+> - **Rules**: Do not redesign UI. Do not install packages. Keep changes minimal. No broad refactor rule.
 >
 > **Task List**:
 > 1. [Step 1]
@@ -25,3 +27,7 @@ Use this template to generate the final prompt for the implementation phase.
 > **Verification**:
 > - Run `npm run lint`.
 > - Provide `git diff --stat` in the final summary.
+>
+> **Deliverables**:
+> - List of changed files
+> - Risk summary

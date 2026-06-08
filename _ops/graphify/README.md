@@ -23,6 +23,6 @@ To provide a repeatable "Implementation Gate" that validates proposed changes ag
 ## System Index
 - [Workflow Guide](./GRAPHIFY_WORKFLOW.md)
 - [Project Checklist](./GRAPHIFY_PROJECT_CHECKLIST.md)
-- [Implementation Gate](./GRAPHIFY_IMPLEMENTATION_GATE.md)
+- [Implementation Gate Template](./GRAPHIFY_IMPLEMENTATION_GATE_TEMPLATE.md)
 - [Codex Handoff Template](./GRAPHIFY_CODEX_HANDOFF_TEMPLATE.md)
-- [Post-Audit Protocol](./GRAPHIFY_POST_AUDIT.md)
+- [Post-Audit Template](./GRAPHIFY_POST_AUDIT_TEMPLATE.md)
