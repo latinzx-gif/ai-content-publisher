@@ -6,7 +6,7 @@ import {
 } from '@/lib/agents/openaiModels';
 import { resetDownstreamWorkflowMetadata } from '@/lib/agents/contentWorkflowMetadata';
 import { runOpenAIResponse } from '@/lib/agents/openaiResponses';
-import { runOpenAIImage } from '@/lib/agents/openaiImages';
+import { runOpenAIImage, isImageModel } from '@/lib/agents/openaiImages';
 import { resolveExecutionModel } from '@/lib/agents/modelPolicy';
 import { discoverAgentRuntimes, type AgentRuntimePreference, type AgentRuntimeProvider } from '@/lib/agents/runtimeDiscovery';
 import { buildAgentRagContext, type AgentRagContext } from '@/lib/rag/buildRagContext';
@@ -456,7 +456,7 @@ async function executeWithPreference({
   }
 
   if (selectedPreference === 'openai') {
-    if (model === 'gpt-image-2') {
+    if (isImageModel(model)) {
       const response = await runOpenAIImage({
         model,
         prompt: String(input.prompt || input.visualBrief || input.imageBrief || input.title || 'Legal professional office background'),

@@ -1,4 +1,25 @@
-import { OpenAIAgentModel } from './openaiModels';
+/**
+ * Bridge between internal product model names and actual OpenAI API models.
+ */
+export const IMAGE_MODEL_BRIDGE: Record<string, string> = {
+  'gpt-image-2': 'dall-e-3',
+  'dall-e-3': 'dall-e-3',
+  'dall-e-2': 'dall-e-2',
+};
+
+/**
+ * Returns true if the model is a recognized image generation model.
+ */
+export function isImageModel(model: string): boolean {
+  return Object.keys(IMAGE_MODEL_BRIDGE).includes(model);
+}
+
+/**
+ * Maps an internal model name to a valid OpenAI model name.
+ */
+export function mapToOpenAIImageModel(model: string): string {
+  return IMAGE_MODEL_BRIDGE[model] || 'dall-e-3';
+}
 
 type OpenAIImagePayload = {
   created: number;
@@ -36,7 +57,7 @@ export async function runOpenAIImage({
   }
 
   // Map internal model name to actual OpenAI model
-  const apiModel = model === 'gpt-image-2' ? 'dall-e-3' : model;
+  const apiModel = mapToOpenAIImageModel(model);
 
   const response = await fetch('https://api.openai.com/v1/images/generations', {
     method: 'POST',

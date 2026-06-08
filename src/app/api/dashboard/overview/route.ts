@@ -424,7 +424,7 @@ export async function GET(request: Request) {
             (asset.metadata?.durableAssetReference === true || typeof asset.storage_path === 'string'),
         ),
         presentation: normalizedPresentation.presentation,
-        debug: normalizedPresentation.debug,
+        // Explicitly omit debug data to prevent technical leaks to user-facing surfaces
       };
 
       if (DONE_STATUSES.has(item.status)) {

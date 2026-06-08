@@ -163,6 +163,23 @@ export async function GET(request: Request) {
             (asset.metadata?.durableAssetReference === true || typeof asset.storage_path === 'string'),
         );
 
+        const presentationData = buildPrdPresentation({
+          title: contentItem?.title,
+          subtitle: contentItem?.service_area ?? review.review_type,
+          platform:
+            Array.isArray(contentItemMetadata.platforms) && contentItemMetadata.platforms.length > 0
+              ? contentItemMetadata.platforms.join(', ')
+              : contentItem?.service_area ?? review.review_type,
+          status: review.status,
+          priority: review.risk_level ?? contentItem?.risk_level ?? null,
+          metadata: contentItemMetadata,
+          generatedDrafts,
+          generatedAssets,
+          updatedAt: review.updated_at,
+          dueAt: review.due_at,
+          agentName: review.assigned_reviewer ? reviewerMap.get(review.assigned_reviewer) ?? 'Reviewer' : undefined,
+        });
+
         return {
           ...review,
           content_items: contentItem
@@ -180,22 +197,10 @@ export async function GET(request: Request) {
           taskTrace,
           latestTaskTrace: taskTrace[0] ?? null,
           hasRealImageOutput,
-          ...buildPrdPresentation({
-            title: contentItem?.title,
-            subtitle: contentItem?.service_area ?? review.review_type,
-            platform:
-              Array.isArray(contentItemMetadata.platforms) && contentItemMetadata.platforms.length > 0
-                ? contentItemMetadata.platforms.join(', ')
-                : contentItem?.service_area ?? review.review_type,
-            status: review.status,
-            priority: review.risk_level ?? contentItem?.risk_level ?? null,
-            metadata: contentItemMetadata,
-            generatedDrafts,
-            generatedAssets,
-            updatedAt: review.updated_at,
-            dueAt: review.due_at,
-            agentName: review.assigned_reviewer ? reviewerMap.get(review.assigned_reviewer) ?? 'Reviewer' : undefined,
-          }),
+          presentation: presentationData.presentation,
+          drafts: presentationData.drafts,
+          assets: presentationData.assets,
+          // Explicitly omit debug data to prevent technical leaks to user-facing surfaces
         };
       }),
       count: reviews?.length ?? 0,
