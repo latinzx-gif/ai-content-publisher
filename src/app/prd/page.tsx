@@ -4411,7 +4411,7 @@ function PrdPageClient() {
       ];
     };
     const languageSummary = getLanguageDisplayLabels(newReviewItem.languages, ['th', 'en']).join(', ');
-    const replaceDashboardColumnItem = (workflowId: string, columnName: 'Todo' | 'In Progress', item: BoardItem) =>
+    const replaceDashboardColumnItem = (workflowId: string, columnName: 'Todo' | 'In Progress' | 'Done', item: BoardItem) =>
       setDashboardState((current) => ({
         ...current,
         board: normalizeDashboardCounts(
@@ -4796,7 +4796,8 @@ function PrdPageClient() {
   const syncDashboardPipelineFromReview = (item: ReviewQueueItem, decision: ReviewDecision) => {
     const workflowId = item.workflowId ?? getDashboardIdForWorkflowId(item.id);
     const publishingId = item.publishingId ?? getPublishingIdForWorkflowId(item.id);
-    const targetColumn = decision === 'queued' ? 'Publishing Queued' : decision === 'rejected' ? 'Text Ready' : 'Approved / Awaiting Queue';
+    const targetColumn: 'Todo' | 'In Progress' | 'Done' =
+      decision === 'queued' || decision === 'approved' ? 'Done' : 'In Progress';
     const syncedItem: BoardItem = {
       id: workflowId,
       title: item.title,

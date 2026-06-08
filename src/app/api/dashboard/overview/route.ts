@@ -442,12 +442,22 @@ export async function GET(request: Request) {
         return;
       }
 
-      if (item.status === 'source_search' || item.status === 'generating' || item.status === 'scheduled') {
+      if (
+        item.status === 'source_search' ||
+        item.status === 'generating' ||
+        item.status === 'text_ready' ||
+        item.status === 'assets_ready'
+      ) {
         boardBuckets['In Progress'].push(payload);
         return;
       }
 
-      if (item.status === 'draft' || item.status === 'text_ready' || item.status === 'assets_ready' || item.status === 'ready_for_review' || item.status === 'approved') {
+      if (item.status === 'approved' || item.status === 'scheduled') {
+        boardBuckets.Done.push(payload);
+        return;
+      }
+
+      if (item.status === 'draft' || item.status === 'ready_for_review') {
         boardBuckets.Todo.push(payload);
         return;
       }
