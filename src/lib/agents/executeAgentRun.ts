@@ -12,6 +12,7 @@ import { discoverAgentRuntimes, type AgentRuntimePreference, type AgentRuntimePr
 import { buildAgentRagContext, type AgentRagContext } from '@/lib/rag/buildRagContext';
 import { queueAgentRun } from '@/lib/server/agentQueue';
 import { writeAuditEvent } from '@/lib/server/audit';
+import { persistGeneratedAssetToStorage } from '@/lib/server/contentAssetStorage';
 import { writeSystemLogBestEffort } from '@/lib/server/systemLog';
 
 type AgentRun = {
@@ -1713,7 +1714,7 @@ async function applyImageGenerationHandoff({
 
   const { data: existingAssets, error: existingAssetsError } = await supabase
     .from('content_assets')
-    .select('sort_order,metadata')
+    .select('id,sort_order,storage_path,metadata')
     .eq('content_item_id', contentItem.id)
     .order('sort_order', { ascending: true });
 
@@ -1721,7 +1722,8 @@ async function applyImageGenerationHandoff({
     throw new Error(existingAssetsError.message);
   }
 
-  let generatedCount = 0;
+  let durableGeneratedCount = 0;
+  let transientGeneratedCount = 0;
   const expectedCount = existingAssets?.length ?? images.length;
 
   for (let i = 0; i < images.length; i++) {
@@ -1737,22 +1739,41 @@ async function applyImageGenerationHandoff({
       continue;
     }
 
-    generatedCount += 1;
     const assetMetadata = normalizeRecord(existingAssets?.[i]?.metadata) ?? {};
+    const persistedAsset = await persistGeneratedAssetToStorage({
+      supabase,
+      contentItemId: contentItem.id,
+      agentRunId: run.id,
+      sortOrder: i,
+      image,
+    });
+
+    if (persistedAsset.durable) {
+      durableGeneratedCount += 1;
+    } else {
+      transientGeneratedCount += 1;
+    }
 
     const { error: assetUpdateError } = await supabase
       .from('content_assets')
       .update({
-        url: imageUrl,
-        source: 'OpenAI gpt-image-2',
+        url: persistedAsset.durable ? null : persistedAsset.fallbackUrl,
+        storage_path: persistedAsset.storagePath,
+        source: persistedAsset.durable ? 'Supabase Storage · OpenAI gpt-image-2' : 'OpenAI gpt-image-2 (transient)',
         metadata: {
           ...assetMetadata,
           generatedAssetPlaceholder: false,
           generatedAt: new Date().toISOString(),
           imageProvider: 'OpenAI',
           imageModel: 'gpt-image-2',
+          assetStatus: persistedAsset.durable ? 'ready' : 'transient',
+          durableAssetReference: persistedAsset.durable,
+          transientAssetReference: !persistedAsset.durable,
+          failureReason: persistedAsset.errorMessage ?? undefined,
+          contentType: persistedAsset.contentType ?? undefined,
           revisedPrompt: typeof image?.revised_prompt === 'string' ? image.revised_prompt : undefined,
           agentRunId: run.id,
+          contentItemId: contentItem.id,
         },
       })
       .eq('content_item_id', contentItem.id)
@@ -1764,31 +1785,42 @@ async function applyImageGenerationHandoff({
   }
 
   const generatedAt = new Date().toISOString();
-  const imageGenerationStatus = generatedCount >= expectedCount ? 'generated' : 'partial';
+  const imageGenerationStatus =
+    durableGeneratedCount >= expectedCount
+      ? 'generated'
+      : durableGeneratedCount > 0 || transientGeneratedCount > 0
+        ? 'partial'
+        : 'failed';
+  const degradedMessage =
+    imageGenerationStatus === 'generated'
+      ? undefined
+      : transientGeneratedCount > 0
+        ? 'Image output exists but durable asset storage is incomplete.'
+        : typeof userFacingOutput.degraded_message_if_failed === 'string'
+          ? userFacingOutput.degraded_message_if_failed
+          : 'Image generation did not return a durable visual asset.';
   const contentMetadata: Record<string, unknown> = {
     ...contentItem.metadata,
     assetComposerStatus:
       imageGenerationStatus === 'generated'
         ? 'Assets generated'
-        : `Assets partially generated (${generatedCount}/${expectedCount})`,
+        : imageGenerationStatus === 'partial'
+          ? `Assets pending durable storage (${durableGeneratedCount}/${expectedCount} durable)`
+          : 'Image generation failed',
     creativeSummary:
       typeof userFacingOutput.creative_summary === 'string'
         ? userFacingOutput.creative_summary
         : typeof contentItem.metadata?.creativeSummary === 'string'
           ? contentItem.metadata.creativeSummary
           : undefined,
-    degradedMessage:
-      imageGenerationStatus === 'generated'
-        ? undefined
-        : typeof userFacingOutput.degraded_message_if_failed === 'string'
-          ? userFacingOutput.degraded_message_if_failed
-          : undefined,
+    degradedMessage,
     imageLayout: {
       ...(normalizeRecord(contentItem.metadata?.imageLayout) ?? {}),
       status: imageGenerationStatus,
       generatedAt,
       completedAt: generatedAt,
-      generatedCount,
+      generatedCount: durableGeneratedCount,
+      transientGeneratedCount,
       expectedCount,
       agentRunId: run.id,
     },
@@ -1835,15 +1867,18 @@ async function applyImageGenerationHandoff({
       assetComposerStatus:
         imageGenerationStatus === 'generated'
           ? 'Assets generated'
-          : `Assets partially generated (${generatedCount}/${expectedCount})`,
+          : imageGenerationStatus === 'partial'
+            ? `Assets pending durable storage (${durableGeneratedCount}/${expectedCount} durable)`
+            : 'Image generation failed',
       generatedAssetsReadyAt: imageGenerationStatus === 'generated' ? generatedAt : undefined,
       generatedAssetsPartialAt: imageGenerationStatus === 'partial' ? generatedAt : undefined,
+      generatedAssetsErrorAt: imageGenerationStatus === 'failed' ? generatedAt : undefined,
     };
 
     await supabase
-      .from('review_items')
-      .update({ metadata: reviewMetadataUpdate })
-      .eq('id', existingReviewItem.id);
+        .from('review_items')
+        .update({ metadata: reviewMetadataUpdate })
+        .eq('id', existingReviewItem.id);
   }
 
   if (reviewQueue.ready && reviewQueue.createdReview) {
@@ -1878,17 +1913,19 @@ async function applyImageGenerationHandoff({
         ? reviewQueue.ready
           ? 'Image Generation Agent persisted real image output and moved the workflow into Review Queue.'
           : 'Image Generation Agent persisted real image output and is waiting for compliance review before review packaging.'
-        : `Image Generation Agent persisted ${generatedCount} of ${expectedCount} requested assets.`,
+        : `Image Generation Agent persisted ${durableGeneratedCount} durable assets and ${transientGeneratedCount} transient assets out of ${expectedCount} requested assets.`,
     metadata: {
       agentRunId: run.id,
       contentItemId: contentItem.id,
-      generatedCount,
+      generatedCount: durableGeneratedCount,
+      transientGeneratedCount,
       expectedCount,
       reviewQueue,
+      degradedMessage,
     },
   });
 
-  return { applied: true, imagesGenerated: generatedCount, imageGenerationStatus, reviewQueue };
+  return { applied: true, imagesGenerated: durableGeneratedCount, transientImages: transientGeneratedCount, imageGenerationStatus, reviewQueue };
 }
 
 async function applyComplianceHandoff({

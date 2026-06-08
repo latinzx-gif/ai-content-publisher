@@ -1,7 +1,9 @@
 import { NextResponse } from 'next/server';
 import { requireApiActor, requireContentAccess, requireTeamPermission } from '@/lib/server/apiSecurity';
 import { buildPrdPresentation } from '@/lib/prdPresentation';
+import { attachSignedAssetUrls } from '@/lib/server/contentAssetStorage';
 import { writeAuditEvent } from '@/lib/server/audit';
+import { fetchWorkflowTraceMap } from '@/lib/server/workflowTrace';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 
 type CreateReviewBody = {
@@ -22,6 +24,7 @@ type ContentTranslationRow = {
 };
 
 type ContentAssetRow = {
+  id: string | null;
   content_item_id: string;
   asset_type: string;
   layout_type: string | null;
@@ -85,6 +88,7 @@ export async function GET(request: Request) {
     const contentItemIds = Array.from(new Set((reviews ?? []).map((review) => review.content_item_id).filter(Boolean)));
     const translationsByContentItem = new Map<string, ContentTranslationRow[]>();
     const assetsByContentItem = new Map<string, ContentAssetRow[]>();
+    const taskTraceMap = await fetchWorkflowTraceMap(supabase, contentItemIds);
 
     if (reviewerIds.length > 0) {
       const { data: profiles, error: profileError } = await supabase
@@ -110,7 +114,7 @@ export async function GET(request: Request) {
           .order('created_at', { ascending: true }),
         supabase
           .from('content_assets')
-          .select('content_item_id,asset_type,layout_type,url,storage_path,alt_text,source,sort_order,metadata')
+          .select('id,content_item_id,asset_type,layout_type,url,storage_path,alt_text,source,sort_order,metadata')
           .in('content_item_id', contentItemIds)
           .order('sort_order', { ascending: true }),
       ]);
@@ -129,7 +133,9 @@ export async function GET(request: Request) {
         translationsByContentItem.set(row.content_item_id, current);
       }
 
-      for (const row of (assetsResult.data ?? []) as ContentAssetRow[]) {
+      const signedAssets = await attachSignedAssetUrls(supabase, (assetsResult.data ?? []) as ContentAssetRow[]);
+
+      for (const row of signedAssets) {
         const current = assetsByContentItem.get(row.content_item_id) ?? [];
         current.push(row);
         assetsByContentItem.set(row.content_item_id, current);
@@ -150,6 +156,12 @@ export async function GET(request: Request) {
             createdAt: translation.created_at,
           })) ?? contentItemMetadata.generatedDrafts;
         const generatedAssets = assetsByContentItem.get(review.content_item_id) ?? [];
+        const taskTrace = taskTraceMap.get(review.content_item_id) ?? [];
+        const hasRealImageOutput = generatedAssets.some(
+          (asset) =>
+            asset.metadata?.generatedAssetPlaceholder !== true &&
+            (asset.metadata?.durableAssetReference === true || typeof asset.storage_path === 'string'),
+        );
 
         return {
           ...review,
@@ -165,6 +177,9 @@ export async function GET(request: Request) {
               }
             : contentItem,
           reviewer_name: review.assigned_reviewer ? reviewerMap.get(review.assigned_reviewer) ?? 'Reviewer' : 'Unassigned reviewer',
+          taskTrace,
+          latestTaskTrace: taskTrace[0] ?? null,
+          hasRealImageOutput,
           ...buildPrdPresentation({
             title: contentItem?.title,
             subtitle: contentItem?.service_area ?? review.review_type,

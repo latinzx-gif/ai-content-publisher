@@ -5,6 +5,7 @@ import { requireApiActor, requireContentAccess, requireTeamPermission } from '@/
 import { queueAgentRun } from '@/lib/server/agentQueue';
 import { writeAuditEvent } from '@/lib/server/audit';
 import { writeSystemLogBestEffort } from '@/lib/server/systemLog';
+import { buildWorkflowTraceFromAgentRun, fetchWorkflowTraceMap } from '@/lib/server/workflowTrace';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 
 type CreateContentJobBody = {
@@ -69,7 +70,20 @@ export async function GET(request: Request) {
       throw new Error(error.message);
     }
 
-    return NextResponse.json({ jobs: data ?? [], count: data?.length ?? 0 });
+    const jobs = data ?? [];
+    const taskTraceMap = await fetchWorkflowTraceMap(
+      supabase,
+      jobs.map((job) => job.id),
+    );
+
+    return NextResponse.json({
+      jobs: jobs.map((job) => ({
+        ...job,
+        taskTrace: taskTraceMap.get(job.id) ?? [],
+        latestTaskTrace: (taskTraceMap.get(job.id) ?? [])[0] ?? null,
+      })),
+      count: jobs.length,
+    });
   } catch (error) {
     await writeSystemLogBestEffort(supabase, {
       eventType: 'content_jobs.list_failed',
@@ -280,7 +294,24 @@ export async function POST(request: Request) {
           ...contentItem,
           status: contentItem.status,
         },
-        queuedRuns,
+        queuedRuns: queuedRuns.map((run) => ({
+          ...run,
+          taskTrace: buildWorkflowTraceFromAgentRun(
+            {
+              id: run.id,
+              agent_id: run.agent_id,
+              target_id: contentItem.id,
+              target_type: run.target_type,
+              status: run.status,
+              input: typeof run.input === 'object' && run.input ? (run.input as Record<string, unknown>) : {},
+              output: {},
+              started_at: null,
+              completed_at: null,
+              created_at: typeof run.created_at === 'string' ? run.created_at : null,
+            },
+            null,
+          ),
+        })),
         executedRuns,
         review: null,
       },

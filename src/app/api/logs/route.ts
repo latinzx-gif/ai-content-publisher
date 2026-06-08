@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { requireActiveTeamMember, requireApiActor } from '@/lib/server/apiSecurity';
 import { buildLogPresentation } from '@/lib/prdPresentation';
+import { buildWorkflowTraceFromSystemLog } from '@/lib/server/workflowTrace';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 
 const allowedSeverities = ['low', 'medium', 'high', 'critical'] as const;
@@ -67,6 +68,16 @@ export async function GET(request: Request) {
           metadata: row.metadata,
           createdAt: row.created_at,
         }),
+        taskTrace: buildWorkflowTraceFromSystemLog({
+          id: row.id,
+          event_type: row.event_type,
+          status: row.status,
+          message: row.message,
+          target_type: row.target_type,
+          target_id: row.target_id,
+          metadata: row.metadata,
+          created_at: row.created_at,
+        }),
       })),
       errorEvents: (errorEventsResult.data ?? []).map((row) => ({
         ...row,
@@ -78,6 +89,16 @@ export async function GET(request: Request) {
           message: row.message,
           metadata: row.metadata,
           createdAt: row.created_at,
+        }),
+        taskTrace: buildWorkflowTraceFromSystemLog({
+          id: row.id,
+          event_type: row.type,
+          status: row.status,
+          message: row.message,
+          target_type: null,
+          target_id: null,
+          metadata: row.metadata,
+          created_at: row.created_at,
         }),
       })),
       summary: summarizeLogs(systemLogsResult.data ?? [], errorEventsResult.data ?? []),

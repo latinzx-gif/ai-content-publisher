@@ -41,6 +41,7 @@ export type PresentationDraft = {
 };
 
 export type PresentationAsset = {
+  id?: string | null;
   assetType: string;
   layoutType?: string | null;
   url?: string | null;
@@ -194,6 +195,7 @@ export function mapGeneratedAssets(value: unknown): PresentationAsset[] {
       }
 
       return {
+        id: normalizeTextValue(record.id) || undefined,
         assetType:
           normalizeTextValue(record.assetType) ||
           normalizeTextValue(record.asset_type) ||
@@ -216,6 +218,14 @@ function isPlaceholderAsset(asset: PresentationAsset) {
   return asset.metadata?.generatedAssetPlaceholder === true;
 }
 
+function isDurableAsset(asset: PresentationAsset) {
+  return Boolean(asset.storagePath?.length || asset.metadata?.durableAssetReference === true);
+}
+
+function isTransientAsset(asset: PresentationAsset) {
+  return !isPlaceholderAsset(asset) && !isDurableAsset(asset) && Boolean(asset.url || asset.metadata?.transientAssetReference);
+}
+
 function isFailedAsset(asset: PresentationAsset) {
   return Boolean(
     normalizeTextValue(asset.metadata?.failureReason) ||
@@ -225,13 +235,14 @@ function isFailedAsset(asset: PresentationAsset) {
 }
 
 function getRealAssets(assets: PresentationAsset[]) {
-  return assets.filter((asset) => !isPlaceholderAsset(asset) && Boolean(asset.url || asset.storagePath));
+  return assets.filter((asset) => !isPlaceholderAsset(asset) && isDurableAsset(asset) && Boolean(asset.url || asset.storagePath));
 }
 
 function buildImageStatusLabel(assets: PresentationAsset[], degradedMessage: string | undefined) {
   const realAssets = getRealAssets(assets);
   const failedAssets = assets.filter((asset) => isFailedAsset(asset));
   const pendingAssets = assets.filter((asset) => isPlaceholderAsset(asset) || (!asset.url && !asset.storagePath));
+  const transientAssets = assets.filter((asset) => isTransientAsset(asset));
 
   if (degradedMessage || failedAssets.length > 0) {
     return 'Generation failed';
@@ -239,6 +250,10 @@ function buildImageStatusLabel(assets: PresentationAsset[], degradedMessage: str
 
   if (realAssets.length > 0) {
     return 'Output ready';
+  }
+
+  if (transientAssets.length > 0) {
+    return 'Pending durable storage';
   }
 
   if (pendingAssets.length > 0) {
@@ -358,6 +373,7 @@ export function buildPrdPresentation(params: {
   const drafts = mapGeneratedDrafts(params.generatedDrafts ?? metadata?.generatedDrafts);
   const assets = mapGeneratedAssets(params.generatedAssets ?? getValueFromRecord(metadata, ['generatedAssets', 'contentAssets', 'assets']));
   const firstDraft = drafts[0];
+  const firstVisibleAsset = assets.find((asset) => !isPlaceholderAsset(asset) && Boolean(asset.url || asset.storagePath));
   const firstRealAsset = getRealAssets(assets)[0];
   const degradedMessage =
     getTextFromRecord(metadata, ['degradedMessage', 'degraded_message']) ||
@@ -418,7 +434,7 @@ export function buildPrdPresentation(params: {
     caption,
     hashtags,
     call_to_action: callToAction,
-    image_preview_url: firstRealAsset?.url || undefined,
+    image_preview_url: firstRealAsset?.url || firstVisibleAsset?.url || undefined,
     image_status_label: imageStatusLabel,
     layout_summary: layoutSummary,
     creative_summary: creativeSummary,

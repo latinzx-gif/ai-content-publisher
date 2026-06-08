@@ -45,6 +45,12 @@ function createMissingConfigClient(detail: string): SupabaseClient {
       upsert: () => createQueryStub(result),
       delete: () => createQueryStub(result),
     }),
+    storage: {
+      from: () => ({
+        upload: async () => result,
+        createSignedUrl: async () => result,
+      }),
+    },
     rpc: async () => result,
   } as unknown as SupabaseClient;
 }
