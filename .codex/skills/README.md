@@ -9,6 +9,7 @@ This directory contains a focused Codex Skills pack for the Head Office App. The
 3. **[content-pipeline-ui-mapper](./content-pipeline-ui-mapper/SKILL.md)**: Use to map backend task traces and agent statuses to readable UI states in the Content Pipeline.
 4. **[review-queue-renderer-auditor](./review-queue-renderer-auditor/SKILL.md)**: Use to ensure the Review Queue renders content (text, images, layout) in a human-readable format, avoiding raw JSON leaks.
 5. **[release-quality-auditor](./release-quality-auditor/SKILL.md)**: Use before finishing a task or preparing for client handoff to ensure stability, quality, and clean state.
+6. **[head-office-graphify-file-ops-runner](./head-office-graphify-file-ops-runner/SKILL.md)**: Specialized skill for Graphify governance, cleanup, and gate preparation (Gemini-only).
 
 ## Recommended Usage Order (After Codex Reset)
 
