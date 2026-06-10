@@ -1,0 +1,213 @@
+# GROUND_TRUTH.md — Project North Star
+
+> @/Users/jakarinosk/HEAD-OFFICE/COMPANY_OS.md — กฎทั้งหมดใน COMPANY_OS.md มีผลกับ project นี้ด้วย
+> ไฟล์นี้ระบุเฉพาะส่วนที่ต่างจาก COMPANY_OS.md เท่านั้น
+
+**อ่านไฟล์นี้ก่อนทุก session ก่อนตัดสินใจ scope หรือเริ่มงานใดๆ**
+
+---
+
+## 1. สิ่งที่กำลังสร้าง
+
+**AI Content Publisher** — ระบบสร้าง ตรวจสอบ และ publish social media content แบบ semi-automated สำหรับ law/accounting firm
+
+เส้นทางหลัก (V1 flow):
+
+```
+Create Post → Brief Builder → Rule Loader → Content Generation (TH+EN)
+→ Image Prompt → Image Generation → Quality Check → Review & Approval
+→ Calendar → Publishing (Buffer) → Logs / Dashboard
+```
+
+- **ภาษา:** Dual-language (Thai primary + English secondary)
+- **Publishing channel:** Buffer API เท่านั้น (ไม่มี direct Meta/LinkedIn/Twitter)
+- **AI:** OpenAI เท่านั้น (text = GPT, image = DALL-E 3)
+- **Database:** Supabase project `ai-auto-tools` / `luxegqsccaodcikxhwrm` — prefix `acp_`
+- **Auth:** Supabase magic link (`/publisher/login`), password (`/login`)
+
+---
+
+## 2. App Structure
+
+| Surface | Path | URL |
+|---------|------|-----|
+| PRD Dashboard | `src/app/page.tsx` | `http://localhost:3001/` |
+| Publisher workflow | `src/app/publisher/*` | `http://localhost:3001/publisher/` |
+
+- Monorepo root: `/Users/jakarinosk/HEAD-OFFICE/`
+- App root: `/Users/jakarinosk/HEAD-OFFICE/head-office-app/`
+- **ไม่มี** `apps/ai-content-publisher/` แล้ว — merged เข้า `head-office-app` แล้ว
+- **ไม่มี** `editor-canvas2` — removed ออกไปแล้ว อย่าสร้างใหม่
+
+---
+
+## 3. Phase Status (2026-06-10)
+
+| Phase | Status | หมายเหตุ |
+|-------|--------|----------|
+| **Phase 1 MVP** | ✅ **CLOSED** | 12 modules built + integrated (FIX-01 → CLOSE-01) |
+| **Phase 1.1** | ✅ **CLOSED** | Lint, tests, auth, docs synced |
+| **Phase 1 refactor** | 🔄 **IN PROGRESS** | Extract components จาก `page.tsx` → `src/features/prd/` |
+| **Phase 2** | 🔒 LOCKED | ห้ามเริ่มจนกว่า user จะ approve |
+| **Phase 3** | 🔒 LOCKED | ห้ามเริ่มจนกว่า user จะ approve |
+
+**Phase 1 สิ่งที่ built แล้ว (ครบทุกข้อ):**
+- Supabase schema `acp_posts`, `acp_post_content`, `acp_post_images`, `acp_audit_logs`
+- localStorage → Supabase migration สมบูรณ์
+- OpenAI text generation (brief + content + QC)
+- DALL-E 3 image generation
+- Buffer publish/schedule/retry
+- Supabase magic-link auth + RLS
+- 13 gate tests pass, lint 0 errors, build clean
+
+---
+
+## 4. Active Task
+
+**P1-04t — Extract `EndToEndWorkflowSimulation` from `page.tsx`**
+
+| Field | Value |
+|-------|-------|
+| Phase | **PLAN** |
+| Agent | Claude Code (`claude-fable-5`) or Cursor `next` |
+| Allowed files | `src/app/page.tsx`, `src/features/prd/**` |
+| Output target | `src/features/prd/components/EndToEndWorkflowSimulation.tsx` |
+
+ดูรายละเอียดเต็ม: `orchestration/CURRENT_TASK.md`
+
+**Queue หลัง P1-04 refactor slices:**
+
+| ID | งาน | Blocker |
+|----|-----|---------|
+| P1-E2E-02 | Playwright E2E authenticated flow | User saves `playwright/.auth/publisher.json` |
+| P1-BUFFER-01 | Live Buffer publish | User adds valid `BUFFER_ACCESS_TOKEN` |
+| P2-01 | Sources MVP (Phase 2 entry) | User approves Phase 2 scope |
+
+---
+
+## 5. ห้ามสร้าง (ทุก Phase)
+
+สิ่งเหล่านี้ **ห้ามแตะ** ไม่ว่าจะมีเหตุผลอะไร จนกว่า user จะ approve เป็นลายลักษณ์อักษร:
+
+- ❌ Marketplace / payments / multi-tenant
+- ❌ Sources / RSS / Tavily / Brave search
+- ❌ Google Drive RAG / pgvector / embeddings
+- ❌ Competitor monitoring
+- ❌ Advanced analytics pipeline
+- ❌ Drag-and-drop calendar / yearly view
+- ❌ Direct Meta / LinkedIn / Twitter API
+- ❌ Multi-model AI routing (OpenAI only)
+- ❌ Custom auth system (Supabase only)
+- ❌ `editor-canvas2` (removed — do not restore)
+- ❌ UI polish ก่อน critical flow stable
+- ❌ Tests ก่อน target behavior stable
+
+---
+
+## 6. Agent Roles
+
+| Agent | หน้าที่ | ห้าม |
+|-------|---------|------|
+| **Cursor** | Orchestrator — set CURRENT_TASK, approve plans, review tasks | แตะ source code |
+| **Claude Code** | Implementer — PLAN + EXECUTE per CURRENT_TASK.md | Self-approve, deviate from plan |
+| **Gemini CLI** | Audit only — large context scans, read-only | Implement features |
+| **Antigravity** | UI polish only — Tailwind/CSS in allowed paths | Auth, API, Supabase |
+
+**Default model:** `claude-fable-5` — อย่า downgrade โดยไม่มี user approval
+
+---
+
+## 7. Loop สำหรับทุก Task
+
+```
+Cursor → CURRENT_TASK.md (Phase: PLAN)
+Claude → TASK_PLAN.md + CURSOR_PLAN_REQUEST.md → STOP
+Cursor → approve → PLAN_APPROVAL.md → Phase: EXECUTE
+Claude → implement → TASK_RESULT.md + CURSOR_REVIEW_REQUEST.md → STOP
+Cursor → review + cleanup → next task
+```
+
+กฎเหล็ก: **Claude ไม่ self-approve ไม่ start task ถัดไปเอง**
+
+ดู loop detail: `orchestration/AGENT_LOOP.md`  
+ดู review process: `orchestration/CURSOR_REVIEW_GATE.md`
+
+---
+
+## 8. Key Files Map
+
+| ต้องการรู้เรื่อง | อ่านที่ |
+|----------------|---------|
+| งานปัจจุบัน | `orchestration/CURRENT_TASK.md` |
+| สถานะ approval | `orchestration/REVIEW_STATUS.md` |
+| Scope ที่ lock แล้ว | `orchestration/PHASE_1_SCOPE_LOCK.md` |
+| Infrastructure decisions | `orchestration/CURSOR_DECISIONS.md` |
+| Agent rules (ฉบับเต็ม) | `head-office-app/AGENTS.md` |
+| Demo readiness | `reports/DEMO_READINESS_REPORT.md` |
+| Phase 1 sign-off | `reports/PHASE_1_SIGNOFF.md` |
+
+---
+
+## 9. Reading Protocol — อ่านอะไร ลำดับไหน
+
+### Claude Code — PLAN session
+
+อ่านตามลำดับ ห้ามข้าม:
+
+```
+0. /Users/jakarinosk/HEAD-OFFICE/COMPANY_OS.md ← company rules (อ่านก่อนสุด)
+1. orchestration/GROUND_TRUTH.md          ← scope + forbidden (อ่านก่อนเสมอ)
+2. orchestration/REVIEW_STATUS.md         ← ตรวจว่า previous task APPROVED แล้ว
+3. orchestration/CURRENT_TASK.md          ← goal + allowed files + acceptance criteria
+4. head-office-app/AGENTS.md              ← codebase rules
+5. [Allowed Files จาก CURRENT_TASK.md]   ← อ่านเฉพาะ section ที่เกี่ยวข้อง ไม่ dump ทั้งไฟล์
+6. src/features/prd/README.md             ← ถ้า task แตะ features/prd/
+```
+
+จากนั้นเขียน:
+- `_agent/TASK_PLAN.md` — ดูรูปแบบที่ `orchestration/templates/GOOD_TASK_GUIDE.md`
+- `_agent/CURSOR_PLAN_REQUEST.md` → **STOP**
+
+---
+
+### Claude Code — EXECUTE session
+
+```
+0. /Users/jakarinosk/HEAD-OFFICE/COMPANY_OS.md ← ถ้ายังไม่ได้อ่านใน session นี้
+1. orchestration/CURRENT_TASK.md          ← ยืนยัน Phase: EXECUTE
+2. head-office-app/_agent/PLAN_APPROVAL.md ← ต้องเป็น APPROVED เท่านั้น
+3. head-office-app/_agent/TASK_PLAN.md    ← implement ตามนี้เท่านั้น ห้าม improvise
+4. [Allowed Files]                        ← อ่านเฉพาะที่ต้องแก้จริง
+```
+
+จากนั้น implement → เขียน `_agent/TASK_RESULT.md` + `_agent/CURSOR_REVIEW_REQUEST.md` → **STOP**
+
+---
+
+### Cursor — เขียน task ใหม่
+
+```
+0. /Users/jakarinosk/HEAD-OFFICE/COMPANY_OS.md ← routing rules + universal forbidden
+1. orchestration/GROUND_TRUTH.md          ← phase status + forbidden
+2. orchestration/REVIEW_STATUS.md         ← previous task approved?
+3. orchestration/POST_PHASE_1_1_QUEUE.md  ← next task ในคิว
+4. head-office-app/_agent/TASK_RESULT.md  ← output จาก task ที่แล้ว (ถ้ามี)
+```
+
+จากนั้นเขียน `orchestration/CURRENT_TASK.md` — ดูรูปแบบที่ `orchestration/templates/GOOD_TASK_GUIDE.md`
+
+---
+
+### Cursor — Review task
+
+```
+1. head-office-app/_agent/TASK_RESULT.md
+2. head-office-app/_agent/CURSOR_REVIEW_REQUEST.md
+3. git diff (allowed files only)
+4. npm run build && npm run typecheck && npm run lint
+5. orchestration/TASK_CLEANUP_CHECKLIST.md
+```
+
+---
+
+*Last updated: 2026-06-10 — อัปเดตโดย Cowork session*

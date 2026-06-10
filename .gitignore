@@ -1,0 +1,39 @@
+# Dependencies
+node_modules/
+.next/
+dist/
+build/
+.cache/
+.turbo/
+
+# Environment
+.env
+.env.local
+.env.production
+.env.vercel.local
+.env.*.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+
+# Vercel
+.vercel/
+
+# Coverage
+coverage/
+
+# Temp
+tmp/
+temp/

@@ -1,0 +1,12 @@
+{
+  "name": "head-office-monorepo",
+  "private": true,
+  "description": "Monorepo root — app lives in head-office-app/",
+  "scripts": {
+    "dev": "npm run dev --prefix head-office-app -- -p 3001",
+    "build": "npm run build --prefix head-office-app",
+    "start": "npm run start --prefix head-office-app",
+    "lint": "npm run lint --prefix head-office-app",
+    "typecheck": "npm run typecheck --prefix head-office-app"
+  }
+}
