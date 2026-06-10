@@ -9,9 +9,9 @@
 
 | Field | Value |
 |-------|-------|
-| **Active Task** | **P1-FIX-01** — ✅ APPROVED |
+| **Active Task** | **P1-LINT-01** — ✅ APPROVED |
 | **Loop Phase** | **DONE** |
-| **Next Action** | Demo-ready — optional: pre-existing lint 8 errors in PRD/auth |
+| **Next Action** | Demo-ready — optional: 172 lint warnings (unused imports in PRD) |
 
 ---
 
@@ -58,6 +58,7 @@
 | **P1-04ac** | ✅ | ✅ APPROVED | 2026-06-10 | DashboardLifecycleDetail + workflow libs |
 | **P1-04ad–cc** | ✅ | ✅ APPROVED | 2026-06-10 | All views + `PrdPageClient`; `page.tsx` **13 lines** |
 | **P1-FIX-01** | ✅ | ✅ APPROVED | 2026-06-11 | Workflow integrity F1–F11; migrations applied; E2E 26/26; auth bypass off |
+| **P1-LINT-01** | ✅ | ✅ APPROVED | 2026-06-11 | 8 ESLint errors → 0; integration-callback-flash helper |
 
 ---
 
