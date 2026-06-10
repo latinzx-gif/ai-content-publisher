@@ -1,13 +1,12 @@
 'use client';
 
 import { Settings } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { SettingsMenuIcon } from '@/features/prd/components/icons/prd-icons';
 import { settingsGroups } from '@/features/prd/config/settings-display';
 import type { AgentRuntimePreference } from '@/features/prd/types/runtime';
 import { SettingsApiTokens } from '@/features/prd/views/settings/SettingsApiTokens';
 import { SettingsCodexConnection } from '@/features/prd/views/settings/SettingsCodexConnection';
-import { SettingsFacebookLogin } from '@/features/prd/views/settings/SettingsFacebookLogin';
 import { SettingsIntegrations } from '@/features/prd/views/settings/SettingsIntegrations';
 import { SettingsProfile } from '@/features/prd/views/settings/SettingsProfile';
 import { SettingsReleaseReadiness } from '@/features/prd/views/settings/SettingsReleaseReadiness';
@@ -19,17 +18,16 @@ export function SettingsView({
   agentConnectionPreference: AgentRuntimePreference;
   onAgentConnectionPreferenceChange: (value: AgentRuntimePreference) => void;
 }) {
-  const [settingsPage, setSettingsPage] = useState('Integrations');
-
-  useEffect(() => {
+  const [settingsPage, setSettingsPage] = useState(() => {
     if (typeof window === 'undefined') {
-      return;
+      return 'Integrations';
     }
-    const params = new URLSearchParams(window.location.search);
-    if (params.get('integration') === 'buffer' || params.get('integration') === 'facebook') {
-      setSettingsPage('Facebook');
+    const integration = new URLSearchParams(window.location.search).get('integration');
+    if (integration === 'google_drive' || integration === 'facebook' || integration === 'buffer') {
+      return 'Integrations';
     }
-  }, []);
+    return 'Integrations';
+  });
 
   return (
     <div className="overflow-hidden rounded-2xl border border-[#deded8] bg-white shadow-[0_1px_2px_rgba(20,20,20,0.04)]">
@@ -74,8 +72,6 @@ export function SettingsView({
         <section className="min-w-0 overflow-x-hidden p-4 md:p-8">
           {settingsPage === 'Integrations' ? (
             <SettingsIntegrations />
-          ) : settingsPage === 'Facebook' ? (
-            <SettingsFacebookLogin />
           ) : settingsPage === 'Codex Local' ? (
             <SettingsCodexConnection />
           ) : settingsPage === 'API Tokens' ? (

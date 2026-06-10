@@ -1,11 +1,12 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, startTransition, useState } from 'react';
 import {
   buildOAuthCallbackUrl,
   OAUTH_PROVIDER_SETUP,
   type OAuthProviderKey,
 } from '@/lib/publishing/oauth-setup-links';
+import { consumeIntegrationCallbackFlash } from '@/lib/publishing/integration-callback-flash';
 import type { PublishingConnectionsStatus } from '@/lib/publishing/publishing-connection-status';
 
 const API_TOKEN_STORAGE_KEY = 'prd_api_bearer_token';
@@ -15,6 +16,8 @@ type PublishingLoginPanelProps = {
   returnTo: string;
   mode: 'prd' | 'publisher';
   onDisconnect?: (provider: 'buffer' | 'facebook') => Promise<void>;
+  /** Demo scope: Facebook-only publishing; Buffer OAuth stays in code but hidden. */
+  hideBuffer?: boolean;
 };
 
 type SetupInfo = {
@@ -49,6 +52,7 @@ export function PublishingLoginPanel({
   returnTo,
   mode,
   onDisconnect,
+  hideBuffer = true,
 }: PublishingLoginPanelProps) {
   const [status, setStatus] = useState(initialStatus);
   const [setup, setSetup] = useState<SetupInfo | null>(null);
@@ -123,31 +127,18 @@ export function PublishingLoginPanel({
   }, [mode]);
 
   useEffect(() => {
-    if (typeof window === 'undefined') {
-      return;
-    }
-
-    const params = new URLSearchParams(window.location.search);
-    const integration = params.get('integration');
-    const integrationStatus = params.get('integration_status');
-    const integrationMessage = params.get('integration_message');
-
-    if (!integration || !integrationStatus) {
-      return;
-    }
-
-    if (integrationStatus === 'connected') {
-      setMessage(`${integration === 'buffer' ? 'Buffer' : 'Facebook'} connected successfully.`);
-    } else {
-      setError(integrationMessage ?? `${integration} login failed.`);
-    }
-
-    params.delete('integration');
-    params.delete('integration_status');
-    params.delete('integration_message');
-    const nextUrl = `${window.location.pathname}${params.toString() ? `?${params.toString()}` : ''}`;
-    window.history.replaceState({}, '', nextUrl);
-    void refresh();
+    startTransition(() => {
+      const flash = consumeIntegrationCallbackFlash(['buffer', 'facebook']);
+      if (flash.message) {
+        setMessage(flash.message);
+      }
+      if (flash.error) {
+        setError(flash.error);
+      }
+      if (flash.message || flash.error) {
+        void refresh();
+      }
+    });
   }, [refresh]);
 
   async function handleDisconnect(provider: 'buffer' | 'facebook') {
@@ -204,36 +195,38 @@ export function PublishingLoginPanel({
   return (
     <div className="space-y-4">
       <div className="rounded-2xl border border-[#d9e0ef] bg-[#f4f7fd] px-4 py-3 text-sm leading-relaxed text-[#2f4f7f]">
-        ถ้ากด Login แล้วไม่มีอะไรเกิดขึ้น แปลว่ายังไม่ได้ตั้ง OAuth บน server — ใช้ปุ่ม{' '}
-        <strong>Register OAuth App</strong> ด้านล่างก่อน แล้วใส่ Client ID/Secret ใน{' '}
-        <code className="rounded bg-white/70 px-1 py-0.5 text-xs">.env.local</code>
+        {hideBuffer
+          ? 'Demo ใช้ Facebook โดยตรง — schedule ไป Page ที่เชื่อมแล้ว Buffer พักไว้ก่อน (เปิดใช้ภายหลังได้)'
+          : 'ถ้ากด Login แล้วไม่มีอะไรเกิดขึ้น แปลว่ายังไม่ได้ตั้ง OAuth บน server — ใช้ปุ่ม Register OAuth App ด้านล่างก่อน'}
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-2">
-        <ConnectionCard
-          provider="buffer"
-          title="Buffer Login"
-          description="Sign in with Buffer to publish and schedule posts from this app."
-          connected={status.bufferConnected}
-          configured={status.bufferOAuthConfigured}
-          detail={
-            status.bufferConnected
-              ? 'Buffer account connected.'
-              : status.bufferConfigured
-                ? 'Buffer token found, but profile check failed.'
-                : 'Not connected yet.'
-          }
-          setup={bufferSetup}
-          loginHref={bufferAuthorizeUrl}
-          copiedKey={copiedKey}
-          onCopy={copyText}
-          onLogin={() =>
-            handleLoginAttempt('buffer', status.bufferOAuthConfigured, bufferAuthorizeUrl)
-          }
-          onRefresh={() => void refresh()}
-          onDisconnect={() => void handleDisconnect('buffer')}
-          refreshLabel={loading ? 'Checking…' : 'Check Buffer'}
-        />
+      <div className={`grid gap-4 ${hideBuffer ? '' : 'lg:grid-cols-2'}`}>
+        {!hideBuffer ? (
+          <ConnectionCard
+            provider="buffer"
+            title="Buffer Login"
+            description="Sign in with Buffer to publish and schedule posts from this app."
+            connected={status.bufferConnected}
+            configured={status.bufferOAuthConfigured}
+            detail={
+              status.bufferConnected
+                ? 'Buffer account connected.'
+                : status.bufferConfigured
+                  ? 'Buffer token found, but profile check failed.'
+                  : 'Not connected yet.'
+            }
+            setup={bufferSetup}
+            loginHref={bufferAuthorizeUrl}
+            copiedKey={copiedKey}
+            onCopy={copyText}
+            onLogin={() =>
+              handleLoginAttempt('buffer', status.bufferOAuthConfigured, bufferAuthorizeUrl)
+            }
+            onRefresh={() => void refresh()}
+            onDisconnect={() => void handleDisconnect('buffer')}
+            refreshLabel={loading ? 'Checking…' : 'Check Buffer'}
+          />
+        ) : null}
 
         <ConnectionCard
           provider="facebook"
