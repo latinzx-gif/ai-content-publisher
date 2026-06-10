@@ -51,6 +51,19 @@ export type DashboardApiPayload = DashboardPayload & { generatedAt: string };
 
 export type DashboardBoardTab = 'All' | 'Assigned' | 'Agents' | 'Scheduled';
 
+export type AgentQueueJob = {
+  id: string;
+  agent: string;
+  owner: string;
+  stage: string;
+  status: 'Done' | 'Running' | 'Queued' | 'Waiting review';
+  detail: string;
+  createdAt: string;
+  updatedAt: string;
+  handoffTarget?: string;
+  runMode?: 'Dry-run' | 'Live';
+};
+
 export type CommandCenterCounts = {
   total: number;
   brief: number;

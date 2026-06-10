@@ -1,33 +1,46 @@
 # PRD feature module (extracted from `src/app/page.tsx`)
 
-Incremental split of the PRD monolith. **Do not** add new logic to `page.tsx` — extend modules here.
+`src/app/page.tsx` is a **thin shell** (Suspense + `PrdPageClient`). All PRD UI and workspace logic lives here.
 
 | Path | Purpose |
 |------|---------|
-| `config/navigation.ts` | `navGroups`, `pageMeta`, `PageName` |
-| `types/` | API, board, content, dashboard, runtime types |
-| `lib/` | Pure helpers (`text`, `command-center`, `dashboard-tabs`) |
-| `components/primitives/` | Small shared UI (`AlertIcon`, `PanelSection`, `Tag`, `RiskBadge`, `RiskPill`, `SectionKicker`, `SystemStateCard`) |
-| `components/Sidebar.tsx` | Desktop PRD sidebar shell |
-| `components/MobileSidebarDrawer.tsx` | Mobile nav drawer overlay |
-| `components/TopBar.tsx` | PRD header bar (auth, search, actions) |
-| `components/DashboardHeader.tsx` | Page title, breadcrumb, tab strip |
-| `components/MiniPageCard.tsx` | Stat/summary card (label, value, detail) |
-| `components/CalendarPost.tsx` | Calendar grid post chip (drag/reschedule) |
-| `components/LegendDot.tsx` | Calendar status legend dot |
-| `components/ChannelCard.tsx` | Publishing channel summary card |
-| `components/PublishingStatus.tsx` | Publishing queue status pill |
-| `components/StatCard.tsx` | Dashboard stat card with tone variants |
-| `components/CreateStep.tsx` | Create workflow step indicator |
-| `components/WorkspaceView.tsx` | Generic workspace placeholder layout |
-| `components/PrdPageLoadingFallback.tsx` | Suspense loading state for PRD `/` |
-| `components/SafetyConfirmationDialog.tsx` | Safety confirmation modal + `SafetyConfirmation` types |
-| `components/EndToEndWorkflowSimulation.tsx` | SW-134 end-to-end workflow simulation panel |
-| `components/CommandCenterHero.tsx` | Dashboard operations command hero |
-| `components/WorkflowPipelineOverview.tsx` | Publishing pipeline step counts |
-| `components/StatePreviewStrip.tsx` | Empty / loading / error state preview strip |
-| `components/ResponsiveQaStrip.tsx` | Responsive viewport QA guard strip |
-| `components/BoardCard.tsx` | Kanban board item card |
-| `components/MobileBoardStack.tsx` | Mobile stacked kanban view |
+| `PrdPageClient.tsx` | Client workspace router, data loading, handlers, API mapper helpers |
+| `config/` | Navigation, agents, plan entitlements, display constants |
+| `types/` | API, board, content, dashboard, review-queue, logs, workflow-status, content-job |
+| `lib/` | Pure helpers (calendar, review-queue match, workflow IDs/stage, text, command-center, …) |
+| `views/` | Major route views: Dashboard, Calendar, Publishing, Review Queue, Agents, Logs, Create Post, Settings, … |
+| `views/settings/` | Settings sub-panels |
+| `components/` | Shared panels, drawers, board, create workflow panels |
+| `components/primitives/` | Small shared UI (`Tag`, `RiskBadge`, …) |
+| `components/icons/` | PRD SVG icon components |
+| `components/create/` | Create-post step panels |
 
-Remaining view components still live in `src/app/page.tsx` until later slices.
+## Views (`views/`)
+
+| File | Route area |
+|------|------------|
+| `DashboardView.tsx` | Dashboard / command center |
+| `CalendarView.tsx` | Calendar |
+| `PublishingView.tsx` | Publishing queue |
+| `ReviewQueueView.tsx` | Review queue |
+| `AgentsView.tsx` | Agents |
+| `LogsView.tsx` | Logs |
+| `CreatePostView.tsx` | Create post workflow |
+| `AnalyticsView.tsx` | Analytics placeholder |
+| `ContentLibraryView.tsx` | Content library |
+| `KnowledgeBaseView.tsx` | Knowledge base |
+| `RulesBrandView.tsx` | Rules & brand |
+| `SettingsView.tsx` | Settings shell |
+| `settings/*` | Settings children (API tokens, integrations, readiness, …) |
+
+## Key components
+
+| File | Purpose |
+|------|---------|
+| `ContentJobDetailDrawer.tsx` | Full content-job detail drawer |
+| `WorkflowStatusSyncPanel.tsx` | Cross-surface workflow sync status |
+| `Sidebar.tsx`, `TopBar.tsx`, `MobileSidebarDrawer.tsx` | App chrome |
+| `BoardColumn.tsx`, `BoardCard.tsx`, `MobileBoardStack.tsx` | Kanban board |
+| `AgentPanel.tsx`, `AgentQueueCard.tsx` | Agent workforce UI |
+
+Full extraction history: `orchestration/P1_04_REMAINING_PLAN.md` (HEAD-OFFICE repo).
