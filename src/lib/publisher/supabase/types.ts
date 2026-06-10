@@ -5,6 +5,7 @@ export type AcpPostStatus =
   | "draft"
   | "revision_requested"
   | "approved"
+  | "rejected"
   | "scheduled"
   | "publishing"
   | "published"

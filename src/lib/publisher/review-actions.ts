@@ -28,7 +28,7 @@ export async function saveDraft(post_id: string) {
 }
 
 async function saveStatus(post_id: string, status: ReviewStatus, action: string) {
-  await upsertPost({ post_id, status: status as import("@/lib/publisher/supabase/types").AcpPostStatus });
+  await upsertPost({ post_id, status });
   addLog(
     "generation",
     action,

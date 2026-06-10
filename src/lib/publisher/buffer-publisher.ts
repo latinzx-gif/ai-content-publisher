@@ -35,8 +35,7 @@ export async function bufferPublish(
 
   const token = await getStoredBufferAccessToken();
   if (!token) {
-    await saveStatus(post_id, "published");
-    await serverLog(post_id, "Publish Now", "[MOCK] Buffer publish completed. Connect Buffer in Settings to enable live publishing.", "success");
+    await serverLog(post_id, "Publish Now", "[MOCK] Buffer publish completed. Connect Buffer in Settings to enable live publishing.", "warn");
     return { success: true, publish_id: `mock_publish_${Date.now()}`, mock: true };
   }
 
@@ -85,8 +84,8 @@ export async function bufferSchedule(
 
   const token = await getStoredBufferAccessToken();
   if (!token) {
-    await upsertPost({ post_id, scheduled_at, status: "scheduled" });
-    await serverLog(post_id, "Schedule", `[MOCK] Scheduled for ${scheduled_at}. Connect Buffer in Settings to enable live scheduling.`, "success");
+    await upsertPost({ post_id, scheduled_at });
+    await serverLog(post_id, "Schedule", `[MOCK] Scheduled for ${scheduled_at}. Connect Buffer in Settings to enable live scheduling.`, "warn");
     return { success: true, schedule_id: `mock_schedule_${Date.now()}`, mock: true };
   }
 

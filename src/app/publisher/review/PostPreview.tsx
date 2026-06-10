@@ -45,12 +45,14 @@ export default function PostPreview({
     <div className="grid gap-5 xl:grid-cols-2">
       <PreviewSection
         imageUrl={primaryImage?.image_url}
+        isPlaceholder={primaryImage?.is_placeholder ?? false}
         notes={primaryNotes}
         title="Primary Post"
         version={data.content.primary}
       />
       <PreviewSection
         imageUrl={secondaryImage?.image_url}
+        isPlaceholder={secondaryImage?.is_placeholder ?? false}
         notes={secondaryNotes}
         title="Secondary Comment"
         version={data.content.secondary}
@@ -77,11 +79,13 @@ export default function PostPreview({
 
 function PreviewSection({
   imageUrl,
+  isPlaceholder,
   notes,
   title,
   version,
 }: {
   imageUrl?: string;
+  isPlaceholder: boolean;
   notes: QualityCheckResult[];
   title: string;
   version: GeneratedContentVersion;
@@ -102,6 +106,11 @@ function PreviewSection({
               src={imageUrl}
               unoptimized
             />
+            {isPlaceholder ? (
+              <Badge className="absolute left-3 top-3 bg-[var(--danger-soft)] text-[var(--danger-ink)]">
+                PLACEHOLDER — image generation failed
+              </Badge>
+            ) : null}
           </div>
         ) : (
           <div className="flex aspect-[3/2] items-center justify-center rounded-[calc(var(--radius)*0.55)] bg-[var(--surface-muted)] text-sm font-semibold text-[var(--text-muted)]">

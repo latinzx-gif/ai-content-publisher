@@ -1,7 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Image from "next/image";
 
+import { Badge } from "@/components/publisher/ui/badge";
 import {
   emptyHistory,
   generateImage,
@@ -12,6 +14,7 @@ import {
 } from "@/lib/publisher/image-generator";
 import type { ImagePromptSet } from "@/lib/publisher/image-prompt-generator";
 import { getPostContent, insertPostImage } from "@/lib/publisher/db";
+import { createPostId } from "@/lib/publisher/post-id";
 import { Button } from "@/components/publisher/ui/button";
 import {
   Card,
@@ -59,7 +62,7 @@ export default function ImageGenerator({
         type: image.type,
         version: image.version,
         image_url: image.image_url,
-        is_placeholder: false,
+        is_placeholder: image.is_placeholder,
         prompt: image.prompt as unknown as Record<string, unknown>,
         visual_concept_id: prompt.visual_concept_id ?? null,
       });
@@ -69,7 +72,11 @@ export default function ImageGenerator({
         [type]: [...(prev[type] ?? []), image],
         saved_at: new Date().toISOString(),
       }));
-      setMessage("");
+      setMessage(
+        image.is_placeholder
+          ? `Image generation failed for ${type} — a placeholder slot was saved. Regenerate to get real output.`
+          : ""
+      );
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Image generation failed.");
     }
@@ -86,8 +93,8 @@ export default function ImageGenerator({
         </p>
         <h1 className="mt-2 text-3xl font-black text-[var(--navy)]">Images</h1>
         <p className="mt-2 max-w-3xl text-[var(--text-muted)]">
-          Generate local placeholder image records from saved primary and
-          secondary image prompts.
+          Generate DALL-E 3 images from saved primary and secondary image
+          prompts. Failed generations are marked as placeholders explicitly.
         </p>
       </div>
 
@@ -141,7 +148,7 @@ export default function ImageGenerator({
       <Card>
         <CardHeader>
           <CardTitle>Version history</CardTitle>
-          <CardDescription>All generated placeholder image versions.</CardDescription>
+          <CardDescription>All generated image versions; failed generations are flagged.</CardDescription>
         </CardHeader>
         <CardContent className="grid gap-4 lg:grid-cols-2">
           <HistoryList title="Primary versions" images={history.primary} />
@@ -179,14 +186,26 @@ function ImageCard({
       <CardContent className="space-y-4">
         {image ? (
           <>
-            <div className="flex aspect-[3/2] items-center justify-center rounded-[calc(var(--radius)*0.55)] bg-[var(--navy)] p-6 text-center text-2xl font-black text-[var(--paper)]">
-              {title} V{image.version}
+            <div className="relative aspect-square overflow-hidden rounded-[calc(var(--radius)*0.55)] bg-[var(--surface-muted)]">
+              <Image
+                alt={`${title} version ${image.version}`}
+                className="object-cover"
+                fill
+                sizes="(max-width: 1024px) 100vw, 50vw"
+                src={image.image_url}
+                unoptimized
+              />
+              {image.is_placeholder ? (
+                <Badge className="absolute left-3 top-3 bg-[var(--danger-soft)] text-[var(--danger-ink)]">
+                  PLACEHOLDER — generation failed
+                </Badge>
+              ) : null}
             </div>
             <dl className="space-y-3 text-sm">
               <InfoRow label="Prompt used" value={image.prompt.hero_object} />
               <InfoRow label="Version number" value={String(image.version)} />
               <InfoRow label="Timestamp" value={image.generated_at} />
-              <InfoRow label="Placeholder URL" value={image.image_url} />
+              <InfoRow label="Image URL" value={image.image_url} />
             </dl>
           </>
         ) : (
@@ -207,7 +226,12 @@ function HistoryList({ images, title }: { images: GeneratedImage[]; title: strin
         <ul className="mt-3 space-y-2 text-sm">
           {images.map((image) => (
             <li key={`${image.type}-${image.version}-${image.generated_at}`} className="rounded-[calc(var(--radius)*0.55)] bg-[var(--surface-muted)] p-3">
-              <p className="font-bold text-[var(--navy)]">Version {image.version}</p>
+              <div className="flex items-center justify-between gap-2">
+                <p className="font-bold text-[var(--navy)]">Version {image.version}</p>
+                {image.is_placeholder ? (
+                  <Badge className="bg-[var(--danger-soft)] text-[var(--danger-ink)]">PLACEHOLDER</Badge>
+                ) : null}
+              </div>
               <p className="mt-1 font-mono text-xs text-[var(--text-muted)]">{image.generated_at}</p>
             </li>
           ))}
@@ -239,6 +263,3 @@ function Field({ children, label }: { children: React.ReactNode; label: string }
   );
 }
 
-function createPostId() {
-  return `post_${Date.now()}`;
-}

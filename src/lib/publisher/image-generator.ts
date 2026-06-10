@@ -1,5 +1,5 @@
 import type { ImagePrompt } from "./image-prompt-generator";
-import { generateImageAI } from "./openai";
+import { generateImageAIWithFallback } from "./openai";
 import { getPostImages } from "@/lib/publisher/db";
 import type { AcpPostImage } from "@/lib/publisher/supabase/types";
 
@@ -10,6 +10,7 @@ export type GeneratedImage = {
   type: ImageType;
   version: number;
   image_url: string;
+  is_placeholder: boolean;
   prompt: ImagePrompt;
   generated_at: string;
 };
@@ -29,13 +30,14 @@ export async function generateImage(
   currentHistory: ImageHistory
 ): Promise<GeneratedImage> {
   const version = (currentHistory[type]?.length || 0) + 1;
-  const image_url = await generateImageAI(prompt, post_id, type, version);
+  const result = await generateImageAIWithFallback(prompt, post_id, type, version);
 
   return {
     post_id,
     type,
     version,
-    image_url,
+    image_url: result.image_url,
+    is_placeholder: result.is_placeholder,
     prompt,
     generated_at: new Date().toISOString(),
   };
@@ -66,6 +68,7 @@ function dbRowToImage(row: AcpPostImage): GeneratedImage {
     type: row.type,
     version: row.version,
     image_url: row.image_url,
+    is_placeholder: row.is_placeholder,
     prompt: (row.prompt ?? {}) as ImagePrompt,
     generated_at: row.generated_at,
   };

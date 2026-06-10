@@ -109,7 +109,32 @@ export function addLog(
 
 export async function getLogs(filters: LogFilters = {}): Promise<LogEntry[]> {
   const rows = await getAuditLogs(filters);
-  return rows.map(auditLogToEntry);
+  if (rows.length > 0) return rows.map(auditLogToEntry);
+
+  if (typeof window === "undefined") return [];
+
+  const local = readArray<LogEntry>(allLogsKey);
+  const since = dateRangeSince(filters.dateRange ?? "all");
+  return local.filter((entry) => {
+    if (filters.type && filters.type !== "all" && entry.type !== filters.type) return false;
+    if (filters.postId?.trim()) {
+      const needle = filters.postId.trim().toLowerCase();
+      if (!entry.post_id.toLowerCase().includes(needle)) return false;
+    }
+    if (filters.agent && filters.agent !== "all" && entry.agent !== filters.agent) return false;
+    if (since && new Date(entry.timestamp) < since) return false;
+    return true;
+  });
+}
+
+function dateRangeSince(dateRange: LogDateRange): Date | null {
+  const now = new Date();
+  if (dateRange === "all") return null;
+  if (dateRange === "today") {
+    return new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  }
+  const days = dateRange === "7d" ? 7 : 30;
+  return new Date(now.getTime() - days * 24 * 60 * 60 * 1000);
 }
 
 export async function getAgentUsage(filters: LogFilters = {}): Promise<LogUsage[]> {

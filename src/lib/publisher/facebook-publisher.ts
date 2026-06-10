@@ -18,8 +18,13 @@ export type FacebookPublishResult = {
 export type FacebookPublishMode = "live" | "mock";
 
 export async function getFacebookPublishMode(): Promise<FacebookPublishMode> {
-  const connection = await getStoredFacebookConnection();
-  return connection?.accessToken && connection.externalAccountId ? "live" : "mock";
+  try {
+    const connection = await getStoredFacebookConnection();
+    return connection?.accessToken && connection.externalAccountId ? "live" : "mock";
+  } catch (error) {
+    console.warn("getFacebookPublishMode: falling back to mock", error);
+    return "mock";
+  }
 }
 
 export async function facebookPublish(
@@ -32,12 +37,11 @@ export async function facebookPublish(
 
   const connection = await getStoredFacebookConnection();
   if (!connection?.accessToken || !connection.externalAccountId) {
-    await saveStatus(post_id, "published");
     await serverLog(
       post_id,
       "Publish Now",
       "[MOCK] Facebook publish saved locally. Connect Facebook in Settings to publish live.",
-      "success"
+      "warn"
     );
     return { success: true, post_id: `mock_fb_${Date.now()}`, mock: true };
   }
@@ -98,12 +102,12 @@ export async function facebookSchedule(
 
   const connection = await getStoredFacebookConnection();
   if (!connection?.accessToken || !connection.externalAccountId) {
-    await upsertPost({ post_id, scheduled_at, status: "scheduled" });
+    await upsertPost({ post_id, scheduled_at });
     await serverLog(
       post_id,
       "Schedule",
       `[MOCK] Scheduled for ${scheduled_at}. Connect Facebook in Settings to schedule live.`,
-      "success"
+      "warn"
     );
     return { success: true, schedule_id: `mock_fb_schedule_${Date.now()}`, mock: true };
   }

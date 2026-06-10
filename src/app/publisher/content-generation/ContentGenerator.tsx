@@ -7,7 +7,8 @@ import {
   type GeneratedContent,
   type GeneratedContentVersion,
 } from "@/lib/publisher/content-generator";
-import { getPostContent, upsertPostContent } from "@/lib/publisher/db";
+import { getPostContent, upsertPost, upsertPostContent } from "@/lib/publisher/db";
+import { createPostId } from "@/lib/publisher/post-id";
 import { Button } from "@/components/publisher/ui/button";
 import {
   Card,
@@ -93,6 +94,7 @@ export default function ContentGenerator({
     }
 
     try {
+      await upsertPost({ post_id: postId });
       await upsertPostContent({
         post_id: postId,
         content: { ...content, post_id: postId, saved_at: new Date().toISOString() } as unknown as Record<string, unknown>,
@@ -270,6 +272,3 @@ function Field({ children, label }: { children: React.ReactNode; label: string }
   );
 }
 
-function createPostId() {
-  return `post_${Date.now()}`;
-}

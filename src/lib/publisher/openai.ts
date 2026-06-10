@@ -2,7 +2,9 @@
 
 import OpenAI from "openai";
 
+import { isServerApiAuthBypassEnabled } from "@/lib/auth-bypass";
 import { createServiceClient } from "@/lib/publisher/supabase/server";
+import { persistImageToStorage } from "./image-storage";
 import type { Brief } from "./brief-builder";
 import type { GeneratedContent } from "./content-generator";
 import type { ImagePrompt } from "./image-prompt-generator";
@@ -25,17 +27,19 @@ async function serverLog(
   post_id: string,
   action: string,
   details: string,
-  status: "success" | "warn" | "error"
+  status: "success" | "warn" | "error",
+  type: "generation" | "image" = "generation",
+  agent: string = "Content Agent"
 ): Promise<void> {
   try {
     const db = createServiceClient();
     await db.from("acp_audit_logs").insert({
-      type: "generation",
+      type,
       action,
       post_id,
       details,
       status,
-      agent: "Content Agent",
+      agent,
     } as never);
   } catch {
     // fire-and-forget — never block generation on log failure
@@ -139,13 +143,18 @@ export async function generateContentAI(
   const raw = response.choices[0]?.message.content ?? "";
   let parsed: GeneratedContent;
   try {
-    parsed = JSON.parse(raw) as GeneratedContent;
-    if (!parsed.primary?.headline || !parsed.secondary?.headline) {
-      throw new Error("Missing primary or secondary content");
+    parsed = normalizeGeneratedContent(parseJsonResponse(raw), primaryLang, secondaryLang);
+    if (!parsed.primary.headline.trim()) {
+      throw new Error("Missing primary headline");
     }
-  } catch {
+  } catch (error) {
     await serverLog(post_id, "Content Generated (AI)", `Parse error: ${raw.slice(0, 120)}`, "error");
-    throw new Error("OpenAI response could not be parsed as generated content");
+    if (isServerApiAuthBypassEnabled()) {
+      return buildFallbackContent(briefText, primaryLang, secondaryLang);
+    }
+    throw new Error(
+      error instanceof Error ? error.message : "OpenAI response could not be parsed as generated content"
+    );
   }
 
   parsed.generated_at = new Date().toISOString();
@@ -220,6 +229,88 @@ export async function runQualityChecksAI(
 
 // ----- private helpers -----
 
+function parseJsonResponse(raw: string): unknown {
+  const trimmed = raw.trim();
+  const fenced = trimmed.match(/```(?:json)?\s*([\s\S]*?)```/i);
+  const body = fenced ? fenced[1].trim() : trimmed;
+  return JSON.parse(body);
+}
+
+function emptyContentVersion() {
+  return {
+    headline: "",
+    subheadline: "",
+    support_line: "",
+    long_form: "",
+    hashtags: "",
+    disclaimer: "",
+  };
+}
+
+function buildFallbackContent(
+  briefText: string,
+  primaryLang: string,
+  secondaryLang: string
+): GeneratedContent {
+  const headline = briefText.split("\n")[0]?.replace(/^Headline:\s*/i, "").trim() || "Draft headline";
+  return {
+    primary_language: primaryLang,
+    secondary_language: secondaryLang,
+    primary: {
+      headline,
+      subheadline: "Draft subheadline for local review.",
+      support_line: "Support line generated in dev fallback mode.",
+      long_form: `${headline}\n\n${briefText}`.slice(0, 500),
+      hashtags: "#HeadOffice #ContentOS",
+      disclaimer: "This is draft content for workflow testing.",
+    },
+    secondary: {
+      headline: `${headline} (EN)`,
+      subheadline: "Secondary comment draft.",
+      support_line: "First-comment support line.",
+      long_form: "Secondary long-form draft for workflow testing.",
+      hashtags: "#HeadOffice",
+      disclaimer: "Review before publishing.",
+    },
+    generated_at: new Date().toISOString(),
+  };
+}
+
+function normalizeGeneratedContent(
+  value: unknown,
+  primaryLang: string,
+  secondaryLang: string
+): GeneratedContent {
+  const record = (value && typeof value === "object" ? value : {}) as Record<string, unknown>;
+  const primary = {
+    ...emptyContentVersion(),
+    ...((record.primary as Record<string, unknown> | undefined) ?? {}),
+  };
+  const secondary = {
+    ...emptyContentVersion(),
+    ...((record.secondary as Record<string, unknown> | undefined) ?? {}),
+  };
+
+  for (const version of [primary, secondary]) {
+    for (const key of Object.keys(version) as Array<keyof typeof primary>) {
+      if (version[key] != null) version[key] = String(version[key]);
+    }
+  }
+
+  if (!secondary.headline.trim()) {
+    secondary.headline = primary.headline;
+    secondary.long_form = secondary.long_form || primary.long_form;
+  }
+
+  return {
+    primary_language: String(record.primary_language ?? primaryLang),
+    secondary_language: String(record.secondary_language ?? secondaryLang),
+    primary,
+    secondary,
+    generated_at: new Date().toISOString(),
+  };
+}
+
 function formatBrief(brief: unknown): string {
   if (!brief || typeof brief !== "object") return "No brief provided.";
   const b = brief as Record<string, unknown>;
@@ -279,20 +370,54 @@ export async function generateImageAI(
     n: 1,
     size: "1024x1024",
     quality: "standard",
-    response_format: "url",
   });
 
   const url = response.data?.[0]?.url;
   if (!url) {
-    await serverLog(post_id, `Image Generated (AI) — ${type} v${version}`, "OpenAI returned no image URL", "error");
+    await serverLog(post_id, `Image Generated (AI) — ${type} v${version}`, "OpenAI returned no image URL", "error", "image", "Image Composer Agent");
     throw new Error("OpenAI returned no image URL");
   }
+
+  // DALL-E URLs expire in ~1-2h; persist to Supabase Storage when possible.
+  const durableUrl = await persistImageToStorage(url, post_id, type, version);
 
   await serverLog(
     post_id,
     `Image Generated (AI) — ${type} v${version}`,
-    `DALL-E 3 image generated for ${type} (visual_concept_id: ${prompt.visual_concept_id})`,
-    "success"
+    `DALL-E 3 image generated for ${type} (visual_concept_id: ${prompt.visual_concept_id})${durableUrl ? " — stored" : " — ephemeral URL only"}`,
+    "success",
+    "image",
+    "Image Composer Agent"
   );
-  return url;
+  return durableUrl ?? url;
+}
+
+export type GeneratedImageResult = {
+  image_url: string;
+  is_placeholder: boolean;
+  error?: string;
+};
+
+export async function generateImageAIWithFallback(
+  prompt: ImagePrompt,
+  post_id: string,
+  type: "primary" | "secondary",
+  version: number
+): Promise<GeneratedImageResult> {
+  try {
+    const image_url = await generateImageAI(prompt, post_id, type, version);
+    return { image_url, is_placeholder: false };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Image generation failed";
+    const placeholder = `https://placehold.co/1024x1024/e8f5e9/1b5e20/png?text=${encodeURIComponent(`${type} v${version}`)}`;
+    await serverLog(
+      post_id,
+      `Image Generated (AI) — ${type} v${version}`,
+      `${message}. Degraded: placeholder slot saved instead of real output.`,
+      "error",
+      "image",
+      "Image Composer Agent"
+    );
+    return { image_url: placeholder, is_placeholder: true, error: message };
+  }
 }

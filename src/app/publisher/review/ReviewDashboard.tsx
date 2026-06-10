@@ -15,6 +15,7 @@ import {
 import {
   generateImage,
   getImageHistory,
+  type GeneratedImage,
   type ImageHistory,
   type ImageType,
 } from "@/lib/publisher/image-generator";
@@ -112,7 +113,7 @@ export default function ReviewDashboard({
   const [requirements, setRequirements] = useState<ReviewWorkflow>({
     postId: initialPostId,
     platforms: ["Facebook"],
-    autoPublish: true,
+    autoPublish: false,
   });
   const [requirementsLoaded, setRequirementsLoaded] = useState(false);
   const [pipelineLogs, setPipelineLogs] = useState<PipelineLog[]>([]);
@@ -175,6 +176,7 @@ export default function ReviewDashboard({
             const failMessage = "No brief found. Create and save a brief before queueing this post.";
             pushLog("error", failMessage);
             addLog("error", "Orchestrator Intake", currentPostId, failMessage, "error", "Orchestrator");
+            await upsertPost({ post_id: currentPostId, status: "revision_requested" });
             setStatus("revision_requested");
             setPipelineMessage(failMessage);
 
@@ -277,6 +279,7 @@ export default function ReviewDashboard({
 
         if (failCount > 0) {
           const failMessage = `QC blocked auto publish due to ${failCount} fail check(s).`;
+          await upsertPost({ post_id: currentPostId, status: "revision_requested" });
           setStatus("revision_requested");
           setPipelineMessage(failMessage);
           pushLog("warn", failMessage);
@@ -310,7 +313,7 @@ export default function ReviewDashboard({
               type: "primary",
               version: img.version,
               image_url: img.image_url,
-              is_placeholder: false,
+              is_placeholder: img.is_placeholder,
               prompt: img.prompt as unknown as Record<string, unknown>,
               visual_concept_id: primaryPrompt.visual_concept_id ?? null,
             });
@@ -324,24 +327,55 @@ export default function ReviewDashboard({
               type: "secondary",
               version: img.version,
               image_url: img.image_url,
-              is_placeholder: false,
+              is_placeholder: img.is_placeholder,
               prompt: img.prompt as unknown as Record<string, unknown>,
               visual_concept_id: secondaryPrompt.visual_concept_id ?? null,
             });
             imageHistory = { ...imageHistory, secondary: [...imageHistory.secondary, img] };
           }
 
+          const degradedCount =
+            [...imageHistory.primary, ...imageHistory.secondary].filter((img) => img.is_placeholder).length;
+
           addLog(
             "image",
             "Image Composer Agent",
             currentPostId,
-            "Generated placeholder visuals for available variants.",
-            "success",
+            degradedCount
+              ? `Image composer degraded: ${degradedCount} placeholder slot(s) — real output missing.`
+              : "Generated real visuals for available variants.",
+            degradedCount ? "warn" : "success",
             "Image Composer Agent"
           );
-          pushLog("success", "Image composer finished.");
+          pushLog(degradedCount ? "warn" : "success", "Image composer finished.");
         } else {
           pushLog("info", "Image composer already prepared.");
+        }
+
+        // Placeholder output must never count as review-ready. Block the
+        // publish path explicitly when any current image is degraded.
+        const latestImages = [
+          imageHistory.primary.at(-1),
+          imageHistory.secondary.at(-1),
+        ].filter(Boolean) as GeneratedImage[];
+        if (latestImages.some((img) => img.is_placeholder)) {
+          const failMessage =
+            "Image generation degraded — placeholder output detected. Regenerate images before approval.";
+          await upsertPost({ post_id: currentPostId, status: "revision_requested" });
+          setStatus("revision_requested");
+          setPipelineMessage(failMessage);
+          pushLog("warn", failMessage);
+          await savePipelineAudit(currentPostId, {
+            postId: currentPostId,
+            platforms: pipeline.platforms,
+            autoPublish: pipeline.autoPublish,
+            status: "blocked",
+            steps: [...workflowSteps, "image_degraded"],
+            message: failMessage,
+            created_at: new Date().toISOString(),
+          });
+          setData({ content, imagePrompts, images: imageHistory, qc: qcPayload });
+          return;
         }
 
         workflowSteps.push("publish queueing");
@@ -465,10 +499,9 @@ export default function ReviewDashboard({
   useEffect(() => {
     if (!postId || !requirementsLoaded || loading) return;
 
-    const shouldAutoRun =
-      status === "draft" ||
-      status === "revision_requested" ||
-      status === "rejected";
+    // Only fresh drafts auto-run. revision_requested / rejected are human stop
+    // decisions — re-running requires an explicit "Run Agent Pipeline" click.
+    const shouldAutoRun = status === "draft";
 
     if (!shouldAutoRun || activePlatforms.length === 0) return;
 
@@ -495,18 +528,23 @@ export default function ReviewDashboard({
       return;
     }
 
-    const nextStatus = await (
-      action === "approve"
-        ? approvePost(postId)
-        : action === "reject"
-          ? rejectPost(postId)
-          : action === "revision"
-            ? requestRevision(postId)
-            : saveDraft(postId)
-    );
+    try {
+      const nextStatus = await (
+        action === "approve"
+          ? approvePost(postId)
+          : action === "reject"
+            ? rejectPost(postId)
+            : action === "revision"
+              ? requestRevision(postId)
+              : saveDraft(postId)
+      );
 
-    setStatus(nextStatus);
-    setMessage(`Status saved as ${nextStatus}.`);
+      setStatus(nextStatus);
+      setMessage(`Status saved as ${nextStatus}.`);
+    } catch (error) {
+      const detail = error instanceof Error ? error.message : "Unknown error.";
+      setMessage(`Could not save status: ${detail}`);
+    }
   }
 
   async function saveRequirements() {
@@ -755,25 +793,25 @@ export default function ReviewDashboard({
         <CardContent className="flex flex-wrap gap-2">
           <Link
             className={buttonVariants({ variant: "outline" })}
-            href={`/content-generation?post_id=${postId}`}
+            href={`/publisher/content-generation?post_id=${postId}`}
           >
             Content
           </Link>
           <Link
             className={buttonVariants({ variant: "outline" })}
-            href={`/image-prompts?post_id=${postId}`}
+            href={`/publisher/image-prompts?post_id=${postId}`}
           >
             Image Prompts
           </Link>
           <Link
             className={buttonVariants({ variant: "outline" })}
-            href={`/images?post_id=${postId}`}
+            href={`/publisher/images?post_id=${postId}`}
           >
             Images
           </Link>
           <Link
             className={buttonVariants({ variant: "outline" })}
-            href={`/quality-check?post_id=${postId}`}
+            href={`/publisher/quality-check?post_id=${postId}`}
           >
             QC
           </Link>
@@ -834,7 +872,7 @@ async function loadRequirements(postId: string): Promise<ReviewWorkflow> {
   return {
     postId,
     platforms: normalizePlatforms(stored?.platforms || fallbackPlatform),
-    autoPublish: stored?.autoPublish ?? true,
+    autoPublish: stored?.autoPublish ?? false,
   };
 }
 

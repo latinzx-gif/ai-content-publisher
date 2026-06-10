@@ -10,17 +10,15 @@ import { getAllPostSummaries, type PostSummary } from "@/lib/publisher/calendar-
 import type { GeneratedContent } from "@/lib/publisher/content-generator";
 import type { FacebookPublishMode } from "@/lib/publisher/facebook-publisher";
 import { publishPost, retryPost, schedulePost } from "@/lib/publisher/publish-router";
-import type { BufferMode, BufferResult } from "@/lib/publisher/buffer-publisher";
+import type { BufferResult } from "@/lib/publisher/buffer-publisher";
 import { getAuditLogs, getPostContent } from "@/lib/publisher/db";
 import type { AcpAuditLog } from "@/lib/publisher/supabase/types";
 
 type PublishActionResult = BufferResult & { schedule_id?: string; post_id?: string };
 
 export default function PublishQueue({
-  bufferMode,
   facebookMode,
 }: {
-  bufferMode: BufferMode;
   facebookMode: FacebookPublishMode;
 }) {
   const [posts, setPosts] = useState<PostSummary[]>([]);
@@ -89,7 +87,7 @@ export default function PublishQueue({
         </p>
         <h1 className="mt-2 text-3xl font-black text-[var(--navy)]">Publishing</h1>
         <p className="mt-2 max-w-3xl text-[var(--text-muted)]">
-          Facebook publishing queue. Approved Facebook posts can be scheduled directly to your connected Page.
+          Facebook-only publishing queue. Approved Facebook posts can be scheduled directly to your connected Page; posts for other platforms do not appear here while the Buffer integration is paused.
         </p>
       </div>
 
@@ -108,12 +106,6 @@ export default function PublishQueue({
           </p>
         </div>
       )}
-
-      {bufferMode === "mock" ? (
-        <p className="text-xs text-[var(--text-muted)]">
-          Buffer is not connected yet. Non-Facebook platforms would still use Buffer when added later.
-        </p>
-      ) : null}
 
       {loading ? (
         <Card>
