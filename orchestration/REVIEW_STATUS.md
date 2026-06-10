@@ -1,7 +1,7 @@
 # REVIEW_STATUS.md — Task Approval Tracker
 
 **Updated by:** Cursor  
-**Last Updated:** 2026-06-10
+**Last Updated:** 2026-06-11
 
 ---
 
@@ -9,9 +9,9 @@
 
 | Field | Value |
 |-------|-------|
-| **Active Task** | **P1-04** — COMPLETE (`page.tsx` thin shell) |
+| **Active Task** | **P1-FIX-01** — ✅ APPROVED |
 | **Loop Phase** | **DONE** |
-| **Next Action** | Optional: slim `PrdPageClient.tsx` / `usePrdWorkspace` (P1-04cb–cc) |
+| **Next Action** | Demo-ready — optional: pre-existing lint 8 errors in PRD/auth |
 
 ---
 
@@ -57,6 +57,7 @@
 | **P1-04ab** | ✅ | ✅ APPROVED | 2026-06-10 | AgentPanel + AgentQueueCard extracted |
 | **P1-04ac** | ✅ | ✅ APPROVED | 2026-06-10 | DashboardLifecycleDetail + workflow libs |
 | **P1-04ad–cc** | ✅ | ✅ APPROVED | 2026-06-10 | All views + `PrdPageClient`; `page.tsx` **13 lines** |
+| **P1-FIX-01** | ✅ | ✅ APPROVED | 2026-06-11 | Workflow integrity F1–F11; migrations applied; E2E 26/26; auth bypass off |
 
 ---
 
@@ -65,5 +66,8 @@
 | Blocker | Resolution |
 |---------|------------|
 | RLS migration on remote | ✅ Applied |
+| P1-FIX-01 migrations (`rejected` + `acp-images`) | ✅ Applied 2026-06-11 via Supabase MCP |
+| Supabase project restart | ✅ DB online |
+| Auth bypass in `.env.local` | ✅ Disabled 2026-06-11 |
 | Buffer OIDC token | Optional — add `BUFFER_ACCESS_TOKEN` for live publish |
 | LINEAR_API_KEY in orchestration | ✅ `orchestration/.env.local` |
