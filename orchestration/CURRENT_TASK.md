@@ -1,4 +1,4 @@
-# CURRENT TASK: P1-04 — COMPLETE (thin `page.tsx` shell)
+# CURRENT TASK: P1-04cb/cc — COMPLETE
 
 ## Phase
 
@@ -6,7 +6,7 @@ DONE
 
 ## Status
 
-**Exit criteria met** — `page.tsx` is **13 lines**; `PrdPageClient` + views live under `src/features/prd/`
+**P1-04 fully slimmed** — `page.tsx` **13 lines** · `PrdPageClient.tsx` **7 lines** · workspace in `hooks/usePrdWorkspace.tsx`
 
 ## Primary Agent
 
@@ -14,17 +14,14 @@ DONE
 
 ## Goal (achieved)
 
-- [x] `page.tsx` ≤ **3,000** lines (actual: **13**)
+- [x] API mappers → `lib/api-mappers/` (dashboard, calendar, publishing, review, logs, …)
+- [x] `usePrdWorkspace` hook — state, handlers, render
 - [x] `npm run typecheck` + `npm run build` clean
-- [x] Verbatim component moves to `features/prd/`
 
-## Optional follow-up (not blocking P1-04)
+## Next (optional)
 
-| ID | Work |
-|----|------|
-| P1-04cb | Slim `PrdPageClient.tsx` (~3,654 lines) — move API mappers → `lib/api-mappers/` |
-| P1-04cc | `usePrdWorkspace` hook extraction |
-| Docs | `features/prd/README.md` view index (updated this session) |
+- Lint cleanup (unused imports in extracted views)
+- Commit + push P1-04cb/cc slice
 
 ## Roadmap archive
 
