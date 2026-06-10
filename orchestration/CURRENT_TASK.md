@@ -1,28 +1,31 @@
-# CURRENT TASK: P1-04aa — Extract BoardColumn from page.tsx
+# CURRENT TASK: P1-04 — COMPLETE (thin `page.tsx` shell)
 
 ## Phase
 
-PLAN
+DONE
 
 ## Status
 
-Ready — desktop kanban column (~line 12453); uses `BoardCard`
+**Exit criteria met** — `page.tsx` is **13 lines**; `PrdPageClient` + views live under `src/features/prd/`
 
 ## Primary Agent
 
-Claude Code (**Fable 5** — `claude-fable-5`)
+—
 
-## Goal
+## Goal (achieved)
 
-Extract **`BoardColumn`** → `src/features/prd/components/BoardColumn.tsx`.
+- [x] `page.tsx` ≤ **3,000** lines (actual: **13**)
+- [x] `npm run typecheck` + `npm run build` clean
+- [x] Verbatim component moves to `features/prd/`
 
-## Allowed Files
+## Optional follow-up (not blocking P1-04)
 
-```
-head-office-app/src/app/page.tsx
-head-office-app/src/features/prd/**
-```
+| ID | Work |
+|----|------|
+| P1-04cb | Slim `PrdPageClient.tsx` (~3,654 lines) — move API mappers → `lib/api-mappers/` |
+| P1-04cc | `usePrdWorkspace` hook extraction |
+| Docs | `features/prd/README.md` view index (updated this session) |
 
-## Depends
+## Roadmap archive
 
-P1-04z ✅ MobileBoardStack + BoardCard (12,658 lines)
+`orchestration/P1_04_REMAINING_PLAN.md`

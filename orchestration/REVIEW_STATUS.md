@@ -9,9 +9,9 @@
 
 | Field | Value |
 |-------|-------|
-| **Active Task** | **P1-04aa** — BoardColumn extraction |
-| **Loop Phase** | **PLAN** |
-| **Next Action** | `03-claude-plan` or `next` |
+| **Active Task** | **P1-04** — COMPLETE (`page.tsx` thin shell) |
+| **Loop Phase** | **DONE** |
+| **Next Action** | Optional: slim `PrdPageClient.tsx` / `usePrdWorkspace` (P1-04cb–cc) |
 
 ---
 
@@ -53,6 +53,10 @@
 | **P1-04x** | ✅ | ✅ APPROVED | 2026-06-10 | StatePreviewStrip extracted |
 | **P1-04y** | ✅ | ✅ APPROVED | 2026-06-10 | ResponsiveQaStrip extracted |
 | **P1-04z** | ✅ | ✅ APPROVED | 2026-06-10 | MobileBoardStack + BoardCard extracted |
+| **P1-04aa** | ✅ | ✅ APPROVED | 2026-06-10 | BoardColumn extracted |
+| **P1-04ab** | ✅ | ✅ APPROVED | 2026-06-10 | AgentPanel + AgentQueueCard extracted |
+| **P1-04ac** | ✅ | ✅ APPROVED | 2026-06-10 | DashboardLifecycleDetail + workflow libs |
+| **P1-04ad–cc** | ✅ | ✅ APPROVED | 2026-06-10 | All views + `PrdPageClient`; `page.tsx` **13 lines** |
 
 ---
 

@@ -31,8 +31,7 @@
 
 ## Active loop
 
-**P1-04aa** — Extract `BoardColumn` from `page.tsx` (PLAN).  
-Progress: P1-04c–z ✅ · `page.tsx` ~12,658 lines. See `orchestration/CURRENT_TASK.md`.
+**P1-04** — COMPLETE. `page.tsx` thin shell (13 lines); workspace in `features/prd/PrdPageClient.tsx`.
 
 ---
 
