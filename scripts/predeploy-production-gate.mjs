@@ -1,5 +1,18 @@
 import { spawnSync } from 'node:child_process';
 
+const forbiddenProductionFlags = [
+  'AI_CONTENT_DISABLE_API_AUTH',
+  'NEXT_PUBLIC_AI_CONTENT_DISABLE_API_AUTH',
+];
+
+for (const name of forbiddenProductionFlags) {
+  const value = process.env[name];
+  if (value === 'true' || value === '1') {
+    console.error(`Predeploy gate failed: ${name} is enabled. Dev-only — unset for production deploy.`);
+    process.exit(1);
+  }
+}
+
 const localSmokeUrl = process.env.AI_CONTENT_LOCAL_SMOKE_URL ?? 'http://127.0.0.1:3000';
 
 const checks = [

@@ -1,8 +1,9 @@
 import { NextResponse } from 'next/server';
 import type { SupabaseClient, User } from '@supabase/supabase-js';
+import { isServerApiAuthBypassEnabled } from '@/lib/auth-bypass';
 import { isMissingSupabaseServerConfigError } from '@/lib/supabase/server';
 
-const API_AUTH_BYPASS_ENABLED = process.env.AI_CONTENT_DISABLE_API_AUTH === 'true';
+const API_AUTH_BYPASS_ENABLED = isServerApiAuthBypassEnabled();
 
 export type ApiActor = {
   authUserId: string;

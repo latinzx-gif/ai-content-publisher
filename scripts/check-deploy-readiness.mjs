@@ -2,16 +2,22 @@ import { spawnSync } from 'node:child_process';
 
 const requiredEnvironmentVariables = [
   'NEXT_PUBLIC_SUPABASE_URL',
+  'NEXT_PUBLIC_SUPABASE_ANON_KEY',
+  'NEXT_PUBLIC_SITE_URL',
   'SUPABASE_SERVICE_ROLE_KEY',
   'OPENAI_API_KEY',
 ];
 
 const optionalEnvironmentVariables = [
-  'NEXT_PUBLIC_SUPABASE_ANON_KEY',
   'OPENAI_EMBEDDING_MODEL',
   'OPENAI_AGENT_TEXT_MODEL',
   'BUFFER_ACCESS_TOKEN',
   'CODEX_LOCAL_BRIDGE_SECRET',
+];
+
+const forbiddenProductionVariables = [
+  'AI_CONTENT_DISABLE_API_AUTH',
+  'NEXT_PUBLIC_AI_CONTENT_DISABLE_API_AUTH',
 ];
 
 const targetEnvironment = process.argv[2] ?? 'preview';
@@ -76,6 +82,19 @@ if (missingRequired.length > 0) {
     console.log(`npx vercel env add ${name} ${targetEnvironment}${effectiveGitBranch ? ` ${effectiveGitBranch}` : ''}`);
   }
   process.exit(1);
+}
+
+if (targetEnvironment === 'production') {
+  const forbiddenPresent = forbiddenProductionVariables.filter((name) => envNames.has(name));
+  if (forbiddenPresent.length > 0) {
+    console.log('');
+    console.error('Dev-only auth bypass flags must not be set in production:');
+    for (const name of forbiddenPresent) {
+      console.error(`- ${name}`);
+    }
+    console.error('Remove them from the Vercel production environment.');
+    process.exit(1);
+  }
 }
 
 if (missingOptional.length > 0) {
