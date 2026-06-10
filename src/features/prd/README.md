@@ -4,10 +4,12 @@
 
 | Path | Purpose |
 |------|---------|
-| `PrdPageClient.tsx` | Client workspace router, data loading, handlers, API mapper helpers |
+| `PrdPageClient.tsx` | Thin wrapper → `usePrdWorkspace()` |
+| `hooks/usePrdWorkspace.tsx` | Client workspace state, data loading, handlers, page render |
+| `lib/api-mappers/` | API payload mappers (dashboard, calendar, publishing, review, logs, storage) |
 | `config/` | Navigation, agents, plan entitlements, display constants |
 | `types/` | API, board, content, dashboard, review-queue, logs, workflow-status, content-job |
-| `lib/` | Pure helpers (calendar, review-queue match, workflow IDs/stage, text, command-center, …) |
+| `lib/` | Pure helpers (calendar-display, review-queue match, workflow IDs/stage, prd-navigation, …) |
 | `views/` | Major route views: Dashboard, Calendar, Publishing, Review Queue, Agents, Logs, Create Post, Settings, … |
 | `views/settings/` | Settings sub-panels |
 | `components/` | Shared panels, drawers, board, create workflow panels |
