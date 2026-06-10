@@ -46,6 +46,9 @@ next-env.d.ts
 
 # Local Playwright artifacts
 .playwright-cli/
+/test-results/
+/playwright-report/
+/blob-report/
 
 # Graphify generated outputs
 graphify-out/*
@@ -62,3 +65,25 @@ graphify-out/manifest.json
 # Allow gates
 !graphify-out/gates/
 !graphify-out/gates/*.md
+
+# Logs
+logs
+*.log
+dev-debug.log
+# Dependency directories
+node_modules/
+# Environment variables
+.env
+# Editor directories and files
+.idea
+.vscode
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+# OS specific
+
+# Task files
+# tasks.json
+# tasks/ 

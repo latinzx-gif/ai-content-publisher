@@ -16,7 +16,7 @@ const checks = [
   {
     name: 'PRD page',
     method: 'GET',
-    path: '/prd',
+    path: '/?page=dashboard',
     expectedStatus: 200,
     expectedHeaders: {
       'x-content-type-options': 'nosniff',
@@ -28,7 +28,7 @@ const checks = [
   {
     name: 'PRD publishing deep link',
     method: 'GET',
-    path: '/prd?page=publishing&tab=scheduled',
+    path: '/?page=publishing&tab=scheduled',
     expectedStatus: 200,
   },
   {

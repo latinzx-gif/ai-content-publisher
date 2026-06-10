@@ -39,7 +39,7 @@ export default function LoginPage() {
   useEffect(() => {
     const storedToken = window.sessionStorage.getItem(API_TOKEN_STORAGE_KEY);
     if (storedToken) {
-      router.replace('/prd');
+      router.replace('/');
       return;
     }
   }, [router]);
@@ -92,7 +92,7 @@ export default function LoginPage() {
       window.localStorage.setItem(LOGIN_REMEMBER_STORAGE_KEY, rememberCredentials ? 'true' : 'false');
       window.sessionStorage.setItem(API_TOKEN_STORAGE_KEY, payload.accessToken);
       setMessage(authMode === 'sign-up' ? 'Account created. Loading dashboard...' : 'Sign in successful. Loading dashboard...');
-      router.replace('/prd');
+      router.replace('/');
     } catch (error) {
       setMessage(error instanceof Error ? error.message : authMode === 'sign-up' ? 'Unable to sign up.' : 'Unable to sign in.');
     } finally {
@@ -214,7 +214,7 @@ export default function LoginPage() {
         <div className="mt-5 border-t border-[#deded8] pt-4">
           <button
             type="button"
-            onClick={() => router.push('/prd')}
+            onClick={() => router.push('/')}
             className="text-xs font-medium text-[#4f4f49] hover:text-[#171717]"
           >
             Go to dashboard

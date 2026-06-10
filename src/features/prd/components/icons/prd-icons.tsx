@@ -16,6 +16,7 @@ export function SettingsMenuIcon({ name }: { name: string }) {
     GitHub: GithubIcon,
     'Codex Local': Bot,
     Integrations: PlugIcon,
+    Facebook: FacebookIcon,
     Labs: FlaskIcon,
     Members: UsersIcon,
   };

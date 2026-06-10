@@ -5,8 +5,8 @@ import './globals.css';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: 'Head Office | 3D Command Center',
-  description: 'Virtual 3D Head Office Command Center',
+  title: 'Head Office | PRD',
+  description: 'Head Office PRD — main operations command center for content creation, review, publishing, and agent monitoring.',
 };
 
 export default function RootLayout({

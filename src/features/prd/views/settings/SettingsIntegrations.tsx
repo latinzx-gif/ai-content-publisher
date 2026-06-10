@@ -56,7 +56,13 @@ export function SettingsIntegrations() {
           <IntegrationAppCard
             key={app.name}
             app={app}
-            onAction={() => setIntegrationNotice(`${app.name} ${app.status === 'Connected' ? 'manage' : 'connect'} action recorded. Backend connector will persist OAuth status in Stage 9.`)}
+            onAction={() => {
+              if (app.name === 'Facebook') {
+                setIntegrationNotice('Open Settings → Facebook to connect your Page through Buffer and verify the connection.');
+                return;
+              }
+              setIntegrationNotice(`${app.name} ${app.status === 'Connected' ? 'manage' : 'connect'} action recorded. Backend connector will persist OAuth status in Stage 9.`);
+            }}
           />
         ))}
       </div>

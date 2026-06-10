@@ -269,14 +269,14 @@ export const settingsGroups = [
   },
   {
     label: 'Agency OS',
-    items: ['General', 'Repositories', 'GitHub', 'Codex Local', 'Integrations', 'Labs', 'Members'],
+    items: ['General', 'Repositories', 'GitHub', 'Codex Local', 'Integrations', 'Facebook', 'Labs', 'Members'],
   },
 ];
 
 export const integrationApps = [
   { name: 'Google Drive', description: 'Sync documents, PDFs, folders, Docs, Sheets, and Slides.', status: 'Connected', category: 'Knowledge Source', scope: 'RAG source ingest', auth: 'OAuth connected', lastSync: '12m ago', readiness: 'Ready', icon: DriveIcon },
   { name: 'Obsidian', description: 'Index markdown vault notes, backlinks, and internal knowledge.', status: 'Connect', category: 'Knowledge Source', scope: 'Local vault import', auth: 'Path approval needed', lastSync: 'Not connected', readiness: 'Needs setup', icon: ObsidianIcon },
-  { name: 'Facebook', description: 'Publish posts, monitor pages, and sync publishing results.', status: 'Connected', category: 'Publishing', scope: 'Page publishing', auth: 'Page token active', lastSync: '18m ago', readiness: 'Ready', icon: FacebookIcon },
+  { name: 'Facebook', description: 'Publish posts and schedule through Buffer after the Page is connected.', status: 'Connect', category: 'Publishing', scope: 'Page publishing via Buffer', auth: 'Connect Page in Buffer', lastSync: 'Not connected', readiness: 'Needs setup', icon: FacebookIcon },
   { name: 'Instagram', description: 'Prepare visual posts, carousel assets, and caption drafts.', status: 'Connect', category: 'Publishing', scope: 'Asset publishing', auth: 'Business login needed', lastSync: 'Not connected', readiness: 'Needs setup', icon: InstagramIcon },
   { name: 'Buffer', description: 'Queue approved content and manage publishing schedules.', status: 'Connected', category: 'Publishing', scope: 'Queue handoff', auth: 'Access token active', lastSync: '5m ago', readiness: 'Ready', icon: BufferIcon },
   { name: 'YouTube', description: 'Plan scripts, descriptions, thumbnails, and video publishing.', status: 'Connect', category: 'Publishing', scope: 'Video metadata', auth: 'OAuth needed', lastSync: 'Not connected', readiness: 'Needs setup', icon: YoutubeIcon },
