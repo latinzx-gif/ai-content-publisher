@@ -13,6 +13,8 @@ type RouteItem = {
   href: string;
   label: string;
   phase: Phase;
+  /** Page exists but is suspended from use (boss call, 2026-06-11). */
+  paused?: boolean;
 };
 
 type RouteGroup = {
@@ -24,7 +26,8 @@ const routeGroups: RouteGroup[] = [
   {
     title: "Main",
     items: [
-      { href: "/publisher/create", label: "Create", phase: "P1" },
+      { href: "/publisher", label: "Dashboard", phase: "P1" },
+      { href: "/publisher/create", label: "Create", phase: "P1", paused: true },
       { href: "/publisher/review", label: "Review", phase: "P1" },
       { href: "/publisher/calendar", label: "Calendar", phase: "P1" },
       { href: "/publisher/publishing", label: "Publishing", phase: "P1" },
@@ -86,6 +89,9 @@ export default function Sidebar() {
   function isActiveRoute(itemHref: string) {
     if (!pathname) return false;
     if (pathname === itemHref) return true;
+    // Dashboard ("/publisher") matches exactly, otherwise it would light up
+    // on every publisher page.
+    if (itemHref === "/publisher") return false;
     return pathname.startsWith(`${itemHref}/`);
   }
 
@@ -117,13 +123,19 @@ export default function Sidebar() {
                       aria-current={isActive ? "page" : undefined}
                       className={cn(
                         "flex items-center justify-between gap-2 rounded-lg px-2 py-2 text-sm text-white/75 transition-colors hover:bg-white/5 hover:text-white",
-                        item.phase !== "P1" && "opacity-55",
+                        (item.phase !== "P1" || item.paused) && "opacity-55",
                         isActive && "bg-white/10 font-medium text-white"
                       )}
                       href={item.href}
                     >
                       <span className="truncate">{item.label}</span>
-                      {phaseBadge(item.phase)}
+                      {item.paused ? (
+                        <Badge variant="outline" className="border-transparent bg-white/10 text-white/70">
+                          Paused
+                        </Badge>
+                      ) : (
+                        phaseBadge(item.phase)
+                      )}
                     </Link>
                   </li>
                 );

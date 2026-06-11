@@ -35,7 +35,7 @@ export async function GET(request: NextRequest) {
   try {
     const profile = await exchangePublisherGoogleAuthorizationCode(code);
     await signInPublisherWithGoogleProfile(profile);
-    return NextResponse.redirect(new URL("/publisher/create", origin));
+    return NextResponse.redirect(new URL("/publisher", origin));
   } catch (error) {
     const message = error instanceof Error ? error.message : "Google sign-in failed.";
     return loginRedirect(origin, message);

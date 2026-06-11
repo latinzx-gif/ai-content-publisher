@@ -75,25 +75,26 @@ function buildAttentionItems(posts: AcpPost[]): AttentionItem[] {
     {
       label: "Drafts waiting for content",
       count: count(["draft"]),
-      href: "/create",
+      // Create page is paused — Brief Builder is the working entry point.
+      href: "/publisher/briefs",
       colorClass: "text-[var(--charcoal)]",
     },
     {
       label: "Posts with revision requested",
       count: count(["revision_requested"]),
-      href: "/review",
+      href: "/publisher/review",
       colorClass: "text-yellow-600",
     },
     {
       label: "Approved — not yet scheduled",
       count: count(["approved"]),
-      href: "/calendar",
+      href: "/publisher/calendar",
       colorClass: "text-[var(--emerald)]",
     },
     {
       label: "Failed to publish",
       count: count(["failed"]),
-      href: "/publishing",
+      href: "/publisher/publishing",
       colorClass: "text-red-600",
     },
   ].filter((item) => item.count > 0);
@@ -152,8 +153,8 @@ export default function DashboardHome() {
             Today&rsquo;s publishing operation — drafts, agent outputs, and the next-action queue.
           </p>
         </div>
-        <Link className={cn(buttonVariants(), "flex-shrink-0")} href="/create">
-          + Create Post
+        <Link className={cn(buttonVariants(), "flex-shrink-0")} href="/publisher/briefs">
+          + New Brief
         </Link>
       </div>
 
@@ -341,10 +342,10 @@ export default function DashboardHome() {
             </h2>
             <div className="space-y-1">
               {[
-                { label: "Create new post", href: "/create" },
-                { label: "Review queue", href: "/review" },
-                { label: "Calendar", href: "/calendar" },
-                { label: "Publishing", href: "/publishing" },
+                { label: "Brief Builder", href: "/publisher/briefs" },
+                { label: "Review queue", href: "/publisher/review" },
+                { label: "Calendar", href: "/publisher/calendar" },
+                { label: "Publishing", href: "/publisher/publishing" },
                 { label: "Audit logs", href: "/publisher/logs" },
               ].map((link) => (
                 <Link

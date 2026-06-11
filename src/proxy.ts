@@ -58,7 +58,7 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(new URL("/publisher/login", request.url));
   }
   if (user && pathname === "/publisher/login") {
-    return NextResponse.redirect(new URL("/publisher/create", request.url));
+    return NextResponse.redirect(new URL("/publisher", request.url));
   }
 
   return response;
