@@ -1,6 +1,7 @@
 "use server";
 
 import { getStoredBufferAccessToken } from "@/lib/publishing/integration-connection-store";
+import { hasPublisherSession } from "@/lib/publisher/auth-guard";
 import { createServiceClient } from "@/lib/publisher/supabase/server";
 import { getPostContent, upsertPost } from "@/lib/publisher/db";
 import type { GeneratedContent } from "./content-generator";
@@ -29,6 +30,10 @@ export async function bufferPublish(
   post_id: string,
   content: GeneratedContent | null
 ): Promise<BufferResult> {
+  // Audit C3: unauthorized calls return early — no status write, no log.
+  if (!(await hasPublisherSession())) {
+    return { success: false, error: "Unauthorized. Sign in before publishing." };
+  }
   if (!content?.primary) {
     return fail(post_id, "Publish Now", "Missing primary post content.");
   }
@@ -75,6 +80,9 @@ export async function bufferSchedule(
   content: GeneratedContent | null,
   scheduled_at: string
 ): Promise<BufferResult> {
+  if (!(await hasPublisherSession())) {
+    return { success: false, error: "Unauthorized. Sign in before publishing." };
+  }
   if (!content?.primary) {
     return fail(post_id, "Schedule", "Missing primary post content.");
   }
@@ -123,6 +131,9 @@ export async function bufferSchedule(
 }
 
 export async function bufferRetry(post_id: string): Promise<BufferResult> {
+  if (!(await hasPublisherSession())) {
+    return { success: false, error: "Unauthorized. Sign in before publishing." };
+  }
   const dbContent = await getPostContent(post_id);
   const content = dbContent?.content as GeneratedContent | null;
   return bufferPublish(post_id, content);

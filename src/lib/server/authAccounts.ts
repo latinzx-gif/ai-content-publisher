@@ -60,6 +60,30 @@ export function defaultDisplayName(email: string) {
   return email.split('@')[0] || email;
 }
 
+/**
+ * Registration allowlist (audit C1). Closed by default: when neither
+ * AUTH_ALLOWED_EMAILS nor AUTH_ALLOWED_EMAIL_DOMAINS is set, no new account
+ * can self-register (existing accounts can still sign in).
+ */
+export function isEmailAllowedToRegister(email: unknown): boolean {
+  const normalized = normalizeAuthEmail(email);
+  if (!normalized) return false;
+
+  const emails = (process.env.AUTH_ALLOWED_EMAILS ?? '')
+    .split(',')
+    .map((entry) => entry.trim().toLowerCase())
+    .filter(Boolean);
+  const domains = (process.env.AUTH_ALLOWED_EMAIL_DOMAINS ?? '')
+    .split(',')
+    .map((entry) => entry.trim().toLowerCase().replace(/^@/, ''))
+    .filter(Boolean);
+
+  if (emails.includes(normalized)) return true;
+
+  const domain = normalized.split('@')[1] ?? '';
+  return domain !== '' && domains.includes(domain);
+}
+
 export async function findAuthUserByEmail(supabase: AuthAccountClient, email: string) {
   let page = 1;
 
@@ -142,7 +166,11 @@ export async function ensureStarterTeamMember(supabase: AuthAccountClient, profi
     return normalizeTeamMember(existingMember);
   }
 
-  const shouldCreateFirstAdmin = !(await hasActiveAdmin(supabase));
+  // Audit C1: in production the first registrant must not silently become
+  // admin — bootstrap requires an explicit opt-in flag.
+  const firstAdminBootstrapAllowed =
+    process.env.NODE_ENV !== 'production' || process.env.ALLOW_FIRST_ADMIN_BOOTSTRAP === 'true';
+  const shouldCreateFirstAdmin = firstAdminBootstrapAllowed && !(await hasActiveAdmin(supabase));
   const starterMember = shouldCreateFirstAdmin
     ? {
         role: 'admin',

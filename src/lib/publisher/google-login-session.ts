@@ -2,6 +2,7 @@ import type { User } from "@supabase/supabase-js";
 import {
   createAuthAccountClient,
   findAuthUserByEmail,
+  isEmailAllowedToRegister,
   normalizeAuthEmail,
   provisionWorkspaceUser,
 } from "@/lib/server/authAccounts";
@@ -20,6 +21,14 @@ async function ensureGoogleAuthUser(profile: PublisherGoogleProfile): Promise<Us
 
   if (existingUser) {
     return existingUser;
+  }
+
+  // Audit C1: only allowlisted emails may auto-provision a workspace account
+  // via Google login. Existing accounts above are unaffected.
+  if (!isEmailAllowedToRegister(email)) {
+    throw new Error(
+      "This Google account is not allowed to register. Ask an admin to add it to AUTH_ALLOWED_EMAILS."
+    );
   }
 
   const { data, error } = await admin.auth.admin.createUser({

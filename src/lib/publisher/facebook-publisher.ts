@@ -1,6 +1,7 @@
 "use server";
 
 import { getStoredFacebookConnection } from "@/lib/publishing/integration-connection-store";
+import { hasPublisherSession } from "@/lib/publisher/auth-guard";
 import { getPostContent, upsertPost } from "@/lib/publisher/db";
 import type { GeneratedContent } from "@/lib/publisher/content-generator";
 import { createServiceClient } from "@/lib/publisher/supabase/server";
@@ -31,6 +32,10 @@ export async function facebookPublish(
   post_id: string,
   content: GeneratedContent | null
 ): Promise<FacebookPublishResult> {
+  // Audit C3: unauthorized calls return early — no status write, no log.
+  if (!(await hasPublisherSession())) {
+    return { success: false, error: "Unauthorized. Sign in before publishing." };
+  }
   if (!content?.primary) {
     return fail(post_id, "Publish Now", "Missing primary post content.");
   }
@@ -83,6 +88,9 @@ export async function facebookSchedule(
   content: GeneratedContent | null,
   scheduled_at: string
 ): Promise<FacebookPublishResult> {
+  if (!(await hasPublisherSession())) {
+    return { success: false, error: "Unauthorized. Sign in before publishing." };
+  }
   if (!content?.primary) {
     return fail(post_id, "Schedule", "Missing primary post content.");
   }
@@ -146,6 +154,9 @@ export async function facebookSchedule(
 }
 
 export async function facebookRetry(post_id: string): Promise<FacebookPublishResult> {
+  if (!(await hasPublisherSession())) {
+    return { success: false, error: "Unauthorized. Sign in before publishing." };
+  }
   const row = await getPostContent(post_id);
   const content = row?.content as GeneratedContent | null;
   return facebookPublish(post_id, content);

@@ -13,9 +13,15 @@ import {
   type FacebookPublishResult,
 } from "@/lib/publisher/facebook-publisher";
 import type { GeneratedContent } from "@/lib/publisher/content-generator";
+import { hasPublisherSession } from "@/lib/publisher/auth-guard";
 import { getPost } from "@/lib/publisher/db";
 
 export type PublishActionResult = BufferResult | FacebookPublishResult;
+
+const UNAUTHORIZED: PublishActionResult = {
+  success: false,
+  error: "Unauthorized. Sign in before publishing.",
+};
 
 const PUBLISHABLE_STATUSES = ["approved", "scheduled", "failed"] as const;
 
@@ -39,6 +45,7 @@ export async function publishPost(
   content: GeneratedContent | null,
   platform: string | null | undefined
 ): Promise<PublishActionResult> {
+  if (!(await hasPublisherSession())) return UNAUTHORIZED;
   const blocked = await checkPublishable(post_id);
   if (blocked) return blocked;
   if (isFacebookPlatform(platform)) {
@@ -53,6 +60,7 @@ export async function schedulePost(
   scheduled_at: string,
   platform: string | null | undefined
 ): Promise<PublishActionResult> {
+  if (!(await hasPublisherSession())) return UNAUTHORIZED;
   const blocked = await checkPublishable(post_id);
   if (blocked) return blocked;
   if (isFacebookPlatform(platform)) {
@@ -65,6 +73,7 @@ export async function retryPost(
   post_id: string,
   platform: string | null | undefined
 ): Promise<PublishActionResult> {
+  if (!(await hasPublisherSession())) return UNAUTHORIZED;
   const blocked = await checkPublishable(post_id);
   if (blocked) return blocked;
   if (isFacebookPlatform(platform)) {

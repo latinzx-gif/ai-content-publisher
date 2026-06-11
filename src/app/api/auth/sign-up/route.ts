@@ -16,11 +16,22 @@ type SignUpBody = {
   email?: string;
   password?: string;
   displayName?: string;
+  inviteCode?: string;
 };
 
 export async function POST(request: Request) {
   try {
     const body = (await request.json()) as SignUpBody;
+
+    // Audit C1: sign-up is invite-only. When SIGNUP_INVITE_CODE is unset the
+    // route is disabled entirely.
+    const expectedInviteCode = process.env.SIGNUP_INVITE_CODE?.trim();
+    const inviteCode = typeof body.inviteCode === 'string' ? body.inviteCode.trim() : '';
+
+    if (!expectedInviteCode || inviteCode !== expectedInviteCode) {
+      return NextResponse.json({ error: 'Sign-up is disabled.' }, { status: 403 });
+    }
+
     const email = normalizeAuthEmail(body.email);
     const password = normalizeAuthPassword(body.password);
     const displayName = typeof body.displayName === 'string' && body.displayName.trim() ? body.displayName.trim() : defaultDisplayName(email);

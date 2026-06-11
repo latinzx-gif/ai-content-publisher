@@ -3,6 +3,7 @@
 import { redirect } from "next/navigation";
 import { getPublisherGoogleLoginConfig } from "@/lib/publisher/google-login-oauth";
 import { createClient } from "@/lib/publisher/supabase/server";
+import { isEmailAllowedToRegister } from "@/lib/server/authAccounts";
 
 function publisherAuthCallbackUrl() {
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3001";
@@ -31,15 +32,26 @@ export async function signIn(
 ): Promise<{ error?: string }> {
   const supabase = await createClient();
 
+  // Audit C1: magic link must not open-register arbitrary emails — only
+  // allowlisted addresses may create a new account; everyone else can only
+  // sign in to an existing one.
   const { error } = await supabase.auth.signInWithOtp({
     email,
     options: {
       emailRedirectTo: publisherAuthCallbackUrl(),
-      shouldCreateUser: true,
+      shouldCreateUser: isEmailAllowedToRegister(email),
     },
   });
 
-  if (error) return { error: error.message };
+  if (error) {
+    if (/rate limit/i.test(error.message)) {
+      return {
+        error:
+          "ส่งอีเมลครบโควต้าชั่วโมงนี้แล้ว (Supabase built-in email จำกัด ~2 ฉบับ/ชม.) — รอประมาณ 1 ชั่วโมงแล้วลองใหม่ หรือให้ทีมรัน: node scripts/dev-magic-link.mjs <email> เพื่อรับลิงก์โดยไม่ต้องส่งเมล",
+      };
+    }
+    return { error: error.message };
+  }
   return {};
 }
 

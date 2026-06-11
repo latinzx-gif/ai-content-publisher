@@ -3,6 +3,7 @@
 import OpenAI from "openai";
 
 import { isServerApiAuthBypassEnabled } from "@/lib/auth-bypass";
+import { requirePublisherSession } from "@/lib/publisher/auth-guard";
 import { createServiceClient } from "@/lib/publisher/supabase/server";
 import { persistImageToStorage } from "./image-storage";
 import type { Brief } from "./brief-builder";
@@ -67,6 +68,7 @@ export async function generateBriefAI(
   language: string,
   post_id: string
 ): Promise<Brief> {
+  await requirePublisherSession();
   const ai = getOpenAI();
 
   const response = await ai.chat.completions.create({
@@ -111,6 +113,7 @@ export async function generateContentAI(
   secondaryLang: string,
   post_id: string
 ): Promise<GeneratedContent> {
+  await requirePublisherSession();
   const ai = getOpenAI();
 
   const briefText = formatBrief(brief);
@@ -172,6 +175,7 @@ export async function runQualityChecksAI(
   rules: unknown,
   post_id: string
 ): Promise<QualityCheckResult[]> {
+  await requirePublisherSession();
   const ai = getOpenAI();
 
   const contentText = flattenContentForQC(content);
@@ -354,6 +358,7 @@ export async function generateImageAI(
   type: "primary" | "secondary",
   version: number
 ): Promise<string> {
+  await requirePublisherSession();
   const ai = getOpenAI();
 
   const promptText = [
@@ -404,6 +409,9 @@ export async function generateImageAIWithFallback(
   type: "primary" | "secondary",
   version: number
 ): Promise<GeneratedImageResult> {
+  // Guard before the try block — an unauthorized call must fail loudly, not
+  // degrade into a placeholder image.
+  await requirePublisherSession();
   try {
     const image_url = await generateImageAI(prompt, post_id, type, version);
     return { image_url, is_placeholder: false };

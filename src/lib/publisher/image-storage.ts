@@ -3,12 +3,17 @@
 // Storage (bucket "acp-images") so posts keep a durable image reference.
 // Pairs with supabase/migrations/20260611100000_acp_images_storage_bucket.sql.
 
+import { randomUUID } from "crypto";
+
 import { createServiceClient } from "@/lib/publisher/supabase/server";
 
 const BUCKET = "acp-images";
 
 // Downloads the image at sourceUrl and uploads it to Supabase Storage at
-// `${post_id}/${type}-v${version}.png`. Returns the public URL on success.
+// `${post_id}/${random}/${type}-v${version}.png`. Returns the public URL on
+// success. The random path segment (audit M1) keeps unreviewed images on the
+// public bucket from being enumerable via guessable post_ids — only the URL
+// stored on the post row reaches the new object.
 // Never throws — all failures return null so callers can fall back to the
 // ephemeral source URL.
 export async function persistImageToStorage(
@@ -26,7 +31,7 @@ export async function persistImageToStorage(
 
     const buffer = await res.arrayBuffer();
     const contentType = res.headers.get("content-type") ?? "image/png";
-    const path = `${post_id}/${type}-v${version}.png`;
+    const path = `${post_id}/${randomUUID()}/${type}-v${version}.png`;
 
     const db = createServiceClient();
     const { error } = await db.storage
