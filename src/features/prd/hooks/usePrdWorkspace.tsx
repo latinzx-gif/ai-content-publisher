@@ -167,7 +167,7 @@ export function usePrdWorkspace() {
   const [publishingActionLoading, setPublishingActionLoading] = useState('');
   const [publishingError, setPublishingError] = useState('');
   const [publishingSummary, setPublishingSummary] = useState<Record<string, number> | null>(null);
-  const hasSessionToken = typeof window !== 'undefined' && Boolean(window.sessionStorage.getItem('prd_api_bearer_token')?.trim());
+  const hasSessionToken = clientInitComplete && typeof window !== 'undefined' && Boolean(window.sessionStorage.getItem('prd_api_bearer_token')?.trim());
   const hasToken = authBypassEnabled || Boolean(apiToken.trim()) || hasSessionToken;
   const shouldUseMockQueue = false;
   const [reviewQueueItemsState, setReviewQueueItemsState] = useState<ReviewQueueItem[]>(() =>
@@ -2158,10 +2158,12 @@ export function usePrdWorkspace() {
                   error={reviewError}
                   targetReviewItemId={selectedContentJobDetailWorkflowId}
                   actorDisplayName={apiActorDisplayName}
+                  activeTab={activeTab}
                   onNoopAction={(message) => showUiNotice(`Review Queue action: ${message}`)}
                   onReviewDecision={handleReviewDecisionSync}
                   onRequestReviewDecision={requestReviewDecision}
                   onOpenContentJob={(id) => openContentJobDetail(id, `เปิด Content Job Detail จาก Review Queue: ${id}`)}
+                  onTabChange={(tab) => goToPageWithTab('Review Queue', tab)}
                 />
                 ) : activePage === 'Rules & Brand' ? (
                   <RulesBrandView />

@@ -33,7 +33,12 @@ function ReviewLanguagePanel({ body, language, title }: { body: string; language
         <span className="rounded-full border border-[#deded8] bg-[#f6f6f2] px-2 py-0.5 text-[11px] font-semibold text-[#4f4f49]">
           {language}
         </span>
-        <button className="rounded-lg border border-[#deded8] bg-white px-2.5 py-1 text-[11px] font-semibold text-[#6e6e68] hover:bg-[#f6f6f2]" type="button">
+        <button
+          className="cursor-not-allowed rounded-lg border border-[#deded8] bg-white px-2.5 py-1 text-[11px] font-semibold text-[#8a8a82] opacity-50"
+          type="button"
+          disabled
+          title="Edit not available in this view"
+        >
           Edit
         </button>
       </div>
@@ -69,25 +74,31 @@ function ComplianceFinding({ finding }: { finding: (typeof complianceFindings)[n
   );
 }
 
+const REVIEW_TABS = ['Awaiting review', 'Risk flagged', 'Approved'] as const;
+
 export function ReviewQueueView({
   items,
   error = '',
   targetReviewItemId,
   actorDisplayName,
+  activeTab,
   onNoopAction,
   onReviewDecision,
   onRequestReviewDecision,
   onOpenContentJob,
+  onTabChange,
 }: {
   items: ReviewQueueItem[];
   loading?: boolean;
   error?: string;
   targetReviewItemId?: string | null;
   actorDisplayName?: string;
+  activeTab?: string;
   onNoopAction: (message: string) => void;
   onReviewDecision: (item: ReviewQueueItem, decision: ReviewDecision) => void;
   onRequestReviewDecision: (item: ReviewQueueItem, decision: ReviewDecision, reason: string, applyDecision: () => void) => void;
   onOpenContentJob: (id: string) => void;
+  onTabChange?: (tab: string) => void;
 }) {
   const [selectedReviewItemId, setSelectedReviewItemId] = useState(items[0]?.id ?? '');
   const [reviewDecision, setReviewDecision] = useState<'pending' | 'approved' | 'rejected' | 'queued'>('pending');
@@ -123,13 +134,23 @@ export function ReviewQueueView({
       ...sorted.filter((item) => !hasReviewQueueTargetMatch(item, targetSignatures)),
     ];
   }, [items, targetReviewItem]);
+  const activeReviewTab = activeTab ?? 'Awaiting review';
+  const tabFilteredItems = useMemo(() => {
+    if (activeReviewTab === 'Risk flagged') {
+      return orderedReviewItems.filter((item) => item.risk === 'High' || item.risk === 'Medium');
+    }
+    if (activeReviewTab === 'Approved') {
+      return orderedReviewItems.filter((item) => item.status === 'Approved');
+    }
+    return orderedReviewItems.filter((item) => item.status !== 'Approved');
+  }, [orderedReviewItems, activeReviewTab]);
   const reviewQueueSearchQuery = reviewQueueSearch.trim().toLowerCase();
   const reviewQueueItems = useMemo(() => {
     if (!reviewQueueSearchQuery) {
-      return orderedReviewItems;
+      return tabFilteredItems;
     }
 
-    return orderedReviewItems.filter((item) => {
+    return tabFilteredItems.filter((item) => {
       const searchable = [
         item.id,
         item.title,
@@ -145,13 +166,31 @@ export function ReviewQueueView({
 
       return searchable.includes(reviewQueueSearchQuery);
     });
-  }, [orderedReviewItems, reviewQueueSearchQuery]);
-  const selectedReviewItem = targetReviewItem ?? reviewQueueItems.find((item) => item.id === selectedReviewItemId) ?? orderedReviewItems[0] ?? items[0] ?? null;
+  }, [tabFilteredItems, reviewQueueSearchQuery]);
+  const selectedReviewItem = targetReviewItem ?? reviewQueueItems.find((item) => item.id === selectedReviewItemId) ?? tabFilteredItems[0] ?? null;
 
   if (!selectedReviewItem) {
     return (
-      <div className="rounded-2xl border border-[#deded8] bg-white p-4 text-sm text-[#6e6e68]">
-        No items are currently waiting in Review Queue.
+      <div className="space-y-3">
+        <div className="flex gap-1.5">
+          {REVIEW_TABS.map((tab) => (
+            <button
+              key={tab}
+              type="button"
+              onClick={() => onTabChange?.(tab)}
+              className={`rounded-lg px-2.5 py-1 text-xs font-semibold transition-colors ${
+                activeReviewTab === tab
+                  ? 'bg-[#171717] text-white'
+                  : 'border border-[#deded8] bg-white text-[#4f4f49] hover:bg-[#f6f6f2]'
+              }`}
+            >
+              {tab}
+            </button>
+          ))}
+        </div>
+        <div className="rounded-2xl border border-[#deded8] bg-white p-4 text-sm text-[#6e6e68]">
+          No items in &ldquo;{activeReviewTab}&rdquo;.
+        </div>
       </div>
     );
   }
@@ -229,6 +268,22 @@ export function ReviewQueueView({
         <div className="border-b border-[#e8e8e4] p-4">
           <h2 className="text-sm font-semibold text-[#171717]">In Review</h2>
           <p className="mt-1 text-xs text-[#6e6e68]">Human-in-the-loop queue for lawyers and accountants.</p>
+          <div className="mt-3 flex flex-wrap gap-1.5">
+            {REVIEW_TABS.map((tab) => (
+              <button
+                key={tab}
+                type="button"
+                onClick={() => onTabChange?.(tab)}
+                className={`rounded-lg px-2.5 py-1 text-xs font-semibold transition-colors ${
+                  activeReviewTab === tab
+                    ? 'bg-[#171717] text-white'
+                    : 'border border-[#deded8] bg-white text-[#4f4f49] hover:bg-[#f6f6f2]'
+                }`}
+              >
+                {tab}
+              </button>
+            ))}
+          </div>
           {error ? (
             <div className="mt-3 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-[11px] font-semibold text-amber-800">
               {error}
@@ -450,6 +505,7 @@ export function ReviewQueueView({
             <div>
               <h2 className="text-sm font-semibold text-[#171717]">AI Compliance Checker</h2>
               <p className="mt-1 text-xs leading-relaxed text-[#6e6e68]">Checks citations, legal/tax claims, translation consistency, and prohibited guarantee wording.</p>
+              <p className="mt-1 text-[11px] italic text-[#8a8a82]">Sample findings — not post-specific</p>
             </div>
           </div>
 

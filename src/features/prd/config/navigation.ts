@@ -91,7 +91,7 @@ export const pageMeta: Record<
     group: 'Studio',
     title: 'Create',
     description: 'A guided studio flow from brief, rules, generation, image direction, QC, and review handoff.',
-    tabs: ['Manual Setup', 'Quick AI Mode'],
+    tabs: [],
   },
   'Content Library': {
     group: 'Studio',

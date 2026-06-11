@@ -118,9 +118,9 @@ export function GenerationCreatePanel({
               <h3 className="mt-2 text-2xl font-semibold tracking-[-0.04em] text-[#171717]">Generated Text</h3>
               <p className="mt-1 text-xs text-[#6e6e68]">Content Strategy Agent generates text first. Images and layout wait for this approved text package.</p>
             </div>
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[11px] font-semibold text-emerald-700">
-              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-              Text ready
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 text-[11px] font-semibold text-amber-700">
+              <span className="h-1.5 w-1.5 rounded-full bg-amber-400" />
+              Draft template – not AI generated
             </span>
           </div>
 

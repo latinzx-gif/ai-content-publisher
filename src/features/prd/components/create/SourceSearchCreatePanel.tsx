@@ -104,6 +104,7 @@ export function SourceSearchCreatePanel({
           <div>
             <SectionKicker>Step 2 / Source Search</SectionKicker>
             <h3 className="mt-2 text-xl font-semibold tracking-[-0.02em] text-[#171717]">Reference set prepared from your setup</h3>
+            <p className="mt-1 text-[11px] font-medium text-amber-600">Source preview — no search run yet</p>
             <p className="mt-2 max-w-3xl text-sm leading-relaxed text-[#304463]">
               {mode === 'quick'
                 ? 'Quick AI Mode will keep the setup lightweight, but source search still follows the selected languages, platforms, and citation rule.'

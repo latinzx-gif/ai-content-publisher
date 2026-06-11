@@ -42,14 +42,14 @@ export function CreatePostView({
   const [selectedWordCount, setSelectedWordCount] = useState(500);
   const [selectedPostCount, setSelectedPostCount] = useState(1);
   const [selectedImageCount, setSelectedImageCount] = useState(6);
-  const [selectedAssetIds, setSelectedAssetIds] = useState(['Image 1', 'Image 2', 'Image 3']);
+  const [selectedAssetIds, setSelectedAssetIds] = useState<string[]>([]);
   const [selectedCategory, setSelectedCategory] = useState('Tax');
   const [selectedContentGoal, setSelectedContentGoal] = useState('Educate & Lead');
   const [selectedTargetAudience, setSelectedTargetAudience] = useState('SME Owners');
   const [selectedCta, setSelectedCta] = useState('Book consultation');
   const [selectedBrandVoice, setSelectedBrandVoice] = useState('Legal advisory');
   const [selectedCitationStrictness, setSelectedCitationStrictness] = useState('Strict citations');
-  const [selectedSourceConnectors, setSelectedSourceConnectors] = useState(['Knowledge Base', 'Official Link']);
+  const [selectedSourceConnectors, setSelectedSourceConnectors] = useState(['Knowledge Base']);
   const [officialSourceLinks, setOfficialSourceLinks] = useState<string[]>(['']);
   const [lastDraftSavedAt, setLastDraftSavedAt] = useState('');
   const effectiveSelectedAssets = selectedAssetIds.filter((asset) => Number(asset.replace(/\D/g, '')) <= selectedImageCount);
@@ -215,7 +215,7 @@ export function CreatePostView({
       category: selectedCategory,
       risk: selectedCategory === 'PDPA' || selectedCategory === 'Corporate Law' ? 'Medium' : 'Low',
       createdBy: creatorName || (mode === 'quick' ? 'Quick Mode' : 'Manual Mode'),
-      assetComposerStatus: 'Assets reviewed and ready for human approval',
+      assetComposerStatus: selectedAssetsForPackage.length > 0 ? 'Assets reviewed and ready for human approval' : 'Image generation pending — no assets yet',
       assetLayoutPlan: [
         ...selectedPlatforms.map((platform, index) => `${platform}: ${selectedImageLayout} crop ${index + 1} ready`),
         ...(selectedFacebookLayoutGuideline
