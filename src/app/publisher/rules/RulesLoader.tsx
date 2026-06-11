@@ -3,7 +3,8 @@
 import { useState } from "react";
 
 import { loadRules, type Rules } from "@/lib/publisher/rules-loader";
-import { upsertPostContent } from "@/lib/publisher/db";
+import { upsertPost, upsertPostContent } from "@/lib/publisher/db";
+import { createPostId } from "@/lib/publisher/post-id";
 import { Button } from "@/components/publisher/ui/button";
 import {
   Card,
@@ -47,13 +48,15 @@ export default function RulesLoader({ initialPostId }: { initialPostId: string }
     };
 
     try {
+      await upsertPost({ post_id: postId, brand, platform });
       await upsertPostContent({
         post_id: postId,
         rules: payload as unknown as Record<string, unknown>,
       });
       setMessage(`Rules saved to ${postId}.`);
-    } catch {
-      setMessage("Failed to save rules. Check console.");
+    } catch (error) {
+      const detail = error instanceof Error ? error.message : "Unknown error";
+      setMessage(`Failed to save rules: ${detail}`);
     }
   }
 
@@ -211,6 +214,3 @@ function ReadOnlyObject({
   );
 }
 
-function createPostId() {
-  return `post_${Date.now()}`;
-}

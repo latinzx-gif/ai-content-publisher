@@ -8,6 +8,7 @@ import {
   type ImagePromptSet,
 } from "@/lib/publisher/image-prompt-generator";
 import { getPostContent, upsertPostContent } from "@/lib/publisher/db";
+import { createPostId } from "@/lib/publisher/post-id";
 import { Button } from "@/components/publisher/ui/button";
 import {
   Card,
@@ -168,6 +169,3 @@ function Field({ children, label }: { children: React.ReactNode; label: string }
   );
 }
 
-function createPostId() {
-  return `post_${Date.now()}`;
-}

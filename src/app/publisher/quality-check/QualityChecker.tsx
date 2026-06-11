@@ -8,6 +8,7 @@ import {
   type QualityStatus,
 } from "@/lib/publisher/quality-checker";
 import { getPost, getPostContent, upsertPost } from "@/lib/publisher/db";
+import { createPostId } from "@/lib/publisher/post-id";
 import { Badge } from "@/components/publisher/ui/badge";
 import { Button } from "@/components/publisher/ui/button";
 import {
@@ -176,6 +177,3 @@ function Field({ children, label }: { children: React.ReactNode; label: string }
   );
 }
 
-function createPostId() {
-  return `post_${Date.now()}`;
-}

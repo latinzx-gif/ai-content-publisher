@@ -424,7 +424,7 @@ function CalendarPostLink({
       className={`block rounded-[calc(var(--radius)*0.45)] border border-[var(--line)] transition hover:border-[var(--navy)] ${
         compact ? "p-2" : "p-4"
       }`}
-      href={`/review?post_id=${post.post_id}`}
+      href={`/publisher/review?post_id=${post.post_id}`}
       draggable
       onDragStart={(event) => {
         onDragStart();

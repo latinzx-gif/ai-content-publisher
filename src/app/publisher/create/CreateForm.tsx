@@ -1,8 +1,10 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 
 import { Button } from "@/components/publisher/ui/button";
+import { createPostId } from "@/lib/publisher/post-id";
 import {
   Card,
   CardContent,
@@ -17,6 +19,7 @@ import { Textarea } from "@/components/publisher/ui/textarea";
 type CreateMode = "manual" | "batch";
 
 type CreateDraft = {
+  post_id?: string;
   mode: CreateMode;
   topic: string;
   theme: string;
@@ -74,6 +77,7 @@ const objectives = [
 ];
 
 export default function CreateForm() {
+  const router = useRouter();
   const [draft, setDraft] = useState<CreateDraft>(() => {
     const stored = readStoredDraft();
     return stored ? { ...initialDraft, ...stored } : initialDraft;
@@ -137,6 +141,7 @@ export default function CreateForm() {
 
     const nextDraft = {
       ...draft,
+      post_id: draft.post_id || createPostId(),
       saved_at: new Date().toISOString(),
     };
 
@@ -144,6 +149,22 @@ export default function CreateForm() {
     setStoredDraft(nextDraft);
     setDraft(nextDraft);
     setSaveMessage("Draft saved locally.");
+  }
+
+  function continueToBriefBuilder() {
+    if (!validate()) return;
+
+    const postId = draft.post_id || createPostId();
+    const nextDraft = {
+      ...draft,
+      post_id: postId,
+      saved_at: new Date().toISOString(),
+    };
+
+    window.localStorage.setItem(draftKey, JSON.stringify(nextDraft));
+    setStoredDraft(nextDraft);
+    setDraft(nextDraft);
+    router.push(`/publisher/briefs?post_id=${encodeURIComponent(postId)}`);
   }
 
   function restoreDraft() {
@@ -319,6 +340,9 @@ export default function CreateForm() {
             <Button type="button" onClick={saveDraft}>
               Save
             </Button>
+            <Button type="button" variant="default" onClick={continueToBriefBuilder}>
+              Continue to Brief Builder
+            </Button>
             <Button
               type="button"
               variant="outline"
@@ -348,7 +372,8 @@ export default function CreateForm() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <dl className="grid gap-3 text-sm sm:grid-cols-3">
+            <dl className="grid gap-3 text-sm sm:grid-cols-2 lg:grid-cols-4">
+              <SummaryItem label="Post ID" value={storedDraft.post_id ?? "Pending save"} />
               <SummaryItem label="Mode" value={storedDraft.mode} />
               <SummaryItem label="Brand" value={storedDraft.brand} />
               <SummaryItem label="Platform" value={storedDraft.platform} />

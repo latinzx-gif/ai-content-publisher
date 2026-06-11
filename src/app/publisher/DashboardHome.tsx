@@ -345,7 +345,7 @@ export default function DashboardHome() {
                 { label: "Review queue", href: "/review" },
                 { label: "Calendar", href: "/calendar" },
                 { label: "Publishing", href: "/publishing" },
-                { label: "Audit logs", href: "/logs" },
+                { label: "Audit logs", href: "/publisher/logs" },
               ].map((link) => (
                 <Link
                   key={link.href}

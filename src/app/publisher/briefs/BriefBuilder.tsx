@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 
 import { generateBrief, type Brief } from "@/lib/publisher/brief-builder";
 import { upsertPost, upsertPostContent, getPostContent } from "@/lib/publisher/db";
+import { createPostId } from "@/lib/publisher/post-id";
 import { Button } from "@/components/publisher/ui/button";
 import {
   Card,
@@ -87,13 +88,15 @@ export default function BriefBuilder({ initialPostId }: { initialPostId: string 
     const payload = { post_id: postId, topic, brand, platform, language, brief };
 
     try {
-      await Promise.all([
-        upsertPost({ post_id: postId, brand, platform }),
-        upsertPostContent({ post_id: postId, brief: payload as unknown as Record<string, unknown> }),
-      ]);
+      await upsertPost({ post_id: postId, brand, platform });
+      await upsertPostContent({
+        post_id: postId,
+        brief: payload as unknown as Record<string, unknown>,
+      });
       setMessage(`Brief saved to ${postId}.`);
-    } catch {
-      setMessage("Failed to save brief. Check console.");
+    } catch (error) {
+      const detail = error instanceof Error ? error.message : "Unknown error";
+      setMessage(`Failed to save brief: ${detail}`);
     }
   }
 
@@ -276,6 +279,3 @@ function readCreateDraft() {
   }
 }
 
-function createPostId() {
-  return `post_${Date.now()}`;
-}
