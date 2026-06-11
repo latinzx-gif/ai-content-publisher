@@ -244,7 +244,7 @@ export function CalendarView({
               </button>
             ) : null}
             <span className="text-xs font-semibold text-[#4f4f49]">
-              {monthOffset === 0 ? 'This month' : monthOffset === -1 ? 'Last month' : monthOffset === 1 ? 'Next month' : `${monthOffset > 0 ? '+' : ''}${monthOffset}mo`}
+              {(monthOffset ?? 0) === 0 ? 'This month' : (monthOffset ?? 0) === -1 ? 'Last month' : (monthOffset ?? 0) === 1 ? 'Next month' : `${(monthOffset ?? 0) > 0 ? '+' : ''}${monthOffset ?? 0}mo`}
             </span>
             {onNextMonth ? (
               <button
