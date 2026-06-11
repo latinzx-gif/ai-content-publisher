@@ -88,3 +88,10 @@ node_modules/
 # Task files
 # tasks.json
 # tasks/ 
+
+# Editor/agent tool state (local only)
+.cursor/
+.taskmaster/
+
+# Local agent ops artifacts
+_agent/archive/offsite-docs/
