@@ -92,7 +92,7 @@ export function ContentOsLoginPage() {
         return;
       }
 
-      window.location.replace('/publisher');
+      window.location.replace('/');
     })();
 
     return () => {
@@ -152,7 +152,7 @@ export function ContentOsLoginPage() {
       return;
     }
 
-    window.location.assign('/publisher');
+    window.location.assign('/');
   }
 
   async function handleGoogleSignIn() {

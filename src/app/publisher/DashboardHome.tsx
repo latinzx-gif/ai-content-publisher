@@ -159,10 +159,13 @@ export default function DashboardHome() {
       </div>
 
       {/* ── Two-column layout ── */}
-      <div className="grid grid-cols-1 lg:grid-cols-[1fr_280px] gap-6 items-start">
+      <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_280px] gap-6 items-start">
 
-        {/* ── LEFT COLUMN ── */}
-        <div className="space-y-6">
+        {/* ── LEFT COLUMN ──
+            min-w-0 lets the pipeline board scroll inside its own column;
+            without it the grid refuses to shrink and pushes the right
+            column off-screen. */}
+        <div className="space-y-6 min-w-0">
 
           {/* Metrics row */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">

@@ -6,7 +6,7 @@ import { createClient } from "@/lib/publisher/supabase/server";
 export async function GET(request: NextRequest) {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get("code");
-  const next = searchParams.get("next") ?? "/publisher";
+  const next = searchParams.get("next") ?? "/";
   const oauthError =
     searchParams.get("error_description") ?? searchParams.get("error");
 
