@@ -41,13 +41,13 @@ Create Post → Brief Builder → Rule Loader → Content Generation (TH+EN)
 
 ---
 
-## 3. Phase Status (2026-06-10)
+## 3. Phase Status (2026-06-11)
 
 | Phase | Status | หมายเหตุ |
 |-------|--------|----------|
 | **Phase 1 MVP** | ✅ **CLOSED** | 12 modules built + integrated (FIX-01 → CLOSE-01) |
 | **Phase 1.1** | ✅ **CLOSED** | Lint, tests, auth, docs synced |
-| **Phase 1 refactor** | 🔄 **IN PROGRESS** | Extract components จาก `page.tsx` → `src/features/prd/` |
+| **Phase 1 refactor** | ✅ **CLOSED** | `page.tsx` เหลือ 13 บรรทัด (thin shell) — components ทั้งหมดอยู่ใน `src/features/prd/components/` รวม `EndToEndWorkflowSimulation.tsx`, `TopBar.tsx` |
 | **Phase 2** | 🔒 LOCKED | ห้ามเริ่มจนกว่า user จะ approve |
 | **Phase 3** | 🔒 LOCKED | ห้ามเริ่มจนกว่า user จะ approve |
 
@@ -64,23 +64,22 @@ Create Post → Brief Builder → Rule Loader → Content Generation (TH+EN)
 
 ## 4. Active Task
 
-**P1-04t — Extract `EndToEndWorkflowSimulation` from `page.tsx`**
+**P1-DEMO-FINAL — Content OS demo readiness — สถานะ: DEMO READY**
 
 | Field | Value |
 |-------|-------|
-| Phase | **PLAN** |
-| Agent | Claude Code (`claude-fable-5`) or Cursor `next` |
-| Allowed files | `src/app/page.tsx`, `src/features/prd/**` |
-| Output target | `src/features/prd/components/EndToEndWorkflowSimulation.tsx` |
+| Phase | **DEMO READY** |
+| งานที่ปิดไปแล้ว (2026-06-11) | P1-04 refactor (รวม P1-04t), P1-FIX-01 workflow integrity (commit `764d659`), P1-LINT-01 (commit `afe6af3`) |
+| รายละเอียด P1-FIX-01 | `head-office-app/_agent/archive/P1-FIX-01/TASK_RESULT.md` |
 
 ดูรายละเอียดเต็ม: `orchestration/CURRENT_TASK.md`
 
-**Queue หลัง P1-04 refactor slices:**
+**งานค้าง / Queue ถัดไป:**
 
 | ID | งาน | Blocker |
 |----|-----|---------|
-| P1-E2E-02 | Playwright E2E authenticated flow | User saves `playwright/.auth/publisher.json` |
-| P1-BUFFER-01 | Live Buffer publish | User adds valid `BUFFER_ACCESS_TOKEN` |
+| P1-FIX-01 follow-up | ยืนยัน migration `20260611090000_acp_posts_status_rejected.sql` บน live + รัน E2E ซ้ำ | User apply migration ใน dashboard (หน้าต่าง 1 ของ PARALLEL_PLAN_2026-06-11 ดูแลอยู่) |
+| P1-BUFFER-01 | Live Buffer publish | User adds valid `BUFFER_ACCESS_TOKEN` (Buffer paused) |
 | P2-01 | Sources MVP (Phase 2 entry) | User approves Phase 2 scope |
 
 ---
@@ -210,4 +209,4 @@ Cursor → review + cleanup → next task
 
 ---
 
-*Last updated: 2026-06-10 — อัปเดตโดย Cowork session*
+*Last updated: 2026-06-11 — Docs sync (PARALLEL_PLAN_2026-06-11 หน้าต่าง 2)*
