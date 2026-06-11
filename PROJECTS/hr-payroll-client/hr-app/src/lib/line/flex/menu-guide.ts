@@ -493,7 +493,7 @@ export function complaintGuideFlex(formUrl?: string): messagingApi.FlexMessage {
 }
 
 export function announcementGuideFlex(): messagingApi.FlexMessage {
-  return guide("ประกาศ — อยู่ระหว่างเตรียมการ", {
+  return guide("ประกาศ — ดูข่าวสารบริษัท", {
     emoji: "📣",
     title: "ประกาศ",
     subtitle: "ข่าวสารและประกาศบริษัท",
@@ -501,12 +501,11 @@ export function announcementGuideFlex(): messagingApi.FlexMessage {
     description:
       "ดูประกาศล่าสุดจากบริษัท เช่น วันหยุด นโยบายใหม่ หรือกิจกรรมต่างๆ",
     steps: [
-      "เลือกเมนูประกาศเพื่อดูรายการล่าสุด",
-      "กดอ่านรายละเอียดแต่ละประกาศ",
-      "บันทึกวันที่สำคัญลงปฏิทินของคุณ",
+      "กดเมนู \"ประกาศ\" ในเมนู HR",
+      "อ่านรายละเอียดในการ์ดที่ระบบส่งให้",
+      "HR จะ push ประกาศสำคัญมาทาง LINE โดยตรง",
     ],
-    tip: "ระบบ push ประกาศอัตโนมัติจะเปิดใช้งานใน Phase 2",
-    statusLabel: "🚧 Phase 2",
+    tip: "ยังไม่มีประกาศในระบบ — รอการแจ้งจาก HR",
   })
 }
 

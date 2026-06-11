@@ -2,7 +2,6 @@ import type { messagingApi } from "@line/bot-sdk"
 
 import { getAdminClient } from "@/lib/auth/admin-client"
 import { announcementListFlex } from "@/lib/line/flex/announcement-list"
-import { announcementGuideFlex } from "@/lib/line/flex/menu-guide"
 
 export async function announcementAction(): Promise<messagingApi.Message[]> {
   try {
@@ -28,5 +27,5 @@ export async function announcementAction(): Promise<messagingApi.Message[]> {
     console.error("announcement list failed:", err)
   }
 
-  return [announcementGuideFlex()]
+  return [announcementListFlex([])]
 }

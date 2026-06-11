@@ -9,7 +9,9 @@ import {
   menuHintFlex,
   notRegisteredFlex,
 } from "@/lib/line/flex/menu-guide"
+import { buildActionMessages } from "@/lib/line/handlers/actions"
 import { isOneOnOneUserSource } from "@/lib/line/handlers/source"
+import type { RichMenuPostbackAction } from "@/lib/line/types"
 
 /** Free-text chat is off by default — Rich Menu + postback + location only. */
 function isUserChatEnabled(): boolean {
@@ -80,6 +82,30 @@ export async function handleMessage(
   }
 
   if (!isUserChatEnabled()) {
+    return
+  }
+
+  const text = event.message.text.trim()
+  const textActions: Record<string, RichMenuPostbackAction> = {
+    ประกาศ: "announcement",
+    ขอเอกสาร: "document",
+    เอกสาร: "document",
+    ร้องเรียน: "complaint",
+    ลา: "leave",
+    เช็คอิน: "checkin",
+    "ติดต่อ hr": "contact_hr",
+    ติดต่อhr: "contact_hr",
+  }
+  const action = textActions[text.toLowerCase()] ?? textActions[text]
+
+  if (action) {
+    const lineUserId =
+      event.source?.type === "user" ? event.source.userId : undefined
+    const messages = await buildActionMessages(action, { lineUserId })
+    await getLineClient().replyMessage({
+      replyToken: event.replyToken,
+      messages,
+    })
     return
   }
 

@@ -29,9 +29,10 @@ export function announcementListFlex(
     return flexMessage(
       "ไม่มีประกาศ",
       simpleBubble({
-        title: "ประกาศ",
+        title: "ประกาศบริษัท",
         accentColor: "#00897B",
         rows: [{ label: "สถานะ", value: "ยังไม่มีประกาศล่าสุด" }],
+        footerNote: "เมื่อ HR ส่งประกาศ จะแจ้งทาง LINE นี้โดยอัตโนมัติ",
       })
     )
   }

@@ -1,7 +1,7 @@
 # Delivery Readiness Audit — Phase 2
 
-**Date:** 2026-06-10  
-**Verdict:** 🟡 **READY WITH CAVEATS**  
+**Date:** 2026-06-11 (UAT updated)  
+**Verdict:** 🟢 **READY** (1:1 LINE) / 🟡 group HR caveat  
 **Production:** https://hr-app-two-iota.vercel.app
 
 ## Build Gates
@@ -11,7 +11,8 @@
 | `npm run build` | PASS |
 | `npm run typecheck` | PASS |
 | `npm run lint` | PASS (1 pre-existing warning in LeaveForm) |
-| E2E P2 (`run-all-p2.mjs`) | Requires Supabase + migration applied |
+| E2E P2 (`run-all-p2.mjs`) | Skipped locally (env → localhost); migration applied prod |
+| **Manual UAT (LINE 1:1)** | **PASS** — 2026-06-11 ChineseVibe OA |
 
 ## Feature Matrix (PRD F7–F9)
 
@@ -28,12 +29,21 @@
 
 None (build passes).
 
+## Manual UAT Evidence (2026-06-11)
+
+| Flow | Result | Notes |
+|------|--------|-------|
+| F7 ขอเอกสาร → HR notify | ✅ | Flex คำขอเอกสารใหม่ + ปุ่มเปิดคิว; หนังสือรับรองการทำงาน |
+| F8 ร้องเรียน (นิรนาม) | ✅ | Ticket `HR-9UZ3PN`, Flex ยืนยัน + HR notify |
+| F8 ฟอร์ม LIFF | ✅ | เปิดแบบฟอร์มจาก Rich Menu ได้ |
+| HR group chat | ⚠️ | ยังได้ auto-reply จาก LINE OA Manager (ไม่ใช่ bug แอป) |
+
 ## Minor / Caveats
 
-1. **Migration not auto-applied** — run `supabase db push` or apply SQL on remote before production use.
-2. **LIFF URLs** — document/complaint forms open via `NEXT_PUBLIC_BASE_URL/liff/*`; ensure LINE OA allows external browser or register LIFF endpoints.
-3. **Anonymous complaints** — no LINE reply to submitter (privacy by design).
-4. **E2E P2** — DB-level flows; LINE multicast not exercised in CI.
+1. ~~Migration~~ — applied prod (`20260611190000_phase2_support_features.sql`).
+2. **HR group** — ปิด auto-response ใน [LINE OA Manager](https://manager.line.biz/) → Response settings → Webhook; กลุ่มใช้ push-only (`notifyHr`). ดู `scripts/line-oa-response-check.mjs`.
+3. **Anonymous complaints** — HR ได้ notify; ผู้แจ้งนิรนามไม่ได้รับ reply ทาง LINE (by design).
+4. **E2E P2** — รันกับ remote Supabase ได้หลังตั้ง `.env.local` ชี้ production.
 
 ## Demo Path (Phase 2)
 
@@ -44,11 +54,11 @@ None (build passes).
 
 ## User Actions Before Client Demo
 
-- Apply Phase 2 migration on production Supabase
-- Redeploy Vercel after migration
-- Set `NEXT_PUBLIC_BASE_URL` to production URL
-- Manual UAT on real LINE accounts (3 flows)
+- [x] Migration + deploy + `NEXT_PUBLIC_BASE_URL`
+- [x] Manual UAT 1:1 (F7 + F8)
+- [ ] ปิด LINE OA auto-reply ในกลุ่ม HR (optional สำหรับ demo 1:1)
+- [ ] ทดสอบ F9 ประกาศ broadcast (ถ้ายังไม่ลอง)
 
 ## Recommendation
 
-Proceed with internal demo after migration + deploy. Client demo 🟢 after one successful manual UAT pass.
+**Client demo พร้อม** สำหรับ flow 1:1 (ขอเอกสาร + ร้องเรียน + admin queue). แจ้งลูกค้าเรื่องกลุ่ม HR เป็น known config ถ้าใช้ group notify.
