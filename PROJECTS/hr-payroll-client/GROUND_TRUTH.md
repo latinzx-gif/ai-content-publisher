@@ -55,20 +55,14 @@ Cron Jobs: แจ้งเตือน Probation/Visa อัตโนมัต�
 | **M7: Document Request (F7)** | ✅ **CLOSED** | T31–T34 |
 | **M8: Complaints (F8)** | ✅ **CLOSED** | T35–T38 |
 | **M9: Announcements (F9)** | ✅ **CLOSED** | T39–T42 |
-| **M10: Phase 2 Delivery** | ✅ **CLOSED** | T43–T45; audit P2 🟡 |
+| **M10: Phase 2 Delivery** | ✅ **CLOSED** | T43–T45; audit P2 🟢 |
+| **Phase 3 (M11–M15)** | ✅ **CLOSED** | T46–T60; audit P3 🟢 `DELIVERY_READINESS_AUDIT_P3.md` |
 
 ---
 
 ## 4. Active Task
 
-**None** — plan 45/45 complete.
-
-| Field | Value |
-|-------|-------|
-| Last closed | T45 Delivery Audit P2 |
-| Verdict | 🟡 `DELIVERY_READINESS_AUDIT_P2.md` |
-
-ดูรายละเอียดเต็ม: `orchestration/CURRENT_TASK.md`
+**None** — Phase 3 closed 2026-06-11. ดู `orchestration/CURRENT_TASK.md`
 
 ---
 
@@ -112,6 +106,7 @@ Cron Jobs: แจ้งเตือน Probation/Visa อัตโนมัต�
 | All tasks (Taskmaster) | `.taskmaster/tasks/tasks.json` |
 | Demo readiness | `hr-app/reports/DELIVERY_READINESS_AUDIT.md` |
 | Phase 2 plan | `orchestration/PHASE_2_PLAN.md` |
+| Phase 3 plan | `orchestration/PHASE_3_PLAN.md` |
 
 ---
 

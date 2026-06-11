@@ -92,6 +92,8 @@ export async function handleMessage(
     เอกสาร: "document",
     ร้องเรียน: "complaint",
     ลา: "leave",
+    ot: "overtime",
+    ขอot: "overtime",
     เช็คอิน: "checkin",
     "ติดต่อ hr": "contact_hr",
     ติดต่อhr: "contact_hr",

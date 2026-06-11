@@ -755,13 +755,254 @@
       "testStrategy": "audit doc มี verdict",
       "subtasks": [],
       "updatedAt": "2026-06-11T13:46:46.149Z"
+    },
+    {
+      "id": "46",
+      "title": "Overtime Schema — hr_overtime_requests + RLS",
+      "description": "สร้าง schema คำขอ OT พร้อม RLS",
+      "status": "done",
+      "priority": "high",
+      "milestone": "M11",
+      "agent": "Claude Code",
+      "dependencies": [
+        "45"
+      ],
+      "details": "Table hr_overtime_requests: employee_id, date, start_time, end_time, reason, status pending/approved/rejected, approver note",
+      "testStrategy": "migration รันผ่าน, RLS enable",
+      "subtasks": [],
+      "updatedAt": "2026-06-11T15:02:17.890Z"
+    },
+    {
+      "id": "47",
+      "title": "Overtime LINE/LIFF flow",
+      "description": "พนักงานขอ OT ผ่าน LINE — แทน overtime guide stub",
+      "status": "done",
+      "priority": "high",
+      "milestone": "M11",
+      "agent": "Claude Code",
+      "dependencies": [
+        "46"
+      ],
+      "details": "/liff/overtime + /api/overtime/request + flex confirm",
+      "testStrategy": "submit แล้วมี row ใน hr_overtime_requests",
+      "subtasks": [],
+      "updatedAt": "2026-06-11T15:02:20.308Z"
+    },
+    {
+      "id": "48",
+      "title": "Overtime Admin — /admin/overtime queue",
+      "description": "HR อนุมัติ/ปฏิเสธคำขอ OT",
+      "status": "done",
+      "priority": "high",
+      "milestone": "M11",
+      "agent": "Codex",
+      "dependencies": [
+        "47"
+      ],
+      "details": "admin queue + decision actions เหมือน leave pattern",
+      "testStrategy": "HR approve → employee LINE notify",
+      "subtasks": [],
+      "updatedAt": "2026-06-11T15:02:22.824Z"
+    },
+    {
+      "id": "49",
+      "title": "Overtime Flex templates + HR notify",
+      "description": "Flex ยืนยันส่งคำขอ + แจ้งผลอนุมัติ/ปฏิเสธ",
+      "status": "done",
+      "priority": "medium",
+      "milestone": "M11",
+      "agent": "Codex",
+      "dependencies": [
+        "48"
+      ],
+      "details": "overtime-request.ts flex + notifyHr on submit",
+      "testStrategy": "LINE flex แสดงถูกต้อง",
+      "subtasks": [],
+      "updatedAt": "2026-06-11T15:02:25.465Z"
+    },
+    {
+      "id": "50",
+      "title": "Weekly attendance summary cron — LINE to employees",
+      "description": "F6 สรุปเข้างานรายสัปดาห์ส่งพนักงาน",
+      "status": "done",
+      "priority": "high",
+      "milestone": "M12",
+      "agent": "Claude Code",
+      "dependencies": [
+        "45"
+      ],
+      "details": "Supabase edge fn รายสัปดาห์ ICT, flex สรุปชั่วโมง/สาย/ขาด",
+      "testStrategy": "manual trigger ส่งถึง test employee",
+      "subtasks": [],
+      "updatedAt": "2026-06-11T15:02:27.779Z"
+    },
+    {
+      "id": "51",
+      "title": "Monthly attendance summary cron — LINE to employees",
+      "description": "F6 สรุปเข้างานรายเดือนส่งพนักงาน",
+      "status": "done",
+      "priority": "high",
+      "milestone": "M12",
+      "agent": "Claude Code",
+      "dependencies": [
+        "50"
+      ],
+      "details": "edge fn รายเดือน + flex",
+      "testStrategy": "manual trigger PASS",
+      "subtasks": [],
+      "updatedAt": "2026-06-11T15:02:30.119Z"
+    },
+    {
+      "id": "52",
+      "title": "Weekly HR digest — LINE Group summary",
+      "description": "สรุปภาพรวมรายสัปดาห์ส่งกลุ่ม HR",
+      "status": "done",
+      "priority": "medium",
+      "milestone": "M12",
+      "agent": "Claude Code",
+      "dependencies": [
+        "50"
+      ],
+      "details": "ใช้ HR_LINE_GROUP_ID + aggregate attendance/leave/OT pending",
+      "testStrategy": "push ถึง HR group",
+      "subtasks": [],
+      "updatedAt": "2026-06-11T15:02:32.473Z"
+    },
+    {
+      "id": "53",
+      "title": "Reports Admin — /admin/reports lite",
+      "description": "รายงาน attendance, leave, OT + CSV export",
+      "status": "done",
+      "priority": "medium",
+      "milestone": "M13",
+      "agent": "Codex",
+      "dependencies": [
+        "49",
+        "52"
+      ],
+      "details": "แทน AdminComingSoon reports",
+      "testStrategy": "filter ช่วงวันที่ + export CSV",
+      "subtasks": [],
+      "updatedAt": "2026-06-11T15:02:34.835Z"
+    },
+    {
+      "id": "54",
+      "title": "Dashboard weekly/monthly charts — F1 gap",
+      "description": "กราฟ dashboard รายสัปดาห์/รายเดือน",
+      "status": "done",
+      "priority": "medium",
+      "milestone": "M13",
+      "agent": "Codex",
+      "dependencies": [
+        "53"
+      ],
+      "details": "HrAdminDashboard chart tabs week/month",
+      "testStrategy": "chart render ด้วยข้อมูลจริง",
+      "subtasks": [],
+      "updatedAt": "2026-06-11T15:02:37.519Z"
+    },
+    {
+      "id": "55",
+      "title": "Organization Admin — departments CRUD",
+      "description": "จัดการแผนก/โครงสร้างองค์กร lite",
+      "status": "done",
+      "priority": "medium",
+      "milestone": "M14",
+      "agent": "Codex",
+      "dependencies": [
+        "45"
+      ],
+      "details": "hr_departments table หรือใช้ distinct + CRUD; ผูก employee.department",
+      "testStrategy": "สร้างแผนก + assign พนักงาน",
+      "subtasks": [],
+      "updatedAt": "2026-06-11T15:02:39.968Z"
+    },
+    {
+      "id": "56",
+      "title": "Settings Admin — work hours + LINE/HR health",
+      "description": "หน้าตั้งค่าระบบ + แสดงสถานะ config",
+      "status": "done",
+      "priority": "medium",
+      "milestone": "M14",
+      "agent": "Codex",
+      "dependencies": [
+        "55"
+      ],
+      "details": "work start hour, HR group id จาก hr_runtime_config, env health read-only",
+      "testStrategy": "settings แสดงค่าจริง",
+      "subtasks": [],
+      "updatedAt": "2026-06-11T15:02:42.604Z"
+    },
+    {
+      "id": "57",
+      "title": "Document file delivery — upload + signed URL + LINE",
+      "description": "HR แนบไฟล์เอกสารให้พนักงานดาวน์โหลด",
+      "status": "done",
+      "priority": "high",
+      "milestone": "M14",
+      "agent": "Claude Code",
+      "dependencies": [
+        "45"
+      ],
+      "details": "upload hr-documents bucket, signed URL, LINE flex พร้อมลิงก์",
+      "testStrategy": "employee เปิดลิงก์ได้ภายใน TTL",
+      "subtasks": [],
+      "updatedAt": "2026-06-11T15:02:45.296Z"
+    },
+    {
+      "id": "58",
+      "title": "Scheduled announcements — send_at cron",
+      "description": "ประกาศตั้งเวลาส่งอัตโนมัติ",
+      "status": "done",
+      "priority": "medium",
+      "milestone": "M15",
+      "agent": "Claude Code",
+      "dependencies": [
+        "45"
+      ],
+      "details": "cron อ่าน hr_announcements status=draft scheduled_at<=now → broadcast",
+      "testStrategy": "schedule 1 นาทีข้างหน้า → ส่งจริง",
+      "subtasks": [],
+      "updatedAt": "2026-06-11T15:02:47.917Z"
+    },
+    {
+      "id": "59",
+      "title": "Security review P3 + E2E Phase 3",
+      "description": "Security OT/RLS + E2E flows ใหม่",
+      "status": "done",
+      "priority": "high",
+      "milestone": "M15",
+      "agent": "Claude Code",
+      "dependencies": [
+        "58"
+      ],
+      "details": "SECURITY_REVIEW_P3.md + run-all-p3.mjs",
+      "testStrategy": "gates PASS",
+      "subtasks": [],
+      "updatedAt": "2026-06-11T15:02:50.603Z"
+    },
+    {
+      "id": "60",
+      "title": "Delivery Audit Phase 3",
+      "description": "DELIVERY_READINESS_AUDIT_P3.md + demo script",
+      "status": "done",
+      "priority": "high",
+      "milestone": "M15",
+      "agent": "Cursor",
+      "dependencies": [
+        "59"
+      ],
+      "details": "verdict ก่อน handoff Phase 3",
+      "testStrategy": "audit doc มี verdict",
+      "subtasks": [],
+      "updatedAt": "2026-06-11T15:02:53.355Z"
     }
   ],
   "metadata": {
     "version": "1.0.0",
-    "lastModified": "2026-06-11T13:46:46.149Z",
-    "taskCount": 45,
-    "completedCount": 45,
+    "lastModified": "2026-06-11T15:02:53.355Z",
+    "taskCount": 60,
+    "completedCount": 60,
     "tags": [
       "master"
     ]

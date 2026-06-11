@@ -55,8 +55,45 @@ export function DocumentDecisionActions({ doc }: { doc: DocumentRequestRow }) {
     }
   }
 
+  async function uploadResult(file: File) {
+    setBusy(true)
+    setError(null)
+    try {
+      const form = new FormData()
+      form.append("file", file)
+      const res = await fetch(`/api/documents/${doc.id}/upload`, {
+        method: "POST",
+        body: form,
+      })
+      if (!res.ok) {
+        const body = (await res.json().catch(() => null)) as { error?: string } | null
+        throw new Error(body?.error ?? "อัปโหลดไม่สำเร็จ")
+      }
+      router.refresh()
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "อัปโหลดไม่สำเร็จ")
+    } finally {
+      setBusy(false)
+    }
+  }
+
   return (
     <div className="flex min-w-[160px] flex-col gap-2">
+      {doc.status === "processing" || doc.status === "ready" ? (
+        <label className="cursor-pointer text-xs text-brand-red underline">
+          อัปโหลดไฟล์ผลลัพธ์ (PDF/JPG)
+          <input
+            type="file"
+            accept=".pdf,.jpg,.jpeg,.png"
+            className="hidden"
+            disabled={busy}
+            onChange={(e) => {
+              const f = e.target.files?.[0]
+              if (f) void uploadResult(f)
+            }}
+          />
+        </label>
+      ) : null}
       <textarea
         className="min-h-[50px] rounded-lg border border-input px-2 py-1 text-xs"
         placeholder="หมายเหตุ (ไม่บังคับ)"

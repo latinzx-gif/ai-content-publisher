@@ -18,7 +18,9 @@ export async function GET() {
   const supabase = await createClient()
   const { data, error } = await supabase
     .from("hr_announcements")
-    .select("id, title, body, target_type, target_value, status, sent_at, created_at")
+    .select(
+      "id, title, body, target_type, target_value, status, sent_at, scheduled_at, created_at"
+    )
     .order("created_at", { ascending: false })
     .limit(50)
 
@@ -41,6 +43,8 @@ export async function POST(request: NextRequest) {
     targetType?: string
     targetValue?: string
     send?: boolean
+    schedule?: boolean
+    scheduledAt?: string
   }
   try {
     body = await request.json()
@@ -70,6 +74,24 @@ export async function POST(request: NextRequest) {
 
   const supabase = await createClient()
   const shouldSend = body.send === true
+  const shouldSchedule = body.schedule === true
+  const scheduledAt =
+    typeof body.scheduledAt === "string" && body.scheduledAt
+      ? new Date(body.scheduledAt)
+      : null
+
+  if (shouldSchedule) {
+    if (!scheduledAt || Number.isNaN(scheduledAt.getTime())) {
+      return NextResponse.json({ error: "invalid schedule time" }, { status: 400 })
+    }
+    if (scheduledAt.getTime() <= Date.now()) {
+      return NextResponse.json({ error: "schedule must be future" }, { status: 400 })
+    }
+  }
+
+  let status: "draft" | "scheduled" | "sent" = "draft"
+  if (shouldSend) status = "sent"
+  else if (shouldSchedule) status = "scheduled"
 
   const { data: row, error } = await supabase
     .from("hr_announcements")
@@ -78,8 +100,9 @@ export async function POST(request: NextRequest) {
       body: text,
       target_type: targetType,
       target_value: targetType === "department" ? targetValue : null,
-      status: shouldSend ? "sent" : "draft",
+      status,
       sent_at: shouldSend ? new Date().toISOString() : null,
+      scheduled_at: shouldSchedule && scheduledAt ? scheduledAt.toISOString() : null,
       created_by: caller.id,
     })
     .select("id")
@@ -101,8 +124,10 @@ export async function POST(request: NextRequest) {
     }
   }
 
-  return NextResponse.json({ id: row.id, status: shouldSend ? "sent" : "draft" })
+  return NextResponse.json({ id: row.id, status })
 }
+
+export { broadcastAnnouncement }
 
 async function broadcastAnnouncement(options: {
   title: string

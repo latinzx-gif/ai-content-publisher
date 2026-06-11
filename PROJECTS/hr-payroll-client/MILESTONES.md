@@ -80,7 +80,7 @@
 
 ---
 
-## Phase 2 — Support Features (Planned 2026-06-11)
+## Phase 2 — Support Features ✅ CLOSED
 
 | Milestone | Tasks | Features |
 |-----------|-------|----------|
@@ -93,16 +93,31 @@ Detail: `orchestration/PHASE_2_PLAN.md`
 
 ---
 
+## Phase 3 — Operations & Reports (2026-06-11) 🔄 IN PROGRESS
+
+| Milestone | Tasks | Features |
+|-----------|-------|----------|
+| M11: Overtime | T46–T49 | F10 OT request |
+| M12: Attendance Summary | T50–T52 | F6 weekly/monthly |
+| M13: Reports lite | T53–T54 | Admin reports + charts |
+| M14: Admin Ops | T55–T57 | Org, Settings, doc files |
+| M15: P3 Hardening | T58–T60 | Schedule + audit |
+
+Detail: `orchestration/PHASE_3_PLAN.md`
+
+---
+
 ## Summary
 
 | Milestone | Tasks | Weeks | Priority |
 |-----------|-------|-------|----------|
-| M1: Foundation | T01–T05 | Week 1 | P1 |
-| M2: Check-in/Check-out | T06–T11 | Week 2 | P1 |
-| M3: Web Dashboard | T12–T16 | Week 3 | P1 |
-| M4: Leave Management | T17–T21 | Week 4 | P1 |
-| M5: Alerts & Summary | T22–T26 | Week 5 | P1 |
-| M6: Delivery | T27–T30 | Week 6-7 | P1 |
-| Phase 2 | T31–T45 | ~6 weeks | P2 📋 PLANNED |
+| M1: Foundation | T01–T05 | Week 1 | P1 ✅ |
+| M2: Check-in/Check-out | T06–T11 | Week 2 | P1 ✅ |
+| M3: Web Dashboard | T12–T16 | Week 3 | P1 ✅ |
+| M4: Leave Management | T17–T21 | Week 4 | P1 ✅ |
+| M5: Alerts & Summary | T22–T26 | Week 5 | P1 ✅ |
+| M6: Delivery | T27–T30 | Week 6-7 | P1 ✅ |
+| Phase 2 | T31–T45 | ~6 weeks | P2 ✅ |
+| Phase 3 | T46–T60 | ~7 weeks | P3 🔄 |
 
-**Total Phase 1:** 30 tasks / 6-7 weeks
+**Total plan:** 60 tasks

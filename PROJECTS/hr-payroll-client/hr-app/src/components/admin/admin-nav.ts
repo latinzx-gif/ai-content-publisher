@@ -3,6 +3,7 @@ import {
   Building2,
   CalendarDays,
   Clock,
+  Timer,
   FileText,
   GraduationCap,
   LayoutDashboard,
@@ -28,9 +29,10 @@ export type AdminNavItem = {
 export const ADMIN_NAV_ITEMS: AdminNavItem[] = [
   { label: "Dashboard", href: "/admin", icon: LayoutDashboard },
   { label: "Employees", href: "/admin/employees", icon: Users },
-  { label: "Organization", href: "/admin/organization", icon: Building2, comingSoon: true },
+  { label: "Organization", href: "/admin/organization", icon: Building2 },
   { label: "Attendance", href: "/admin/attendance", icon: Clock },
   { label: "Leave Management", href: "/admin/leaves", icon: CalendarDays },
+  { label: "Overtime", href: "/admin/overtime", icon: Timer },
   { label: "Payroll", href: "/admin/payroll", icon: Wallet, comingSoon: true },
   { label: "Performance", href: "/admin/performance", icon: Target, comingSoon: true },
   { label: "Recruitment", href: "/admin/recruitment", icon: UserSearch, comingSoon: true },
@@ -43,8 +45,8 @@ export const ADMIN_NAV_ITEMS: AdminNavItem[] = [
   { label: "Documents", href: "/admin/documents", icon: FileText },
   { label: "Complaints", href: "/admin/complaints", icon: MessageSquareWarning },
   { label: "Announcements", href: "/admin/announcements", icon: Megaphone },
-  { label: "Reports & Analytics", href: "/admin/reports", icon: BarChart3, comingSoon: true },
-  { label: "Settings", href: "/admin/settings", icon: Settings, comingSoon: true },
+  { label: "Reports & Analytics", href: "/admin/reports", icon: BarChart3 },
+  { label: "Settings", href: "/admin/settings", icon: Settings },
 ]
 
 export function isAdminNavActive(pathname: string, href: string): boolean {

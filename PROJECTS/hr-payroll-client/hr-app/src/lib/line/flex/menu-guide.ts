@@ -406,22 +406,32 @@ export function leaveGuideFlex(liffId?: string): messagingApi.FlexMessage {
   )
 }
 
-export function overtimeGuideFlex(): messagingApi.FlexMessage {
-  return guide("ขอ OT — อยู่ระหว่างเตรียมการ", {
-    emoji: "⏰",
-    title: "ขอ OT",
-    subtitle: "ยื่นคำขอทำงานล่วงเวลา",
-    accentColor: "#E65100",
-    description:
-      "ยื่นคำขอทำงานล่วงเวลา (OT) ระบบจะส่งให้หัวหน้างานและ HR อนุมัติ",
-    steps: [
-      "ระบุวันที่และช่วงเวลา OT ที่ต้องการ",
-      "อธิบายเหตุผลและงานที่ต้องทำ",
-      "รอการอนุมัติจากหัวหน้างาน / HR",
-    ],
-    tip: "ฟีเจอร์ฟอร์ม OT จะเปิดใน Phase 2 — ติดต่อ HR ชั่วคราวผ่านเมนู \"ติดต่อ HR\"",
-    statusLabel: "🚧 Phase 2",
-  })
+export function overtimeGuideFlex(formUrl?: string): messagingApi.FlexMessage {
+  const hasForm = Boolean(formUrl)
+
+  return guide(
+    hasForm ? "ขอ OT — เปิดแบบฟอร์ม" : "ขอ OT — เตรียมเปิดใช้งาน",
+    {
+      emoji: "⏰",
+      title: "ขอ OT",
+      subtitle: "ยื่นคำขอทำงานล่วงเวลา",
+      accentColor: "#E65100",
+      description: hasForm
+        ? "กรอกวันที่ เวลา และเหตุผล — ส่งให้ HR อนุมัติ"
+        : "แบบฟอร์ม OT กำลังเตรียมเปิดใช้งาน",
+      steps: hasForm
+        ? [
+            "กดปุ่ม \"เปิดแบบฟอร์มขอ OT\" ด้านล่าง",
+            "ระบุวันที่และช่วงเวลา",
+            "รอ HR อนุมัติทาง LINE",
+          ]
+        : ["ติดต่อ HR ผ่านเมนู \"ติดต่อ HR\""],
+      tip: "แนะนำยื่นล่วงหน้าก่อนวันทำ OT",
+      ...(hasForm && formUrl
+        ? { button: { label: "เปิดแบบฟอร์มขอ OT", uri: formUrl } }
+        : { statusLabel: "⏳ เร็วๆ นี้" }),
+    }
+  )
 }
 
 export function documentGuideFlex(formUrl?: string): messagingApi.FlexMessage {

@@ -27,6 +27,7 @@ import {
   DocumentApprovalsList,
   RecentHrTicketsList,
 } from "@/features/dashboard/DashboardWidgetLists"
+import { AttendanceTrendBars } from "@/features/dashboard/AttendanceTrendBars"
 import { OnboardingDonut } from "@/features/dashboard/OnboardingDonut"
 import { RecruitmentDonut } from "@/features/dashboard/RecruitmentDonut"
 import { getDashboardWidgets } from "@/features/dashboard/widgets-data"
@@ -40,7 +41,7 @@ const QUICK_ACTIONS: Array<{
   { label: "Approve Leave", href: "/admin/leaves", icon: CalendarCheck },
   { label: "Run Payroll", href: "/admin/payroll", icon: Wallet },
   { label: "Manage Documents", href: "/admin/documents", icon: FileText },
-  { label: "Create Announcement", href: "/admin/settings", icon: Megaphone },
+  { label: "Create Announcement", href: "/admin/announcements", icon: Megaphone },
   { label: "Report Builder", href: "/admin/reports", icon: BarChart3 },
   { label: "View Org Chart", href: "/admin/organization", icon: Network },
   { label: "Attendance Report", href: "/admin/attendance", icon: Clock },
@@ -220,22 +221,11 @@ export async function HrAdminDashboard({ userName }: { userName: string }) {
           <ComplianceRemindersList items={widgets.compliance} />
         </WidgetCard>
 
-        <WidgetCard compact title="Announcements">
-          <ul className="space-y-2">
-            <li className="rounded-lg border border-border/60 bg-muted/20 p-2 text-sm">
-              <div className="flex items-center gap-2">
-                <Megaphone className="size-5 text-brand-red" strokeWidth={1.75} />
-                <span className="font-medium">Welcome to 中国名堂 HR</span>
-                <StatusPill label="Info" variant="info" />
-              </div>
-              <p className="mt-1 text-xs text-muted-foreground">
-                Use LINE for check-in and leave requests.
-              </p>
-            </li>
-          </ul>
-          <p className="mt-3 text-xs text-muted-foreground">
-            Full announcements — Phase 2
-          </p>
+        <WidgetCard compact title="Attendance (7 days)" href="/admin/attendance">
+          <AttendanceTrendBars
+            title={`Today: ${stats.checkedInToday} in · ${stats.lateToday} late · ${stats.absentToday} absent`}
+            data={stats.attendanceByDay}
+          />
         </WidgetCard>
 
         <WidgetCard compact title="Quick Actions">

@@ -15,10 +15,11 @@ export function AnnouncementComposeForm({
   const [body, setBody] = useState("")
   const [targetType, setTargetType] = useState<"all" | "department">("all")
   const [targetValue, setTargetValue] = useState("")
+  const [scheduleAt, setScheduleAt] = useState("")
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  async function submit(send: boolean) {
+  async function submit(mode: "send" | "draft" | "schedule") {
     setBusy(true)
     setError(null)
     try {
@@ -30,7 +31,9 @@ export function AnnouncementComposeForm({
           body,
           targetType,
           targetValue: targetType === "department" ? targetValue : undefined,
-          send,
+          send: mode === "send",
+          schedule: mode === "schedule",
+          scheduledAt: mode === "schedule" ? scheduleAt : undefined,
         }),
       })
       if (!res.ok) {
@@ -94,12 +97,29 @@ export function AnnouncementComposeForm({
           </select>
         ) : null}
       </div>
+      <div className="flex flex-wrap items-center gap-2 text-sm">
+        <label className="text-muted-foreground">กำหนดส่ง:</label>
+        <input
+          type="datetime-local"
+          className="rounded-lg border border-input px-2 py-1 text-sm"
+          value={scheduleAt}
+          onChange={(e) => setScheduleAt(e.target.value)}
+        />
+      </div>
       {error ? <p className="text-sm text-destructive">{error}</p> : null}
-      <div className="flex gap-2">
-        <Button size="sm" disabled={busy} onClick={() => submit(true)}>
+      <div className="flex flex-wrap gap-2">
+        <Button size="sm" disabled={busy} onClick={() => submit("send")}>
           {busy ? "…" : "ส่งประกาศทันที"}
         </Button>
-        <Button size="sm" variant="outline" disabled={busy} onClick={() => submit(false)}>
+        <Button
+          size="sm"
+          variant="secondary"
+          disabled={busy || !scheduleAt}
+          onClick={() => submit("schedule")}
+        >
+          ตั้งเวลาส่ง
+        </Button>
+        <Button size="sm" variant="outline" disabled={busy} onClick={() => submit("draft")}>
           บันทึกแบบร่าง
         </Button>
       </div>
