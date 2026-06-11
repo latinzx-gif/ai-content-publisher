@@ -10,19 +10,19 @@ This version has breaking changes. Read the relevant guide in `node_modules/next
 
 - Project name: `Head Office App`
 - Project root: `/Users/jakarinosk/HEAD-OFFICE/head-office-app`
-- Primary product surface: `/prd`
-- Primary entry route: `/login`
+- **Main web page (PRD):** `/` — `src/app/page.tsx`. Default view is Dashboard; deep links use query params (e.g. `/?page=publishing&tab=scheduled`). Legacy `/prd` redirects to `/`.
+- Auth gate: `/login` (sign-in only — not the product home)
 - Product purpose: agent-assisted content operations for legal/accounting workflows, including drafting, image generation, review, publishing support, and runtime monitoring
-- Current V1 focus: make the `/prd` workflow reliable end to end for content creation, real asset generation, review readiness, publishing support, and logs
+- Current V1 focus: make the PRD workflow at `/` reliable end to end for content creation, real asset generation, review readiness, publishing support, and logs
 
 Scope rules:
-- `/prd` is the main operating surface
+- `/` is the main operating surface (`src/app/page.tsx`)
 - `editor-canvas2` has been removed from this project
 - Do not reference, restore, rebuild, or include `editor-canvas2` unless the user explicitly asks for it
 
 ## 2. Current Product Goal
 
-The realistic V1 goal is to make the `/prd` workflow usable for agent-driven content creation, image generation, review/approval, publishing support, and runtime monitoring.
+The realistic V1 goal is to make the PRD workflow at `/` usable for agent-driven content creation, image generation, review/approval, publishing support, and runtime monitoring.
 
 Do not treat marketplace features, payments, multi-tenant expansion, or full automation ambitions as V1 unless they are explicitly implemented and proven in the current code.
 
@@ -30,8 +30,8 @@ Do not treat marketplace features, payments, multi-tenant expansion, or full aut
 
 Intended V1 flow:
 
-`Login`
--> `/prd Dashboard`
+`Login` (if needed)
+-> `/` PRD Dashboard
 -> `Create Post`
 -> `Content Text Agent`
 -> `Image Generation Agent`
@@ -53,7 +53,7 @@ Required workflow rules:
 ### 1. Content Text Agent
 - Creates or assists with post text
 - Produces captions, drafts, rewrites, and content variants
-- Supports the Create Post workflow inside `/prd`
+- Supports the Create Post workflow inside PRD (`/`)
 
 ### 2. Image Generation Agent
 - Produces real image output
@@ -118,7 +118,7 @@ Avoid:
 - raw full-file dumps
 - raw `git log`
 - raw `git diff` on large files
-- reading all of `src/app/prd/page.tsx` unless the task needs it
+- reading all of `src/app/page.tsx` unless the task needs it
 - scanning the full repository without a narrow target
 - dumping full build or test logs into context
 
@@ -148,8 +148,8 @@ General rules:
 - Do not remove fallback or error states unless replaced with safer behavior
 
 Special route rules:
-- `/prd` is the primary product surface
-- `/login` is the primary entry
+- `/` (PRD) is the primary product surface
+- `/login` is auth only — not the product home
 - `editor-canvas2` is removed and out of scope unless explicitly requested
 
 ## 8. Image / Asset Rules
@@ -244,7 +244,7 @@ Default:
 
 ## 12. Output Format
 
-Every Codex run should return:
+Every agent run should return:
 1. What was inspected
 2. Root cause or finding
 3. Files changed
@@ -268,7 +268,7 @@ Current priority after Critical Fix 1:
 - Persist generated image output to durable storage
 - Align `src/lib/agents/openaiImages.ts` with the actual production model/API contract
 
-2. Reduce mock/fallback ambiguity in `/prd`
+2. Reduce mock/fallback ambiguity in PRD (`/`)
 - Make mock-backed states explicit
 - Prevent fake readiness
 
@@ -295,9 +295,9 @@ Do not drift into:
 
 Before any feature implementation or surgical code change, the following workflow is mandatory:
 
-1. **Gate Review**: Codex must read the relevant task gate file at `graphify-out/gates/TASK-XXX_IMPLEMENTATION_GATE.md`.
-2. **Boundary Compliance**: Codex must strictly follow the **Allowed Files** and **Forbidden Files** sections of the gate.
-3. **Scope Control**: Codex must not broaden the scope or refactor unrelated code.
+1. **Gate Review**: Claude Code must read the relevant task gate file at `graphify-out/gates/TASK-XXX_IMPLEMENTATION_GATE.md`.
+2. **Boundary Compliance**: Claude Code must strictly follow the **Allowed Files** and **Forbidden Files** sections of the gate.
+3. **Scope Control**: Claude Code must not broaden the scope or refactor unrelated code.
 4. **Pre-Implementation Audit**: Run a quick audit of the allowed files to confirm the analysis remains accurate before making edits.
-5. **Handoff Documentation**: Codex must return a summary of changed files and verification results (lint, build, diff) upon completion.
-6. **Role Separation**: Gemini handles File Ops, Docs, and Gate Preparation. Codex is the primary agent for source code implementation.
+5. **Handoff Documentation**: Claude Code must return a summary of changed files and verification results (lint, build, diff) upon completion.
+6. **Role Separation**: Gemini handles File Ops, Docs, and Gate Preparation. Claude Code is the primary agent for source code implementation.

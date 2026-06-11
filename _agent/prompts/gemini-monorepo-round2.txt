@@ -1,0 +1,126 @@
+You are reorganizing the HEAD-OFFICE monorepo at:
+
+  /Users/jakarinosk/HEAD-OFFICE
+
+## Context (read first)
+
+- Cursor already fixed agent paths: app task files live at `head-office-app/_agent/` (NOT monorepo root `_agent/`)
+- Phase 1 app housekeeping is DONE: `head-office-app/docs/`, `_agent/`, `skills/README.md`
+- Your job is MONOREPO ROUND 2 ONLY — do NOT redo app docs or touch `head-office-app/src/`
+- Read: `head-office-app/_agent/PHASE1_HOUSEKEEPING_RESULT.md`, `CURSOR_DECISIONS.md`, `head-office-app/GEMINI.md`
+
+## Mission: Monorepo root reorganization
+
+### 1. Create `/Users/jakarinosk/HEAD-OFFICE/README.md`
+
+Monorepo map (1 page):
+- `head-office-app/` — product (PRD `/` + Publisher `/publisher/*`, dev :3001)
+- `PROJECTS/` — client delivery (do not reorganize inside)
+- `agentops-lite/` — separate tool (do not move)
+- `orchestration/` — agent loop (you create)
+- `knowledge/` — optional stubs only this round (see §4)
+- `docs/`, `reports/`, `graphify-out/`, `archive/`
+
+### 2. Create `orchestration/` — MOVE from repo root
+
+Move these files into `orchestration/`:
+- AGENT_LOOP.md, CURRENT_TASK.md, REVIEW_STATUS.md, CURSOR_DECISIONS.md
+- CLOSURE_TASK_QUEUE.md, CURSOR_REVIEW_GATE.md, PROJECT_STATE.md, DECISION_LOG.md
+- MODEL_ROUTING.md, SUBAGENT_ROUTING.md, PHASE_1_SCOPE_LOCK.md, QA_CHECKLIST.md
+- TASK_PLAN_TEMPLATE.md, TASK_RESULT_TEMPLATE.md, TASK_CLEANUP_CHECKLIST.md
+- HERMES_LOOP_RULES.md, HERMES.md, AGENT_ROLES.md, BUILD_STAGES.md, ROADMAP.md
+- TODAY_AGENT_TASK.md
+- auto_build_loop.sh (from root)
+
+Move folder:
+- `scripts/` → `orchestration/scripts/` (run-claude-task.sh, tmux-claude.sh, claude-onboarding-prompt.txt)
+
+Create `orchestration/README.md` — what lives here, how agent loop works.
+
+Create `orchestration/templates/` if useful for *_TEMPLATE.md files.
+
+### 3. Create `archive/` — MOVE stale root docs
+
+- AGENCY_OS_COMPLETION_REPORT.md, AGENCY_OS_STATUS.md
+- HEAD_OFFICE_ACTIVATION_PLAN.md, HEAD_OFFICE_CURRENT_STATE.md, HEAD_OFFICE_DASHBOARD.md
+- HEAD_OFFICE_FINAL_AUDIT.md, HEAD_OFFICE_INDEPENDENT_AUDIT.md
+- MIGRATION_COMPLETION_REPORT.md, RESOURCE_ALLOCATION.md, STRATEGIC_PRIORITIES.md
+- CODEX_TASK_QUEUE.md, NEXT_GEMINI_TASKS.md
+- `tasks/NEXT_CODEX_TASK.md` → `archive/tasks/`
+
+Delete empty `apps/` and `tasks/` if empty after moves.
+
+### 4. DO NOT MOVE (this round)
+
+- `head-office-app/` (except updating references in docs if needed — no src/)
+- `PROJECTS/`, `agentops-lite/`
+- `HERMES-BRAIN/`, `OS/`, `DATA/` — leave at root; only mention in README as future `knowledge/` consolidation
+- `graphify-out/` at root (canonical)
+- `docs/`, `reports/` at root (keep; fix links only)
+
+### 5. Path updates (CRITICAL — Cursor fixed these; preserve correctness)
+
+After moving scripts to `orchestration/scripts/`, update:
+
+**`orchestration/scripts/run-claude-task.sh`**
+- `ROOT` = parent of `orchestration/` (monorepo root) — adjust dirname logic: `ROOT="$(cd "$(dirname "$0")/../.." && pwd)"` OR equivalent
+- `CURRENT_TASK.md` → `$ROOT/orchestration/CURRENT_TASK.md`
+- `AGENT_DIR` = `$ROOT/head-office-app/_agent` (keep — do NOT create root `_agent/`)
+- `PLAN_APPROVAL` = `$AGENT_DIR/PLAN_APPROVAL.md`
+- Prompts must say `head-office-app/_agent/TASK_PLAN.md` etc.
+
+**`orchestration/scripts/tmux-claude.sh`**
+- `ROOT` points to monorepo root
+- Read `orchestration/CURRENT_TASK.md` in messages
+
+**`orchestration/auto_build_loop.sh`**
+- `APP="$ROOT/head-office-app"`
+
+**`orchestration/CURRENT_TASK.md`**
+- Update Allowed Files if they still say `head-office-app/TASK_PLAN.md` without `_agent/`
+
+**`head-office-app/_agent/README.md`**
+- Point to `../../orchestration/CURRENT_TASK.md` (not root)
+
+**`AGENT_LOOP.md`** (after move to orchestration/)
+- Update artifact paths: app files → `head-office-app/_agent/`
+
+Grep and fix stale refs:
+- `apps/ai-content-publisher` in orchestration/ and head-office-app (except archive/historical)
+- `$ROOT/_agent/` (wrong — must be `head-office-app/_agent/`)
+
+### 6. Optional: docs/publisher rename
+
+If quick: rename `head-office-app/docs/prd/archive/publisher-migration/` → `head-office-app/docs/publisher/` and fix links in skills/docs. Skip if risky.
+
+### Constraints
+
+- NO changes under `head-office-app/src/`
+- NO git commit
+- NO .env changes
+- NO moves inside `PROJECTS/` or `agentops-lite/`
+- If Obsidian links might break for HERMES-BRAIN/OS/DATA, do not move them
+
+### Verification
+
+```bash
+# Approval path must resolve
+test -f /Users/jakarinosk/HEAD-OFFICE/head-office-app/_agent/PLAN_APPROVAL.md && echo OK
+
+# Build still works
+cd /Users/jakarinosk/HEAD-OFFICE/head-office-app && npm run build && npm run typecheck
+
+# No wrong _agent path in scripts
+rg '\$ROOT/_agent|ROOT/_agent' /Users/jakarinosk/HEAD-OFFICE/orchestration/scripts || echo "no bad paths"
+
+# No stale ACP paths in active orchestration files
+rg 'apps/ai-content-publisher' /Users/jakarinosk/HEAD-OFFICE/orchestration --glob '!archive/**' || true
+```
+
+### Deliverables
+
+1. `/Users/jakarinosk/HEAD-OFFICE/orchestration/MONOREPO_ROUND2_RESULT.md` — move log, verification, broken links
+2. `/Users/jakarinosk/HEAD-OFFICE/README.md`
+3. Full old → new path table
+
+Stop. Do not start knowledge/ consolidation or src/ refactors.
