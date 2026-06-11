@@ -11,6 +11,7 @@ import {
 import { complaintAction } from "@/lib/line/handlers/actions/complaint"
 import { documentAction } from "@/lib/line/handlers/actions/document"
 import { contactHrAction } from "@/lib/line/handlers/actions/contact-hr"
+import { contactHrNotifyAction } from "@/lib/line/handlers/actions/contact-hr-notify"
 import { leaveAction } from "@/lib/line/handlers/actions/leave"
 import { overtimeAction } from "@/lib/line/handlers/actions/overtime"
 
@@ -32,6 +33,7 @@ const ACTION_HANDLERS: Record<
   complaint: complaintAction,
   announcement: announcementAction,
   contact_hr: contactHrAction,
+  contact_hr_notify: contactHrNotifyAction,
 }
 
 export async function buildActionMessages(

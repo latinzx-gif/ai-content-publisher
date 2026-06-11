@@ -9,6 +9,7 @@ import {
   menuHintFlex,
   notRegisteredFlex,
 } from "@/lib/line/flex/menu-guide"
+import { isOneOnOneUserSource } from "@/lib/line/handlers/source"
 
 /** Free-text chat is off by default — Rich Menu + postback + location only. */
 function isUserChatEnabled(): boolean {
@@ -57,7 +58,7 @@ async function checkinMessages(
 export async function handleMessage(
   event: webhook.MessageEvent
 ): Promise<void> {
-  if (!event.replyToken) {
+  if (!event.replyToken || !isOneOnOneUserSource(event.source)) {
     return
   }
 

@@ -32,6 +32,8 @@ Cron Jobs: แจ้งเตือน Probation/Visa อัตโนมัต�
 | Web Admin | `hr-app/src/app/admin/*` | `https://[domain]/admin/` |
 | LINE Webhook | `hr-app/src/app/api/line/webhook` | POST endpoint |
 | LIFF (Leave form) | `hr-app/src/app/liff/leave` | LIFF URL |
+| LIFF (Documents) | `hr-app/src/app/liff/documents` | Web/LIFF URL |
+| LIFF (Complaint) | `hr-app/src/app/liff/complaint` | Web/LIFF URL |
 | LIFF (QR checkin) | `hr-app/src/app/liff/checkin` | LIFF URL |
 
 - **Project root:** `/Users/jakarinosk/HEAD-OFFICE/PROJECTS/hr-payroll-client/`
@@ -40,30 +42,31 @@ Cron Jobs: แจ้งเตือน Probation/Visa อัตโนมัต�
 
 ---
 
-## 3. Phase Status (2026-06-10)
+## 3. Phase Status (2026-06-11)
 
 | Phase | Status | หมายเหตุ |
 |-------|--------|----------|
-| **M1: Foundation** | ✅ **CLOSED** | T01–T05 approved 2026-06-10 |
-| **M2: Check-in/Check-out** | 🔄 IN PROGRESS | T07–T09 ✅; batch R1: T10+T11 |
-| **M3: Web Dashboard** | 🔄 STARTING | batch R1: T12 dashboard |
-| **M3: Web Dashboard** | 🔒 LOCKED | รอ M2 complete |
-| **M4: Leave Management** | 🔒 LOCKED | รอ M3 complete |
-| **M5: Alerts & Summary** | 🔒 LOCKED | รอ M4 complete |
-| **M6: Delivery** | 🔒 LOCKED | รอ M5 complete |
-| **Phase 2** | 🔒 LOCKED | รอ user approve |
+| **M1: Foundation** | ✅ **CLOSED** | T01–T05 |
+| **M2: Check-in/Check-out** | ✅ **CLOSED** | T06–T11 |
+| **M3: Web Dashboard** | ✅ **CLOSED** | T12–T16 |
+| **M4: Leave Management** | ✅ **CLOSED** | T17–T21 |
+| **M5: Alerts & Summary** | ✅ **CLOSED** | T22–T26 |
+| **M6: Delivery** | ✅ **CLOSED** | T27–T30; audit 🟡 `DELIVERY_READINESS_AUDIT.md` |
+| **M7: Document Request (F7)** | ✅ **CLOSED** | T31–T34 |
+| **M8: Complaints (F8)** | ✅ **CLOSED** | T35–T38 |
+| **M9: Announcements (F9)** | ✅ **CLOSED** | T39–T42 |
+| **M10: Phase 2 Delivery** | ✅ **CLOSED** | T43–T45; audit P2 🟡 |
 
 ---
 
 ## 4. Active Task
 
-**Batch Round 1 — T10 + T11 + T12** (file-isolated)
+**None** — plan 45/45 complete.
 
 | Field | Value |
 |-------|-------|
-| Phase | **BATCH PLAN** |
-| PLAN agent | Claude Code |
-| Detail | `orchestration/CURRENT_BATCH.md` |
+| Last closed | T45 Delivery Audit P2 |
+| Verdict | 🟡 `DELIVERY_READINESS_AUDIT_P2.md` |
 
 ดูรายละเอียดเต็ม: `orchestration/CURRENT_TASK.md`
 
@@ -78,7 +81,7 @@ Cron Jobs: แจ้งเตือน Probation/Visa อัตโนมัต�
 - ❌ Mobile app native (iOS/Android)
 - ❌ Integration กับ accounting software (SAP, SAGE ฯลฯ)
 - ❌ Advanced BI / analytics pipeline
-- ❌ Phase 2 features (F7 Document Request, F8 Complaint, F9 Announcements) จนกว่า user จะ approve
+- ❌ Phase 2 features **นอกแผน** `PHASE_2_PLAN.md` (F7–F9 อนุมัติแล้ว — เริ่ม T31+)
 - ❌ Direct database access จาก client (ต้องผ่าน API routes หรือ Supabase RLS เท่านั้น)
 - ❌ Store LINE tokens ใน localStorage (ใช้ server-side เท่านั้น)
 
@@ -107,7 +110,8 @@ Cron Jobs: แจ้งเตือน Probation/Visa อัตโนมัต�
 | Milestones + tasks overview | `MILESTONES.md` |
 | PRD ฉบับเต็ม | `docs/PRD.md` |
 | All tasks (Taskmaster) | `.taskmaster/tasks/tasks.json` |
-| Demo readiness | `reports/DELIVERY_READINESS_AUDIT.md` |
+| Demo readiness | `hr-app/reports/DELIVERY_READINESS_AUDIT.md` |
+| Phase 2 plan | `orchestration/PHASE_2_PLAN.md` |
 
 ---
 
@@ -135,4 +139,4 @@ WORK_START_MINUTE=0
 
 ---
 
-*Last updated: 2026-06-10*
+*Last updated: 2026-06-11 — Phase 1 closed, Phase 2 planned*

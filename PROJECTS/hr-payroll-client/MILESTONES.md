@@ -80,10 +80,16 @@
 
 ---
 
-## Phase 2 — Post Delivery (Locked)
-🔒 F7: Document Request  
-🔒 F8: Complaint / Whistleblowing  
-🔒 F9: HR Announcements  
+## Phase 2 — Support Features (Planned 2026-06-11)
+
+| Milestone | Tasks | Features |
+|-----------|-------|----------|
+| M7: Document Request | T31–T34 | F7 |
+| M8: Complaint | T35–T38 | F8 |
+| M9: Announcements | T39–T42 | F9 |
+| M10: P2 Hardening | T43–T45 | Security + E2E + audit |
+
+Detail: `orchestration/PHASE_2_PLAN.md`
 
 ---
 
@@ -97,6 +103,6 @@
 | M4: Leave Management | T17–T21 | Week 4 | P1 |
 | M5: Alerts & Summary | T22–T26 | Week 5 | P1 |
 | M6: Delivery | T27–T30 | Week 6-7 | P1 |
-| Phase 2 | — | TBD | P2 🔒 |
+| Phase 2 | T31–T45 | ~6 weeks | P2 📋 PLANNED |
 
 **Total Phase 1:** 30 tasks / 6-7 weeks

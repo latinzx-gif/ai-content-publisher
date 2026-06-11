@@ -1,0 +1,88 @@
+import { NextResponse, type NextRequest } from "next/server"
+
+import { getCurrentEmployee } from "@/lib/auth/session"
+import { complaintReplyFlex } from "@/lib/line/flex/complaint-submit"
+import { pushToLineUser } from "@/lib/line/notify-hr"
+import { createClient } from "@/lib/supabase/server"
+
+type ReplyBody = {
+  message?: string
+  close?: boolean
+}
+
+export async function POST(
+  request: NextRequest,
+  context: { params: Promise<{ id: string }> }
+) {
+  const caller = await getCurrentEmployee()
+  if (!caller || (caller.role !== "hr" && caller.role !== "admin")) {
+    return NextResponse.json({ error: "forbidden" }, { status: 403 })
+  }
+
+  const { id } = await context.params
+  let body: ReplyBody
+  try {
+    body = await request.json()
+  } catch {
+    return NextResponse.json({ error: "invalid body" }, { status: 400 })
+  }
+
+  const message = typeof body.message === "string" ? body.message.trim() : ""
+  if (message.length < 3) {
+    return NextResponse.json({ error: "message required" }, { status: 400 })
+  }
+
+  const supabase = await createClient()
+  const { data: complaint, error: fetchError } = await supabase
+    .from("hr_complaints")
+    .select(
+      "id, ticket_code, subject, is_anonymous, status, employee_id, hr_employees(line_user_id)"
+    )
+    .eq("id", id)
+    .maybeSingle()
+
+  if (fetchError) {
+    return NextResponse.json({ error: fetchError.message }, { status: 500 })
+  }
+  if (!complaint) {
+    return NextResponse.json({ error: "not found" }, { status: 404 })
+  }
+
+  const { error: replyError } = await supabase.from("hr_complaint_replies").insert({
+    complaint_id: id,
+    author_employee_id: caller.id,
+    message,
+  })
+
+  if (replyError) {
+    return NextResponse.json({ error: replyError.message }, { status: 500 })
+  }
+
+  const newStatus = body.close ? "closed" : "replied"
+  await supabase
+    .from("hr_complaints")
+    .update({ status: newStatus })
+    .eq("id", id)
+
+  if (!complaint.is_anonymous && complaint.employee_id) {
+    type EmpJoin = { line_user_id: string | null }
+    const empRaw = complaint.hr_employees as EmpJoin | EmpJoin[] | null
+    const emp = empRaw ? (Array.isArray(empRaw) ? empRaw[0] : empRaw) : null
+    try {
+      if (emp?.line_user_id) {
+        await pushToLineUser(emp.line_user_id, [
+          complaintReplyFlex({
+            ticketCode: complaint.ticket_code,
+            subject: complaint.subject,
+            message,
+            closed: body.close === true,
+          }),
+        ])
+      }
+    } catch (lineError) {
+      console.error("complaint reply LINE notify failed:", lineError)
+    }
+  }
+
+  return NextResponse.json({ id, status: newStatus })
+}

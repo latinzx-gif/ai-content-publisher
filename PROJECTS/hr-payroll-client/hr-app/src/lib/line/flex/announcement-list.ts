@@ -1,0 +1,71 @@
+import type { messagingApi } from "@line/bot-sdk"
+
+import { flexMessage, simpleBubble } from "@/lib/line/flex/base"
+
+export function announcementBroadcastFlex(options: {
+  title: string
+  body: string
+}): messagingApi.FlexMessage {
+  const preview =
+    options.body.length > 200
+      ? `${options.body.slice(0, 197)}...`
+      : options.body
+
+  return flexMessage(
+    `ประกาศ: ${options.title}`,
+    simpleBubble({
+      title: options.title,
+      accentColor: "#00897B",
+      rows: [{ label: "รายละเอียด", value: preview }],
+      footerNote: "ประกาศจาก HR",
+    })
+  )
+}
+
+export function announcementListFlex(
+  items: { title: string; body: string; sentAt: string }[]
+): messagingApi.FlexMessage {
+  if (items.length === 0) {
+    return flexMessage(
+      "ไม่มีประกาศ",
+      simpleBubble({
+        title: "ประกาศ",
+        accentColor: "#00897B",
+        rows: [{ label: "สถานะ", value: "ยังไม่มีประกาศล่าสุด" }],
+      })
+    )
+  }
+
+  const latest = items[0]
+  const date = new Date(latest.sentAt).toLocaleDateString("th-TH", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  })
+
+  const rows = [
+    { label: "ล่าสุด", value: latest.title },
+    { label: "วันที่", value: date },
+    {
+      label: "รายละเอียด",
+      value:
+        latest.body.length > 120
+          ? `${latest.body.slice(0, 117)}...`
+          : latest.body,
+    },
+  ]
+
+  if (items.length > 1) {
+    rows.push({ label: "เพิ่มเติม", value: `อีก ${items.length - 1} ประกาศ` })
+  }
+
+  return flexMessage(
+    "ประกาศล่าสุด",
+    simpleBubble({
+      title: "ประกาศบริษัท",
+      accentColor: "#00897B",
+      rows,
+      footerNote: "ดูประกาศเพิ่มเติมได้ที่ HR Admin",
+    })
+  )
+}

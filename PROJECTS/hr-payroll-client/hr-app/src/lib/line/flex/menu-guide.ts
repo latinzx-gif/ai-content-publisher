@@ -424,40 +424,72 @@ export function overtimeGuideFlex(): messagingApi.FlexMessage {
   })
 }
 
-export function documentGuideFlex(): messagingApi.FlexMessage {
-  return guide("ขอเอกสาร — อยู่ระหว่างเตรียมการ", {
-    emoji: "📄",
-    title: "ขอเอกสาร",
-    subtitle: "หนังสือรับรอง / เอกสาร HR",
-    accentColor: "#7B1FA2",
-    description:
-      "ขอเอกสารจาก HR เช่น หนังสือรับรองการทำงาน หนังสือรับรองเงินเดือน หรือเอกสารอื่นๆ",
-    steps: [
-      "เลือกประเภทเอกสารที่ต้องการ",
-      "ระบุจำนวนชุดและวัตถุประสงค์",
-      "รอ HR เตรียมเอกสารและแจ้งรับ",
-    ],
-    tip: "ฟีเจอร์นี้จะเปิดใช้งานใน Phase 2 — ติดต่อ HR ได้ทันทีผ่านเมนู \"ติดต่อ HR\"",
-    statusLabel: "🚧 Phase 2",
-  })
+export function documentGuideFlex(formUrl?: string): messagingApi.FlexMessage {
+  const hasForm = Boolean(formUrl)
+
+  return guide(
+    hasForm ? "ขอเอกสาร — เปิดแบบฟอร์ม" : "ขอเอกสาร — เตรียมเปิดใช้งาน",
+    {
+      emoji: "📄",
+      title: "ขอเอกสาร",
+      subtitle: "หนังสือรับรอง / เอกสาร HR",
+      accentColor: "#7B1FA2",
+      description: hasForm
+        ? "กรอกแบบฟอร์มขอเอกสาร ระบบจะส่งคำขอให้ HR ดำเนินการ"
+        : "แบบฟอร์มขอเอกสารกำลังเตรียมเปิดใช้งาน",
+      steps: hasForm
+        ? [
+            "กดปุ่ม \"เปิดแบบฟอร์มขอเอกสาร\" ด้านล่าง",
+            "เลือกประเภท จำนวนชุด และวัตถุประสงค์",
+            "รอ HR แจ้งเมื่อเอกสารพร้อมรับ",
+          ]
+        : [
+            "ติดต่อ HR ผ่านเมนู \"ติดต่อ HR\"",
+            "แจ้งประเภทเอกสารที่ต้องการ",
+            "รอการยืนยันจากทีม HR",
+          ],
+      tip: "แนะนำยื่นคำขอล่วงหน้า 3–5 วันทำการ",
+      ...(hasForm && formUrl
+        ? {
+            button: { label: "เปิดแบบฟอร์มขอเอกสาร", uri: formUrl },
+          }
+        : { statusLabel: "⏳ เร็วๆ นี้" }),
+    }
+  )
 }
 
-export function complaintGuideFlex(): messagingApi.FlexMessage {
-  return guide("ร้องเรียน — อยู่ระหว่างเตรียมการ", {
-    emoji: "📢",
-    title: "ร้องเรียน",
-    subtitle: "แจ้งปัญหาและข้อเสนอแนะ",
-    accentColor: "#F57C00",
-    description:
-      "ช่องทางแจ้งปัญหาในที่ทำงาน ข้อเสนอแนะ หรือเรื่องร้องเรียนอย่างเป็นทางการ",
-    steps: [
-      "เลือกหมวดหมู่เรื่องที่ต้องการแจ้ง",
-      "อธิบายรายละเอียดและแนบหลักฐาน (ถ้ามี)",
-      "ติดตามสถานะการดำเนินการจาก HR",
-    ],
-    tip: "ข้อมูลจะถูกเก็บเป็นความลับ — ฟีเจอร์ฟอร์มออนไลน์จะเปิดใน Phase 2",
-    statusLabel: "🚧 Phase 2",
-  })
+export function complaintGuideFlex(formUrl?: string): messagingApi.FlexMessage {
+  const hasForm = Boolean(formUrl)
+
+  return guide(
+    hasForm ? "ร้องเรียน — เปิดแบบฟอร์ม" : "ร้องเรียน — เตรียมเปิดใช้งาน",
+    {
+      emoji: "📢",
+      title: "ร้องเรียน",
+      subtitle: "แจ้งปัญหาและข้อเสนอแนะ",
+      accentColor: "#F57C00",
+      description: hasForm
+        ? "ส่งเรื่องร้องเรียนหรือข้อเสนอแนะ — เลือกได้ว่าจะไม่เปิดเผยตัวตน"
+        : "ช่องทางแจ้งปัญหากำลังเตรียมเปิดใช้งาน",
+      steps: hasForm
+        ? [
+            "กดปุ่ม \"เปิดแบบฟอร์มร้องเรียน\" ด้านล่าง",
+            "กรอกหัวข้อและรายละเอียด",
+            "เก็บเลขที่อ้างอิงเพื่อติดตาม",
+          ]
+        : [
+            "ติดต่อ HR ผ่านเมนู \"ติดต่อ HR\"",
+            "แจ้งเรื่องที่ต้องการร้องเรียน",
+            "รอการติดตามจากทีม HR",
+          ],
+      tip: "ข้อมูลจะถูกเก็บเป็นความลับ",
+      ...(hasForm && formUrl
+        ? {
+            button: { label: "เปิดแบบฟอร์มร้องเรียน", uri: formUrl },
+          }
+        : { statusLabel: "⏳ เร็วๆ นี้" }),
+    }
+  )
 }
 
 export function announcementGuideFlex(): messagingApi.FlexMessage {
@@ -513,27 +545,22 @@ export function menuHintFlex(): messagingApi.FlexMessage {
 }
 
 export function contactHrGuideFlex(): messagingApi.FlexMessage {
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL
   return guide("ติดต่อ HR", {
     emoji: "🎧",
     title: "ติดต่อ HR",
     subtitle: "ช่องทางติดต่อทีม HR",
     accentColor: "#5C6BC0",
     description:
-      "OA นี้ไม่รับข้อความแชท — ใช้เมนู HR ด้านล่าง หรือติดต่อ HR ผ่านหัวหน้างาน / ช่องทางภายในที่บริษัทกำหนด",
+      "กดปุ่มด้านล่างเพื่อส่งคำขอให้ทีม HR — ระบบจะแจ้งในกลุ่ม HR และติดต่อกลับผ่าน LINE OA นี้",
     steps: [
-      "ใช้เมนู \"เช็คอิน\" หรือ \"ขอลา\" สำหรับงานประจำวัน",
-      "เรื่องเร่งด่วน แจ้งหัวหน้างานหรือ HR โดยตรง",
-      "HR ดูคำขอลาและแจ้งเตือนได้ที่ Web Admin",
+      "กด \"แจ้งทีม HR\" ด้านล่าง",
+      "รอ HR ติดต่อกลับทางแชท LINE นี้",
+      "เรื่องเร่งด่วน แจ้งหัวหน้างานโดยตรงด้วย",
     ],
     tip: "เวลาทำการ จ–ศ 09:00–18:00 น. (ยกเว้นวันหยุดนักขัตฤกษ์)",
-    ...(baseUrl
-      ? {
-          button: {
-            label: "เปิด HR Admin (สำหรับ HR)",
-            uri: `${baseUrl}/admin`,
-          },
-        }
-      : {}),
+    postbackButton: {
+      label: "แจ้งทีม HR",
+      data: "action=contact_hr_notify",
+    },
   })
 }

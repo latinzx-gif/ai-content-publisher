@@ -2,7 +2,7 @@
 // (RLS: hr_is_hr_admin allows full read). No service role here.
 import { createClient } from "@/lib/supabase/server"
 
-export const PAGE_SIZE = 20
+export const PAGE_SIZE = 12
 
 // Whitelist: sort column comes from the URL — never pass it through raw.
 const SORT_COLUMNS = ["name", "contract_start"] as const

@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Content + Image Automation UI/UX Research Report</title>
+  <style>
+    :root{
+      --bg:#f6f7fb; --paper:#ffffff; --ink:#151923; --muted:#667085; --line:#e5e7ef;
+      --dark:#101828; --soft:#f0f3f8; --accent:#d92d20; --accent2:#0f62fe; --green:#039855; --yellow:#f79009;
+      --radius:20px; --shadow:0 18px 45px rgba(16,24,40,.08);
+    }
+    *{box-sizing:border-box}
+    html{scroll-behavior:smooth}
+    body{margin:0;background:var(--bg);color:var(--ink);font-family:Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;line-height:1.65}
+    a{color:var(--accent2);text-decoration:none} a:hover{text-decoration:underline}
+    .wrap{max-width:1180px;margin:0 auto;padding:36px 20px 70px}
+    .hero{background:linear-gradient(135deg,#101828 0%,#1d2939 52%,#7a271a 100%);color:white;border-radius:28px;padding:44px;box-shadow:var(--shadow);position:relative;overflow:hidden}
+    .hero:after{content:"";position:absolute;inset:auto -80px -130px auto;width:360px;height:360px;border-radius:999px;background:rgba(255,255,255,.08)}
+    .eyebrow{font-size:13px;letter-spacing:.14em;text-transform:uppercase;color:#fecdca;font-weight:700;margin-bottom:10px}
+    h1{font-size:42px;line-height:1.16;margin:0 0 16px;letter-spacing:-.04em}
+    h2{font-size:28px;line-height:1.25;margin:0 0 16px;letter-spacing:-.03em}
+    h3{font-size:19px;margin:0 0 10px;letter-spacing:-.02em}
+    p{margin:0 0 12px}.muted{color:var(--muted)}
+    .hero p{font-size:17px;max-width:850px;color:#e4e7ec}.meta{display:flex;gap:12px;flex-wrap:wrap;margin-top:24px}.pill{border:1px solid rgba(255,255,255,.24);border-radius:999px;padding:8px 12px;font-size:13px;background:rgba(255,255,255,.08)}
+    .toc{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:20px 0 28px}.toc a{background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:14px;color:var(--ink);box-shadow:0 6px 20px rgba(16,24,40,.04);font-weight:650}
+    section{background:var(--paper);border:1px solid var(--line);border-radius:var(--radius);padding:28px;margin:22px 0;box-shadow:0 8px 28px rgba(16,24,40,.045)}
+    .grid{display:grid;gap:18px}.grid-2{grid-template-columns:repeat(2,1fr)}.grid-3{grid-template-columns:repeat(3,1fr)}
+    .card{border:1px solid var(--line);border-radius:18px;padding:18px;background:#fff}.card.soft{background:#fbfcff}.tag{display:inline-flex;align-items:center;padding:4px 9px;border-radius:999px;background:#fff1f3;color:#b42318;font-size:12px;font-weight:700;margin-bottom:10px}
+    .note{border-left:4px solid var(--accent);padding:14px 16px;background:#fff7f5;border-radius:12px;margin:14px 0}.ok{border-left-color:var(--green);background:#f0fdf4}.warn{border-left-color:var(--yellow);background:#fffbeb}
+    table{width:100%;border-collapse:collapse;margin:12px 0 4px;font-size:14px}th,td{border-bottom:1px solid var(--line);padding:12px 10px;vertical-align:top;text-align:left}th{font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:#475467;background:#f9fafb}tr:hover td{background:#fcfcff}
+    .flow{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}.step{background:#f2f4f7;border:1px solid #e4e7ec;border-radius:999px;padding:8px 11px;font-size:13px;font-weight:650}.arrow{color:#98a2b3;padding:8px 0}
+    .mock{border:1px solid #d0d5dd;border-radius:22px;background:#fff;overflow:hidden;box-shadow:0 16px 38px rgba(16,24,40,.09);margin-top:14px}.mockbar{height:38px;background:#101828;display:flex;align-items:center;gap:7px;padding:0 14px}.dot{width:10px;height:10px;border-radius:999px;background:#f97066}.dot:nth-child(2){background:#fdb022}.dot:nth-child(3){background:#32d583}.mock svg{display:block;width:100%;height:auto}.caption{font-size:13px;color:var(--muted);margin-top:10px}.small{font-size:13px}.checklist li{margin:7px 0}.priority{display:inline-flex;width:26px;height:26px;border-radius:999px;background:#101828;color:#fff;align-items:center;justify-content:center;font-size:13px;font-weight:800;margin-right:8px}.source-list li{margin:9px 0}.kbd{font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;background:#f2f4f7;border:1px solid #e4e7ec;border-radius:8px;padding:2px 6px;color:#344054}.footer{color:#667085;text-align:center;font-size:12px;margin-top:28px}.badge-red{background:#fef3f2;color:#b42318}.badge-blue{background:#eff8ff;color:#175cd3}.badge-green{background:#ecfdf3;color:#027a48}.badge-purple{background:#f4f3ff;color:#5925dc}
+    @media(max-width:900px){.grid-2,.grid-3,.toc{grid-template-columns:1fr}.hero{padding:28px}h1{font-size:31px}section{padding:20px}.wrap{padding:20px 12px 46px}table{font-size:13px}}
+    @media print{body{background:white}.wrap{max-width:none}.hero,section{box-shadow:none;break-inside:avoid}.toc{display:none}a{text-decoration:none;color:#111827}}
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <header class="hero">
+      <div class="eyebrow">Research Report · AI Content + Image Automation</div>
+      <h1>รายงานวิเคราะห์ UI/UX เว็บไซต์ AI Content + Image Automation</h1>
+      <p>สรุปจากแพลตฟอร์มแนว AI marketing, AI social media, content scheduler, image/design generator และ approval workflow เพื่อนำไปปรับกับเว็บ AI Content Publisher / Fastwork client delivery ของ DataClaw</p>
+      <div class="meta">
+        <div class="pill">Scope: Content → Image → Approval → Schedule</div>
+        <div class="pill">Use case: Social media / Brand content</div>
+        <div class="pill">Output: UI/UX pattern + development direction</div>
+      </div>
+    </header>
+
+    <nav class="toc">
+      <a href="#summary">1. Executive Summary</a>
+      <a href="#benchmarks">2. Website Benchmarks</a>
+      <a href="#patterns">3. UI/UX Patterns</a>
+      <a href="#recommendation">4. Recommendation</a>
+    </nav>
+
+    <section id="summary">
+      <h2>1. Executive Summary</h2>
+      <div class="grid grid-3">
+        <div class="card soft"><span class="tag badge-red">Key Insight</span><h3>AI ไม่ควรเป็นแค่กล่อง Prompt</h3><p>เว็บที่ดีเปลี่ยน AI ให้เป็น workflow: รับ brand context → generate → edit → approve → schedule → analyze.</p></div>
+        <div class="card soft"><span class="tag badge-blue">UX Direction</span><h3>ต้องมี Preview ก่อน Publish</h3><p>ผู้ใช้ต้องเห็นภาพโพสต์จริงแยกตาม platform เช่น Facebook, LinkedIn, Instagram ก่อนกดอนุมัติหรือ schedule.</p></div>
+        <div class="card soft"><span class="tag badge-green">MVP Priority</span><h3>Quick Mode สำคัญที่สุด</h3><p>ลูกค้า SME ต้องเริ่มจากหน้าเดียว: Topic, Brand, Platform, จำนวนโพสต์, Image style, Generate.</p></div>
+      </div>
+      <div class="note ok"><strong>ข้อสรุปสำหรับเว็บที่ทำอยู่:</strong> ควรออกแบบให้เหมือน “Content Operating System” มากกว่า AI Writer ธรรมดา โดยมี 6 หน้าแกนหลัก: Brand Setup, Quick Create, Drafts, Image Studio, Calendar, Analytics.</div>
+    </section>
+
+    <section id="benchmarks">
+      <h2>2. Website Benchmarks: เว็บที่ควรศึกษา</h2>
+      <p class="muted">ตารางนี้สรุปฟีเจอร์และ UI pattern ที่เกี่ยวข้องกับ AI content + image automation โดยตรง</p>
+      <table>
+        <thead><tr><th>Website</th><th>Positioning</th><th>UI/UX ที่เด่น</th><th>สิ่งที่ควรนำมาใช้</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Jasper</strong><br><a href="https://www.jasper.ai/platform">jasper.ai/platform</a></td><td>AI marketing platform / brand-controlled AI workflow</td><td>Brand voice, style guide, campaign workflow, AI agents, content pipeline</td><td>เพิ่ม Brand Voice + Campaign Brief ก่อน generate เพื่อให้โพสต์ไม่ generic</td></tr>
+          <tr><td><strong>Canva AI / Magic Design</strong><br><a href="https://www.canva.com/canva-ai/">canva.com/canva-ai</a></td><td>AI design + editable layout</td><td>Prompt → editable design, template carousel, visual style matching</td><td>หลัง generate text ให้เลือก image style/template ได้ทันที</td></tr>
+          <tr><td><strong>Adobe Express</strong><br><a href="https://www.adobe.com/express/feature/content-scheduler">adobe.com/express/feature/content-scheduler</a></td><td>Create + resize + schedule social content</td><td>Content Scheduler, unscheduled drafts, drag/drop calendar, channel preview</td><td>ทำ Calendar ที่ลาก draft ไปลงวันเวลาได้</td></tr>
+          <tr><td><strong>Buffer</strong><br><a href="https://buffer.com/ai-assistant">buffer.com/ai-assistant</a></td><td>Simple social media scheduler with AI assistant</td><td>AI rewrite, expand, shorten, platform-specific post, clean composer</td><td>ใส่ปุ่ม Quick Action: Rewrite / Shorten / More formal / More casual</td></tr>
+          <tr><td><strong>Predis.ai</strong><br><a href="https://predis.ai/features/social-media-scheduler/">predis.ai/features/social-media-scheduler</a></td><td>AI social posts, carousels, reels, captions, scheduler</td><td>Content planner, create post/carousel/reel, schedule to handles</td><td>แยก output type: Text Post / Image Post / Carousel / Reel idea</td></tr>
+          <tr><td><strong>Simplified</strong><br><a href="https://simplified.com/">simplified.com</a></td><td>All-in-one AI writer, design, video, social scheduler</td><td>Left sidebar product suite, calendar, approval roles, media-heavy cards</td><td>ใช้ dashboard รวม Draft, Calendar, AI Writer, Brand Kit ใน sidebar เดียว</td></tr>
+          <tr><td><strong>Ocoya</strong><br><a href="https://www.ocoya.com/">ocoya.com</a></td><td>AI content creation + social scheduling hub</td><td>AI writing + creative + scheduling in one dashboard</td><td>ทำ positioning ว่าเป็น hub เดียว ไม่ใช่แค่ generator</td></tr>
+          <tr><td><strong>Marky</strong><br><a href="https://www.mymarky.ai/">mymarky.ai</a></td><td>Generate a month of posts, images, carousels</td><td>Bulk content generation, multi-brand, approval before posting</td><td>เพิ่ม Campaign Factory ภายหลัง: 30 วัน × หลายโพสต์</td></tr>
+          <tr><td><strong>Planable</strong><br><a href="https://planable.io/">planable.io</a></td><td>Content collaboration, approval, scheduling</td><td>Comment, suggestion, annotation, client approval links</td><td>เพิ่ม approval link สำหรับลูกค้า review โดยไม่ต้องเข้า admin ลึก</td></tr>
+          <tr><td><strong>FeedHive</strong><br><a href="https://www.feedhive.com/">feedhive.com</a></td><td>AI social media automation and workflows</td><td>Brand tone, automation, posting conditions, team workspace</td><td>ระยะถัดไปค่อยเพิ่ม automation rule เช่น post เฉพาะวัน/เวลา/เงื่อนไข</td></tr>
+          <tr><td><strong>Copy.ai</strong><br><a href="https://www.copy.ai/">copy.ai</a></td><td>Content automation workflows and brand voice</td><td>Infobase, brand voice, tables, reusable workflow</td><td>เพิ่ม Knowledge Source / Brand Context สำหรับลดการ prompt ซ้ำ</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section id="patterns">
+      <h2>3. UI/UX Patterns ที่พบซ้ำในเว็บกลุ่มนี้</h2>
+      <div class="grid grid-2">
+        <div class="card"><h3><span class="priority">1</span>Brand-first onboarding</h3><p>ผู้ใช้ตั้งค่า brand voice, audience, tone, visual style, color, logo, platform ก่อนเริ่ม generate.</p></div>
+        <div class="card"><h3><span class="priority">2</span>Template-first generation</h3><p>แทนที่จะให้ prompt เปล่า ระบบให้เลือก template เช่น Product launch, Educational post, Promo, FAQ, Carousel.</p></div>
+        <div class="card"><h3><span class="priority">3</span>Editor + Preview split view</h3><p>ด้านซ้ายเป็น input/control, ตรงกลางเป็น editor, ด้านขวาเป็น preview ตาม platform.</p></div>
+        <div class="card"><h3><span class="priority">4</span>AI quick actions</h3><p>โพสต์ที่ generate แล้วควรมีปุ่มแก้เร็ว: rewrite, shorten, expand, change tone, add CTA, add hashtags.</p></div>
+        <div class="card"><h3><span class="priority">5</span>Image option selection</h3><p>สร้างภาพหลายตัวเลือก แล้วให้ผู้ใช้เลือก 1 ภาพก่อน approve creative.</p></div>
+        <div class="card"><h3><span class="priority">6</span>Approval state machine</h3><p>draft → text approved → image ready → creative approved → scheduled → published/failed.</p></div>
+      </div>
+    </section>
+
+    <section id="visuals">
+      <h2>4. รูปตัวอย่าง UI Mockup สำหรับนำไปพัฒนา</h2>
+      <p class="muted">ภาพด้านล่างเป็น mockup สรุป pattern จากเว็บ benchmark เพื่อใช้เป็น reference ในการพัฒนา ไม่ใช่ screenshot คัดลอกจากเว็บใดเว็บหนึ่ง</p>
+
+      <h3>4.1 Quick Create Page: หน้าเดียวจบสำหรับ Generate Text + Image</h3>
+      <div class="mock"><div class="mockbar"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>
+      <svg viewBox="0 0 1100 610" xmlns="http://www.w3.org/2000/svg">
+        <rect width="1100" height="610" fill="#f8fafc"/>
+        <rect x="24" y="24" width="220" height="562" rx="18" fill="#101828"/>
+        <text x="52" y="66" fill="#fff" font-size="22" font-weight="700">AI Publisher</text>
+        <rect x="48" y="100" width="172" height="38" rx="10" fill="#d92d20"/><text x="70" y="125" fill="#fff" font-size="14" font-weight="700">+ Quick Create</text>
+        <text x="52" y="174" fill="#98a2b3" font-size="14">Brand Setup</text><text x="52" y="216" fill="#98a2b3" font-size="14">Drafts</text><text x="52" y="258" fill="#98a2b3" font-size="14">Image Studio</text><text x="52" y="300" fill="#98a2b3" font-size="14">Calendar</text><text x="52" y="342" fill="#98a2b3" font-size="14">Analytics</text>
+        <text x="278" y="62" fill="#101828" font-size="26" font-weight="800">Quick Create</text><text x="278" y="92" fill="#667085" font-size="15">Create 5-10 social posts with images from one brief</text>
+        <rect x="278" y="122" width="360" height="432" rx="18" fill="#fff" stroke="#e4e7ec"/>
+        <text x="306" y="160" fill="#344054" font-size="15" font-weight="700">Campaign Brief</text>
+        <rect x="306" y="184" width="304" height="52" rx="12" fill="#f2f4f7"/><text x="326" y="216" fill="#667085" font-size="14">Topic: Payroll service for SMEs</text>
+        <rect x="306" y="252" width="145" height="48" rx="12" fill="#f2f4f7"/><text x="326" y="282" fill="#667085" font-size="14">Platform</text><rect x="465" y="252" width="145" height="48" rx="12" fill="#f2f4f7"/><text x="485" y="282" fill="#667085" font-size="14">Language</text>
+        <rect x="306" y="316" width="145" height="48" rx="12" fill="#f2f4f7"/><text x="326" y="346" fill="#667085" font-size="14">5 posts</text><rect x="465" y="316" width="145" height="48" rx="12" fill="#f2f4f7"/><text x="485" y="346" fill="#667085" font-size="14">Image style</text>
+        <rect x="306" y="382" width="304" height="88" rx="12" fill="#f2f4f7"/><text x="326" y="414" fill="#667085" font-size="14">Notes / Knowledge source</text>
+        <rect x="306" y="494" width="304" height="44" rx="12" fill="#d92d20"/><text x="402" y="522" fill="#fff" font-size="15" font-weight="800">Generate Drafts</text>
+        <rect x="662" y="122" width="398" height="432" rx="18" fill="#fff" stroke="#e4e7ec"/>
+        <text x="690" y="160" fill="#344054" font-size="15" font-weight="700">Live Platform Preview</text>
+        <rect x="690" y="190" width="342" height="314" rx="16" fill="#f9fafb" stroke="#e4e7ec"/>
+        <circle cx="724" cy="225" r="20" fill="#d92d20"/><text x="754" y="220" fill="#101828" font-size="14" font-weight="700">DataClaw</text><text x="754" y="240" fill="#98a2b3" font-size="12">LinkedIn · Draft</text>
+        <text x="724" y="286" fill="#344054" font-size="16" font-weight="700">Stop wasting time on payroll admin.</text><text x="724" y="318" fill="#667085" font-size="14">Generate compliant HR content with approved</text><text x="724" y="340" fill="#667085" font-size="14">brand voice and ready-to-review images.</text>
+        <rect x="724" y="370" width="256" height="88" rx="12" fill="#ffe4e1"/><text x="792" y="422" fill="#b42318" font-size="18" font-weight="800">AI Image Preview</text>
+      </svg></div>
+      <p class="caption">Pattern: left navigation + brief form + live preview. เหมาะกับ Quick Mode ของระบบคุณ</p>
+
+      <h3>4.2 Drafts + Approval Board</h3>
+      <div class="mock"><div class="mockbar"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>
+      <svg viewBox="0 0 1100 560" xmlns="http://www.w3.org/2000/svg">
+        <rect width="1100" height="560" fill="#f8fafc"/>
+        <text x="42" y="58" fill="#101828" font-size="28" font-weight="800">Drafts Review Board</text><text x="42" y="88" fill="#667085" font-size="15">Control every post before image generation and publishing</text>
+        <g transform="translate(42,126)"><rect width="240" height="380" rx="18" fill="#fff" stroke="#e4e7ec"/><text x="22" y="38" fill="#101828" font-size="16" font-weight="800">Draft</text><rect x="22" y="64" width="196" height="92" rx="14" fill="#f9fafb" stroke="#e4e7ec"/><text x="38" y="94" fill="#344054" font-size="13" font-weight="700">Post 01: HR Tip</text><text x="38" y="120" fill="#667085" font-size="12">Need review</text><rect x="22" y="176" width="196" height="92" rx="14" fill="#f9fafb" stroke="#e4e7ec"/><text x="38" y="206" fill="#344054" font-size="13" font-weight="700">Post 02: Payroll FAQ</text><text x="38" y="232" fill="#667085" font-size="12">Need review</text></g>
+        <g transform="translate(310,126)"><rect width="240" height="380" rx="18" fill="#fff" stroke="#e4e7ec"/><text x="22" y="38" fill="#101828" font-size="16" font-weight="800">Text Approved</text><rect x="22" y="64" width="196" height="92" rx="14" fill="#ecfdf3" stroke="#abefc6"/><text x="38" y="94" fill="#344054" font-size="13" font-weight="700">Post 03: Service CTA</text><text x="38" y="120" fill="#039855" font-size="12">Ready for image</text></g>
+        <g transform="translate(578,126)"><rect width="240" height="380" rx="18" fill="#fff" stroke="#e4e7ec"/><text x="22" y="38" fill="#101828" font-size="16" font-weight="800">Image Ready</text><rect x="22" y="64" width="196" height="142" rx="14" fill="#fff7f5" stroke="#fecdca"/><rect x="38" y="82" width="164" height="62" rx="10" fill="#ffd7d1"/><text x="38" y="170" fill="#344054" font-size="13" font-weight="700">Post 04: Promo</text><text x="38" y="190" fill="#b42318" font-size="12">Creative review</text></g>
+        <g transform="translate(846,126)"><rect width="212" height="380" rx="18" fill="#fff" stroke="#e4e7ec"/><text x="22" y="38" fill="#101828" font-size="16" font-weight="800">Scheduled</text><rect x="22" y="64" width="168" height="92" rx="14" fill="#eff8ff" stroke="#b2ddff"/><text x="38" y="94" fill="#344054" font-size="13" font-weight="700">Post 05</text><text x="38" y="120" fill="#175cd3" font-size="12">Fri 09:00</text></g>
+      </svg></div>
+      <p class="caption">Pattern: state machine แบบ Kanban ทำให้ลูกค้าเข้าใจว่างานอยู่ขั้นไหน</p>
+
+      <h3>4.3 Image Studio: เลือกภาพก่อน Approve Creative</h3>
+      <div class="mock"><div class="mockbar"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>
+      <svg viewBox="0 0 1100 570" xmlns="http://www.w3.org/2000/svg">
+        <rect width="1100" height="570" fill="#f8fafc"/>
+        <text x="42" y="58" fill="#101828" font-size="28" font-weight="800">Image Studio</text><text x="42" y="88" fill="#667085" font-size="15">Generate multiple image options from approved text</text>
+        <rect x="42" y="124" width="306" height="388" rx="18" fill="#fff" stroke="#e4e7ec"/><text x="70" y="162" fill="#344054" font-size="15" font-weight="800">Creative Prompt</text><rect x="70" y="188" width="250" height="130" rx="14" fill="#f2f4f7"/><text x="88" y="222" fill="#667085" font-size="13">Professional HR dashboard,</text><text x="88" y="246" fill="#667085" font-size="13">red-white brand, clean UI,</text><text x="88" y="270" fill="#667085" font-size="13">Thai SME business owner</text><rect x="70" y="344" width="118" height="42" rx="12" fill="#f2f4f7"/><text x="96" y="371" fill="#667085" font-size="13">1:1</text><rect x="202" y="344" width="118" height="42" rx="12" fill="#f2f4f7"/><text x="228" y="371" fill="#667085" font-size="13">Brand</text><rect x="70" y="420" width="250" height="44" rx="12" fill="#d92d20"/><text x="134" y="448" fill="#fff" font-size="14" font-weight="800">Generate Images</text>
+        <g transform="translate(382,124)"><rect width="210" height="260" rx="18" fill="#fff" stroke="#e4e7ec"/><rect x="20" y="20" width="170" height="160" rx="14" fill="#ffd7d1"/><text x="70" y="104" fill="#b42318" font-size="17" font-weight="800">Option A</text><text x="42" y="218" fill="#344054" font-size="13" font-weight="700">Clean office</text></g>
+        <g transform="translate(622,124)"><rect width="210" height="260" rx="18" fill="#fff" stroke="#d92d20" stroke-width="3"/><rect x="20" y="20" width="170" height="160" rx="14" fill="#fee4e2"/><text x="70" y="104" fill="#b42318" font-size="17" font-weight="800">Option B</text><text x="42" y="218" fill="#344054" font-size="13" font-weight="700">Selected</text></g>
+        <g transform="translate(862,124)"><rect width="210" height="260" rx="18" fill="#fff" stroke="#e4e7ec"/><rect x="20" y="20" width="170" height="160" rx="14" fill="#fef3f2"/><text x="70" y="104" fill="#b42318" font-size="17" font-weight="800">Option C</text><text x="42" y="218" fill="#344054" font-size="13" font-weight="700">Abstract UI</text></g>
+        <rect x="382" y="420" width="690" height="52" rx="14" fill="#101828"/><text x="650" y="453" fill="#fff" font-size="16" font-weight="800">Approve Creative & Send to Calendar</text>
+      </svg></div>
+      <p class="caption">Pattern: image generation ต้องแยกเป็นขั้นตอนเพื่อควบคุมคุณภาพ ไม่ควร auto publish ทันที</p>
+
+      <h3>4.4 Calendar Scheduler: วางแผนและลากโพสต์ลงเวลา</h3>
+      <div class="mock"><div class="mockbar"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>
+      <svg viewBox="0 0 1100 570" xmlns="http://www.w3.org/2000/svg">
+        <rect width="1100" height="570" fill="#f8fafc"/><text x="42" y="58" fill="#101828" font-size="28" font-weight="800">Content Calendar</text><text x="42" y="88" fill="#667085" font-size="15">Drag approved posts into publishing slots</text>
+        <rect x="42" y="124" width="242" height="390" rx="18" fill="#fff" stroke="#e4e7ec"/><text x="70" y="160" fill="#344054" font-size="15" font-weight="800">Approved Queue</text><rect x="70" y="188" width="186" height="78" rx="14" fill="#ecfdf3" stroke="#abefc6"/><text x="88" y="218" fill="#344054" font-size="13" font-weight="700">Post 06</text><text x="88" y="242" fill="#039855" font-size="12">Ready</text><rect x="70" y="286" width="186" height="78" rx="14" fill="#ecfdf3" stroke="#abefc6"/><text x="88" y="316" fill="#344054" font-size="13" font-weight="700">Post 07</text><text x="88" y="340" fill="#039855" font-size="12">Ready</text>
+        <rect x="316" y="124" width="742" height="390" rx="18" fill="#fff" stroke="#e4e7ec"/>
+        <g font-size="13" font-weight="800" fill="#475467"><text x="352" y="162">Mon</text><text x="454" y="162">Tue</text><text x="556" y="162">Wed</text><text x="658" y="162">Thu</text><text x="760" y="162">Fri</text><text x="862" y="162">Sat</text><text x="964" y="162">Sun</text></g>
+        <g stroke="#e4e7ec"><line x1="422" y1="180" x2="422" y2="492"/><line x1="524" y1="180" x2="524" y2="492"/><line x1="626" y1="180" x2="626" y2="492"/><line x1="728" y1="180" x2="728" y2="492"/><line x1="830" y1="180" x2="830" y2="492"/><line x1="932" y1="180" x2="932" y2="492"/><line x1="334" y1="272" x2="1040" y2="272"/><line x1="334" y1="364" x2="1040" y2="364"/></g>
+        <rect x="350" y="202" width="76" height="58" rx="12" fill="#fee4e2"/><text x="364" y="225" fill="#b42318" font-size="12" font-weight="800">09:00</text><text x="364" y="246" fill="#344054" font-size="11">LinkedIn</text>
+        <rect x="554" y="294" width="76" height="58" rx="12" fill="#eff8ff"/><text x="568" y="317" fill="#175cd3" font-size="12" font-weight="800">12:00</text><text x="568" y="338" fill="#344054" font-size="11">Facebook</text>
+        <rect x="758" y="386" width="76" height="58" rx="12" fill="#fef0c7"/><text x="772" y="409" fill="#b54708" font-size="12" font-weight="800">18:00</text><text x="772" y="430" fill="#344054" font-size="11">Instagram</text>
+      </svg></div>
+      <p class="caption">Pattern: Calendar ต้องรองรับ unscheduled / draft / scheduled / published ในหน้าเดียว</p>
+    </section>
+
+    <section id="recommendation">
+      <h2>5. Recommendation สำหรับเว็บ AI Content Publisher ที่ทำอยู่</h2>
+      <div class="note"><strong>Positioning ที่แนะนำ:</strong> “AI Content Operating System สำหรับสร้างโพสต์ + ภาพ + ตรวจอนุมัติ + นัดเวลาโพสต์ ในระบบเดียว”</div>
+      <h3>5.1 โครงสร้างหน้าเว็บที่ควรมี</h3>
+      <table>
+        <thead><tr><th>Page</th><th>Purpose</th><th>Core Components</th><th>Priority</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Brand Setup</strong></td><td>เก็บข้อมูลแบรนด์เพื่อให้ AI เขียนตรงโทน</td><td>Business type, audience, tone, forbidden words, examples, logo/color</td><td>P0</td></tr>
+          <tr><td><strong>Quick Create</strong></td><td>สร้างโพสต์เร็วแบบหน้าเดียว</td><td>Topic, platform, language, post count, word count, image style, notes</td><td>P0</td></tr>
+          <tr><td><strong>Drafts</strong></td><td>ตรวจและอนุมัติข้อความ</td><td>List/Kanban, status badge, edit modal, approve text, regenerate</td><td>P0</td></tr>
+          <tr><td><strong>Image Studio</strong></td><td>สร้างและเลือกภาพประกอบ</td><td>Prompt, 1-3 image options, select, regenerate, approve creative</td><td>P0</td></tr>
+          <tr><td><strong>Calendar</strong></td><td>นัดเวลาโพสต์</td><td>Monthly/weekly view, approved queue, platform filter, schedule button</td><td>P1</td></tr>
+          <tr><td><strong>Analytics</strong></td><td>เรียนรู้ผลลัพธ์หลังโพสต์</td><td>Engagement, best time, best platform, content recommendation</td><td>P2</td></tr>
+        </tbody>
+      </table>
+
+      <h3>5.2 User Flow ที่ควรใช้</h3>
+      <div class="flow"><span class="step">Brand Setup</span><span class="arrow">→</span><span class="step">Quick Create</span><span class="arrow">→</span><span class="step">Review Text</span><span class="arrow">→</span><span class="step">Generate Images</span><span class="arrow">→</span><span class="step">Approve Creative</span><span class="arrow">→</span><span class="step">Schedule / Publish</span></div>
+
+      <h3>5.3 Component Checklist สำหรับ DEV</h3>
+      <div class="grid grid-2">
+        <div class="card"><h3>Generator Form</h3><ul class="checklist"><li>Topic / Campaign objective</li><li>Platform selector</li><li>Language selector</li><li>Number of posts: 1 / 5 / 10</li><li>Word count</li><li>Knowledge source toggle</li><li>Image style selector</li></ul></div>
+        <div class="card"><h3>Draft Card</h3><ul class="checklist"><li>Status badge</li><li>Platform icon</li><li>Text preview</li><li>AI actions: rewrite / shorten / expand</li><li>Approve text button</li><li>Generate image button</li></ul></div>
+        <div class="card"><h3>Image Card</h3><ul class="checklist"><li>Image preview</li><li>Prompt used</li><li>Select option</li><li>Regenerate</li><li>Approve creative</li><li>Link image to draft</li></ul></div>
+        <div class="card"><h3>Calendar Item</h3><ul class="checklist"><li>Date/time</li><li>Platform</li><li>Post status</li><li>Preview modal</li><li>Buffer publish state</li><li>Error state if publish failed</li></ul></div>
+      </div>
+    </section>
+
+    <section id="roadmap">
+      <h2>6. Development Roadmap แบบ Practical</h2>
+      <table>
+        <thead><tr><th>Phase</th><th>Goal</th><th>Deliverables</th><th>Scope Guard</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Phase 1</strong><br>Demo-ready MVP</td><td>ลูกค้าสร้างโพสต์และรูปได้จริง</td><td>Brand Setup, Quick Create, Drafts, Image Studio, basic approval</td><td>ยังไม่ทำ analytics ลึก / automation rule</td></tr>
+          <tr><td><strong>Phase 2</strong><br>Schedule Workflow</td><td>นำโพสต์ที่อนุมัติแล้วไปลง calendar</td><td>Calendar, schedule queue, Buffer integration, publish status</td><td>ยังไม่ทำ multi-client agency dashboard</td></tr>
+          <tr><td><strong>Phase 3</strong><br>Campaign Factory</td><td>สร้างโพสต์เป็นชุด 7/14/30 วัน</td><td>Campaign brief, bulk generation, batch approval, calendar auto-fill</td><td>ต้องคุม token/cost และ rate limit</td></tr>
+          <tr><td><strong>Phase 4</strong><br>Learning Loop</td><td>ใช้ผลลัพธ์จริงมาปรับ content</td><td>Analytics, best post pattern, recommendation, content asset library</td><td>ต้องมีข้อมูล publish/engagement ก่อน</td></tr>
+        </tbody>
+      </table>
+      <div class="note warn"><strong>ข้อควรระวัง:</strong> อย่าเริ่มจากระบบใหญ่เกินไป เช่น 30 วัน × 10 โพสต์ + Auto image + Auto publish พร้อมกันทั้งหมด เพราะเสี่ยง token/cost บานและ QA ยาก ควรเริ่มจาก 5-10 posts ต่อ batch และให้ user approve ก่อนเสมอ</div>
+    </section>
+
+    <section id="sources">
+      <h2>7. Sources</h2>
+      <ol class="source-list small">
+        <li>Jasper Platform — <a href="https://www.jasper.ai/platform">https://www.jasper.ai/platform</a></li>
+        <li>Jasper Brand Voice — <a href="https://www.jasper.ai/brand-voice">https://www.jasper.ai/brand-voice</a></li>
+        <li>Canva AI — <a href="https://www.canva.com/canva-ai/">https://www.canva.com/canva-ai/</a></li>
+        <li>Canva AI Social Media Post Generator — <a href="https://www.canva.com/features/ai-social-media-post-generator/">https://www.canva.com/features/ai-social-media-post-generator/</a></li>
+        <li>Adobe Express — <a href="https://www.adobe.com/express/">https://www.adobe.com/express/</a></li>
+        <li>Adobe Express Content Scheduler — <a href="https://www.adobe.com/express/feature/content-scheduler">https://www.adobe.com/express/feature/content-scheduler</a></li>
+        <li>Buffer AI Assistant — <a href="https://buffer.com/ai-assistant">https://buffer.com/ai-assistant</a></li>
+        <li>Predis.ai Scheduler — <a href="https://predis.ai/features/social-media-scheduler/">https://predis.ai/features/social-media-scheduler/</a></li>
+        <li>Simplified — <a href="https://simplified.com/">https://simplified.com/</a></li>
+        <li>Simplified Approval Workflow — <a href="https://simplified.com/social-media/approval-workflow">https://simplified.com/social-media/approval-workflow</a></li>
+        <li>Ocoya — <a href="https://www.ocoya.com/">https://www.ocoya.com/</a></li>
+        <li>Marky — <a href="https://www.mymarky.ai/">https://www.mymarky.ai/</a></li>
+        <li>Planable — <a href="https://planable.io/">https://planable.io/</a></li>
+        <li>Planable Approval Help — <a href="https://help.planable.io/hc/en-us/articles/22581435847324-How-to-get-Client-Approval-for-content-in-Planable">https://help.planable.io/hc/en-us/articles/22581435847324-How-to-get-Client-Approval-for-content-in-Planable</a></li>
+        <li>FeedHive — <a href="https://www.feedhive.com/">https://www.feedhive.com/</a></li>
+        <li>Copy.ai — <a href="https://www.copy.ai/">https://www.copy.ai/</a></li>
+      </ol>
+    </section>
+    <div class="footer">Prepared for DataClaw / AI Content Publisher development · HTML self-contained report</div>
+  </main>
+</body>
+</html>

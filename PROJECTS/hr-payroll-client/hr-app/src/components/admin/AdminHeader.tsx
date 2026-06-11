@@ -16,7 +16,7 @@ export function AdminHeader({
   return (
     <header className="z-10 shrink-0 border-b border-border/80 bg-white px-3 py-2 md:px-4 md:py-2.5">
       <div className="flex items-center gap-3">
-        <AdminMobileNav alertBadge={alertBadge} />
+        <AdminMobileNav />
         <div className="relative mx-auto hidden w-full max-w-xl flex-1 md:block">
           <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
           <input

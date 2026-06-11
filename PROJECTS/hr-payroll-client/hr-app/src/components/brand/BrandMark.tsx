@@ -81,12 +81,12 @@ export function BrandMark({
       />
       <div className="min-w-0 flex-1 py-0.5">
         <p
-          className="truncate text-[22px] font-bold leading-none text-foreground"
+          className="text-[22px] font-bold leading-none text-foreground"
           style={{ fontFamily: "var(--font-noto-sc), sans-serif" }}
         >
           中国名堂
         </p>
-        <p className="mt-1.5 truncate text-xs font-semibold uppercase tracking-[0.2em] text-foreground/65">
+        <p className="mt-1.5 text-xs font-semibold uppercase tracking-[0.18em] text-foreground/65">
           Zhongguomingtang
         </p>
       </div>

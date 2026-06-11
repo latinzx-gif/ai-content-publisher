@@ -1,16 +1,16 @@
 # E2E T27 Results
 
-**Date:** 2026-06-11T08:34:54.957Z
+**Date:** 2026-06-11T13:31:13.772Z
 **Command:** `npm run test:e2e`
-**Overall:** PASS
+**Overall:** FAIL
 
 ## Flow Summary
 
 | Flow | Passed | Failed | Status |
 |------|--------|--------|--------|
-| flow-attendance | 7 | 0 | PASS |
-| flow-leave | 11 | 0 | PASS |
-| flow-alerts | 5 | 0 | PASS |
+| attendance | 0 | 1 | FAIL |
+| leave | 0 | 1 | FAIL |
+| alerts | 0 | 1 | FAIL |
 
 ## Skips
 
@@ -18,7 +18,14 @@
 
 ## Errors
 
-None
+### attendance
+- fetch failed
+
+### leave
+- fetch failed
+
+### alerts
+- fetch failed
 
 ## Environment
 

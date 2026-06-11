@@ -21,7 +21,14 @@ import { KpiCard } from "@/components/brand/KpiCard"
 import { StatusPill } from "@/components/brand/StatusPill"
 import { WidgetCard } from "@/components/brand/WidgetCard"
 import { getDashboardStats } from "@/features/dashboard/data"
+import {
+  AttendanceExceptionsList,
+  ComplianceRemindersList,
+  DocumentApprovalsList,
+  RecentHrTicketsList,
+} from "@/features/dashboard/DashboardWidgetLists"
 import { OnboardingDonut } from "@/features/dashboard/OnboardingDonut"
+import { RecruitmentDonut } from "@/features/dashboard/RecruitmentDonut"
 import { getDashboardWidgets } from "@/features/dashboard/widgets-data"
 
 const QUICK_ACTIONS: Array<{
@@ -49,18 +56,13 @@ const NEW_HIRE_STATUS: Record<
   pending: { label: "Pending", variant: "pending" },
 }
 
-const DOC_STUB = [
-  { label: "Employment Contracts", count: 0 },
-  { label: "ID Proofs", count: 0 },
-  { label: "Policy Acknowledgement", count: 0 },
-] as const
-
-const RECRUITMENT_STUB = [
-  { label: "New", count: 0 },
-  { label: "In Review", count: 0 },
-  { label: "Interview", count: 0 },
-  { label: "Offered", count: 0 },
-  { label: "On Hold", count: 0 },
+/** Demo pipeline counts — matches mockup until recruitment module ships. */
+const RECRUITMENT_DONUT = [
+  { name: "New", value: 14 },
+  { name: "In Review", value: 11 },
+  { name: "Interview", value: 9 },
+  { name: "Offered", value: 5 },
+  { name: "On Hold", value: 3 },
 ] as const
 
 export async function HrAdminDashboard({ userName }: { userName: string }) {
@@ -176,120 +178,46 @@ export async function HrAdminDashboard({ userName }: { userName: string }) {
           compact
           title="Pending Document Approvals"
           href="/admin/documents"
+          footerHref="/admin/documents"
+          footerLabel="Go to Documents"
         >
-          <ul className="space-y-3">
-            {DOC_STUB.map((item) => (
-              <li
-                key={item.label}
-                className="flex items-center justify-between gap-2 text-sm"
-              >
-                <span className="text-muted-foreground">{item.label}</span>
-                <span className="font-semibold tabular-nums text-brand-red">
-                  {item.count}
-                </span>
-              </li>
-            ))}
-          </ul>
+          <DocumentApprovalsList />
         </WidgetCard>
 
-        <WidgetCard compact title="Attendance Exceptions" href="/admin/attendance">
-          {widgets.exceptions.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No exceptions today</p>
-          ) : (
-            <ul className="space-y-3">
-              {widgets.exceptions.map((item) => (
-                <li
-                  key={item.id}
-                  className="flex items-start justify-between gap-2 border-b border-border/60 pb-2 last:border-0"
-                >
-                  <div>
-                    <p className="text-sm font-medium">{item.employeeName}</p>
-                    <p className="text-xs text-muted-foreground">{item.detail}</p>
-                  </div>
-                  <StatusPill
-                    label={item.kind === "late" ? "Late" : "Open"}
-                    variant="warning"
-                  />
-                </li>
-              ))}
-            </ul>
-          )}
+        <WidgetCard
+          compact
+          title="Attendance Exceptions"
+          href="/admin/attendance"
+          footerHref="/admin/attendance"
+          footerLabel="Go to Attendance"
+        >
+          <AttendanceExceptionsList items={widgets.exceptions} />
         </WidgetCard>
 
-        <WidgetCard compact title="Recent HR Tickets" href="/admin/alerts">
-          {widgets.recentAlerts.length === 0 ? (
-            <p className="text-sm text-muted-foreground">All clear</p>
-          ) : (
-            <ul className="space-y-3">
-              {widgets.recentAlerts.map((item) => (
-                <li
-                  key={item.id}
-                  className="flex items-start justify-between gap-2 text-sm"
-                >
-                  <div className="min-w-0">
-                    <p className="font-medium">{item.employeeName}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {item.alertType} · {item.triggerDate}
-                    </p>
-                  </div>
-                  <StatusPill
-                    label={item.status}
-                    variant={item.status === "failed" ? "rejected" : "pending"}
-                  />
-                </li>
-              ))}
-            </ul>
-          )}
+        <WidgetCard
+          compact
+          title="Recent HR Tickets"
+          href="/admin/alerts"
+          footerHref="/admin/alerts"
+          footerLabel="Go to Tickets"
+        >
+          <RecentHrTicketsList items={widgets.recentAlerts} />
         </WidgetCard>
       </div>
 
       <div className="grid min-h-0 flex-1 gap-2 md:gap-3 min-[1024px]:grid-cols-4">
         <WidgetCard compact title="Recruitment Snapshot" href="/admin/recruitment">
-          <div className="flex items-center gap-4">
-            <div className="flex size-16 shrink-0 items-center justify-center rounded-full border-4 border-muted bg-muted/30">
-              <span className="text-lg font-bold tabular-nums text-foreground">0</span>
-            </div>
-            <div className="min-w-0 flex-1">
-              <p className="text-xs font-medium text-muted-foreground">Open Positions</p>
-              <ul className="mt-2 space-y-1.5">
-                {RECRUITMENT_STUB.map((item) => (
-                  <li
-                    key={item.label}
-                    className="flex items-center justify-between gap-2 text-xs"
-                  >
-                    <span className="text-muted-foreground">{item.label}</span>
-                    <span className="font-semibold tabular-nums">{item.count}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </div>
+          <RecruitmentDonut compact data={[...RECRUITMENT_DONUT]} />
         </WidgetCard>
 
-        <WidgetCard compact title="Compliance Reminders" href="/admin/alerts">
-          {widgets.compliance.length === 0 ? (
-            <p className="text-sm text-muted-foreground">All clear for 30 days</p>
-          ) : (
-            <ul className="space-y-3">
-              {widgets.compliance.map((item) => (
-                <li
-                  key={`${item.employeeId}-${item.kind}`}
-                  className="flex items-center justify-between gap-2 text-sm"
-                >
-                  <div className="min-w-0">
-                    <p className="font-medium">{item.employeeName}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {item.kind} · due {item.dueDate}
-                    </p>
-                  </div>
-                  <StatusPill
-                    label={`${item.daysLeft}d`}
-                    variant={item.daysLeft <= 7 ? "warning" : "info"}
-                  />
-                </li>
-              ))}
-            </ul>
-          )}
+        <WidgetCard
+          compact
+          title="Compliance Reminders"
+          href="/admin/alerts"
+          footerHref="/admin/alerts"
+          footerLabel="Go to Compliance"
+        >
+          <ComplianceRemindersList items={widgets.compliance} />
         </WidgetCard>
 
         <WidgetCard compact title="Announcements">

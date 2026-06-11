@@ -4,6 +4,7 @@ import { getLineClient } from "@/lib/line/client"
 import { welcomeFlex } from "@/lib/line/flex/menu-guide"
 import { handleMessage } from "@/lib/line/handlers/message"
 import { handlePostback } from "@/lib/line/handlers/postback"
+import { shouldHandleInteractiveEvent } from "@/lib/line/handlers/source"
 
 async function handleFollow(event: webhook.FollowEvent): Promise<void> {
   if (!event.replyToken) {
@@ -16,7 +17,22 @@ async function handleFollow(event: webhook.FollowEvent): Promise<void> {
   })
 }
 
+async function handleJoin(event: webhook.JoinEvent): Promise<void> {
+  if (event.source?.type === "group" && event.source.groupId) {
+    console.info("LINE join groupId", event.source.groupId)
+  }
+}
+
 async function handleEvent(event: webhook.Event): Promise<void> {
+  if (event.type === "join") {
+    return handleJoin(event)
+  }
+
+  // Never auto-reply in group/room — HR group is push-only (reports).
+  if (!shouldHandleInteractiveEvent(event)) {
+    return
+  }
+
   switch (event.type) {
     case "postback":
       return handlePostback(event)

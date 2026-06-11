@@ -4,12 +4,16 @@ export function WidgetCard({
   title,
   href,
   actionLabel = "View All",
+  footerHref,
+  footerLabel,
   compact = false,
   children,
 }: {
   title: string
   href?: string
   actionLabel?: string
+  footerHref?: string
+  footerLabel?: string
   compact?: boolean
   children: React.ReactNode
 }) {
@@ -43,6 +47,16 @@ export function WidgetCard({
       >
         {children}
       </div>
+      {footerHref && footerLabel ? (
+        <div className="shrink-0 border-t border-border/60 px-3 py-2 text-center">
+          <Link
+            href={footerHref}
+            className="text-xs font-medium text-brand-red hover:underline"
+          >
+            {footerLabel}
+          </Link>
+        </div>
+      ) : null}
     </div>
   )
 }

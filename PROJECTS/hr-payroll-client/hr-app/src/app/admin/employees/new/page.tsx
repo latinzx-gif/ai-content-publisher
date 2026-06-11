@@ -1,0 +1,18 @@
+import Link from "next/link"
+
+import { AddEmployeeForm } from "@/features/employees/AddEmployeeForm"
+
+export default function NewEmployeePage() {
+  return (
+    <div className="flex h-full min-h-0 flex-1 flex-col gap-2 overflow-hidden">
+      <p className="shrink-0 text-sm">
+        <Link href="/admin/employees" className="text-brand-red hover:underline">
+          ← กลับรายชื่อพนักงาน
+        </Link>
+      </p>
+      <div className="min-h-0 flex-1 overflow-hidden">
+        <AddEmployeeForm />
+      </div>
+    </div>
+  )
+}

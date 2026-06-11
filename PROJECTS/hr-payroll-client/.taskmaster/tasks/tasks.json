@@ -469,7 +469,7 @@
       "id": "28",
       "title": "Deployment — production deploy + Vercel config",
       "description": "Deploy ไปยัง Vercel production, ตั้งค่า env, Supabase production project",
-      "status": "in-progress",
+      "status": "done",
       "priority": "high",
       "milestone": "M6",
       "agent": "Cursor",
@@ -480,13 +480,13 @@
       "details": "ใช้ skill 14-deployment-checklist. Vercel: connect repo, set env vars (LINE, Supabase), custom domain ถ้ามี. Supabase: production project แยกจาก dev. Edge Functions: deploy cron functions. LINE Webhook URL: อัปเดตเป็น production URL",
       "testStrategy": "production URL ทำงานได้, webhook รับ event จาก LINE production",
       "subtasks": [],
-      "updatedAt": "2026-06-11T08:35:36.712Z"
+      "updatedAt": "2026-06-11T09:39:06.810Z"
     },
     {
       "id": "29",
       "title": "Demo Prep — script + known issues + fallback",
       "description": "เตรียม demo script, seed demo data, รายการ known issues พร้อม workaround",
-      "status": "pending",
+      "status": "done",
       "priority": "medium",
       "milestone": "M6",
       "agent": "Cursor",
@@ -495,29 +495,273 @@
       ],
       "details": "Demo data: 5 พนักงาน test accounts พร้อม LINE accounts จริง. Demo script: 1) เช็คอิน, 2) ดู dashboard, 3) ขอลา + อนุมัติ, 4) ดู alert. Known issues doc. Fallback: screenshot/recording ถ้า LINE API ปัญหา",
       "testStrategy": "demo run ผ่านทุก step โดยไม่ติด",
-      "subtasks": []
+      "subtasks": [],
+      "updatedAt": "2026-06-11T14:00:00.000Z"
     },
     {
       "id": "30",
       "title": "Delivery Audit — Pre-demo quality gate",
       "description": "รัน delivery audit ด้วย Opus ก่อน demo",
-      "status": "pending",
+      "status": "done",
       "priority": "high",
       "milestone": "M6",
-      "agent": "Claude Code (Opus)",
+      "agent": "Cursor",
       "dependencies": [
         "29"
       ],
       "details": "ใช้ skill 07-delivery-audit. ตรวจ: feature completeness vs PRD, security, performance, error handling, UX. Verdict: 🟢 Ready / 🟡 Ready with caveats / 🔴 Not ready",
       "testStrategy": "DELIVERY_READINESS_AUDIT.md สร้างแล้ว verdict 🟢 หรือ 🟡",
-      "subtasks": []
+      "subtasks": [],
+      "updatedAt": "2026-06-11T14:00:00.000Z"
+    },
+    {
+      "id": "31",
+      "title": "Document Request Schema — hr_document_requests + RLS + Storage",
+      "description": "สร้าง schema คำขอเอกสาร พร้อม RLS และ storage bucket",
+      "status": "done",
+      "priority": "high",
+      "milestone": "M7",
+      "agent": "Claude Code",
+      "dependencies": [
+        "30"
+      ],
+      "details": "Table hr_document_requests, bucket hr-documents, RLS employee insert own / HR manage all",
+      "testStrategy": "migration รันผ่าน, RLS enable",
+      "subtasks": [],
+      "updatedAt": "2026-06-11T13:46:13.832Z"
+    },
+    {
+      "id": "32",
+      "title": "Document Request LINE/LIFF flow",
+      "description": "พนักงานขอเอกสารผ่าน LINE — เลือกประเภท, เหตุผล, ติดตามสถานะ",
+      "status": "done",
+      "priority": "high",
+      "milestone": "M7",
+      "agent": "Claude Code",
+      "dependencies": [
+        "31"
+      ],
+      "details": "แทนที่ documentAction guide stub ด้วย LIFF หรือ postback flow จริง",
+      "testStrategy": "submit แล้วมี row ใน hr_document_requests",
+      "subtasks": [],
+      "updatedAt": "2026-06-11T13:46:16.305Z"
+    },
+    {
+      "id": "33",
+      "title": "Document Request Admin — /admin/documents queue",
+      "description": "HR จัดการคิวคำขอเอกสาร อัปโหลดไฟล์ ส่ง LINE",
+      "status": "done",
+      "priority": "high",
+      "milestone": "M7",
+      "agent": "Codex",
+      "dependencies": [
+        "32"
+      ],
+      "details": "แทน AdminComingSoon ด้วย queue + approve + upload + notify",
+      "testStrategy": "HR complete request → employee notify",
+      "subtasks": [],
+      "updatedAt": "2026-06-11T13:46:18.902Z"
+    },
+    {
+      "id": "34",
+      "title": "Document Request Flex templates",
+      "description": "Flex ยืนยันคำขอ + แจ้งเอกสารพร้อม",
+      "status": "done",
+      "priority": "medium",
+      "milestone": "M7",
+      "agent": "Codex",
+      "dependencies": [
+        "33"
+      ],
+      "details": "Template ยืนยัน submit, แจ้ง ready/download",
+      "testStrategy": "Flex render ใน LINE",
+      "subtasks": [],
+      "updatedAt": "2026-06-11T13:46:21.138Z"
+    },
+    {
+      "id": "35",
+      "title": "Complaint Schema — hr_complaints + anonymous RLS",
+      "description": "Schema ร้องเรียน พร้อม anonymous flag และ RLS",
+      "status": "done",
+      "priority": "high",
+      "milestone": "M8",
+      "agent": "Claude Code",
+      "dependencies": [
+        "30"
+      ],
+      "details": "hr_complaints + hr_complaint_messages, anonymous ไม่ผูก employee_id",
+      "testStrategy": "migration + RLS pass",
+      "subtasks": [],
+      "updatedAt": "2026-06-11T13:46:23.363Z"
+    },
+    {
+      "id": "36",
+      "title": "Complaint LINE flow — submit + ticket id",
+      "description": "ยื่นร้องเรียนผ่าน LINE ระบุ/ไม่ระบุตัวตน",
+      "status": "done",
+      "priority": "high",
+      "milestone": "M8",
+      "agent": "Claude Code",
+      "dependencies": [
+        "35"
+      ],
+      "details": "แทน complaintAction stub",
+      "testStrategy": "ticket created + Flex confirm",
+      "subtasks": [],
+      "updatedAt": "2026-06-11T13:46:25.594Z"
+    },
+    {
+      "id": "37",
+      "title": "Complaint Admin — /admin/complaints",
+      "description": "HR ดูรายการ ตอบกลับ ปิดเรื่อง",
+      "status": "done",
+      "priority": "high",
+      "milestone": "M8",
+      "agent": "Codex",
+      "dependencies": [
+        "36"
+      ],
+      "details": "หน้า admin ใหม่ complaint queue + thread",
+      "testStrategy": "HR reply → status update",
+      "subtasks": [],
+      "updatedAt": "2026-06-11T13:46:27.837Z"
+    },
+    {
+      "id": "38",
+      "title": "Complaint notify employee on HR reply",
+      "description": "ส่ง LINE เมื่อ HR ตอบ (non-anonymous)",
+      "status": "done",
+      "priority": "medium",
+      "milestone": "M8",
+      "agent": "Claude Code",
+      "dependencies": [
+        "37"
+      ],
+      "details": "push/flex เมื่อมี reply ใหม่",
+      "testStrategy": "employee รับ notify",
+      "subtasks": [],
+      "updatedAt": "2026-06-11T13:46:30.096Z"
+    },
+    {
+      "id": "39",
+      "title": "Announcement Schema — hr_announcements + targeting",
+      "description": "Schema ประกาศ HR + กลุ่มเป้าหมาย",
+      "status": "done",
+      "priority": "high",
+      "milestone": "M9",
+      "agent": "Claude Code",
+      "dependencies": [
+        "30"
+      ],
+      "details": "target: all / department / role",
+      "testStrategy": "migration pass",
+      "subtasks": [],
+      "updatedAt": "2026-06-11T13:46:32.334Z"
+    },
+    {
+      "id": "40",
+      "title": "Announcement Admin compose — /admin/announcements",
+      "description": "HR สร้างประกาศ schedule ส่ง",
+      "status": "done",
+      "priority": "high",
+      "milestone": "M9",
+      "agent": "Codex",
+      "dependencies": [
+        "39"
+      ],
+      "details": "compose UI + preview + schedule",
+      "testStrategy": "draft saved, schedule set",
+      "subtasks": [],
+      "updatedAt": "2026-06-11T13:46:34.612Z"
+    },
+    {
+      "id": "41",
+      "title": "Announcement broadcast — Flex batch push",
+      "description": "ส่งประกาศถึงพนักงานตาม target + rate limit",
+      "status": "done",
+      "priority": "high",
+      "milestone": "M9",
+      "agent": "Claude Code",
+      "dependencies": [
+        "40"
+      ],
+      "details": "multicast 500/batch queue",
+      "testStrategy": "broadcast ถึง test employees",
+      "subtasks": [],
+      "updatedAt": "2026-06-11T13:46:36.862Z"
+    },
+    {
+      "id": "42",
+      "title": "Announcement LINE view — latest for employee",
+      "description": "พนักงานดูประกาศล่าสุดใน LINE",
+      "status": "done",
+      "priority": "medium",
+      "milestone": "M9",
+      "agent": "Claude Code",
+      "dependencies": [
+        "41"
+      ],
+      "details": "แทน announcementAction stub",
+      "testStrategy": "postback แสดงรายการ",
+      "subtasks": [],
+      "updatedAt": "2026-06-11T13:46:39.140Z"
+    },
+    {
+      "id": "43",
+      "title": "Security Review Phase 2",
+      "description": "RLS ใหม่, anonymous complaint, document storage",
+      "status": "done",
+      "priority": "high",
+      "milestone": "M10",
+      "agent": "Claude Code (Opus)",
+      "dependencies": [
+        "34",
+        "38",
+        "42"
+      ],
+      "details": "skill 10-security-review สำหรับ P2 tables",
+      "testStrategy": "SECURITY_REVIEW_P2.md PASS",
+      "subtasks": [],
+      "updatedAt": "2026-06-11T13:46:41.365Z"
+    },
+    {
+      "id": "44",
+      "title": "E2E Phase 2 — document, complaint, announcement flows",
+      "description": "E2E 3 flows ใหม่",
+      "status": "done",
+      "priority": "medium",
+      "milestone": "M10",
+      "agent": "Claude Code",
+      "dependencies": [
+        "43"
+      ],
+      "details": "scripts/e2e flow-document, flow-complaint, flow-announcement",
+      "testStrategy": "all flows PASS",
+      "subtasks": [],
+      "updatedAt": "2026-06-11T13:46:43.640Z"
+    },
+    {
+      "id": "45",
+      "title": "Delivery Audit Phase 2",
+      "description": "DELIVERY_READINESS_AUDIT_P2.md + demo update",
+      "status": "done",
+      "priority": "high",
+      "milestone": "M10",
+      "agent": "Cursor",
+      "dependencies": [
+        "44"
+      ],
+      "details": "verdict ก่อน handoff Phase 2",
+      "testStrategy": "audit doc มี verdict",
+      "subtasks": [],
+      "updatedAt": "2026-06-11T13:46:46.149Z"
     }
   ],
   "metadata": {
     "version": "1.0.0",
-    "lastModified": "2026-06-11T08:35:36.712Z",
-    "taskCount": 30,
-    "completedCount": 27,
+    "lastModified": "2026-06-11T13:46:46.149Z",
+    "taskCount": 45,
+    "completedCount": 45,
     "tags": [
       "master"
     ]

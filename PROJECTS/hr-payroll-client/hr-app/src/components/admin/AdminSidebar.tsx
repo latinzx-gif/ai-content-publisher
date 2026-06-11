@@ -9,6 +9,7 @@ import {
   isAdminNavActive,
   type AdminNavItem,
 } from "@/components/admin/admin-nav"
+import { ADMIN_SIDEBAR_WIDTH_CLASS } from "@/components/admin/admin-layout"
 import { BrandMark } from "@/components/brand/BrandMark"
 import { cn } from "@/lib/utils"
 
@@ -19,8 +20,8 @@ function SidebarPromo() {
         className="pointer-events-none absolute inset-x-0 bottom-0 h-12 bg-[radial-gradient(ellipse_120%_80%_at_50%_100%,rgba(229,57,53,0.12),transparent)]"
         aria-hidden
       />
-      <div className="relative flex items-end justify-between gap-1">
-        <p className="max-w-[9.5rem] text-left text-[17px] font-bold leading-[1.25] text-brand-red">
+      <div className="relative flex items-end justify-between gap-2">
+        <p className="max-w-[11rem] text-left text-[17px] font-bold leading-[1.25] text-brand-red">
           Together, We
           <br />
           Build a Stronger
@@ -40,19 +41,7 @@ function SidebarPromo() {
   )
 }
 
-/** @deprecated Use ADMIN_NAV_ITEMS from admin-nav.ts */
-export const NAV_ITEMS = ADMIN_NAV_ITEMS
-
-export function isNavActive(pathname: string, href: string): boolean {
-  return isAdminNavActive(pathname, href)
-}
-
-export function AdminNavLinks({
-  onNavigate,
-}: {
-  onNavigate?: () => void
-  alertBadge?: number
-}) {
+export function AdminNavLinks({ onNavigate }: { onNavigate?: () => void }) {
   const pathname = usePathname()
 
   return (
@@ -92,7 +81,7 @@ function AdminNavLink({
       )}
     >
       <Icon className="size-4 shrink-0" />
-      <span className="min-w-0 flex-1 truncate">{label}</span>
+      <span className="min-w-0 flex-1 leading-snug">{label}</span>
       {!active ? (
         <ChevronRight
           className="size-4 shrink-0 text-muted-foreground/45"
@@ -105,7 +94,12 @@ function AdminNavLink({
 
 export function AdminSidebar() {
   return (
-    <aside className="hidden h-full max-h-dvh w-64 shrink-0 flex-col overflow-hidden border-r border-border/80 bg-white md:flex">
+    <aside
+      className={cn(
+        "hidden h-full max-h-dvh shrink-0 flex-col overflow-hidden border-r border-border/80 bg-white md:flex",
+        ADMIN_SIDEBAR_WIDTH_CLASS
+      )}
+    >
       <div className="shrink-0 border-b border-border/80 px-5 py-5 [@media(max-height:900px)]:py-4">
         <BrandMark variant="sidebar" />
       </div>

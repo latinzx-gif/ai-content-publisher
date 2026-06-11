@@ -3,9 +3,11 @@
 import { useState } from "react"
 import { Menu } from "lucide-react"
 
+import { ADMIN_SIDEBAR_WIDTH_CLASS } from "@/components/admin/admin-layout"
 import { AdminNavLinks } from "@/components/admin/AdminSidebar"
 import { BrandMark } from "@/components/brand/BrandMark"
 import { Button } from "@/components/ui/button"
+import { cn } from "@/lib/utils"
 import {
   Sheet,
   SheetContent,
@@ -13,7 +15,7 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet"
 
-export function AdminMobileNav({ alertBadge = 0 }: { alertBadge?: number }) {
+export function AdminMobileNav() {
   const [open, setOpen] = useState(false)
 
   return (
@@ -26,15 +28,12 @@ export function AdminMobileNav({ alertBadge = 0 }: { alertBadge?: number }) {
           </Button>
         }
       />
-      <SheetContent side="left" className="w-64 p-0">
+      <SheetContent side="left" className={cn(ADMIN_SIDEBAR_WIDTH_CLASS, "p-0")}>
         <SheetHeader className="border-b px-5 py-6">
           <BrandMark variant="sidebar" />
         </SheetHeader>
         <div className="py-4">
-          <AdminNavLinks
-            alertBadge={alertBadge}
-            onNavigate={() => setOpen(false)}
-          />
+          <AdminNavLinks onNavigate={() => setOpen(false)} />
         </div>
       </SheetContent>
     </Sheet>

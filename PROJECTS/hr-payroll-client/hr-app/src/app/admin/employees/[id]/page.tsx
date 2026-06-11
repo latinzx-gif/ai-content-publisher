@@ -1,18 +1,8 @@
 import Link from "next/link"
 import { notFound } from "next/navigation"
 
-import { AdminPageShell } from "@/components/brand/AdminPageShell"
-import { StatusPill } from "@/components/brand/StatusPill"
-import { EmployeeProfileForm } from "@/features/employees/profile/EmployeeProfileForm"
+import { EmployeeProfilePageClient } from "@/features/employees/profile/EmployeeProfilePageClient"
 import { getEmployeeProfile } from "@/features/employees/profile/data"
-
-function statusVariant(
-  status: string
-): "approved" | "pending" | "neutral" {
-  if (status === "active") return "approved"
-  if (status === "probation") return "pending"
-  return "neutral"
-}
 
 export default async function EmployeeProfilePage({
   params,
@@ -24,24 +14,13 @@ export default async function EmployeeProfilePage({
   if (!profile) notFound()
 
   return (
-    <AdminPageShell
-      title={profile.name}
-      description={
-        <Link
-          href="/admin/employees"
-          className="text-brand-red hover:underline"
-        >
+    <div className="flex h-full min-h-0 flex-1 flex-col gap-2 overflow-hidden">
+      <p className="shrink-0 text-sm">
+        <Link href="/admin/employees" className="text-brand-red hover:underline">
           ← กลับรายชื่อพนักงาน
         </Link>
-      }
-      badge={
-        <StatusPill
-          label={profile.status}
-          variant={statusVariant(profile.status)}
-        />
-      }
-    >
-      <EmployeeProfileForm profile={profile} />
-    </AdminPageShell>
+      </p>
+      <EmployeeProfilePageClient profile={profile} />
+    </div>
   )
 }
