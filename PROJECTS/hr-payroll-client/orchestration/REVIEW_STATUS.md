@@ -1,21 +1,36 @@
-# REVIEW_STATUS.md — hr-payroll-client
+# REVIEW_STATUS.md
 
-| Task ID | Task Name | Status | Verdict | Date | Notes |
-|---------|-----------|--------|---------|------|-------|
-| T01–T30 | Phase 1 | ✅ COMPLETE | ✅ APPROVED | 2026-06-11 | audit 🟡 |
-| T31–T45 | Phase 2 | ✅ COMPLETE | ✅ APPROVED | 2026-06-11 | audit P2 🟢 |
-| T46–T60 | Phase 3 | ✅ COMPLETE | ✅ APPROVED | 2026-06-11 | audit P3 🟢 |
+**Previous task:** T76 — Phase 5.1 Production Hardening  
+**Status:** ✅ **APPROVED** (2026-06-11)  
+**Active task:** T77 — Phase 5 delivery & client handoff
 
-**Phase 1:** ✅ CLOSED (30/30)  
-**Phase 2:** ✅ CLOSED (15/15)  
-**Phase 3:** ✅ CLOSED (15/15) — **60/60 done**
+| Gate | Result |
+|------|--------|
+| build / typecheck / lint | ✅ PASS |
+| Production deploy | ✅ https://hr-app-two-iota.vercel.app |
+| Smoke 8 routes | ✅ PASS (`E2E_P5_1_RESULTS.md`) |
+| Security review P5.1 | ✅ APPROVED |
+| Linear T76 | ✅ JAK-131 Done |
 
-| Milestone | Linear | Status |
-|-----------|--------|--------|
-| M1–M10 | T01–T45 | ✅ CLOSED |
-| M11–M15 | T46–T60 | ✅ CLOSED |
+## T76 Delivered
 
-**Reports:** `DELIVERY_READINESS_AUDIT_P3.md`, `SECURITY_REVIEW_P3.md`, `E2E_P3_RESULTS.md`
+- `notifyBranchManager` — LINE push เมื่อ leave / attendance `pending_manager`
+- Branch sidebar badges (pending counts)
+- Migration `20260615000000_approval_expiry_vault_align.sql`
+- `scripts/e2e/smoke-role-routes.mjs`
+- Fixed `linear-sync-hr-payroll.mjs` for `master.tasks` JSON shape
 
----
-*Last updated: 2026-06-11 — Phase 3 complete*
+## Task Log
+
+| Task | Status | Date |
+|------|--------|------|
+| T01–T75 | ✅ APPROVED | 2026-06-10 |
+| T76 Phase 5.1 | ✅ APPROVED | 2026-06-11 |
+| T77 Handoff | 📋 READY FOR REVIEW | 2026-06-11 | CLIENT_HANDOFF_P5.md + smoke PASS + commit |
+
+## T77 Delivered (2026-06-11)
+
+- `reports/CLIENT_HANDOFF_P5.md` — roles, URLs, BM setup, LINE, cron, gaps
+- Vault + cron `approval-expiry` on `oouswalwqhojpzqwwdvs`
+- Smoke 8 routes PASS (production)
+- Git commit Phase 5 archive

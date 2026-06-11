@@ -132,6 +132,7 @@ type SimpleBubbleOptions = {
   rows?: BubbleRow[]
   footerNote?: string
   button?: { label: string; uri: string }
+  postbackButton?: { label: string; data: string }
 }
 
 function textLine(text: string): messagingApi.FlexComponent {
@@ -166,6 +167,7 @@ export function simpleBubble({
   rows,
   footerNote,
   button,
+  postbackButton,
 }: SimpleBubbleOptions): messagingApi.FlexBubble {
   const bodyContents: messagingApi.FlexComponent[] = [
     ...(lines ?? []).map(textLine),
@@ -206,7 +208,7 @@ export function simpleBubble({
     body: cardBody(bodyContents),
   }
 
-  if (button) {
+  if (button || postbackButton) {
     bubble.footer = {
       type: "box",
       layout: "vertical",
@@ -215,7 +217,13 @@ export function simpleBubble({
           type: "button",
           style: "primary",
           color: accentColor,
-          action: { type: "uri", label: button.label, uri: button.uri },
+          action: postbackButton
+            ? {
+                type: "postback",
+                label: postbackButton.label,
+                data: postbackButton.data,
+              }
+            : { type: "uri", label: button!.label, uri: button!.uri },
         },
       ],
     }

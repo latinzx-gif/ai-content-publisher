@@ -1,15 +1,13 @@
 # E2E Phase 3 Results
 
-Generated: 2026-06-11T15:03:06.176Z
+Generated: 2026-06-11T15:16:42.153Z
 
-Overall: FAIL
+Overall: PASS
 
-## overtime
-- passed: 0
-- failed: 1
-- error: fetch failed
+## flow-overtime
+- passed: 2
+- failed: 0
 
-## announcements-scheduled
-- passed: 0
-- failed: 1
-- error: fetch failed
+## flow-announcements
+- passed: 3
+- failed: 0

@@ -1,7 +1,13 @@
 import { NextResponse, type NextRequest } from "next/server"
 
 import { countLeaveDays, type LeaveType } from "@/features/leave/types"
-import { getCurrentEmployee } from "@/lib/auth/session"
+import { recordPayrollHours } from "@/lib/approval/payroll-ledger"
+import {
+  getCurrentEmployeeWithBranch,
+  getManagedBranchId,
+  isBranchManager,
+  isHrOrAdmin,
+} from "@/lib/auth/branch"
 import {
   leaveApprovedFlex,
   leaveRejectedFlex,
@@ -18,10 +24,8 @@ export async function POST(
   request: NextRequest,
   context: { params: Promise<{ id: string }> }
 ) {
-  const caller = await getCurrentEmployee()
-  if (!caller || (caller.role !== "hr" && caller.role !== "admin")) {
-    return NextResponse.json({ error: "forbidden" }, { status: 403 })
-  }
+  const caller = await getCurrentEmployeeWithBranch()
+  if (!caller) return NextResponse.json({ error: "unauthorized" }, { status: 401 })
 
   const { id } = await context.params
   let body: DecideBody
@@ -44,66 +48,76 @@ export async function POST(
   const { data: leave, error: fetchError } = await supabase
     .from("hr_leaves")
     .select(
-      "id, employee_id, type, start_date, end_date, status, hr_employees(line_user_id, name)"
+      "id, employee_id, type, start_date, end_date, status, approval_status, leave_unit, leave_hours, hr_employees!employee_id(line_user_id, name, branch_id)"
     )
     .eq("id", id)
     .maybeSingle()
 
-  if (fetchError) {
-    return NextResponse.json({ error: fetchError.message }, { status: 500 })
-  }
-  if (!leave) {
-    return NextResponse.json({ error: "not found" }, { status: 404 })
-  }
-  if (leave.status !== "pending") {
-    return NextResponse.json({ error: "already decided" }, { status: 409 })
+  if (fetchError) return NextResponse.json({ error: fetchError.message }, { status: 500 })
+  if (!leave) return NextResponse.json({ error: "not found" }, { status: 404 })
+  if (leave.approval_status === "expired") {
+    return NextResponse.json({ error: "คำขอหมดอายุแล้ว" }, { status: 400 })
   }
 
   const employeeJoin = Array.isArray(leave.hr_employees)
     ? leave.hr_employees[0]
     : leave.hr_employees
   const lineUserId = employeeJoin?.line_user_id as string | null | undefined
+  const branchId = (employeeJoin as { branch_id?: string })?.branch_id ?? null
   const leaveType = leave.type as LeaveType
   const days = countLeaveDays(leave.start_date, leave.end_date) ?? 0
 
-  const newStatus = body.action === "approve" ? "approved" : "rejected"
-  const { error: updateError } = await supabase
-    .from("hr_leaves")
-    .update({
-      status: newStatus,
-      approved_by: caller.id,
-      decision_note: note || null,
-    })
-    .eq("id", id)
+  const finalizeApprove = async () => {
+    const newStatus = "approved"
+    const { error: updateError } = await supabase
+      .from("hr_leaves")
+      .update({
+        status: newStatus,
+        approval_status: "approved",
+        approved_by: caller.id,
+        hr_decided_by: caller.id,
+        hr_decided_at: new Date().toISOString(),
+        decision_note: note || null,
+      })
+      .eq("id", id)
 
-  if (updateError) {
-    return NextResponse.json({ error: updateError.message }, { status: 500 })
-  }
+    if (updateError) throw updateError
 
-  let remainingDays: number | null = null
+    let remainingDays: number | null = null
 
-  if (body.action === "approve" && days > 0) {
-    const { data: balance } = await supabase
-      .from("hr_leave_balances")
-      .select("used_days, total_days")
-      .eq("employee_id", leave.employee_id)
-      .eq("leave_type", leave.type)
-      .maybeSingle()
-
-    if (balance) {
-      const nextUsed = Number(balance.used_days) + days
-      await supabase
+    if (leave.leave_unit === "days" && days > 0) {
+      const { data: balance } = await supabase
         .from("hr_leave_balances")
-        .update({ used_days: nextUsed })
+        .select("used_days, total_days")
         .eq("employee_id", leave.employee_id)
         .eq("leave_type", leave.type)
-      remainingDays = Number(balance.total_days) - nextUsed
-    }
-  }
+        .maybeSingle()
 
-  if (lineUserId) {
-    try {
-      if (body.action === "approve") {
+      if (balance) {
+        const nextUsed = Number(balance.used_days) + days
+        await supabase
+          .from("hr_leave_balances")
+          .update({ used_days: nextUsed })
+          .eq("employee_id", leave.employee_id)
+          .eq("leave_type", leave.type)
+        remainingDays = Number(balance.total_days) - nextUsed
+      }
+    }
+
+    if (leave.leave_unit === "hours" && leave.leave_hours) {
+      await recordPayrollHours({
+        employeeId: leave.employee_id as string,
+        branchId,
+        workDate: leave.start_date as string,
+        hours: Number(leave.leave_hours),
+        lineType: "sick_hourly",
+        sourceType: "leave",
+        sourceId: id,
+      })
+    }
+
+    if (lineUserId) {
+      try {
         await pushToLineUser(lineUserId, [
           leaveApprovedFlex({
             type: leaveType,
@@ -113,7 +127,37 @@ export async function POST(
             note: note || null,
           }),
         ])
-      } else {
+      } catch (lineError) {
+        console.error("leave decide LINE notify failed:", lineError)
+      }
+    }
+
+    return { id, status: newStatus }
+  }
+
+  const finalizeReject = async (stage: "manager" | "hr") => {
+    const patch =
+      stage === "manager"
+        ? {
+            approval_status: "rejected",
+            status: "rejected",
+            manager_decided_by: caller.id,
+            manager_decided_at: new Date().toISOString(),
+            decision_note: note,
+          }
+        : {
+            approval_status: "rejected",
+            status: "rejected",
+            hr_decided_by: caller.id,
+            hr_decided_at: new Date().toISOString(),
+            decision_note: note,
+          }
+
+    const { error } = await supabase.from("hr_leaves").update(patch).eq("id", id)
+    if (error) throw error
+
+    if (lineUserId) {
+      try {
         await pushToLineUser(lineUserId, [
           leaveRejectedFlex({
             type: leaveType,
@@ -122,11 +166,63 @@ export async function POST(
             reason: note,
           }),
         ])
+      } catch (lineError) {
+        console.error("leave reject LINE notify failed:", lineError)
       }
-    } catch (lineError) {
-      console.error("leave decide LINE notify failed:", lineError)
+    }
+    return { id, status: "rejected" }
+  }
+
+  if (leave.approval_status === "pending_manager") {
+    if (!isBranchManager(caller.role) && !isHrOrAdmin(caller.role)) {
+      return NextResponse.json({ error: "forbidden" }, { status: 403 })
+    }
+    if (isBranchManager(caller.role)) {
+      const managed = await getManagedBranchId(caller.id)
+      if (managed !== branchId) {
+        return NextResponse.json({ error: "forbidden" }, { status: 403 })
+      }
+    }
+
+    if (body.action === "reject") {
+      try {
+        return NextResponse.json(await finalizeReject("manager"))
+      } catch (e) {
+        return NextResponse.json({ error: String(e) }, { status: 500 })
+      }
+    }
+
+    const { error } = await supabase
+      .from("hr_leaves")
+      .update({
+        approval_status: "pending_hr",
+        manager_decided_by: caller.id,
+        manager_decided_at: new Date().toISOString(),
+      })
+      .eq("id", id)
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+    return NextResponse.json({ id, approval_status: "pending_hr" })
+  }
+
+  if (leave.approval_status === "pending_hr") {
+    if (!isHrOrAdmin(caller.role)) {
+      return NextResponse.json({ error: "forbidden" }, { status: 403 })
+    }
+
+    if (body.action === "reject") {
+      try {
+        return NextResponse.json(await finalizeReject("hr"))
+      } catch (e) {
+        return NextResponse.json({ error: String(e) }, { status: 500 })
+      }
+    }
+
+    try {
+      return NextResponse.json(await finalizeApprove())
+    } catch (e) {
+      return NextResponse.json({ error: String(e) }, { status: 500 })
     }
   }
 
-  return NextResponse.json({ id, status: newStatus })
+  return NextResponse.json({ error: "already decided" }, { status: 409 })
 }

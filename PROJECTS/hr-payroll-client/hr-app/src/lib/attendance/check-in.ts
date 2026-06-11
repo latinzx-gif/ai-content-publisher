@@ -3,6 +3,7 @@
 // (no user session); RLS is bypassed by design (T02).
 import { getAdminClient } from "@/lib/auth/admin-client"
 import { ictDayRangeUtc, lateMinutes } from "@/lib/attendance/late"
+import { getWorkStart } from "@/lib/runtime-config"
 
 export type CheckInLocation = {
   latitude: number
@@ -19,13 +20,6 @@ export type CheckInResult =
     }
   | { status: "already_checked_in"; checkInAt: Date }
   | { status: "not_registered" }
-
-function workStart(): { hour: number; minute: number } {
-  return {
-    hour: Number(process.env.WORK_START_HOUR ?? 9),
-    minute: Number(process.env.WORK_START_MINUTE ?? 0),
-  }
-}
 
 export async function checkIn({
   lineUserId,
@@ -72,7 +66,7 @@ export async function checkIn({
     }
   }
 
-  const { hour, minute } = workStart()
+  const { hour, minute } = await getWorkStart()
   const late = lateMinutes(now, hour, minute)
 
   const { error: insertError } = await admin.from("hr_attendance").insert({

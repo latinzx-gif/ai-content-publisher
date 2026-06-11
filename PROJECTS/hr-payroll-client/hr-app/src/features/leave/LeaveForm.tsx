@@ -51,13 +51,17 @@ export function LeaveForm() {
   })
 
   const [file, setFile] = useState<File | null>(null)
+  const [leaveHours, setLeaveHours] = useState("")
   const [fileError, setFileError] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
   const [success, setSuccess] = useState(false)
   const [submitError, setSubmitError] = useState<string | null>(null)
 
   const type = form.watch("type")
-  const days = countLeaveDays(form.watch("startDate"), form.watch("endDate"))
+  const startDate = form.watch("startDate")
+  const endDate = form.watch("endDate")
+  const days = countLeaveDays(startDate, endDate)
+  const isSameDaySick = type === "sick" && startDate && endDate && startDate === endDate
 
   function onFileChange(event: React.ChangeEvent<HTMLInputElement>) {
     const selected = event.target.files?.[0] ?? null
@@ -91,6 +95,9 @@ export function LeaveForm() {
     formData.append("endDate", values.endDate)
     formData.append("reason", values.reason)
     if (file) formData.append("attachment", file)
+    if (type === "sick" && leaveHours.trim()) {
+      formData.append("leaveHours", leaveHours.trim())
+    }
 
     try {
       const res = await fetch("/api/leave/request", {
@@ -170,12 +177,38 @@ export function LeaveForm() {
           />
         </div>
 
-        <p className="text-sm text-muted-foreground">
-          จำนวนวันลา:{" "}
-          <span className="font-medium text-foreground tabular-nums">
-            {days === null ? "—" : `${days} วัน`}
-          </span>
-        </p>
+        {isSameDaySick ? (
+          <FormItem>
+            <FormLabel>ชั่วโมงลาป่วย (ภายในวัน)</FormLabel>
+            <FormControl>
+              <input
+                type="number"
+                min={0.5}
+                max={24}
+                step={0.5}
+                value={leaveHours}
+                onChange={(e) => setLeaveHours(e.target.value)}
+                className={inputClassName}
+                placeholder="เช่น 2"
+              />
+            </FormControl>
+            <FormDescription>
+              ลาป่วยภายในวันนับเป็นชม. — ใส่ชั่วโมงแทนจำนวนวัน
+            </FormDescription>
+          </FormItem>
+        ) : (
+          <p className="text-sm text-muted-foreground">
+            จำนวนวันลา:{" "}
+            <span className="font-medium text-foreground tabular-nums">
+              {days === null ? "—" : `${days} วัน`}
+            </span>
+            {type === "sick" ? (
+              <span className="block text-xs">
+                ลาป่วยย้อนหลังได้ไม่เกิน 3 วัน — ต้องแนบใบรับรองแพทย์
+              </span>
+            ) : null}
+          </p>
+        )}
 
         <FormField
           control={form.control}
@@ -224,7 +257,7 @@ export function LeaveForm() {
 
         {success ? (
           <p className="text-sm text-green-600">
-            ส่งคำขอลาแล้ว — ระบบจะแจ้งผลทาง LINE เมื่อ HR อนุมัติ
+            ส่งคำขอลาแล้ว — รอ Branch Manager แล้ว HR อนุมัติ (ภายใน 48 ชม.)
           </p>
         ) : null}
         {submitError ? (

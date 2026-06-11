@@ -34,11 +34,14 @@ export function checkoutSummaryFlex({
         { label: "เลิกงาน", value: `${outText} น.` },
         { label: "รวมเวลา", value: formatDuration(workMinutes) },
       ],
-      ...(overtimeMinutes > 0
-        ? {
-            footerNote: `เกินเวลามาตรฐาน ${formatDuration(overtimeMinutes)}`,
-          }
-        : {}),
+      footerNote:
+        overtimeMinutes > 0
+          ? `เกินเวลามาตรฐาน ${formatDuration(overtimeMinutes)} — กดปุ่มด้านล่างยื่นสรุปวัน`
+          : "กดปุ่มด้านล่างเพื่อยื่นสรุปวันให้หัวหน้าสาขาอนุมัติ (ภายใน 48 ชม.)",
+      postbackButton: {
+        label: "ยื่นสรุปวัน",
+        data: "action=submit_attendance",
+      },
     })
   )
 }

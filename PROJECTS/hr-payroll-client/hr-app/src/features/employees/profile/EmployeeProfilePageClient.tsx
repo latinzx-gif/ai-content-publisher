@@ -6,12 +6,22 @@ import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { EmployeeProfileForm } from "@/features/employees/profile/EmployeeProfileForm"
 import { EmployeeProfileView } from "@/features/employees/profile/EmployeeProfileView"
+import { LifecyclePanel } from "@/features/employees/profile/LifecyclePanel"
 import type { EmployeeProfile } from "@/features/employees/profile/data"
+
+type ComplianceNote = {
+  id: string
+  category: string
+  note: string
+  created_at: string
+}
 
 export function EmployeeProfilePageClient({
   profile,
+  notes,
 }: {
   profile: EmployeeProfile
+  notes: ComplianceNote[]
 }) {
   const [editing, setEditing] = useState(false)
 
@@ -37,7 +47,7 @@ export function EmployeeProfilePageClient({
   }
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+    <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto pr-1">
       <EmployeeProfileView
         profile={profile}
         actions={
@@ -53,6 +63,10 @@ export function EmployeeProfilePageClient({
           </Button>
         }
       />
+      <section className="shrink-0 rounded-xl border border-border/80 bg-card p-4">
+        <h2 className="mb-3 text-sm font-semibold">Employee Lifecycle (F5)</h2>
+        <LifecyclePanel profile={profile} notes={notes} />
+      </section>
     </div>
   )
 }

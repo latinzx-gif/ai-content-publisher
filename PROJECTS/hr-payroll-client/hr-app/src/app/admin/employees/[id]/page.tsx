@@ -2,7 +2,7 @@ import Link from "next/link"
 import { notFound } from "next/navigation"
 
 import { EmployeeProfilePageClient } from "@/features/employees/profile/EmployeeProfilePageClient"
-import { getEmployeeProfile } from "@/features/employees/profile/data"
+import { getComplianceNotes, getEmployeeProfile } from "@/features/employees/profile/data"
 
 export default async function EmployeeProfilePage({
   params,
@@ -10,7 +10,10 @@ export default async function EmployeeProfilePage({
   params: Promise<{ id: string }>
 }) {
   const { id } = await params
-  const profile = await getEmployeeProfile(id)
+  const [profile, notes] = await Promise.all([
+    getEmployeeProfile(id),
+    getComplianceNotes(id),
+  ])
   if (!profile) notFound()
 
   return (
@@ -20,7 +23,7 @@ export default async function EmployeeProfilePage({
           ← กลับรายชื่อพนักงาน
         </Link>
       </p>
-      <EmployeeProfilePageClient profile={profile} />
+      <EmployeeProfilePageClient profile={profile} notes={notes} />
     </div>
   )
 }

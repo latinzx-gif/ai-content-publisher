@@ -6,7 +6,7 @@ export type Employee = {
   name: string
   position: string | null
   department: string | null
-  role: "employee" | "hr" | "admin"
+  role: "employee" | "hr" | "admin" | "branch_manager" | "ceo" | "dev"
   status: "active" | "inactive"
 }
 

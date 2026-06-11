@@ -453,3 +453,15 @@ enabled = true
 verify_jwt = false
 import_map = "./functions/announcement-scheduler/deno.json"
 entrypoint = "./functions/announcement-scheduler/index.ts"
+
+[functions.contract-alert]
+enabled = true
+verify_jwt = false
+import_map = "./functions/contract-alert/deno.json"
+entrypoint = "./functions/contract-alert/index.ts"
+
+[functions.approval-expiry]
+enabled = true
+verify_jwt = false
+import_map = "./functions/approval-expiry/deno.json"
+entrypoint = "./functions/approval-expiry/index.ts"

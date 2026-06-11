@@ -30,4 +30,4 @@ Payroll calc, multi-company, native app, accounting, advanced BI.
 
 ## Verdict
 
-🟢 **Ready for Phase 3 demo** — pending migration push + Vercel deploy + cron registration on Supabase.
+🟢 **Ready for Phase 3 demo** — cron registered (`weekly-summary`, `monthly-summary`, `announcement-scheduler`); E2E remote PASS (`npm run test:e2e:p3:remote`).

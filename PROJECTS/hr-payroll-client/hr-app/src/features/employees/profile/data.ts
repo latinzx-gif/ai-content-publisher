@@ -20,6 +20,10 @@ export type EmployeeProfile = {
   contract_start: string | null
   contract_type: ContractType
   probation_end: string | null
+  probation_outcome: string | null
+  probation_outcome_note: string | null
+  probation_extended_until: string | null
+  contract_end: string | null
   visa_expiry: string | null
   work_permit_expiry: string | null
   role: string
@@ -47,7 +51,7 @@ export async function getEmployeeProfile(
   const { data, error } = await supabase
     .from("hr_employees")
     .select(
-      "id, line_user_id, name, date_of_birth, phone, email, position, department, salary, contract_start, contract_type, probation_end, visa_expiry, work_permit_expiry, role, status"
+      "id, line_user_id, name, date_of_birth, phone, email, position, department, salary, contract_start, contract_type, contract_end, probation_end, probation_outcome, probation_outcome_note, probation_extended_until, visa_expiry, work_permit_expiry, role, status"
     )
     .eq("id", id)
     .maybeSingle()
@@ -60,9 +64,26 @@ export async function getEmployeeProfile(
   return {
     ...data,
     contract_type: (data.contract_type as ContractType) ?? null,
+    probation_outcome: data.probation_outcome as string | null,
+    probation_outcome_note: data.probation_outcome_note as string | null,
+    probation_extended_until: data.probation_extended_until as string | null,
+    contract_end: data.contract_end as string | null,
     status,
     probationStatus: deriveProbationStatus(status, data.probation_end, today),
     visaStatus: expiryStatusLabel(data.visa_expiry, today),
     workPermitStatus: expiryStatusLabel(data.work_permit_expiry, today),
   }
+}
+
+export async function getComplianceNotes(employeeId: string) {
+  const supabase = await createClient()
+  const { data, error } = await supabase
+    .from("hr_compliance_notes")
+    .select("id, category, note, created_at")
+    .eq("employee_id", employeeId)
+    .order("created_at", { ascending: false })
+    .limit(20)
+
+  if (error) throw error
+  return data ?? []
 }

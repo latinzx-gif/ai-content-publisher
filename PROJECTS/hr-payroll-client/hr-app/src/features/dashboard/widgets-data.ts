@@ -73,7 +73,7 @@ export async function getDashboardWidgets() {
     supabase
       .from("hr_leaves")
       .select(
-        "id, type, start_date, end_date, hr_employees!inner(name, department)"
+        "id, type, start_date, end_date, hr_employees!employee_id!inner(name, department)"
       )
       .eq("status", "pending")
       .order("created_at", { ascending: false })

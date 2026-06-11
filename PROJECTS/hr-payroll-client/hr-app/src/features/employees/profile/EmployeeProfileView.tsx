@@ -145,8 +145,13 @@ export function EmployeeProfileView({
             label="Work Permit Expiry"
             value={formatDate(profile.work_permit_expiry)}
           />
-          <ProfileField label="Probation" value={profile.probationStatus} />
+          <ProfileField label="Contract End" value={formatDate(profile.contract_end)} />
+          <ProfileField
+            label="Probation Outcome"
+            value={profile.probation_outcome ?? profile.probationStatus}
+          />
           <ProfileField label="Visa Status" value={profile.visaStatus.label} />
+          <ProfileField label="Work Permit Status" value={profile.workPermitStatus.label} />
         </ProfileSectionCard>
       </div>
     </div>

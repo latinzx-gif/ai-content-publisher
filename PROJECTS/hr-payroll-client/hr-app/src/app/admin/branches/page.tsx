@@ -1,0 +1,24 @@
+import { AdminPageShell } from "@/components/brand/AdminPageShell"
+import { BranchesPanel } from "@/features/branches/BranchesPanel"
+import { listBranches } from "@/features/branches/data"
+import { isCeo, isDev } from "@/lib/auth/roles"
+import { requireRole } from "@/lib/auth/require-role"
+
+export default async function AdminBranchesPage() {
+  const employee = await requireRole("hr", "admin", "ceo", "dev")
+  const branches = await listBranches()
+  const readOnly = isCeo(employee.role) && !isDev(employee.role)
+
+  return (
+    <AdminPageShell
+      title="สาขา"
+      description={
+        readOnly
+          ? "ดูข้อมูลสาขาทั้งหมด (read-only)"
+          : "จัดการสาขา — มอบหมาย Branch Manager ได้ภายหลัง"
+      }
+    >
+      <BranchesPanel branches={branches} readOnly={readOnly} />
+    </AdminPageShell>
+  )
+}

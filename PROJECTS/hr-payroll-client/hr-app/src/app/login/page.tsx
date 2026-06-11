@@ -1,5 +1,11 @@
+import Link from "next/link"
+
 import { BrandMark } from "@/components/brand/BrandMark"
-import { Button } from "@/components/ui/button"
+import { Button, buttonVariants } from "@/components/ui/button"
+import { cn } from "@/lib/utils"
+import { adminLoginPath } from "@/lib/auth/roles"
+import { getCurrentEmployee } from "@/lib/auth/session"
+import { createClient } from "@/lib/supabase/server"
 
 const ERROR_MESSAGES: Record<string, string> = {
   not_registered:
@@ -7,7 +13,8 @@ const ERROR_MESSAGES: Record<string, string> = {
   forbidden: "บัญชีของคุณไม่มีสิทธิ์เข้าถึงหน้านี้",
   invalid_state: "การเข้าสู่ระบบหมดอายุ กรุณาลองใหม่อีกครั้ง",
   line_login_failed: "เข้าสู่ระบบด้วย LINE ไม่สำเร็จ กรุณาลองใหม่อีกครั้ง",
-  session_failed: "สร้างเซสชันไม่สำเร็จ กรุณาลองใหม่อีกครั้ง",
+  session_failed:
+    "เซสชันไม่สมบูรณ์ (cookie เก่าหรือบัญชียังไม่ผูกกับพนักงาน) — กดล้าง session แล้ว login ใหม่",
 }
 
 export default async function LoginPage({
@@ -20,8 +27,16 @@ export default async function LoginPage({
     ? (ERROR_MESSAGES[error] ?? ERROR_MESSAGES.line_login_failed)
     : null
 
-  const lineStartUrl = process.env.NEXT_PUBLIC_BASE_URL
-    ? `${process.env.NEXT_PUBLIC_BASE_URL}/api/auth/line/start`
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  const employee = user && !error ? await getCurrentEmployee() : null
+  const dashboardPath = employee ? adminLoginPath(employee.role) : null
+
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL?.trim()
+  const lineStartUrl = baseUrl
+    ? `${baseUrl}/api/auth/line/start`
     : "/api/auth/line/start"
 
   return (
@@ -51,22 +66,42 @@ export default async function LoginPage({
               {errorMessage}
             </p>
           ) : null}
+          {employee && dashboardPath ? (
+            <Link
+              href={dashboardPath}
+              className={cn(
+                buttonVariants({ size: "default" }),
+                "w-full bg-brand-red text-white hover:bg-brand-red/90"
+              )}
+            >
+              เข้าสู่ Dashboard
+            </Link>
+          ) : null}
           {error === "not_registered" && lineId ? (
             <div className="rounded-lg border border-border/80 bg-muted/40 p-3 text-xs text-muted-foreground">
               <p className="font-medium text-foreground">LINE User ID (dev)</p>
               <p className="mt-1 break-all font-mono text-brand-red">{lineId}</p>
               <p className="mt-2">ลงทะเบียนใน local DB:</p>
               <code className="mt-1 block break-all rounded bg-background p-2 text-[10px]">
-                node scripts/seed-admin.mjs {lineId} &quot;Your Name&quot; admin
+                node scripts/seed-admin.mjs {lineId} &quot;Your Name&quot; dev
               </code>
             </div>
           ) : null}
-          <Button
-            render={<a href={lineStartUrl} />}
-            className="w-full bg-[#06C755] hover:bg-[#06C755]/80"
-          >
-            เข้าสู่ระบบด้วย LINE
-          </Button>
+          {!employee || error ? (
+            <Button
+              render={<a href={lineStartUrl} />}
+              className="w-full bg-[#06C755] hover:bg-[#06C755]/80"
+            >
+              เข้าสู่ระบบด้วย LINE
+            </Button>
+          ) : null}
+          {user || error ? (
+            <form action="/api/auth/logout" method="post">
+              <Button type="submit" variant="outline" className="w-full">
+                ล้าง session / cookie
+              </Button>
+            </form>
+          ) : null}
         </div>
       </div>
     </main>

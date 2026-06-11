@@ -6,7 +6,8 @@ import { updateSession } from "@/lib/supabase/middleware"
 // logged-in user. Role-level checks (hr/admin) live in admin/layout.tsx —
 // they need a DB read, which stays out of the proxy hot path.
 function publicOrigin(request: NextRequest): string {
-  return process.env.NEXT_PUBLIC_BASE_URL ?? request.nextUrl.origin
+  const configured = process.env.NEXT_PUBLIC_BASE_URL?.trim()
+  return configured || request.nextUrl.origin
 }
 
 export async function proxy(request: NextRequest) {
@@ -18,10 +19,11 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(new URL("/login", origin))
   }
 
-  if (pathname === "/login" && user) {
-    return NextResponse.redirect(new URL("/admin", origin))
-  }
+  // Never auto-redirect /login → /admin here (caused ERR_TOO_MANY_REDIRECTS when
+  // Supabase session existed but hr_employees lookup failed). Post-login routing
+  // is handled by /api/auth/line/callback; logged-in users use the login page CTA.
 
+  response.headers.set("x-pathname", pathname)
   return response
 }
 

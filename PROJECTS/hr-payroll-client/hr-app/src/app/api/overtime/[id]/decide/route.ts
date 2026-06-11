@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server"
 
-import { getCurrentEmployee } from "@/lib/auth/session"
+import { recordPayrollHours } from "@/lib/approval/payroll-ledger"
+import { getCurrentEmployeeWithBranch, isHrOrAdmin } from "@/lib/auth/branch"
 import { overtimeResultFlex } from "@/lib/line/flex/overtime-request"
 import { pushToLineUser } from "@/lib/line/notify-hr"
 import { createClient } from "@/lib/supabase/server"
@@ -10,12 +11,18 @@ type DecideBody = {
   note?: string
 }
 
+function otHours(startTime: string, endTime: string): number {
+  const [sh, sm] = startTime.split(":").map(Number)
+  const [eh, em] = endTime.split(":").map(Number)
+  return Math.max(0, eh + em / 60 - (sh + sm / 60))
+}
+
 export async function POST(
   request: NextRequest,
   context: { params: Promise<{ id: string }> }
 ) {
-  const caller = await getCurrentEmployee()
-  if (!caller || (caller.role !== "hr" && caller.role !== "admin")) {
+  const caller = await getCurrentEmployeeWithBranch()
+  if (!caller || !isHrOrAdmin(caller.role)) {
     return NextResponse.json({ error: "forbidden" }, { status: 403 })
   }
 
@@ -41,24 +48,43 @@ export async function POST(
 
   const { data: ot, error: fetchError } = await supabase
     .from("hr_overtime_requests")
-    .select("id, work_date, hr_employees(line_user_id)")
+    .select(
+      "id, work_date, start_time, end_time, approval_status, employee_id, hr_employees!employee_id(line_user_id, branch_id)"
+    )
     .eq("id", id)
     .maybeSingle()
 
-  if (fetchError) {
-    return NextResponse.json({ error: fetchError.message }, { status: 500 })
-  }
-  if (!ot) {
-    return NextResponse.json({ error: "not found" }, { status: 404 })
+  if (fetchError) return NextResponse.json({ error: fetchError.message }, { status: 500 })
+  if (!ot) return NextResponse.json({ error: "not found" }, { status: 404 })
+  if (ot.approval_status !== "pending_hr") {
+    return NextResponse.json({ error: "already decided" }, { status: 409 })
   }
 
   const { error: updateError } = await supabase
     .from("hr_overtime_requests")
-    .update({ status, decision_note: note || null })
+    .update({
+      status,
+      approval_status: status,
+      decision_note: note || null,
+      hr_decided_by: caller.id,
+      hr_decided_at: new Date().toISOString(),
+    })
     .eq("id", id)
 
-  if (updateError) {
-    return NextResponse.json({ error: updateError.message }, { status: 500 })
+  if (updateError) return NextResponse.json({ error: updateError.message }, { status: 500 })
+
+  if (status === "approved") {
+    const emp = Array.isArray(ot.hr_employees) ? ot.hr_employees[0] : ot.hr_employees
+    const hours = otHours(String(ot.start_time), String(ot.end_time))
+    await recordPayrollHours({
+      employeeId: ot.employee_id as string,
+      branchId: (emp as { branch_id?: string })?.branch_id ?? null,
+      workDate: ot.work_date as string,
+      hours,
+      lineType: "overtime",
+      sourceType: "overtime",
+      sourceId: id,
+    })
   }
 
   type Emp = { line_user_id: string | null }

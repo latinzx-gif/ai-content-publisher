@@ -66,6 +66,8 @@ export async function cleanupE2eData() {
   await rest(`hr_leave_balances?${filter}`, { method: "DELETE" })
   await rest(`hr_attendance?${filter}`, { method: "DELETE" })
   await rest(`hr_alerts?${filter}`, { method: "DELETE" })
+  await rest(`hr_overtime_requests?${filter}`, { method: "DELETE" })
+  await rest(`hr_announcements?title=like.E2E*`, { method: "DELETE" })
   const del = await rest(`hr_employees?id=in.(${ids})`, { method: "DELETE" })
   if (!del.ok) throw new Error(`cleanup employees: ${JSON.stringify(del.data)}`)
   return employees.length

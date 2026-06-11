@@ -1,13 +1,34 @@
-# CURRENT_TASK.md
+# CURRENT TASK: T77 — Phase 5 Delivery & Client Handoff
 
-**No active task** — Phase 3 complete (T46–T60)
+## Phase
 
-| Field | Value |
-|-------|-------|
-| Last task | **T60** — Delivery audit P3 |
-| Phase | **CLOSED** |
-| Reports | `DELIVERY_READINESS_AUDIT_P3.md`, `SECURITY_REVIEW_P3.md`, `E2E_P3_RESULTS.md` |
+EXECUTE → **READY FOR REVIEW**
+
+## Status
+
+Deliverables complete — รอ Cursor review / user sign-off
+
+## Primary Agent
+
+Cursor (executed directly per user approval)
+
+## Completed (2026-06-11)
+
+- [x] Remote migration on `oouswalwqhojpzqwwdvs`
+- [x] Vault `project_url` + `secret_key`
+- [x] Cron `approval-expiry` active (inline SQL)
+- [x] `CLIENT_HANDOFF_P5.md`
+- [x] Smoke 8 routes PASS
+- [x] Git commit (Phase 5 scope)
+
+## Acceptance Criteria
+
+- [x] Remote migration applied; cron documented
+- [x] `CLIENT_HANDOFF_P5.md` ครบ
+- [x] Git commit บน HEAD-OFFICE repo
+- [ ] Linear T77 → Done (after review approve)
+- [ ] User/client sign-off checklist §9 in handoff doc
 
 ## Next
 
-User demo / Phase 4 planning (if any).
+User: review handoff → `review task` → approve T77 → plan T78

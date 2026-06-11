@@ -2,12 +2,14 @@ import { createServerClient } from "@supabase/ssr"
 import { NextResponse, type NextRequest } from "next/server"
 
 import { getAdminClient } from "@/lib/auth/admin-client"
+import { adminLoginPath } from "@/lib/auth/roles"
 import { exchangeCode, verifyIdToken } from "@/lib/auth/line-login"
 
 const STATE_COOKIE = "line_login_state"
 
 function publicOrigin(request: NextRequest): string {
-  return process.env.NEXT_PUBLIC_BASE_URL ?? request.nextUrl.origin
+  const configured = process.env.NEXT_PUBLIC_BASE_URL?.trim()
+  return configured || request.nextUrl.origin
 }
 
 function loginRedirect(request: NextRequest, error: string) {
@@ -54,10 +56,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(loginUrl)
   }
 
-  const destination =
-    employee.role === "hr" || employee.role === "admin"
-      ? "/admin"
-      : "/liff/leave"
+  const destination = adminLoginPath(employee.role)
 
   let response = NextResponse.redirect(new URL(destination, origin))
 

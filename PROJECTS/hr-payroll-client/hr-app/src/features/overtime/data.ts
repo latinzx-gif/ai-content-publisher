@@ -23,7 +23,7 @@ export async function getOvertimeRequests(page = 1, status: OtStatus | "all" = "
   let query = supabase
     .from("hr_overtime_requests")
     .select(
-      "id, employee_id, work_date, start_time, end_time, reason, status, decision_note, created_at, hr_employees!inner(name, department)",
+      "id, employee_id, work_date, start_time, end_time, reason, status, decision_note, created_at, hr_employees!employee_id!inner(name, department)",
       { count: "exact" }
     )
     .order("created_at", { ascending: false })

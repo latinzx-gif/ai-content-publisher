@@ -1,52 +1,31 @@
-import {
-  BarChart3,
-  Building2,
-  CalendarDays,
-  Clock,
-  Timer,
-  FileText,
-  GraduationCap,
-  LayoutDashboard,
-  Megaphone,
-  MessageSquareWarning,
-  Settings,
-  Target,
-  UserSearch,
-  Users,
-  Wallet,
-  type LucideIcon,
-} from "lucide-react"
+import type { AdminNavItem } from "@/components/admin/admin-nav-types"
 
-export type AdminNavItem = {
-  label: string
-  href: string
-  icon: LucideIcon
-  /** Module not built yet — show coming-soon shell */
-  comingSoon?: boolean
-}
+export type { AdminNavItem, AdminNavIconName } from "@/components/admin/admin-nav-types"
 
 /** Sidebar navigation — aligned with HR Admin Dashboard mockup (12441) */
 export const ADMIN_NAV_ITEMS: AdminNavItem[] = [
-  { label: "Dashboard", href: "/admin", icon: LayoutDashboard },
-  { label: "Employees", href: "/admin/employees", icon: Users },
-  { label: "Organization", href: "/admin/organization", icon: Building2 },
-  { label: "Attendance", href: "/admin/attendance", icon: Clock },
-  { label: "Leave Management", href: "/admin/leaves", icon: CalendarDays },
-  { label: "Overtime", href: "/admin/overtime", icon: Timer },
-  { label: "Payroll", href: "/admin/payroll", icon: Wallet, comingSoon: true },
-  { label: "Performance", href: "/admin/performance", icon: Target, comingSoon: true },
-  { label: "Recruitment", href: "/admin/recruitment", icon: UserSearch, comingSoon: true },
+  { label: "Dashboard", href: "/admin", icon: "layout-dashboard" },
+  { label: "Employees", href: "/admin/employees", icon: "users" },
+  { label: "Branches", href: "/admin/branches", icon: "building" },
+  { label: "HR Approval Queue", href: "/admin/manager", icon: "building" },
+  { label: "Organization", href: "/admin/organization", icon: "building" },
+  { label: "Attendance", href: "/admin/attendance", icon: "clock" },
+  { label: "Leave Management", href: "/admin/leaves", icon: "calendar" },
+  { label: "Overtime", href: "/admin/overtime", icon: "timer" },
+  { label: "Payroll", href: "/admin/payroll", icon: "wallet" },
+  { label: "Performance", href: "/admin/performance", icon: "target", comingSoon: true },
+  { label: "Recruitment", href: "/admin/recruitment", icon: "user-search", comingSoon: true },
   {
     label: "Training & Development",
     href: "/admin/training",
-    icon: GraduationCap,
+    icon: "graduation-cap",
     comingSoon: true,
   },
-  { label: "Documents", href: "/admin/documents", icon: FileText },
-  { label: "Complaints", href: "/admin/complaints", icon: MessageSquareWarning },
-  { label: "Announcements", href: "/admin/announcements", icon: Megaphone },
-  { label: "Reports & Analytics", href: "/admin/reports", icon: BarChart3 },
-  { label: "Settings", href: "/admin/settings", icon: Settings },
+  { label: "Documents", href: "/admin/documents", icon: "file-text" },
+  { label: "Complaints", href: "/admin/complaints", icon: "message-warning" },
+  { label: "Announcements", href: "/admin/announcements", icon: "megaphone" },
+  { label: "Reports & Analytics", href: "/admin/reports", icon: "bar-chart" },
+  { label: "Settings", href: "/admin/settings", icon: "settings" },
 ]
 
 export function isAdminNavActive(pathname: string, href: string): boolean {

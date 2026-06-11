@@ -93,7 +93,7 @@ Detail: `orchestration/PHASE_2_PLAN.md`
 
 ---
 
-## Phase 3 — Operations & Reports (2026-06-11) 🔄 IN PROGRESS
+## Phase 3 — Operations & Reports ✅ CLOSED
 
 | Milestone | Tasks | Features |
 |-----------|-------|----------|
@@ -104,6 +104,21 @@ Detail: `orchestration/PHASE_2_PLAN.md`
 | M15: P3 Hardening | T58–T60 | Schedule + audit |
 
 Detail: `orchestration/PHASE_3_PLAN.md`
+
+---
+
+## Phase 4 — Production Excellence (2026-06-11) 🔄 IN PROGRESS
+
+| Milestone | Tasks | Features |
+|-----------|-------|----------|
+| M16: Production Infra | T61–T63 | pg_cron, editable settings, LINE checklist |
+| M17: Dashboard Polish | T64–T66 | F1 charts + real widgets |
+| M18: Reports & Payroll Hub | T67–T69 | CSV export, filters, payroll hub |
+| M19: Employee Lifecycle | T70–T72 | F5 probation/visa/contract |
+| M20: P4 Hardening | T73–T75 | E2E, security, audit |
+
+Detail: `orchestration/PHASE_4_PLAN.md`  
+Linear: JAK-116–JAK-130
 
 ---
 
@@ -118,6 +133,25 @@ Detail: `orchestration/PHASE_3_PLAN.md`
 | M5: Alerts & Summary | T22–T26 | Week 5 | P1 ✅ |
 | M6: Delivery | T27–T30 | Week 6-7 | P1 ✅ |
 | Phase 2 | T31–T45 | ~6 weeks | P2 ✅ |
-| Phase 3 | T46–T60 | ~7 weeks | P3 🔄 |
+| Phase 3 | T46–T60 | ~7 weeks | P3 ✅ |
+| Phase 4 | T61–T75 | ~6 weeks | P4 ⏳ review |
+| Phase 5 | T76–T95 | ~8–10 weeks | P5 📋 planned |
 
-**Total plan:** 60 tasks
+**Total plan:** 95 tasks (T76–T95 ดู `orchestration/PHASE_5_PLAN.md`)
+
+---
+
+## Phase 5 — Multi-Branch & Payroll Hours (M21–M28)
+
+**Goal:** สาขา>แผนก, Branch Manager 1:1, อนุมัติ 2 ขั้น (BM→HR), ชม. payroll, OT โดย BM
+
+| Milestone | Tasks | Focus |
+|-----------|-------|-------|
+| M21 | T76–T78 | Branch schema + roles |
+| M22 | T79–T80 | Approval engine + 48h SLA |
+| M23 | T81–T83 | Attendance daily approval |
+| M24 | T84–T86 | Leave rules (retro sick, hourly sick) |
+| M25 | T87–T88 | OT by Branch Manager |
+| M26 | T89–T90 | Payroll hours ledger + report |
+| M27 | T91–T92 | LINE notify + manager dashboard |
+| M28 | T93–T95 | E2E + audits |

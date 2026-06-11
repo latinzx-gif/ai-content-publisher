@@ -1,22 +1,34 @@
 import { AdminPageShell } from "@/components/brand/AdminPageShell"
+import { ReportsPanel } from "@/features/reports/ReportsPanel"
 import {
   getAttendanceReport,
   getLeaveReportSummary,
   getOvertimeReportSummary,
+  getReportDepartments,
 } from "@/features/reports/data"
 
-export default async function AdminReportsPage() {
-  const [attendance, leaves, overtime] = await Promise.all([
-    getAttendanceReport(30),
-    getLeaveReportSummary(),
-    getOvertimeReportSummary(),
+export default async function AdminReportsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ days?: string; department?: string }>
+}) {
+  const params = await searchParams
+  const days = Number(params.days ?? "30")
+  const department = params.department?.trim() ?? ""
+
+  const [departments, attendance, leaves, overtime] = await Promise.all([
+    getReportDepartments(),
+    getAttendanceReport(days, department || undefined),
+    getLeaveReportSummary(days, department || undefined),
+    getOvertimeReportSummary(department || undefined),
   ])
 
   return (
     <AdminPageShell
       title="Reports"
-      description="รายงานเข้างาน ลา และ OT (30 วันล่าสุด)"
+      description={`รายงานเข้างาน ลา และ OT (${days} วันล่าสุด)`}
     >
+      <ReportsPanel departments={departments} days={days} department={department} />
       <div className="grid gap-6">
         <ReportSection title={`Attendance (${attendance.length})`}>
           <SimpleTable

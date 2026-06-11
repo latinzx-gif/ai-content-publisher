@@ -5,7 +5,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
-import { OvertimeForm } from "@/features/overtime/OvertimeForm"
 import { getCurrentEmployee } from "@/lib/auth/session"
 
 export default async function OvertimeLiffPage() {
@@ -36,8 +35,16 @@ export default async function OvertimeLiffPage() {
           <CardTitle>ขอทำ OT</CardTitle>
           <CardDescription>{employee.name}</CardDescription>
         </CardHeader>
-        <CardContent>
-          <OvertimeForm />
+        <CardContent className="space-y-2 text-sm">
+          <p>
+            ตั้งแต่ Phase 5 — พนักงานไม่สามารถยื่น OT เองได้ กรุณาติดต่อ{" "}
+            <strong>Branch Manager</strong> ของสาขาเพื่อยื่นคำขอ OT
+          </p>
+          {employee.role === "branch_manager" ? (
+            <a href="/admin/branch/overtime" className="text-brand-red underline">
+              ไป Branch Dashboard — ยื่น OT
+            </a>
+          ) : null}
         </CardContent>
       </Card>
     </main>

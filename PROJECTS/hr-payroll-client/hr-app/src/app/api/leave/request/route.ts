@@ -10,11 +10,14 @@ import {
   LEAVE_TYPES,
   type LeaveType,
 } from "@/features/leave/types"
+import { expiresAtFrom } from "@/lib/approval/types"
+import { requiresMedicalCertificate, validateRetroactiveSickLeave } from "@/lib/leave/validation"
 import { getCurrentEmployee } from "@/lib/auth/session"
 import {
   leaveSubmitConfirmFlex,
   leaveSubmitHrNotifyFlex,
 } from "@/lib/line/flex/leave-request"
+import { notifyBranchManager } from "@/lib/line/notify-branch-manager"
 import { notifyHr, pushToLineUser } from "@/lib/line/notify-hr"
 import { createClient } from "@/lib/supabase/server"
 
@@ -37,6 +40,8 @@ export async function POST(request: NextRequest) {
   const endDate = form.get("endDate")
   const reason = form.get("reason")
   const file = form.get("attachment")
+  const leaveHoursRaw = form.get("leaveHours")
+  const medicalFile = form.get("medicalCertificate")
 
   if (
     typeof type !== "string" ||
@@ -49,9 +54,42 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "invalid fields" }, { status: 400 })
   }
 
+  const isSameDay = startDate === endDate
+  const leaveHours =
+    typeof leaveHoursRaw === "string" && leaveHoursRaw.trim()
+      ? Number(leaveHoursRaw)
+      : null
+  const leaveUnit: "days" | "hours" =
+    type === "sick" && isSameDay && leaveHours != null && leaveHours > 0
+      ? "hours"
+      : "days"
+
   const days = countLeaveDays(startDate, endDate)
-  if (days === null || days < 1) {
+  if (leaveUnit === "days" && (days === null || days < 1)) {
     return NextResponse.json({ error: "invalid date range" }, { status: 400 })
+  }
+  if (leaveUnit === "hours" && (!leaveHours || leaveHours <= 0 || leaveHours > 24)) {
+    return NextResponse.json({ error: "invalid leave hours" }, { status: 400 })
+  }
+
+  if (type === "sick") {
+    const retroErr = validateRetroactiveSickLeave(startDate)
+    if (retroErr) return NextResponse.json({ error: retroErr }, { status: 400 })
+  }
+
+  const needsMedical = requiresMedicalCertificate(type, startDate, leaveUnit)
+  const certFile =
+    medicalFile instanceof File && medicalFile.size > 0
+      ? medicalFile
+      : file instanceof File && file.size > 0
+        ? file
+        : null
+
+  if (needsMedical && !certFile) {
+    return NextResponse.json(
+      { error: "ต้องแนบใบรับรองแพทย์สำหรับลาป่วยนี้" },
+      { status: 400 }
+    )
   }
 
   if (file instanceof File && file.size > 0) {
@@ -71,37 +109,42 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 })
   }
 
-  const { data: balanceRow, error: balanceError } = await supabase
-    .from("hr_leave_balances")
-    .select("total_days, used_days")
-    .eq("employee_id", employee.id)
-    .eq("leave_type", type)
-    .maybeSingle()
+  let balance = { remaining: 0, total: 0, used: 0 }
+  if (leaveUnit === "days") {
+    const { data: balanceRow, error: balanceError } = await supabase
+      .from("hr_leave_balances")
+      .select("total_days, used_days")
+      .eq("employee_id", employee.id)
+      .eq("leave_type", type)
+      .maybeSingle()
 
-  if (balanceError) {
-    return NextResponse.json({ error: balanceError.message }, { status: 500 })
-  }
-  if (!balanceRow) {
-    return NextResponse.json(
-      {
-        error: "no_balance",
-        message: "ไม่พบยอดลาสำหรับประเภทนี้ กรุณาติดต่อ HR",
-      },
-      { status: 400 }
-    )
+    if (balanceError) {
+      return NextResponse.json({ error: balanceError.message }, { status: 500 })
+    }
+    if (!balanceRow) {
+      return NextResponse.json(
+        {
+          error: "no_balance",
+          message: "ไม่พบยอดลาสำหรับประเภทนี้ กรุณาติดต่อ HR",
+        },
+        { status: 400 }
+      )
+    }
+
+    balance = snapshotFromRow(balanceRow)
+    const balanceDays = days ?? 0
+    if (!canRequestLeave(balance.remaining, balanceDays)) {
+      return NextResponse.json(
+        {
+          error: "insufficient_balance",
+          message: insufficientBalanceMessage(balance.remaining, balanceDays),
+        },
+        { status: 400 }
+      )
+    }
   }
 
-  const balance = snapshotFromRow(balanceRow)
-  if (!canRequestLeave(balance.remaining, days)) {
-    return NextResponse.json(
-      {
-        error: "insufficient_balance",
-        message: insufficientBalanceMessage(balance.remaining, days),
-      },
-      { status: 400 }
-    )
-  }
-
+  const submittedAt = new Date()
   const { data: leave, error: insertError } = await supabase
     .from("hr_leaves")
     .insert({
@@ -111,6 +154,11 @@ export async function POST(request: NextRequest) {
       end_date: endDate,
       reason: reason.trim(),
       status: "pending",
+      leave_unit: leaveUnit,
+      leave_hours: leaveUnit === "hours" ? leaveHours : null,
+      approval_status: "pending_manager",
+      submitted_at: submittedAt.toISOString(),
+      expires_at: expiresAtFrom(submittedAt).toISOString(),
     })
     .select("id")
     .single()
@@ -123,21 +171,38 @@ export async function POST(request: NextRequest) {
   }
 
   let attachmentPath: string | null = null
-  if (file instanceof File && file.size > 0) {
-    const path = `${user.id}/${leave.id}/${sanitizeFilename(file.name)}`
+  let medicalPath: string | null = null
+
+  async function uploadLeaveFile(uploadFile: File, prefix: string) {
+    if (!user || !leave) throw new Error("missing context")
+    const path = `${user.id}/${leave.id}/${prefix}_${sanitizeFilename(uploadFile.name)}`
     const { error: uploadError } = await supabase.storage
       .from("leave-attachments")
-      .upload(path, file, { contentType: file.type, upsert: false })
+      .upload(path, uploadFile, { contentType: uploadFile.type, upsert: false })
+    if (uploadError) throw uploadError
+    return path
+  }
 
-    if (uploadError) {
-      await supabase.from("hr_leaves").delete().eq("id", leave.id)
-      return NextResponse.json({ error: uploadError.message }, { status: 500 })
+  try {
+    if (file instanceof File && file.size > 0 && file !== certFile) {
+      attachmentPath = await uploadLeaveFile(file, "att")
     }
+    if (certFile) {
+      medicalPath = await uploadLeaveFile(certFile, "med")
+    }
+  } catch (uploadError) {
+    await supabase.from("hr_leaves").delete().eq("id", leave.id)
+    const msg = uploadError instanceof Error ? uploadError.message : "upload failed"
+    return NextResponse.json({ error: msg }, { status: 500 })
+  }
 
-    attachmentPath = path
+  if (attachmentPath || medicalPath) {
     await supabase
       .from("hr_leaves")
-      .update({ attachment_url: path })
+      .update({
+        attachment_url: attachmentPath,
+        medical_certificate_url: medicalPath,
+      })
       .eq("id", leave.id)
   }
 
@@ -166,6 +231,13 @@ export async function POST(request: NextRequest) {
         reason: reason.trim(),
       }),
     ])
+
+    await notifyBranchManager({
+      employeeId: employee.id,
+      kind: "leave",
+      employeeName: employee.name,
+      detail: `${startDate} – ${endDate}`,
+    })
   } catch (lineError) {
     console.error("leave request LINE notify failed:", lineError)
   }

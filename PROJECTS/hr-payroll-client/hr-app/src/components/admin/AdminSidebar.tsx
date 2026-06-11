@@ -4,11 +4,11 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { ChevronRight } from "lucide-react"
 
-import {
-  ADMIN_NAV_ITEMS,
-  isAdminNavActive,
-  type AdminNavItem,
-} from "@/components/admin/admin-nav"
+import { isAdminNavActive, type AdminNavItem } from "@/components/admin/admin-nav"
+import { AdminNavIcon } from "@/components/admin/admin-nav-icons"
+import { isBranchNavActive } from "@/components/admin/branch-nav"
+import { isCeoNavActive } from "@/components/admin/ceo-nav"
+import { isDevNavActive } from "@/lib/auth/dev-view"
 import { ADMIN_SIDEBAR_WIDTH_CLASS } from "@/components/admin/admin-layout"
 import { BrandMark } from "@/components/brand/BrandMark"
 import { cn } from "@/lib/utils"
@@ -41,16 +41,35 @@ function SidebarPromo() {
   )
 }
 
-export function AdminNavLinks({ onNavigate }: { onNavigate?: () => void }) {
+export function AdminNavLinks({
+  items,
+  branchMode = false,
+  ceoMode = false,
+  devAllMode = false,
+  onNavigate,
+}: {
+  items: AdminNavItem[]
+  branchMode?: boolean
+  ceoMode?: boolean
+  devAllMode?: boolean
+  onNavigate?: () => void
+}) {
   const pathname = usePathname()
+  const isActive = devAllMode
+    ? isDevNavActive
+    : branchMode
+      ? isBranchNavActive
+      : ceoMode
+        ? isCeoNavActive
+        : isAdminNavActive
 
   return (
     <nav className="flex flex-col gap-0.5 px-2">
-      {ADMIN_NAV_ITEMS.map((item) => (
+      {items.map((item) => (
         <AdminNavLink
           key={item.href}
           item={item}
-          active={isAdminNavActive(pathname, item.href)}
+          active={isActive(pathname, item.href)}
           onNavigate={onNavigate}
         />
       ))}
@@ -67,7 +86,7 @@ function AdminNavLink({
   active: boolean
   onNavigate?: () => void
 }) {
-  const { label, href, icon: Icon } = item
+  const { label, href, icon, badge } = item
 
   return (
     <Link
@@ -80,9 +99,18 @@ function AdminNavLink({
           : "text-foreground/80 hover:bg-muted hover:text-foreground"
       )}
     >
-      <Icon className="size-4 shrink-0" />
+      <AdminNavIcon name={icon} className="size-4 shrink-0" />
       <span className="min-w-0 flex-1 leading-snug">{label}</span>
-      {!active ? (
+      {badge && badge > 0 ? (
+        <span
+          className={cn(
+            "inline-flex min-w-5 shrink-0 items-center justify-center rounded-full px-1.5 py-0.5 text-[10px] font-semibold tabular-nums",
+            active ? "bg-white/20 text-white" : "bg-brand-red text-white"
+          )}
+        >
+          {badge > 99 ? "99+" : badge}
+        </span>
+      ) : !active ? (
         <ChevronRight
           className="size-4 shrink-0 text-muted-foreground/45"
           aria-hidden
@@ -92,7 +120,17 @@ function AdminNavLink({
   )
 }
 
-export function AdminSidebar() {
+export function AdminSidebar({
+  items,
+  branchMode = false,
+  ceoMode = false,
+  devAllMode = false,
+}: {
+  items: AdminNavItem[]
+  branchMode?: boolean
+  ceoMode?: boolean
+  devAllMode?: boolean
+}) {
   return (
     <aside
       className={cn(
@@ -104,7 +142,12 @@ export function AdminSidebar() {
         <BrandMark variant="sidebar" />
       </div>
       <div className="min-h-0 flex-1 overflow-y-auto py-3">
-        <AdminNavLinks />
+        <AdminNavLinks
+          items={items}
+          branchMode={branchMode}
+          ceoMode={ceoMode}
+          devAllMode={devAllMode}
+        />
       </div>
       <div className="shrink-0 [@media(max-height:900px)]:origin-bottom [@media(max-height:900px)]:scale-[0.92]">
         <SidebarPromo />

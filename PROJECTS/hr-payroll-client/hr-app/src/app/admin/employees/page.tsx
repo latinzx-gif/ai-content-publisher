@@ -11,6 +11,8 @@ import {
   normalizeParams,
   PAGE_SIZE,
 } from "@/features/employees/data"
+import { isCeo, isDev } from "@/lib/auth/roles"
+import { getCurrentEmployee } from "@/lib/auth/session"
 import { EmployeeFilters } from "@/features/employees/EmployeeFilters"
 import { EmployeePagination } from "@/features/employees/EmployeePagination"
 import { EmployeeTable } from "@/features/employees/EmployeeTable"
@@ -20,7 +22,11 @@ export default async function AdminEmployeesPage({
 }: {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>
 }) {
-  const params = normalizeParams(await searchParams)
+  const [employee, params] = await Promise.all([
+    getCurrentEmployee(),
+    normalizeParams(await searchParams),
+  ])
+  const readOnly = employee ? isCeo(employee.role) && !isDev(employee.role) : false
   const [{ employees, total, today }, departments] = await Promise.all([
     getEmployees(params),
     getDepartments(),
@@ -34,16 +40,18 @@ export default async function AdminEmployeesPage({
         description="รายชื่อพนักงาน — ค้นหา กรอง และเปิดโปรไฟล์"
         badge={<CountBadge count={total} label="คน" />}
         action={
-          <Link
-            href="/admin/employees/new"
-            className={cn(
-              buttonVariants({ size: "default" }),
-              "bg-brand-red text-white hover:bg-brand-red/90"
-            )}
-          >
-            <UserPlus className="size-4" />
-            Add Employee
-          </Link>
+          readOnly ? null : (
+            <Link
+              href="/admin/employees/new"
+              className={cn(
+                buttonVariants({ size: "default" }),
+                "bg-brand-red text-white hover:bg-brand-red/90"
+              )}
+            >
+              <UserPlus className="size-4" />
+              Add Employee
+            </Link>
+          )
         }
       >
         <div className="flex h-full min-h-0 flex-col gap-3 overflow-hidden">

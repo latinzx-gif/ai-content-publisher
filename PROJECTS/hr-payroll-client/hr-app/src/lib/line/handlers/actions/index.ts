@@ -14,6 +14,7 @@ import { contactHrAction } from "@/lib/line/handlers/actions/contact-hr"
 import { contactHrNotifyAction } from "@/lib/line/handlers/actions/contact-hr-notify"
 import { leaveAction } from "@/lib/line/handlers/actions/leave"
 import { overtimeAction } from "@/lib/line/handlers/actions/overtime"
+import { submitAttendanceAction } from "@/lib/line/handlers/actions/submit-attendance"
 
 export type ActionContext = {
   lineUserId?: string
@@ -27,6 +28,7 @@ const ACTION_HANDLERS: Record<
   checkin_in: checkinInAction,
   checkout: checkoutAction,
   checkout_confirm: checkoutConfirmAction,
+  submit_attendance: submitAttendanceAction,
   leave: leaveAction,
   overtime: overtimeAction,
   document: documentAction,

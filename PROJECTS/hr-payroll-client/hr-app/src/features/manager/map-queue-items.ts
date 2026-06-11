@@ -1,0 +1,32 @@
+import { LEAVE_TYPE_LABELS, type LeaveType } from "@/features/leave/types"
+
+export function mapAttendanceQueueItems(
+  rows: Array<Record<string, unknown>>
+) {
+  return rows.map((r) => {
+    const emp = Array.isArray(r.hr_employees) ? r.hr_employees[0] : r.hr_employees
+    return {
+      id: r.id as string,
+      label: (emp as { name: string })?.name ?? "—",
+      meta: `${r.work_date} · ยื่น ${new Date(r.submitted_at as string).toLocaleString("th-TH")}`,
+      decidePath: `/api/attendance/submissions/${r.id}/decide`,
+    }
+  })
+}
+
+export function mapLeaveQueueItems(rows: Array<Record<string, unknown>>) {
+  return rows.map((r) => {
+    const emp = Array.isArray(r.hr_employees) ? r.hr_employees[0] : r.hr_employees
+    const typeLabel = LEAVE_TYPE_LABELS[r.type as LeaveType] ?? String(r.type)
+    const unit =
+      r.leave_unit === "hours"
+        ? `${r.leave_hours} ชม.`
+        : `${r.start_date} – ${r.end_date}`
+    return {
+      id: r.id as string,
+      label: `${(emp as { name: string })?.name ?? "—"} · ${typeLabel}`,
+      meta: unit as string,
+      decidePath: `/api/leave/${r.id}/decide`,
+    }
+  })
+}

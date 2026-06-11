@@ -8,16 +8,28 @@ const { ok, summary } = createAssert("flow-announcements")
 export async function runFlowAnnouncements() {
   await cleanupE2eData()
 
-  const { data: row, error } = await rest("POST", "/rest/v1/hr_announcements", {
-    title: "E2E Announcement",
-    body: "Test broadcast body",
-    target_type: "all",
-    status: "sent",
-    sent_at: new Date().toISOString(),
+  const scheduledAt = new Date(Date.now() + 86_400_000).toISOString()
+
+  const ins = await rest("hr_announcements", {
+    method: "POST",
+    body: {
+      title: "E2E Scheduled Announcement",
+      body: "Test scheduled broadcast body for Phase 3",
+      target_type: "all",
+      status: "scheduled",
+      scheduled_at: scheduledAt,
+    },
+    prefer: "return=representation",
   })
 
-  ok(!error && row?.length === 1, "insert announcement")
-  ok(row[0].status === "sent", "status sent")
+  ok(ins.ok, "insert scheduled announcement")
+  const row = Array.isArray(ins.data) ? ins.data[0] : ins.data
+  ok(row?.status === "scheduled", "status scheduled")
+  ok(Boolean(row?.scheduled_at), "scheduled_at set")
+
+  if (row?.id) {
+    await rest(`hr_announcements?id=eq.${row.id}`, { method: "DELETE" })
+  }
 
   return summary()
 }

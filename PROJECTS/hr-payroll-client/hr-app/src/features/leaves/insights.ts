@@ -74,7 +74,7 @@ export async function getLeaveCalendar(month: string): Promise<CalendarLeave[]> 
 
   const { data, error } = await supabase
     .from("hr_leaves")
-    .select("type, start_date, end_date, hr_employees!inner(name)")
+    .select("type, start_date, end_date, hr_employees!employee_id!inner(name)")
     .eq("status", "approved")
     .lte("start_date", end)
     .gte("end_date", start)

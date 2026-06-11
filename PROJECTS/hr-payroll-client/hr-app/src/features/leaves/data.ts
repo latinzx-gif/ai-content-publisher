@@ -42,7 +42,7 @@ export async function getLeaveRequests(params: Required<LeaveListParams>) {
   let query = supabase
     .from("hr_leaves")
     .select(
-      "id, employee_id, type, start_date, end_date, reason, status, attachment_url, decision_note, created_at, hr_employees!inner(name, department)",
+      "id, employee_id, type, start_date, end_date, reason, status, attachment_url, decision_note, created_at, hr_employees!employee_id!inner(name, department)",
       { count: "exact" }
     )
     .order("created_at", { ascending: false })

@@ -3,7 +3,7 @@ import { writeFileSync } from "node:fs"
 import { dirname, resolve } from "node:path"
 import { fileURLToPath } from "node:url"
 
-import { loadEnv } from "../test-helpers/env.mjs"
+import { getLoadedEnvPath, loadEnv } from "../test-helpers/env.mjs"
 import { runFlowAnnouncements } from "./flow-announcements.mjs"
 import { runFlowOvertime } from "./flow-overtime.mjs"
 
@@ -12,7 +12,7 @@ const reportPath = resolve(root, "reports/E2E_P3_RESULTS.md")
 
 async function main() {
   loadEnv()
-  console.log("Phase 3 E2E — starting flows\n")
+  console.log(`Phase 3 E2E — env: ${getLoadedEnvPath()}\n`)
 
   const results = []
   const flows = [

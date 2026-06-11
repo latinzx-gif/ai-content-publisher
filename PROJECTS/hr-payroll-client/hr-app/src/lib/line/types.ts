@@ -3,6 +3,7 @@ export const RICH_MENU_ACTIONS = [
   "checkin_in",
   "checkout",
   "checkout_confirm",
+  "submit_attendance",
   "leave",
   "overtime",
   "document",

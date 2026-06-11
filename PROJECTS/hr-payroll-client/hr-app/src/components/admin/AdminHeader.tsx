@@ -1,22 +1,42 @@
 import Link from "next/link"
 import { Bell, CircleHelp, LogOut, Search } from "lucide-react"
 
+import type { AdminNavItem } from "@/components/admin/admin-nav"
 import { AdminMobileNav } from "@/components/admin/AdminMobileNav"
+import { DevRoleSwitcher } from "@/components/admin/DevRoleSwitcher"
 import { Button } from "@/components/ui/button"
+import type { DevViewAs } from "@/lib/auth/dev-view"
 import { roleDisplayLabel } from "@/lib/auth/labels"
 import type { Employee } from "@/lib/auth/session"
 
 export function AdminHeader({
   alertBadge = 0,
   user,
+  navItems,
+  branchMode = false,
+  ceoMode = false,
+  devAllMode = false,
+  devView = null,
 }: {
   alertBadge?: number
   user?: Pick<Employee, "name" | "role" | "position">
+  navItems: AdminNavItem[]
+  branchMode?: boolean
+  ceoMode?: boolean
+  devAllMode?: boolean
+  devView?: DevViewAs | null
 }) {
+  const isDev = user?.role === "dev"
+
   return (
     <header className="z-10 shrink-0 border-b border-border/80 bg-white px-3 py-2 md:px-4 md:py-2.5">
       <div className="flex items-center gap-3">
-        <AdminMobileNav />
+        <AdminMobileNav
+          items={navItems}
+          branchMode={branchMode}
+          ceoMode={ceoMode}
+          devAllMode={devAllMode}
+        />
         <div className="relative mx-auto hidden w-full max-w-xl flex-1 md:block">
           <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
           <input
@@ -27,6 +47,7 @@ export function AdminHeader({
           />
         </div>
         <div className="flex items-center gap-1 sm:gap-2">
+          {isDev && devView ? <DevRoleSwitcher currentView={devView} /> : null}
           <Link
             href="/admin/alerts"
             className="relative rounded-lg p-2 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"

@@ -4,6 +4,7 @@ import { useState } from "react"
 import { Menu } from "lucide-react"
 
 import { ADMIN_SIDEBAR_WIDTH_CLASS } from "@/components/admin/admin-layout"
+import type { AdminNavItem } from "@/components/admin/admin-nav"
 import { AdminNavLinks } from "@/components/admin/AdminSidebar"
 import { BrandMark } from "@/components/brand/BrandMark"
 import { Button } from "@/components/ui/button"
@@ -15,7 +16,17 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet"
 
-export function AdminMobileNav() {
+export function AdminMobileNav({
+  items,
+  branchMode = false,
+  ceoMode = false,
+  devAllMode = false,
+}: {
+  items: AdminNavItem[]
+  branchMode?: boolean
+  ceoMode?: boolean
+  devAllMode?: boolean
+}) {
   const [open, setOpen] = useState(false)
 
   return (
@@ -33,7 +44,13 @@ export function AdminMobileNav() {
           <BrandMark variant="sidebar" />
         </SheetHeader>
         <div className="py-4">
-          <AdminNavLinks onNavigate={() => setOpen(false)} />
+          <AdminNavLinks
+            items={items}
+            branchMode={branchMode}
+            ceoMode={ceoMode}
+            devAllMode={devAllMode}
+            onNavigate={() => setOpen(false)}
+          />
         </div>
       </SheetContent>
     </Sheet>
