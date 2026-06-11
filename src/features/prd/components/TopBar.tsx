@@ -72,7 +72,7 @@ export function TopBar({
               className="h-8 rounded-lg border border-[#171717] bg-[#171717] px-3 text-xs font-semibold text-white hover:bg-[#2f2f2f]"
               onClick={() => {
                 if (typeof window !== 'undefined') {
-                  window.location.assign('/login');
+                  window.location.assign('/publisher/login');
                 }
               }}
               type="button"

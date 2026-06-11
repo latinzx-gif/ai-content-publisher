@@ -199,7 +199,7 @@ export type AgentExecuteResponse = {
 };
 
 export type RuntimeCandidate = {
-  id: 'multica' | 'codex' | 'openai';
+  id: 'multica' | 'claude' | 'codex' | 'openai';
   label: string;
   available: boolean;
   priority: number;
@@ -220,7 +220,7 @@ export type LocalRuntimeTool = {
 export type RuntimeDiscoveryResponse = {
   status: 'ready' | 'unavailable';
   preference: AgentRuntimePreference;
-  selectedProvider: 'multica' | 'codex' | 'openai' | null;
+  selectedProvider: 'multica' | 'claude' | 'codex' | 'openai' | null;
   candidates: RuntimeCandidate[];
   localTools: LocalRuntimeTool[];
   scanScope: 'server_process';

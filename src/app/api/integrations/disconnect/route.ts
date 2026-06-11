@@ -1,10 +1,10 @@
 import { NextResponse } from 'next/server';
-import { disconnectProvider } from '@/lib/publishing/integration-connection-store';
+import { disconnectProvider } from '@/lib/integrations/integration-connection-store';
 import { requireApiActor } from '@/lib/server/apiSecurity';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 
 type DisconnectBody = {
-  provider?: 'buffer' | 'facebook';
+  provider?: 'buffer' | 'facebook' | 'google_drive';
 };
 
 export async function POST(request: Request) {
@@ -17,8 +17,8 @@ export async function POST(request: Request) {
     }
 
     const body = (await request.json()) as DisconnectBody;
-    if (body.provider !== 'buffer' && body.provider !== 'facebook') {
-      return NextResponse.json({ error: 'provider must be buffer or facebook.' }, { status: 400 });
+    if (body.provider !== 'buffer' && body.provider !== 'facebook' && body.provider !== 'google_drive') {
+      return NextResponse.json({ error: 'provider must be buffer, facebook, or google_drive.' }, { status: 400 });
     }
 
     await disconnectProvider(body.provider);

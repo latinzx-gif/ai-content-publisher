@@ -27,7 +27,7 @@ export async function clearOAuthCookie(name: string) {
 
 export function redirectWithIntegrationStatus(
   returnTo: string,
-  provider: 'buffer' | 'facebook',
+  provider: 'buffer' | 'facebook' | 'google_drive',
   status: 'connected' | 'error',
   message?: string
 ) {

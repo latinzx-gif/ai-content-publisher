@@ -1,1 +1,1 @@
-export type AgentRuntimePreference = 'auto' | 'multica' | 'codex' | 'openai';
+export type AgentRuntimePreference = 'auto' | 'multica' | 'claude' | 'codex' | 'openai';

@@ -5,7 +5,7 @@ export const planEntitlements = {
   promptEditing: false,
   logExports: false,
   ragQueries: true,
-  publishingIntegrations: false,
+  publishingIntegrations: true,
 };
 
 export const agentFeatureFlags = {

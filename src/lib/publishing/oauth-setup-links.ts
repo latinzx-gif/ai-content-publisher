@@ -28,6 +28,21 @@ export const OAUTH_PROVIDER_SETUP = {
       'Return here and click Login, then approve your Facebook Page.',
     ],
   },
+  google_drive: {
+    label: 'Google Drive',
+    registerUrl: 'https://console.cloud.google.com/apis/credentials',
+    docsUrl: 'https://developers.google.com/identity/protocols/oauth2/web-server',
+    envKeys: ['GOOGLE_SERVICE_ACCOUNT_JSON'] as const,
+    callbackPath: '/api/integrations/google-drive/callback',
+    authorizePath: '/api/integrations/google-drive/authorize',
+    setupSteps: [
+      'Enable Google Drive API in Google Cloud Console.',
+      'Create a Service Account and download the JSON key.',
+      'Put GOOGLE_SERVICE_ACCOUNT_JSON in .env.local, then restart npm run dev.',
+      'Share your Drive folder with the service account email (Editor or Viewer).',
+      'Paste the folder link below and click Save folder.',
+    ],
+  },
 } as const;
 
 export type OAuthProviderKey = keyof typeof OAUTH_PROVIDER_SETUP;

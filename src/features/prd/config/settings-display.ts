@@ -133,7 +133,9 @@ export const backendEnvContracts = [
   { key: 'NEXT_PUBLIC_SUPABASE_URL', visibility: 'Client safe', usedBy: 'Browser Supabase client', guard: 'Pair with RLS and scoped anon key' },
   { key: 'NEXT_PUBLIC_SUPABASE_ANON_KEY', visibility: 'Client safe with RLS', usedBy: 'Client reads/writes allowed by policy', guard: 'RLS on every exposed table' },
   { key: 'BUFFER_ACCESS_TOKEN', visibility: 'Server only', usedBy: 'Publishing queue sync', guard: 'Store encrypted or provider-vault reference' },
-  { key: 'CODEX_LOCAL_BRIDGE_SECRET', visibility: 'Local/server only', usedBy: 'Signed local Codex handoff', guard: 'Workspace allowlist + per-action audit logs' },
+  { key: 'CODEX_LOCAL_BRIDGE_SECRET', visibility: 'Local/server only', usedBy: 'Signed local Codex/Claude agent bridge', guard: 'Workspace allowlist + per-action audit logs' },
+  { key: 'HEAD_OFFICE_CLAUDE_COMMAND', visibility: 'Local/server only', usedBy: 'Claude Code CLI invocation via agent daemon', guard: 'Daemon-only; never expose to browser' },
+  { key: 'HEAD_OFFICE_CLAUDE_DEFAULT_MODEL', visibility: 'Local/server only', usedBy: 'Default Claude model for agent daemon runs', guard: 'Override per agent route when needed' },
 ];
 
 export const backendSecurityChecklist = [
@@ -269,16 +271,18 @@ export const settingsGroups = [
   },
   {
     label: 'Agency OS',
-    items: ['General', 'Repositories', 'GitHub', 'Codex Local', 'Integrations', 'Facebook', 'Labs', 'Members'],
+    items: ['General', 'Repositories', 'GitHub', 'Codex Local', 'Integrations', 'Labs', 'Members'],
   },
 ];
 
+export type IntegrationProviderKey = 'google_drive' | 'facebook' | 'buffer';
+
 export const integrationApps = [
-  { name: 'Google Drive', description: 'Sync documents, PDFs, folders, Docs, Sheets, and Slides.', status: 'Connected', category: 'Knowledge Source', scope: 'RAG source ingest', auth: 'OAuth connected', lastSync: '12m ago', readiness: 'Ready', icon: DriveIcon },
-  { name: 'Obsidian', description: 'Index markdown vault notes, backlinks, and internal knowledge.', status: 'Connect', category: 'Knowledge Source', scope: 'Local vault import', auth: 'Path approval needed', lastSync: 'Not connected', readiness: 'Needs setup', icon: ObsidianIcon },
-  { name: 'Facebook', description: 'Publish posts and schedule through Buffer after the Page is connected.', status: 'Connect', category: 'Publishing', scope: 'Page publishing via Buffer', auth: 'Connect Page in Buffer', lastSync: 'Not connected', readiness: 'Needs setup', icon: FacebookIcon },
-  { name: 'Instagram', description: 'Prepare visual posts, carousel assets, and caption drafts.', status: 'Connect', category: 'Publishing', scope: 'Asset publishing', auth: 'Business login needed', lastSync: 'Not connected', readiness: 'Needs setup', icon: InstagramIcon },
-  { name: 'Buffer', description: 'Queue approved content and manage publishing schedules.', status: 'Connected', category: 'Publishing', scope: 'Queue handoff', auth: 'Access token active', lastSync: '5m ago', readiness: 'Ready', icon: BufferIcon },
-  { name: 'YouTube', description: 'Plan scripts, descriptions, thumbnails, and video publishing.', status: 'Connect', category: 'Publishing', scope: 'Video metadata', auth: 'OAuth needed', lastSync: 'Not connected', readiness: 'Needs setup', icon: YoutubeIcon },
-  { name: 'TikTok', description: 'Prepare short-form post ideas, scripts, captions, and hashtags.', status: 'Connect', category: 'Publishing', scope: 'Short-form drafts', auth: 'OAuth needed', lastSync: 'Not connected', readiness: 'Needs setup', icon: TiktokIcon },
+  { name: 'Google Drive', description: 'Sync documents, PDFs, folders, Docs, Sheets, and Slides.', status: 'Connect', category: 'Knowledge Source', scope: 'RAG source ingest', auth: 'Service Account or OAuth', lastSync: 'Not connected', readiness: 'Needs setup', icon: DriveIcon, provider: 'google_drive' as const },
+  { name: 'Obsidian', description: 'Index markdown vault notes, backlinks, and internal knowledge.', status: 'Connect', category: 'Knowledge Source', scope: 'Local vault import', auth: 'Path approval needed', lastSync: 'Not connected', readiness: 'Needs setup', icon: ObsidianIcon, provider: null },
+  { name: 'Facebook', description: 'Publish and schedule posts to your connected Facebook Page.', status: 'Connect', category: 'Publishing', scope: 'Page publishing', auth: 'Facebook OAuth', lastSync: 'Not connected', readiness: 'Needs setup', icon: FacebookIcon, provider: 'facebook' as const },
+  { name: 'Instagram', description: 'Prepare visual posts, carousel assets, and caption drafts.', status: 'Connect', category: 'Publishing', scope: 'Asset publishing', auth: 'Business login needed', lastSync: 'Not connected', readiness: 'Needs setup', icon: InstagramIcon, provider: null },
+  { name: 'Buffer', description: 'Queue approved content and manage publishing schedules.', status: 'Connect', category: 'Publishing', scope: 'Queue handoff (paused)', auth: 'After demo', lastSync: 'Paused', readiness: 'Needs setup', icon: BufferIcon, provider: 'buffer' as const },
+  { name: 'YouTube', description: 'Plan scripts, descriptions, thumbnails, and video publishing.', status: 'Connect', category: 'Publishing', scope: 'Video metadata', auth: 'OAuth needed', lastSync: 'Not connected', readiness: 'Needs setup', icon: YoutubeIcon, provider: null },
+  { name: 'TikTok', description: 'Prepare short-form post ideas, scripts, captions, and hashtags.', status: 'Connect', category: 'Publishing', scope: 'Short-form drafts', auth: 'OAuth needed', lastSync: 'Not connected', readiness: 'Needs setup', icon: TiktokIcon, provider: null },
 ];
