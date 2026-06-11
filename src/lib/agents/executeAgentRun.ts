@@ -213,7 +213,8 @@ export async function executeAgentRun({
       .from('agent_runs')
       .update({
         status: 'succeeded',
-        output,
+        // Image runs carry multi-MB base64 payloads; truncate before persisting to avoid statement timeouts.
+        output: compactOutputForStorage(output),
         token_usage: response.usage,
         completed_at: new Date().toISOString(),
       })
@@ -435,6 +436,19 @@ async function getWorkflowContext(supabase: SupabaseClient, run: AgentRun) {
   };
 }
 
+const MAX_PERSISTED_STRING_LENGTH = 10_000;
+
+/** Truncates oversized strings (e.g. base64 images) so run output fits within DB statement limits. */
+function compactOutputForStorage<T>(value: T): T {
+  return JSON.parse(
+    JSON.stringify(value, (_key, val) =>
+      typeof val === 'string' && val.length > MAX_PERSISTED_STRING_LENGTH
+        ? `${val.slice(0, 256)}…[truncated ${val.length} chars]`
+        : val,
+    ),
+  ) as T;
+}
+
 async function executeWithPreference({
   providerPreference,
   model,
@@ -452,29 +466,46 @@ async function executeWithPreference({
   const selectedPreference = runtimeSelection.selectedProvider;
 
   if (!selectedPreference) {
-    throw new Error('No agent runtime is available. Configure CODEX_LOCAL_BRIDGE_URL/CODEX_LOCAL_BRIDGE_SECRET or OPENAI_API_KEY.');
+    throw new Error(
+      'No agent runtime is available. Configure CODEX_LOCAL_BRIDGE_URL/CODEX_LOCAL_BRIDGE_SECRET (Codex/Claude) or OPENAI_API_KEY.',
+    );
+  }
+
+  // Image models can only run on OpenAI's image API — bridges (Claude/Codex/Multica) are text-only.
+  if (isImageModel(model)) {
+    // Run-level fields live in the nested run input (input.input), not the executor wrapper.
+    const runInput = (input.input && typeof input.input === 'object' && !Array.isArray(input.input) ? input.input : {}) as Record<string, unknown>;
+    const requestedCount = Number(runInput.imageCount ?? input.imageCount);
+    const prompt = String(
+      runInput.prompt ||
+        runInput.visualBrief ||
+        runInput.imageBrief ||
+        input.prompt ||
+        input.visualBrief ||
+        input.imageBrief ||
+        input.title ||
+        'Legal professional office background',
+    );
+    const response = await runOpenAIImage({
+      model,
+      prompt,
+      n: Number.isFinite(requestedCount) && requestedCount > 0 ? Math.min(requestedCount, 4) : 1,
+    });
+
+    return {
+      provider: 'openai',
+      response: {
+        responseId: `img_${Date.now()}`,
+        text: JSON.stringify({ images: response.images }),
+        usage: {},
+        raw: response,
+      },
+      attempts: [{ provider: 'openai', outcome: 'succeeded' }],
+      fallbackReason: selectedPreference === 'openai' ? null : `Image model ${model} requires OpenAI image API; bridge runtimes are text-only.`,
+    };
   }
 
   if (selectedPreference === 'openai') {
-    if (isImageModel(model)) {
-      const response = await runOpenAIImage({
-        model,
-        prompt: String(input.prompt || input.visualBrief || input.imageBrief || input.title || 'Legal professional office background'),
-      });
-
-      return {
-        provider: 'openai',
-        response: {
-          responseId: `img_${Date.now()}`,
-          text: JSON.stringify({ images: response.images }),
-          usage: {},
-          raw: response,
-        },
-        attempts: [{ provider: 'openai', outcome: 'succeeded' }],
-        fallbackReason: null,
-      };
-    }
-
     const response = await runOpenAIResponse({
       model,
       instructions,
@@ -514,8 +545,58 @@ async function executeWithPreference({
     }
   }
 
+  if (selectedPreference === 'claude') {
+    try {
+      const response = await runBridgeResponse({
+        provider: 'claude',
+        model,
+        instructions,
+        input,
+        responseFormat,
+      });
+
+      attempts.push({ provider: 'claude', outcome: 'succeeded' });
+
+      return {
+        provider: 'claude',
+        response,
+        attempts,
+        fallbackReason: null,
+      };
+    } catch (error) {
+      const claudeError = error instanceof Error ? error.message : 'Claude execution failed';
+
+      attempts.push({ provider: 'claude', outcome: 'failed', reason: claudeError });
+
+      try {
+        const response = await runOpenAIResponse({
+          model,
+          instructions,
+          input,
+          responseFormat,
+        });
+
+        attempts.push({ provider: 'openai', outcome: 'succeeded' });
+
+        return {
+          provider: 'openai',
+          response,
+          attempts,
+          fallbackReason: `Claude execution unavailable: ${claudeError}`,
+        };
+      } catch (openAiError) {
+        const openAiMessage = openAiError instanceof Error ? openAiError.message : 'OpenAI execution failed';
+
+        attempts.push({ provider: 'openai', outcome: 'failed', reason: openAiMessage });
+
+        throw new Error(`Claude attempt failed (${claudeError}); OpenAI fallback failed (${openAiMessage}).`);
+      }
+    }
+  }
+
   try {
-    const response = await runCodexResponse({
+    const response = await runBridgeResponse({
+      provider: 'codex',
       model,
       instructions,
       input,
@@ -607,10 +688,10 @@ async function runMulticaResponse({
   }))) as Record<string, unknown>;
 
   if (!response.ok) {
-    throw new Error(extractCodexError(payload).replace('Codex', 'Multica'));
+    throw new Error(extractBridgeError(payload, 'Multica'));
   }
 
-  const text = extractCodexText(payload);
+  const text = extractBridgeText(payload);
 
   if (!text) {
     throw new Error('Multica response did not contain output text.');
@@ -632,12 +713,14 @@ async function runMulticaResponse({
   };
 }
 
-async function runCodexResponse({
+async function runBridgeResponse({
+  provider,
   model,
   instructions,
   input,
   responseFormat,
 }: {
+  provider: 'codex' | 'claude';
   model: string;
   instructions: string | null;
   input: Record<string, unknown>;
@@ -645,13 +728,14 @@ async function runCodexResponse({
 }): Promise<{ responseId: string | null; text: string; usage: Record<string, unknown>; raw: unknown }> {
   const bridgeUrl = process.env.CODEX_LOCAL_BRIDGE_URL?.trim();
   const bridgeSecret = process.env.CODEX_LOCAL_BRIDGE_SECRET?.trim();
+  const providerLabel = provider === 'claude' ? 'Claude' : 'Codex';
 
   if (!bridgeUrl) {
-    throw new Error('Missing CODEX_LOCAL_BRIDGE_URL. Configure this value to use Codex execution.');
+    throw new Error(`Missing CODEX_LOCAL_BRIDGE_URL. Configure this value to use ${providerLabel} execution.`);
   }
 
   if (!bridgeSecret) {
-    throw new Error('Missing CODEX_LOCAL_BRIDGE_SECRET. Configure bridge secret before using Codex execution.');
+    throw new Error(`Missing CODEX_LOCAL_BRIDGE_SECRET. Configure bridge secret before using ${providerLabel} execution.`);
   }
 
   if (!/^https?:\/\//i.test(bridgeUrl)) {
@@ -665,7 +749,7 @@ async function runCodexResponse({
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      provider: 'codex',
+      provider,
       model,
       instructions,
       input,
@@ -678,14 +762,13 @@ async function runCodexResponse({
   }))) as Record<string, unknown>;
 
   if (!response.ok) {
-    const codexError = extractCodexError(payload);
-    throw new Error(codexError);
+    throw new Error(extractBridgeError(payload, providerLabel));
   }
 
-  const text = extractCodexText(payload);
+  const text = extractBridgeText(payload);
 
   if (!text) {
-    throw new Error('Codex response did not contain output text.');
+    throw new Error(`${providerLabel} response did not contain output text.`);
   }
 
   return {
@@ -704,7 +787,7 @@ async function runCodexResponse({
   };
 }
 
-function extractCodexError(payload: Record<string, unknown>) {
+function extractBridgeError(payload: Record<string, unknown>, providerLabel: string) {
   if (typeof payload.error === 'string') {
     return payload.error;
   }
@@ -721,10 +804,10 @@ function extractCodexError(payload: Record<string, unknown>) {
     return payload.message;
   }
 
-  return 'Codex bridge request failed';
+  return `${providerLabel} bridge request failed`;
 }
 
-function extractCodexText(payload: Record<string, unknown>) {
+function extractBridgeText(payload: Record<string, unknown>) {
   if (typeof payload.text === 'string') {
     return payload.text.trim();
   }
@@ -875,6 +958,7 @@ function buildTaskContractInstructions(taskType: string | null) {
 }
 
 function normalizeAgentStructuredOutput(taskType: string | null, parsed: AgentStructuredOutput, rawText: string): AgentStructuredOutput {
+  parsed = unwrapNestedAgentPayload(parsed);
   const existingUserFacing = normalizeRecord(parsed.user_facing_output) ?? {};
   const derivedUserFacing = deriveUserFacingOutput(taskType, parsed, rawText);
   const existingInternalPayload = normalizeRecord(parsed.internal_payload) ?? {};
@@ -886,6 +970,33 @@ function normalizeAgentStructuredOutput(taskType: string | null, parsed: AgentSt
       ...existingUserFacing,
     },
     internal_payload: existingInternalPayload,
+  };
+}
+
+/**
+ * Some models nest the entire output contract inside `user_facing_output`
+ * (e.g. `{ user_facing_output: { summary, status, artifacts: {...} } }`).
+ * Hoist those fields to the top level so artifact extraction works.
+ */
+function unwrapNestedAgentPayload(parsed: AgentStructuredOutput): AgentStructuredOutput {
+  const nested = normalizeRecord(parsed.user_facing_output);
+  const topArtifacts = normalizeRecord(parsed.artifacts);
+  const hasTopArtifacts = Boolean(topArtifacts && Object.keys(topArtifacts).length > 0);
+  const nestedArtifacts = nested ? normalizeRecord(nested.artifacts) : null;
+  const hasNestedArtifacts = Boolean(nestedArtifacts && Object.keys(nestedArtifacts).length > 0);
+
+  if (!nested || hasTopArtifacts || !hasNestedArtifacts) {
+    return parsed;
+  }
+
+  return {
+    ...parsed,
+    summary: parsed.summary ?? (typeof nested.summary === 'string' ? nested.summary : undefined),
+    status: parsed.status ?? (typeof nested.status === 'string' ? nested.status : undefined),
+    nextRecommendedTask:
+      parsed.nextRecommendedTask ?? (typeof nested.nextRecommendedTask === 'string' ? nested.nextRecommendedTask : undefined),
+    artifacts: normalizeRecord(nested.artifacts) ?? undefined,
+    user_facing_output: normalizeRecord(nested.user_facing_output) ?? {},
   };
 }
 
@@ -1475,7 +1586,6 @@ async function applyDraftGenerationHandoff({
 async function applyImageLayoutHandoff({
   supabase,
   run,
-  actorProfileId,
   output,
   rawText,
   contentItem,
@@ -1655,7 +1765,7 @@ async function applyImageGenerationHandoff({
     .limit(1)
     .maybeSingle();
 
-  const images = (output as any).images || [];
+  const images = output.images ?? [];
   const userFacingOutput = normalizeRecord(output.user_facing_output) ?? {};
   if (!Array.isArray(images) || images.length === 0) {
     const failedAt = new Date().toISOString();

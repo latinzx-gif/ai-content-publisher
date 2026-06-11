@@ -2,9 +2,10 @@
  * Bridge between internal product model names and actual OpenAI API models.
  */
 export const IMAGE_MODEL_BRIDGE: Record<string, string> = {
-  'gpt-image-2': 'dall-e-3',
-  'dall-e-3': 'dall-e-3',
-  'dall-e-2': 'dall-e-2',
+  'gpt-image-2': 'gpt-image-2',
+  'gpt-image-1': 'gpt-image-1',
+  'dall-e-3': 'gpt-image-1',
+  'dall-e-2': 'gpt-image-1',
 };
 
 /**
@@ -18,7 +19,7 @@ export function isImageModel(model: string): boolean {
  * Maps an internal model name to a valid OpenAI model name.
  */
 export function mapToOpenAIImageModel(model: string): string {
-  return IMAGE_MODEL_BRIDGE[model] || 'dall-e-3';
+  return IMAGE_MODEL_BRIDGE[model] || 'gpt-image-1';
 }
 
 type OpenAIImagePayload = {
@@ -36,19 +37,17 @@ type OpenAIImagePayload = {
 type RunOpenAIImageInput = {
   model: string;
   prompt: string;
-  size?: '256x256' | '512x512' | '1024x1024';
+  size?: '1024x1024' | '1024x1536' | '1536x1024' | 'auto';
   n?: number;
-  quality?: 'standard' | 'hd';
-  style?: 'vivid' | 'natural';
+  quality?: 'low' | 'medium' | 'high' | 'auto';
 };
 
-export async function runOpenAIImage({ 
-  model, 
-  prompt, 
-  size = '1024x1024', 
+export async function runOpenAIImage({
+  model,
+  prompt,
+  size = '1024x1024',
   n = 1,
-  quality = 'standard',
-  style = 'vivid'
+  quality = 'medium',
 }: RunOpenAIImageInput) {
   const apiKey = process.env.OPENAI_API_KEY;
 
@@ -71,7 +70,6 @@ export async function runOpenAIImage({
       n,
       size,
       quality,
-      style,
     }),
   });
 

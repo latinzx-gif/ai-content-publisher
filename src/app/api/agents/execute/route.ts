@@ -31,8 +31,15 @@ export async function POST(request: Request) {
 
     const body = (await request.json().catch(() => ({}))) as ExecuteAgentBody;
 
-    if (body.providerPreference && body.providerPreference !== 'auto' && body.providerPreference !== 'multica' && body.providerPreference !== 'codex' && body.providerPreference !== 'openai') {
-      return NextResponse.json({ error: 'providerPreference must be auto, multica, codex, or openai' }, { status: 400 });
+    if (
+      body.providerPreference &&
+      body.providerPreference !== 'auto' &&
+      body.providerPreference !== 'multica' &&
+      body.providerPreference !== 'claude' &&
+      body.providerPreference !== 'codex' &&
+      body.providerPreference !== 'openai'
+    ) {
+      return NextResponse.json({ error: 'providerPreference must be auto, multica, claude, codex, or openai' }, { status: 400 });
     }
 
     const providerPreference = normalizeAgentRuntimePreference(body.providerPreference);

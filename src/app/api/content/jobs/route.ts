@@ -30,7 +30,7 @@ type CreateContentJobBody = {
 
 const riskLevels = ['low', 'medium', 'high'] as const;
 const defaultAgentTasks = ['source_search'] as const;
-const providerPreferences = ['auto', 'multica', 'codex', 'openai'] as const;
+const providerPreferences = ['auto', 'multica', 'claude', 'codex', 'openai'] as const;
 
 type ReviewType = NonNullable<CreateContentJobBody['reviewType']>;
 
@@ -128,7 +128,7 @@ export async function POST(request: Request) {
     }
 
     if (body.providerPreference && !providerPreferences.includes(body.providerPreference)) {
-      return NextResponse.json({ error: 'providerPreference must be auto, multica, codex, or openai' }, { status: 400 });
+      return NextResponse.json({ error: 'providerPreference must be auto, multica, claude, codex, or openai' }, { status: 400 });
     }
 
     const riskLevel = body.riskLevel ?? 'low';

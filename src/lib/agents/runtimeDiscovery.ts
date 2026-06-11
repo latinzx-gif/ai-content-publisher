@@ -1,7 +1,7 @@
 import { execFileSync } from 'node:child_process';
 import { existsSync } from 'node:fs';
 
-export type AgentRuntimeProvider = 'multica' | 'codex' | 'openai';
+export type AgentRuntimeProvider = 'multica' | 'claude' | 'codex' | 'openai';
 export type AgentRuntimePreference = 'auto' | AgentRuntimeProvider;
 
 export type LocalRuntimeTool = {
@@ -32,12 +32,15 @@ export type AgentRuntimeSelection = {
 };
 
 export function normalizeAgentRuntimePreference(value: unknown): AgentRuntimePreference {
-  return value === 'multica' || value === 'codex' || value === 'openai' || value === 'auto' ? value : 'auto';
+  return value === 'multica' || value === 'claude' || value === 'codex' || value === 'openai' || value === 'auto'
+    ? value
+    : 'auto';
 }
 
 export function discoverAgentRuntimes(preference: AgentRuntimePreference = 'auto'): AgentRuntimeSelection {
   const localTools = scanLocalRuntimeTools();
   const multicaCli = localTools.find((tool) => tool.id === 'multica');
+  const claudeCli = localTools.find((tool) => tool.id === 'claude');
   const codexCli = localTools.find((tool) => tool.id === 'codex');
   const multicaBridgeUrl = process.env.MULTICA_AGENT_BRIDGE_URL?.trim();
   const multicaBridgeSecret = process.env.MULTICA_AGENT_BRIDGE_SECRET?.trim();
@@ -80,6 +83,25 @@ export function discoverAgentRuntimes(preference: AgentRuntimePreference = 'auto
       },
     },
     {
+      id: 'claude',
+      label: 'Claude Code Local Bridge',
+      available: codexAvailable,
+      priority: 12,
+      reason: codexAvailable
+        ? 'Local agent bridge is configured for Claude Code execution.'
+        : !codexBridgeUrl
+          ? 'Missing CODEX_LOCAL_BRIDGE_URL (shared Head Office agent bridge).'
+          : !codexUrlLooksValid
+            ? 'CODEX_LOCAL_BRIDGE_URL must be an HTTP endpoint.'
+            : 'Missing CODEX_LOCAL_BRIDGE_SECRET.',
+      checks: {
+        bridgeUrlConfigured: Boolean(codexBridgeUrl),
+        bridgeUrlHttp: codexUrlLooksValid,
+        bridgeSecretConfigured: Boolean(codexBridgeSecret),
+        cliDetected: Boolean(claudeCli?.available),
+      },
+    },
+    {
       id: 'codex',
       label: 'Codex Local Bridge',
       available: codexAvailable,
@@ -119,17 +141,25 @@ export function discoverAgentRuntimes(preference: AgentRuntimePreference = 'auto
           : openAiAvailable
             ? 'openai'
             : null
-      : preference === 'codex'
-      ? codexAvailable
-        ? 'codex'
-        : openAiAvailable
-          ? 'openai'
-          : null
-      : preference === 'openai'
-        ? openAiAvailable
-          ? 'openai'
-          : null
-        : candidates.find((candidate) => candidate.available)?.id ?? null;
+      : preference === 'claude'
+        ? codexAvailable
+          ? 'claude'
+          : openAiAvailable
+            ? 'openai'
+            : null
+        : preference === 'codex'
+          ? codexAvailable
+            ? 'codex'
+            : openAiAvailable
+              ? 'openai'
+              : null
+          : preference === 'openai'
+            ? openAiAvailable
+              ? 'openai'
+              : null
+            : [...candidates]
+                .sort((left, right) => right.priority - left.priority)
+                .find((candidate) => candidate.available)?.id ?? null;
 
   return {
     preference,
@@ -148,6 +178,13 @@ function scanLocalRuntimeTools(): LocalRuntimeTool[] {
       command: 'multica',
       capabilities: ['runtime_discovery', 'daemon_gateway', 'local_agent_control'],
       fallbackPaths: ['/opt/homebrew/bin/multica', '/usr/local/bin/multica'],
+    },
+    {
+      id: 'claude',
+      label: 'Claude Code CLI',
+      command: 'claude',
+      capabilities: ['code_edit', 'audit', 'agent_task', 'workspace_reasoning'],
+      fallbackPaths: ['/opt/homebrew/bin/claude', '/usr/local/bin/claude'],
     },
     {
       id: 'codex',

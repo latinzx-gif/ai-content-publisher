@@ -3,6 +3,9 @@ import { createServer } from 'node:http';
 import { randomUUID } from 'node:crypto';
 import { existsSync } from 'node:fs';
 import { execFileSync, spawn } from 'node:child_process';
+import { loadLocalEnvFiles } from './load-local-env.mjs';
+
+loadLocalEnvFiles(['.env.local', '.env.vercel.local']);
 
 const host = process.env.HEAD_OFFICE_AGENT_DAEMON_HOST || '127.0.0.1';
 const port = Number(process.env.HEAD_OFFICE_AGENT_DAEMON_PORT || '8787');
@@ -10,6 +13,8 @@ const secret = process.env.CODEX_LOCAL_BRIDGE_SECRET || process.env.HEAD_OFFICE_
 const workspaceRoot = process.env.HEAD_OFFICE_AGENT_WORKSPACE || process.cwd();
 const codexCommand = process.env.HEAD_OFFICE_CODEX_COMMAND || 'codex';
 const codexArgs = parseArgs(process.env.HEAD_OFFICE_CODEX_ARGS || 'exec -');
+const claudeCommand = process.env.HEAD_OFFICE_CLAUDE_COMMAND || 'claude';
+const claudeDefaultModel = process.env.HEAD_OFFICE_CLAUDE_DEFAULT_MODEL || 'claude-sonnet-4-6';
 const requestTimeoutMs = Number(process.env.HEAD_OFFICE_AGENT_TIMEOUT_MS || '120000');
 const maxBodyBytes = Number(process.env.HEAD_OFFICE_AGENT_MAX_BODY_BYTES || String(512 * 1024));
 const startedAt = Date.now();
@@ -126,6 +131,13 @@ function buildHealth() {
 function buildDiscovery() {
   const tools = [
     {
+      id: 'claude',
+      label: 'Claude Code CLI',
+      command: claudeCommand,
+      path: findCommandPath(claudeCommand),
+      capabilities: ['agent_task', 'text_generation', 'code_audit', 'workspace_reasoning'],
+    },
+    {
       id: 'codex',
       label: 'Codex CLI',
       command: codexCommand,
@@ -175,12 +187,64 @@ async function executeRuntime(body) {
 
   const provider = typeof body.provider === 'string' ? body.provider : 'codex';
 
-  if (provider !== 'codex') {
+  if (provider !== 'codex' && provider !== 'claude') {
     throw new Error(`Unsupported daemon provider: ${provider}`);
   }
 
   if (!isWorkspaceAllowed(workspaceRoot)) {
     throw new Error('Workspace is not allowed for daemon execution');
+  }
+
+  const prompt = buildAgentPrompt(body);
+  const started = Date.now();
+
+  if (provider === 'claude') {
+    const executablePath = findCommandPath(claudeCommand);
+
+    if (!executablePath) {
+      throw new Error(`${claudeCommand} is not available to the daemon process`);
+    }
+
+    const model = typeof body.model === 'string' && body.model.trim() ? body.model.trim() : claudeDefaultModel;
+    const args = [
+      '-p',
+      prompt,
+      '--output-format',
+      'text',
+      '--permission-mode',
+      'acceptEdits',
+      '--dangerously-skip-permissions',
+      '--model',
+      model,
+    ];
+
+    for (const directory of listAllowedWorkspaceDirs()) {
+      args.push('--add-dir', directory);
+    }
+
+    const output = await runCommand({
+      command: executablePath,
+      args,
+      stdin: '',
+      cwd: workspaceRoot,
+      timeoutMs: requestTimeoutMs,
+    });
+
+    return {
+      responseId: randomUUID(),
+      text: output.trim(),
+      usage: {
+        runtime: 'claude',
+        durationMs: Date.now() - started,
+        command: claudeCommand,
+        model,
+      },
+      raw: {
+        provider: 'claude',
+        daemonId,
+        workspaceRoot,
+      },
+    };
   }
 
   const executablePath = findCommandPath(codexCommand);
@@ -189,8 +253,6 @@ async function executeRuntime(body) {
     throw new Error(`${codexCommand} is not available to the daemon process`);
   }
 
-  const prompt = buildCodexPrompt(body);
-  const started = Date.now();
   const output = await runCommand({
     command: executablePath,
     args: codexArgs,
@@ -216,7 +278,14 @@ async function executeRuntime(body) {
   };
 }
 
-function buildCodexPrompt(body) {
+function listAllowedWorkspaceDirs() {
+  return (process.env.HEAD_OFFICE_AGENT_ALLOWED_WORKSPACES || workspaceRoot)
+    .split(',')
+    .map((item) => item.trim())
+    .filter(Boolean);
+}
+
+function buildAgentPrompt(body) {
   return [
     body.instructions ? `Instructions:\n${body.instructions}` : '',
     `Response format: ${body.responseFormat === 'json' ? 'Return strict JSON only.' : 'Return plain text.'}`,
@@ -269,12 +338,9 @@ function runCommand({ command, args, stdin, cwd, timeoutMs }) {
 }
 
 function isWorkspaceAllowed(candidate) {
-  const allowed = (process.env.HEAD_OFFICE_AGENT_ALLOWED_WORKSPACES || workspaceRoot)
-    .split(',')
-    .map((item) => item.trim())
-    .filter(Boolean);
-
-  return allowed.some((allowedPath) => candidate === allowedPath || candidate.startsWith(`${allowedPath}/`));
+  return listAllowedWorkspaceDirs().some(
+    (allowedPath) => candidate === allowedPath || candidate.startsWith(`${allowedPath}/`),
+  );
 }
 
 function findCommandPath(command) {
