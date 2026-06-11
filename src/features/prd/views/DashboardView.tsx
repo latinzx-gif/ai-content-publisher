@@ -132,7 +132,7 @@ export function DashboardView({
             </>
           ) : (
             <div className="rounded-xl border border-[#deded8] bg-white p-4 text-sm text-[#6e6e68]">
-              <p>ไม่มีคอลัมน์แสดงผลในมุมมองนี้ กรุณาสร้างโพสต์ใหม่เพื่อเริ่มคิวงาน</p>
+              <p>No columns to display. Create a new post to start the content queue.</p>
               <div className="mt-3 flex gap-2">
                 <button onClick={onNewPost} className="rounded-lg border border-[#cfcfc8] bg-[#f6f6f2] px-3 py-2 text-xs font-semibold text-[#171717]">
                   New post

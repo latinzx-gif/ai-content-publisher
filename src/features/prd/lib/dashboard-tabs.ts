@@ -3,9 +3,14 @@ import type { DashboardBoard, DashboardBoardTab } from '@/features/prd/types/das
 
 export function normalizeDashboardTab(tab: string): DashboardBoardTab {
   const normalized = tab.toLowerCase();
+  // Legacy keys kept for URL/bookmark compatibility
   if (normalized.includes('assigned')) return 'Assigned';
   if (normalized.includes('agent')) return 'Agents';
   if (normalized.includes('scheduled')) return 'Scheduled';
+  // Named tabs in navigation.ts
+  if (normalized === 'today') return 'All';
+  if (normalized === 'pipeline') return 'Assigned';
+  if (normalized.includes('needs')) return 'Agents';
   return 'All';
 }
 

@@ -11,13 +11,34 @@ type CalendarSlot = {
 
 type ScheduledContentItem = {
   id: string;
-  title: string;
+  title: string | null;
   service_area: string | null;
   status: string;
-  risk_level: string;
+  risk_level: string | null;
   scheduled_at: string;
   metadata: Record<string, unknown>;
 };
+
+type AcpPostRow = {
+  post_id: string;
+  brand: string | null;
+  platform: string | null;
+  status: string;
+  scheduled_at: string;
+  metadata: Record<string, unknown>;
+};
+
+function mapAcpPostToCalendarItem(row: AcpPostRow): ScheduledContentItem {
+  return {
+    id: row.post_id,
+    title: null,
+    service_area: row.brand,
+    status: row.status,
+    risk_level: null,
+    scheduled_at: row.scheduled_at,
+    metadata: row.metadata,
+  };
+}
 
 type MoveContentBody = {
   contentItemId?: string;
@@ -44,9 +65,9 @@ export async function GET(request: Request) {
     }
 
     const { start, end } = extractCalendarQuery(request.url);
-    const { data: scheduledItems, error } = await supabase
-      .from('content_items')
-      .select('id,title,service_area,status,risk_level,scheduled_at,metadata')
+    const { data: rawPosts, error } = await supabase
+      .from('acp_posts')
+      .select('post_id,brand,platform,status,scheduled_at,metadata')
       .not('scheduled_at', 'is', null)
       .gte('scheduled_at', start)
       .lt('scheduled_at', end)
@@ -56,11 +77,12 @@ export async function GET(request: Request) {
       throw new Error(error.message);
     }
 
-    const dailySlots = summarizeCalendarSlots((scheduledItems ?? []) as ScheduledContentItem[]);
+    const scheduledItems = (rawPosts ?? []).map((row) => mapAcpPostToCalendarItem(row as AcpPostRow));
+    const dailySlots = summarizeCalendarSlots(scheduledItems);
 
     return NextResponse.json({
       window: { start, end },
-      items: scheduledItems ?? [],
+      items: scheduledItems,
       dailySlots,
     });
   } catch (error) {
@@ -94,36 +116,34 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'scheduledAt must be a valid ISO date string' }, { status: 400 });
     }
 
-    const { data: contentItem, error: fetchError } = await supabase
-      .from('content_items')
-      .select('id,status,title')
-      .eq('id', body.contentItemId)
+    const { data: acpPost, error: fetchError } = await supabase
+      .from('acp_posts')
+      .select('post_id,status,brand')
+      .eq('post_id', body.contentItemId)
       .maybeSingle();
 
     if (fetchError) {
       throw new Error(fetchError.message);
     }
 
-    if (!contentItem) {
+    if (!acpPost) {
       return NextResponse.json({ error: 'content item not found' }, { status: 404 });
     }
 
-    if (contentItem.status === 'published' || contentItem.status === 'archived') {
-      return NextResponse.json({ error: 'Published or archived content cannot be rescheduled' }, { status: 409 });
+    if (acpPost.status === 'published' || acpPost.status === 'publishing') {
+      return NextResponse.json({ error: 'Published or in-progress content cannot be rescheduled' }, { status: 409 });
     }
 
-    const nextStatus = ['ready_for_review', 'in_review', 'approved', 'scheduled', 'draft', 'source_search', 'generating'].includes(
-      contentItem.status,
-    )
+    const nextStatus = ['draft', 'revision_requested', 'approved', 'rejected', 'failed'].includes(acpPost.status)
       ? 'scheduled'
-      : contentItem.status;
+      : acpPost.status;
     const scheduledIso = new Date(body.scheduledAt).toISOString();
 
-    const { data: updatedItem, error: updateError } = await supabase
-      .from('content_items')
+    const { data: updatedPost, error: updateError } = await supabase
+      .from('acp_posts')
       .update({ scheduled_at: scheduledIso, status: nextStatus })
-      .eq('id', body.contentItemId)
-      .select('id,title,service_area,status,risk_level,scheduled_at,metadata')
+      .eq('post_id', body.contentItemId)
+      .select('post_id,brand,platform,status,scheduled_at,metadata')
       .single();
 
     if (updateError) {
@@ -132,9 +152,9 @@ export async function POST(request: Request) {
 
     const sameDayWindow = getDayWindow(scheduledIso);
     const { count: sameDayCount, error: countError } = await supabase
-      .from('content_items')
-      .select('id', { count: 'exact', head: true })
-      .not('id', 'eq', body.contentItemId)
+      .from('acp_posts')
+      .select('post_id', { count: 'exact', head: true })
+      .not('post_id', 'eq', body.contentItemId)
       .not('scheduled_at', 'is', null)
       .gte('scheduled_at', sameDayWindow.start)
       .lt('scheduled_at', sameDayWindow.end);
@@ -149,19 +169,18 @@ export async function POST(request: Request) {
     await writeAuditEvent(supabase, {
       actorProfileId: actor.profileId,
       eventType: 'calendar.item_rescheduled',
-      targetType: 'content_item',
-      targetId: contentItem.id,
+      targetType: 'acp_post',
+      targetId: acpPost.post_id,
       metadata: {
-        previousStatus: contentItem.status,
+        previousStatus: acpPost.status,
         nextStatus,
-        title: contentItem.title,
         scheduledAt: scheduledIso,
         sameDayTotal,
       },
     });
 
     return NextResponse.json({
-      item: updatedItem,
+      item: updatedPost ? mapAcpPostToCalendarItem(updatedPost as AcpPostRow) : null,
       capacity: {
         date: scheduledIso.slice(0, 10),
         count: sameDayTotal,

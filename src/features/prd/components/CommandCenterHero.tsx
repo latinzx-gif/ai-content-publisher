@@ -27,9 +27,9 @@ export function CommandCenterHero({
 }: CommandCenterHeroProps) {
   const readiness = [
     { label: 'OpenAI', value: error.toLowerCase().includes('openai') ? 'Check' : 'Ready', tone: error.toLowerCase().includes('openai') ? 'rose' : 'emerald' },
-    { label: 'Buffer', value: counts.failedPublish > 0 ? 'Needs action' : 'Ready to connect', tone: counts.failedPublish > 0 ? 'rose' : 'amber' },
-    { label: 'Brand Rules', value: 'Ready', tone: 'emerald' },
-    { label: 'Content Rules', value: 'Ready', tone: 'emerald' },
+    { label: 'Buffer', value: counts.failedPublish > 0 ? 'Needs action' : 'Not connected', tone: counts.failedPublish > 0 ? 'rose' : 'amber' },
+    { label: 'Brand Rules', value: 'Not configured', tone: 'amber' },
+    { label: 'Content Rules', value: 'Not configured', tone: 'amber' },
   ];
   const nextAction = error
     ? { title: 'System needs attention', detail: 'Review connection or token health before sending more work to agents.', action: 'View details', onClick: onDetails }

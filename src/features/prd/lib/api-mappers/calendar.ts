@@ -21,19 +21,22 @@ export function toIsoDate(date: Date) {
 }
 
 
-export function getCalendarWindow() {
+export function getCalendarWindow(monthOffset = 0) {
   const now = new Date();
   const nowParts = toBangkokDateParts(now);
   if (!nowParts) {
+    const shifted = new Date(now.getTime() + monthOffset * 30 * DAY_IN_MS);
     return {
-      start: now,
-      end: new Date(now.getTime() + 34 * DAY_IN_MS),
-      month: now.getMonth(),
-      year: now.getFullYear(),
+      start: shifted,
+      end: new Date(shifted.getTime() + 34 * DAY_IN_MS),
+      month: shifted.getMonth(),
+      year: shifted.getFullYear(),
     };
   }
 
-  const monthStart = createBangkokDateTime(nowParts.year, nowParts.month, 1);
+  const targetYear = nowParts.year + Math.floor((nowParts.month - 1 + monthOffset) / 12);
+  const targetMonth = ((nowParts.month - 1 + monthOffset) % 12 + 12) % 12 + 1;
+  const monthStart = createBangkokDateTime(targetYear, targetMonth, 1);
   const monthStartParts = toBangkokDateParts(monthStart);
   const mondayOffset = monthStartParts ? (monthStartParts.weekday + 6) % 7 : 0;
   const start = new Date(monthStart.getTime() - mondayOffset * DAY_IN_MS);
@@ -42,8 +45,8 @@ export function getCalendarWindow() {
   return {
     start,
     end,
-    month: nowParts.month - 1,
-    year: nowParts.year,
+    month: targetMonth - 1,
+    year: targetYear,
   };
 }
 
@@ -122,9 +125,14 @@ export function mapCalendarPayload(payload: CalendarApiResponse): CalendarPayloa
   const focusPosts = byDate.get(focusKey)?.slice(0, 6) ?? [];
   const focusedKey = focusPosts.length ? focusKey : toAppDateKey(new Date()) ?? toIsoDate(new Date());
   const focusedParts = focusedKey?.split('-').map(Number) ?? [];
+  const today = new Date();
+  const todayParts = toBangkokDateParts(today);
+  const todayLabel = todayParts
+    ? `${monthLabels[todayParts.month - 1]} ${todayParts.day}`
+    : today.toLocaleDateString('en-US', { month: 'long', day: 'numeric' });
   const focusLabel = focusedParts.length === 3 && !Number.isNaN(focusedParts[0]) && !Number.isNaN(focusedParts[1]) && !Number.isNaN(focusedParts[2]) && focusedParts[1] >= 1 && focusedParts[1] <= 12
     ? `${monthLabels[focusedParts[1] - 1]} ${focusedParts[2]}`
-    : 'June 15';
+    : todayLabel;
 
   return {
     dailySlotsByDate: dailySlots.reduce(

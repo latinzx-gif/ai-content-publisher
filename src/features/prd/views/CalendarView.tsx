@@ -37,6 +37,9 @@ export function CalendarView({
   onModeChange,
   dailySlots,
   onNoopAction,
+  monthOffset,
+  onPrevMonth,
+  onNextMonth,
 }: {
   calendarDays: CalendarDay[];
   focusDayPosts: CalendarFocusPost[];
@@ -48,6 +51,9 @@ export function CalendarView({
   onModeChange: (mode: 'Month' | 'Week' | 'Day') => void;
   onMovePost?: (contentItemId: string, targetDate: string, targetHour?: number) => void;
   onNoopAction: (message: string) => void;
+  monthOffset?: number;
+  onPrevMonth?: () => void;
+  onNextMonth?: () => void;
 }) {
   const calendarDaysMapWarning = dailySlots || {};
   const inferDefaultDateKey = useCallback(() => {
@@ -226,22 +232,30 @@ export function CalendarView({
             {loading && <p className="mt-1 text-[11px] font-semibold text-[#6e6e68]">Loading live calendar data...</p>}
           </div>
 
-          <div className="flex items-center rounded-xl border border-[#deded8] bg-[#f4f4f2] p-1">
-            {['Month', 'Week', 'Day'].map((view) => (
+          <div className="flex items-center gap-2">
+            {onPrevMonth ? (
               <button
-                key={view}
-                onClick={() => {
-                  onModeChange(view as 'Month' | 'Week' | 'Day');
-                  onNoopAction(`Switched calendar view to ${view}`);
-                }}
-                className={`h-8 rounded-lg px-3 text-xs font-medium ${
-                  view === viewMode ? 'bg-white text-[#171717] shadow-sm' : 'text-[#6e6e68] hover:text-[#171717]'
-                }`}
+                onClick={onPrevMonth}
+                className="flex h-8 w-8 items-center justify-center rounded-lg border border-[#deded8] bg-white text-[#6e6e68] hover:bg-[#f6f6f2] hover:text-[#171717]"
                 type="button"
+                aria-label="Previous month"
               >
-                {view}
+                ‹
               </button>
-            ))}
+            ) : null}
+            <span className="text-xs font-semibold text-[#4f4f49]">
+              {monthOffset === 0 ? 'This month' : monthOffset === -1 ? 'Last month' : monthOffset === 1 ? 'Next month' : `${monthOffset > 0 ? '+' : ''}${monthOffset}mo`}
+            </span>
+            {onNextMonth ? (
+              <button
+                onClick={onNextMonth}
+                className="flex h-8 w-8 items-center justify-center rounded-lg border border-[#deded8] bg-white text-[#6e6e68] hover:bg-[#f6f6f2] hover:text-[#171717]"
+                type="button"
+                aria-label="Next month"
+              >
+                ›
+              </button>
+            ) : null}
           </div>
 
           <div className="flex items-center rounded-xl border border-[#deded8] bg-[#f4f4f2] p-1">
@@ -336,6 +350,9 @@ export function CalendarView({
 
         {viewMode === 'Week' ? (
           <div className="grid max-h-[820px] overflow-auto border border-[#ecece8] bg-[#fbfbfa]">
+            {weekPostsByDay.every(({ day }) => day.posts.length === 0) && !loading ? (
+              <p className="px-4 py-6 text-center text-xs text-[#8a8a82]">No posts scheduled this week.</p>
+            ) : null}
             <div className="sticky top-0 z-10 grid grid-cols-[64px_repeat(7,minmax(0,1fr))] border-b border-[#e8e8e4] bg-[#fbfbfa]">
               <div className="border-r border-[#e8e8e4] px-3 py-2 text-[10px] font-semibold uppercase tracking-[0.1em] text-[#8a8a82]">Time</div>
               {weekPostsByDay.map(({ day }, dayIndex) => {
@@ -431,7 +448,7 @@ export function CalendarView({
         {viewMode === 'Day' ? (
           <div className="bg-[#fbfbfa]">
             <div className="border-b border-[#e8e8e4] bg-[#fbfbfa] px-3 py-2">
-              <div className="text-xs text-[#8a8a82]">รายงานตามลำดับเวลา</div>
+              <div className="text-xs text-[#8a8a82]">Daily timeline</div>
               <div className="mt-0.5 text-sm font-semibold text-[#171717]">
                 {selectedDayLabel}
               </div>
@@ -600,7 +617,7 @@ export function CalendarView({
         <section className="rounded-2xl border border-[#deded8] bg-[#f6f6f2] p-4">
           <h2 className="text-sm font-semibold text-[#171717]">Drag & drop behavior</h2>
           <p className="mt-2 text-xs leading-relaxed text-[#6e6e68]">
-            Planned interaction: drag a content block to another day, then the system updates scheduled_at, checks channel conflicts, and warns if service coverage becomes unbalanced.
+            Drag a content block to reschedule it. The system updates the publish date, checks channel conflicts, and warns if service coverage becomes unbalanced.
           </p>
         </section>
       </aside>

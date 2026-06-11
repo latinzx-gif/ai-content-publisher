@@ -134,6 +134,9 @@ export function usePrdWorkspace() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [clientInitComplete, setClientInitComplete] = useState(false);
+  const [bridgeAttempted, setBridgeAttempted] = useState(
+    () => authBypassEnabled || (typeof window !== 'undefined' && Boolean(window.sessionStorage.getItem('prd_api_bearer_token')?.trim())),
+  );
   const [activePage, setActivePage] = useState<PageName>(defaultPrdPage);
   const [activeTab, setActiveTab] = useState<string>(pageMeta[defaultPrdPage]?.tabs?.[0] ?? 'All');
   const [apiToken, setApiToken] = useState<string>('');
@@ -148,10 +151,14 @@ export function usePrdWorkspace() {
   const [dashboardError, setDashboardError] = useState('');
   const [calendarDaysState, setCalendarDaysState] = useState<CalendarDay[]>(fallbackCalendarDays);
   const [focusDayPostsState, setFocusDayPostsState] = useState<CalendarFocusPost[]>(fallbackFocusDayPosts);
-  const [calendarFocusLabel, setCalendarFocusLabel] = useState('June 15');
+  const [calendarFocusLabel, setCalendarFocusLabel] = useState(() => {
+    const now = new Date();
+    return now.toLocaleDateString('en-US', { month: 'long', day: 'numeric' });
+  });
   const [calendarDailyCapacity, setCalendarDailyCapacity] = useState<Record<string, CalendarCapacity>>({});
   const [calendarLoading, setCalendarLoading] = useState(false);
   const [calendarError, setCalendarError] = useState('');
+  const [calendarMonthOffset, setCalendarMonthOffset] = useState(0);
   const [publishingChannelsState, setPublishingChannelsState] = useState<PublishingChannelSummary[]>(fallbackPublishingChannels);
   const [publishingQueueState, setPublishingQueueState] = useState<PublishingQueueRow[]>(fallbackPublishingQueue);
   const [workflowPublishingRowsState, setWorkflowPublishingRowsState] = useState<PublishingQueueRow[]>([]);
@@ -1548,11 +1555,14 @@ export function usePrdWorkspace() {
   // Bridge the publisher cookie session (magic link / Google / dev instant
   // sign-in) into the PRD bearer token: one login covers both surfaces.
   // Only runs when no token is stored yet, so a manually pasted token wins.
+  // Sets bridgeAttempted=true on all exit paths so data loading never fires
+  // before we know whether a session exists (prevents the error-flash race).
   useEffect(() => {
     if (!clientInitComplete || authBypassEnabled) {
       return;
     }
     if (window.sessionStorage.getItem('prd_api_bearer_token')?.trim()) {
+      setBridgeAttempted(true);
       return;
     }
 
@@ -1569,6 +1579,10 @@ export function usePrdWorkspace() {
         }
       } catch {
         // No Supabase session available — PRD keeps asking for sign-in.
+      } finally {
+        if (!cancelled) {
+          setBridgeAttempted(true);
+        }
       }
     })();
 
@@ -1604,12 +1618,13 @@ export function usePrdWorkspace() {
     }
   }, [clientInitComplete, hasToken, reviewQueueItemsState]);
 
-  const loadCalendarData = useCallback(async () => {
+  const loadCalendarData = useCallback(async (monthOffset = 0) => {
+    const todayLabel = new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric' });
     if (!hasToken) {
       setCalendarDaysState(fallbackCalendarDays);
       setFocusDayPostsState(fallbackFocusDayPosts);
       setCalendarDailyCapacity({});
-      setCalendarFocusLabel('June 15');
+      setCalendarFocusLabel(todayLabel);
       setCalendarError('Please sign in to load live calendar data.');
       return;
     }
@@ -1617,7 +1632,7 @@ export function usePrdWorkspace() {
     setCalendarLoading(true);
     setCalendarError('');
     try {
-      const { start, end } = getCalendarWindow();
+      const { start, end } = getCalendarWindow(monthOffset);
       const search = new URLSearchParams({ start: start.toISOString(), end: end.toISOString() });
       const payload = await fetchWithToken<CalendarApiResponse>(`/api/calendar/slots?${search.toString()}`);
       const mapped = mapCalendarPayload(payload);
@@ -1630,7 +1645,7 @@ export function usePrdWorkspace() {
       setCalendarDaysState(fallbackCalendarDays);
       setFocusDayPostsState(fallbackFocusDayPosts);
       setCalendarDailyCapacity({});
-      setCalendarFocusLabel('June 15');
+      setCalendarFocusLabel(todayLabel);
     } finally {
       setCalendarLoading(false);
     }
@@ -1669,13 +1684,19 @@ export function usePrdWorkspace() {
           scheduledAt,
         }),
       });
-      await loadCalendarData();
+      await loadCalendarData(calendarMonthOffset);
     } catch (error) {
       setCalendarError(error instanceof Error ? error.message : 'Unable to reschedule content');
     } finally {
       setCalendarLoading(false);
     }
   }
+
+  const navigateCalendarMonth = useCallback((direction: 1 | -1) => {
+    const nextOffset = calendarMonthOffset + direction;
+    setCalendarMonthOffset(nextOffset);
+    void loadCalendarData(nextOffset);
+  }, [calendarMonthOffset, loadCalendarData]);
 
   const loadPublishingData = useCallback(async () => {
     if (!hasToken) {
@@ -1926,10 +1947,14 @@ export function usePrdWorkspace() {
   }
 
   // Loading current page data from effects is intentional because state depends on route context and token availability.
+  // Guard on bridgeAttempted so we never fire a data fetch before the publisher-session bridge has resolved —
+  // this prevents the "Please sign in" error flash that appeared right after a successful publisher login.
   useEffect(() => {
+    if (!bridgeAttempted) return;
+
     const run = () => {
       if (activePage === 'Calendar') {
-        void loadCalendarData();
+        void loadCalendarData(calendarMonthOffset);
       } else if (activePage === 'Dashboard') {
         void loadDashboardData();
       } else if (activePage === 'Publishing') {
@@ -1940,7 +1965,7 @@ export function usePrdWorkspace() {
         void loadLogsData();
       } else if (!hasToken) {
         void loadDashboardData();
-        void loadCalendarData();
+        void loadCalendarData(calendarMonthOffset);
         void loadPublishingData();
         void loadReviewData();
         void loadLogsData();
@@ -1950,7 +1975,7 @@ export function usePrdWorkspace() {
     void Promise.resolve().then(() => {
       run();
     });
-  }, [activePage, hasToken, loadCalendarData, loadDashboardData, loadLogsData, loadPublishingData, loadReviewData]);
+  }, [activePage, bridgeAttempted, hasToken, loadCalendarData, loadDashboardData, loadLogsData, loadPublishingData, loadReviewData]);
 
   useEffect(() => {
     if (!clientInitComplete || !hasToken || !selectedContentJobDetailId) {
@@ -1982,7 +2007,7 @@ export function usePrdWorkspace() {
 
   const onRefresh = async () => {
     if (activePage === 'Calendar') {
-      await loadCalendarData();
+      await loadCalendarData(calendarMonthOffset);
     } else if (activePage === 'Dashboard') {
       await loadDashboardData();
     } else if (activePage === 'Publishing') {
@@ -2050,7 +2075,9 @@ export function usePrdWorkspace() {
                 activeTab={activeTab}
                 onTabChange={(tab) => {
                   setActiveTab(tab);
-                  showUiNotice(`Filtered by ${tab}`);
+                  if (activePage !== 'Calendar') {
+                    showUiNotice(`Filtered by ${tab}`);
+                  }
                 }}
               />
 
@@ -2091,6 +2118,9 @@ export function usePrdWorkspace() {
                     dailySlots={calendarDailyCapacity}
                     onMovePost={moveCalendarPost}
                     onNoopAction={(message) => showUiNotice(`Calendar action: ${message}`)}
+                    monthOffset={calendarMonthOffset}
+                    onPrevMonth={() => navigateCalendarMonth(-1)}
+                    onNextMonth={() => navigateCalendarMonth(1)}
                   />
                 ) : activePage === 'Publishing' ? (
                 <PublishingView
