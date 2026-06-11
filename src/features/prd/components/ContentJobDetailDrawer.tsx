@@ -47,7 +47,6 @@ export function ContentJobDetailDrawer({
   const failedImageAssets = generatedAssets.filter((asset) => asset.availabilityStatus === 'failed');
   const assetLayoutPlan =
     detail.reviewItem?.assetLayoutPlan?.length ? detail.reviewItem.assetLayoutPlan : detail.boardItem?.assetLayoutPlan ?? [];
-  const imageCount = detail.reviewItem?.imageCount ?? detail.boardItem?.imageCount ?? realImageAssets.length ?? selectedAssets.length;
   const visualBrief = detail.reviewItem?.visualBrief || detail.boardItem?.visualBrief;
   const creativeSummary = detail.reviewItem?.creativeSummary;
   const approvalRecommendation = detail.reviewItem?.approvalRecommendation ?? detail.reviewItem?.approvalSummary;
@@ -253,6 +252,7 @@ export function ContentJobDetailDrawer({
                           selectedAssets.map((asset, idx) => {
                             const isUrl = asset.startsWith('http');
                             return isUrl ? (
+                              // eslint-disable-next-line @next/next/no-img-element -- dynamic asset preview URLs
                               <img key={idx} src={asset} alt="Selected" className="h-8 w-8 rounded border border-[#deded8] object-cover" />
                             ) : (
                               <Tag key={idx}>{asset}</Tag>
@@ -273,6 +273,7 @@ export function ContentJobDetailDrawer({
                       realImageAssets.map((asset, index) => (
                         <figure key={`${asset.url ?? asset.storagePath ?? asset.altText}-${index}`} className="overflow-hidden rounded-xl border border-[#e3e3dd] bg-white">
                           {asset.url ? (
+                            // eslint-disable-next-line @next/next/no-img-element -- dynamic generated asset URLs
                             <img
                               src={asset.url}
                               alt={asset.altText || `Generated image ${index + 1}`}

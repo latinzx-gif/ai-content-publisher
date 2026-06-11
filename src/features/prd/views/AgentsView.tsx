@@ -117,9 +117,11 @@ export function AgentsView({
       ? 'Auto runtime select'
       : connectionPreference === 'multica'
         ? 'Multica daemon first'
-        : connectionPreference === 'codex'
-          ? 'Codex local first'
-          : 'OpenAI API first';
+        : connectionPreference === 'claude'
+          ? 'Claude Code local first'
+          : connectionPreference === 'codex'
+            ? 'Codex local first'
+            : 'OpenAI API first';
   const liveAgentNames = new Set(agents.map((agent) => agent.name));
   const activeAgentSource = agents.filter((agent) => coreAgentNames.includes(agent.name));
   const displayAgents = activeAgentSource.map((agent) => {
@@ -313,6 +315,9 @@ export function AgentsView({
           </table>
         </div>
       </section>
+
+      <AgentOperatingModelPanel />
+      <AgentRoutingSection />
 
       {showNewAgent && <NewAgentDialog onClose={() => setShowNewAgent(false)} locked={lockedNewAgent} />}
     </div>

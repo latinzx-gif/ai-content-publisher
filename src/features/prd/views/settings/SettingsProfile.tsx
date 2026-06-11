@@ -1,8 +1,5 @@
 'use client';
 
-import { PenLine } from 'lucide-react';
-import { UsersIcon } from '@/features/prd/components/icons/prd-icons';
-import { teamMembers } from '@/features/prd/config/rules-brand';
 import { BackendReadinessMap } from '@/features/prd/views/settings/BackendReadinessMap';
 
 export function SettingsProfile({ page }: { page: string }) {

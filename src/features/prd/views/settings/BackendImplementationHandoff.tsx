@@ -1,6 +1,5 @@
 'use client';
 
-import { ChevronRight, FileText } from 'lucide-react';
 import { Tag } from '@/features/prd/components/primitives/Tag';
 import {
   backendHandoffChecklist,

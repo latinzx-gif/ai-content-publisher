@@ -48,7 +48,7 @@ export function GenerationCreatePanel({
     {
       title: '1. Generate Text',
       agent: 'Content Strategy Agent',
-      detail: `${wordCount} words for ${targetAudience}, goal: ${contentGoal}, CTA: ${cta}.`,
+      detail: `${wordCount} words on “${topic}” for ${targetAudience}, goal: ${contentGoal}, CTA: ${cta}.`,
     },
     {
       title: '2. Compliance Pass',
@@ -65,14 +65,6 @@ export function GenerationCreatePanel({
       agent: 'Image & Layout Agent',
       detail: `Generate ${imageCount} image option(s), crop for ${activePlatforms.join(', ')}, and compose ${layout.toLowerCase()} layout.`,
     },
-  ];
-  const generationSummary = [
-    ['Category', category],
-    ['Audience', targetAudience],
-    ['Goal', contentGoal],
-    ['Brand', brandVoice],
-    ['Citation', citationStrictness],
-    ['Sources', activeSources.join(', ')],
   ];
 
   return (

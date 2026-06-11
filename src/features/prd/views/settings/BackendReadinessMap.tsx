@@ -1,6 +1,5 @@
 'use client';
 
-import { Layers3, ShieldCheck } from 'lucide-react';
 import { Tag } from '@/features/prd/components/primitives/Tag';
 import { BackendImplementationHandoff } from '@/features/prd/views/settings/BackendImplementationHandoff';
 import {

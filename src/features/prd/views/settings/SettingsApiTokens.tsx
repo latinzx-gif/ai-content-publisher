@@ -1,8 +1,7 @@
 'use client';
 
-import { Eye, EyeOff, Lock, ShieldCheck } from 'lucide-react';
+import { Eye, EyeOff } from 'lucide-react';
 import { useState } from 'react';
-import { KeyIcon } from '@/features/prd/components/icons/prd-icons';
 import { Tag } from '@/features/prd/components/primitives/Tag';
 import type { RuntimeDiscoveryResponse } from '@/features/prd/types/api';
 import { providerKeyReadiness, settingsReadinessChecklist } from '@/features/prd/config/settings-display';
@@ -28,9 +27,11 @@ export function SettingsApiTokens({
       ? 'Auto-select the best available runtime'
       : providerPreference === 'multica'
         ? 'Prefer Multica daemon, fallback Codex/OpenAI'
-        : providerPreference === 'codex'
-        ? 'Prefer Codex first, fallback OpenAI'
-        : 'Use OpenAI API key only';
+        : providerPreference === 'claude'
+          ? 'Prefer Claude Code first, fallback OpenAI'
+          : providerPreference === 'codex'
+            ? 'Prefer Codex first, fallback OpenAI'
+            : 'Use OpenAI API key only';
   const handleProviderPreferenceChange = (value: AgentRuntimePreference) => {
     onProviderPreferenceChange(value);
     setTokenActivity(
@@ -38,9 +39,11 @@ export function SettingsApiTokens({
         ? 'Execution preference updated: detect available runtimes and select automatically.'
         : value === 'multica'
           ? 'Execution preference updated: try Multica daemon first, then fallback to Codex/OpenAI if needed.'
-          : value === 'codex'
-        ? 'Execution preference updated: try Codex first, then fallback to OpenAI if needed.'
-        : 'Execution preference updated: use OpenAI API key only.',
+          : value === 'claude'
+            ? 'Execution preference updated: try Claude Code first, then fallback to OpenAI if needed.'
+            : value === 'codex'
+              ? 'Execution preference updated: try Codex first, then fallback to OpenAI if needed.'
+              : 'Execution preference updated: use OpenAI API key only.',
     );
   };
 
@@ -68,7 +71,7 @@ export function SettingsApiTokens({
       setTokenActivity(
         discovery.selectedProvider
           ? `Runtime selected: ${discovery.selectedProvider}. ${discovery.candidates.filter((candidate) => candidate.available).length}/${discovery.candidates.length} runtime(s) available.`
-          : 'No runtime is available. Configure Codex bridge or OpenAI API key.',
+          : 'No runtime is available. Configure the local agent bridge (Codex/Claude) or OpenAI API key.',
       );
     } catch (error) {
       setTokenActivity(error instanceof Error ? error.message : 'Runtime discovery failed');
@@ -96,7 +99,7 @@ export function SettingsApiTokens({
         <div className="mb-4">
           <h3 className="text-sm font-semibold text-[#171717]">Agent execution connection mode</h3>
           <p className="mt-1 text-xs leading-relaxed text-[#6e6e68]">กำหนดลำดับการเชื่อมต่อสำหรับการรัน Agent ในทุกขั้นตอน</p>
-          <div className="mt-3 grid gap-2 lg:grid-cols-4">
+          <div className="mt-3 grid gap-2 lg:grid-cols-2 xl:grid-cols-5">
             <button
               onClick={() => handleProviderPreferenceChange('auto')}
               className={`rounded-xl border p-3 text-left text-sm transition ${
@@ -126,6 +129,20 @@ export function SettingsApiTokens({
               </p>
             </button>
             <button
+              onClick={() => handleProviderPreferenceChange('claude')}
+              className={`rounded-xl border p-3 text-left text-sm transition ${
+                providerPreference === 'claude'
+                  ? 'border-[#171717] bg-[#171717] text-white'
+                  : 'border-[#deded8] bg-white text-[#171717] hover:border-[#171717]'
+              }`}
+              type="button"
+            >
+              <div className="font-semibold">Claude Code</div>
+              <p className={`mt-1 text-xs ${providerPreference === 'claude' ? 'text-white' : 'text-[#6e6e68]'}`}>
+                รันผ่าน local Claude Code CLI บน agent daemon แล้ว fallback ไป OpenAI เมื่อจำเป็น
+              </p>
+            </button>
+            <button
               onClick={() => handleProviderPreferenceChange('codex')}
               className={`rounded-xl border p-3 text-left text-sm transition ${
                 providerPreference === 'codex'
@@ -134,7 +151,7 @@ export function SettingsApiTokens({
               }`}
               type="button"
             >
-              <div className="font-semibold">Codex (default)</div>
+              <div className="font-semibold">Codex</div>
               <p className={`mt-1 text-xs ${providerPreference === 'codex' ? 'text-white' : 'text-[#6e6e68]'}`}>
                 เชื่อมต่อผ่าน local Codex ก่อน แล้ว fallback ไป OpenAI API เมื่อจำเป็น
               </p>
@@ -161,7 +178,7 @@ export function SettingsApiTokens({
             <div className="flex flex-wrap items-center justify-between gap-2">
               <div>
                 <div className="text-xs font-semibold text-[#171717]">Runtime discovery</div>
-                <p className="mt-0.5 text-xs text-[#6e6e68]">Backend checks Codex Local Bridge and OpenAI runtime, then selects the available machine/runtime.</p>
+                <p className="mt-0.5 text-xs text-[#6e6e68]">Backend checks the local agent bridge (Claude/Codex) and OpenAI runtime, then selects the available machine/runtime.</p>
               </div>
               <button
                 onClick={() => handleProviderTest('Agent runtimes')}

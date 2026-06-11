@@ -52,13 +52,6 @@ export function PublishingView({
   const failedChannel = channels.find((channel) => channel.status === 'Failed');
   const latestError = errors[0];
   const publishingLocked = !planEntitlements.publishingIntegrations;
-  const operationalBuckets = [
-    { label: 'Approved unscheduled', value: queue.filter((item) => (item.status === 'Ready' || item.status === 'Queued') && item.time === 'Unscheduled').length },
-    { label: 'Scheduled', value: queue.filter((item) => (item.status === 'Ready' || item.status === 'Queued') && item.time !== 'Unscheduled').length },
-    { label: 'Failed', value: queue.filter((item) => item.status === 'Failed').length },
-    { label: 'Manual action', value: queue.filter((item) => item.status === 'Failed' || item.status === 'Cancelled').length },
-    { label: 'Published log', value: queue.filter((item) => item.status === 'Published').length },
-  ];
   const toggleSelectedQueueItem = (id: string) => {
     setSelectedQueueIds((current) => (current.includes(id) ? current.filter((itemId) => itemId !== id) : [...current, id]));
   };

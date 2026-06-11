@@ -1,46 +1,10 @@
 'use client';
 
-import {
-  Activity,
-  Archive,
-  BarChart3,
-  Bell,
-  BookOpen,
-  Bot,
-  CalendarDays,
-  ChevronDown,
-  ChevronRight,
-  Circle,
-  Clock3,
-  Eye,
-  EyeOff,
-  FileText,
-  Filter,
-  Home,
-  Inbox,
-  Layers3,
-  Library,
-  Lock,
-  MessageSquareText,
-  MoreHorizontal,
-  PenLine,
-  Plus,
-  Search,
-  Send,
-  Settings,
-  ShieldCheck,
-  Sparkles,
-  UploadCloud,
-  X,
-  Zap,
-} from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import type { ComponentType, ReactNode } from 'react';
-import type { PrdDebugModel, PrdPresentationModel } from '@/lib/prdPresentation';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { isPublicApiAuthBypassEnabled } from '@/lib/auth-bypass';
 import type { ContentJobDetail } from '@/features/prd/types/content-job';
-import { buildWorkflowStatusSnapshot, getReviewSurfaceStage } from '@/features/prd/lib/workflow-status-snapshot';
+import { buildWorkflowStatusSnapshot } from '@/features/prd/lib/workflow-status-snapshot';
 import { DashboardView } from '@/features/prd/views/DashboardView';
 import { CalendarView } from '@/features/prd/views/CalendarView';
 import { PublishingView } from '@/features/prd/views/PublishingView';
@@ -48,74 +12,33 @@ import { ReviewQueueView } from '@/features/prd/views/ReviewQueueView';
 import { AgentsView } from '@/features/prd/views/AgentsView';
 import { LogsView } from '@/features/prd/views/LogsView';
 import {
-  APP_TIMEZONE,
-  APP_TIMEZONE_OFFSET,
-  DAY_IN_MS,
-  createBangkokDateTime,
-  formatFocusTime,
-  monthLabels,
-  toAppDateKey,
-  toBangkokDateParts,
   parseCalendarMinutes,
   toCalendarSlotIso,
-  toDateParts,
 } from '@/features/prd/lib/calendar-display';
 import {
-  buildReviewDraftTitle,
   getLanguageDisplayLabels,
-  languageCodeLabelMap,
-  languageDisplayLabels,
-  normalizeLanguageCode,
-  normalizeLanguageCodes,
 } from '@/features/prd/lib/review-display';
 import {
-  buildReviewIdMatchSignatures,
   buildReviewQueueTargetMatchSignatures,
-  getReviewQueueItemMatchSignatures,
   hasReviewQueueTargetMatch,
   hasReviewQueueValueMatch,
-  getReviewQueueSortValue,
-  hasMatchingSignatures,
   sortReviewQueueItems,
 } from '@/features/prd/lib/review-queue-match';
 import type { LogEvent } from '@/features/prd/types/logs';
 import { ContentJobDetailDrawer } from '@/features/prd/components/ContentJobDetailDrawer';
 import { AgentPanel } from '@/features/prd/components/AgentPanel';
-import { BoardColumn } from '@/features/prd/components/BoardColumn';
-import { DashboardLifecycleDetail } from '@/features/prd/components/DashboardLifecycleDetail';
 import { DashboardHeader } from '@/features/prd/components/DashboardHeader';
-import { CreateStep } from '@/features/prd/components/CreateStep';
-import { CalendarPost } from '@/features/prd/components/CalendarPost';
-import { BoardCard } from '@/features/prd/components/BoardCard';
-import { ChannelCard } from '@/features/prd/components/ChannelCard';
-import { MobileBoardStack } from '@/features/prd/components/MobileBoardStack';
-import { CommandCenterHero } from '@/features/prd/components/CommandCenterHero';
-import { PublishingStatus } from '@/features/prd/components/PublishingStatus';
-import { StatCard } from '@/features/prd/components/StatCard';
-import { LegendDot } from '@/features/prd/components/LegendDot';
-import { MiniPageCard } from '@/features/prd/components/MiniPageCard';
 import { MobileSidebarDrawer } from '@/features/prd/components/MobileSidebarDrawer';
 import { Sidebar } from '@/features/prd/components/Sidebar';
 import { TopBar } from '@/features/prd/components/TopBar';
-import { PrdPageLoadingFallback } from '@/features/prd/components/PrdPageLoadingFallback';
 import {
   SafetyConfirmationDialog,
   type SafetyConfirmation,
 } from '@/features/prd/components/SafetyConfirmationDialog';
 import { WorkspaceView } from '@/features/prd/components/WorkspaceView';
-import { AlertIcon } from '@/features/prd/components/primitives/AlertIcon';
-import { PanelSection } from '@/features/prd/components/primitives/PanelSection';
-import { SectionKicker } from '@/features/prd/components/primitives/SectionKicker';
-import { RiskBadge } from '@/features/prd/components/primitives/RiskBadge';
-import { RiskPill } from '@/features/prd/components/primitives/RiskPill';
-import { Tag } from '@/features/prd/components/primitives/Tag';
-import { coreAgentNames } from '@/features/prd/config/agents';
-import { dashboardLifecycleStages } from '@/features/prd/config/dashboard-lifecycle';
-import { navGroups, pageMeta, type PageName } from '@/features/prd/config/navigation';
-import { getCommandCenterCounts } from '@/features/prd/lib/command-center';
+import { pageMeta, type PageName } from '@/features/prd/config/navigation';
 import {
   filterDashboardBoardByTab,
-  formatBoardItemContextLabel,
   normalizeDashboardTab,
 } from '@/features/prd/lib/dashboard-tabs';
 import { normalizeTextValue } from '@/features/prd/lib/text';
@@ -125,55 +48,29 @@ import {
   getReviewIdForWorkflowId,
   getWorkflowIdSeed,
 } from '@/features/prd/lib/workflow-ids';
-import { inferDashboardLifecycleStage, normalizeWorkflowStage } from '@/features/prd/lib/workflow-stage';
 import type {
   AgentExecuteResponse,
   CalendarApiResponse,
   CalendarCapacity,
   CalendarDay,
-  CalendarDayPost,
   CalendarFocusPost,
-  CalendarPayload,
-  CalendarPostStatus,
-  CalendarQueueItem,
-  CalendarWeekCoverageItem,
   ContentJobCreateResponse,
-  ErrorLogApiRow,
-  LocalRuntimeTool,
   LogsApiResponse,
   PublishingApiResponse,
   PublishingChannelSummary,
-  PublishingErrorApiRow,
   PublishingErrorRow,
-  PublishingIntegrationApiRow,
-  PublishingJobApiRow,
-  PublishingQueueApiRow,
   PublishingQueueRow,
-  RagChatApiResponse,
-  RagCitationApiRow,
-  RagCitationCard,
   ReviewApiResponse,
-  ReviewApiRow,
-  RuntimeCandidate,
-  RuntimeDiscoveryResponse,
-  SystemLogApiRow,
 } from '@/features/prd/types/api';
 import { normalizeBoardRisk, type BoardItem } from '@/features/prd/types/board';
-import type { GeneratedAsset, GeneratedDraft, LanguageCode } from '@/features/prd/types/content';
 import type {
   AgentQueueJob,
-  CommandCenterCounts,
   DashboardActivity,
   DashboardAgent,
   DashboardApiPayload,
   DashboardBoard,
-  DashboardBoardTab,
-  DashboardPayload,
   DashboardStat,
   DashboardStatAction,
-  DashboardStatIcon,
-  DashboardStatSource,
-  DashboardTone,
 } from '@/features/prd/types/dashboard';
 import type { AgentRuntimePreference } from '@/features/prd/types/runtime';
 import type { ReviewDecision } from '@/features/prd/types/review-queue';
@@ -187,14 +84,6 @@ import { SettingsView } from '@/features/prd/views/SettingsView';
 import { createNextDraftWorkflowId, getFacebookLayoutGuideline } from '@/features/prd/config/create-post-workflow';
 import type { CreateReviewPackage } from '@/features/prd/types/review-queue';
 import type { ReviewQueueItem } from '@/features/prd/types/review-queue';
-import {
-  buildDraftPackageFromContext,
-  buildDraftPackageSignature,
-  deriveBrandVoice,
-  mapGeneratedAssetsFromMetadata,
-  mapGeneratedDraftsFromMetadata,
-  normalizeStringList,
-} from '@/features/prd/lib/create-post-package';
 
 import {
   fallbackDashboardData,
@@ -1127,7 +1016,12 @@ export function usePrdWorkspace() {
     const workflowId = selectedWorkflowItemId ?? selectedDashboardBoardItemId ?? createNextDraftWorkflowId();
     const workflowSeed = getWorkflowIdSeed(workflowId);
 
-    if (!hasToken && (agentConnectionPreference === 'auto' || agentConnectionPreference === 'codex')) {
+    if (
+      !hasToken &&
+      (agentConnectionPreference === 'auto' ||
+        agentConnectionPreference === 'codex' ||
+        agentConnectionPreference === 'claude')
+    ) {
       const localRunJobs: AgentQueueJob[] = [
         {
           id: `${commandId}-ORCH`,
@@ -1634,7 +1528,13 @@ export function usePrdWorkspace() {
     setApiToken(window.sessionStorage.getItem('prd_api_bearer_token') ?? '');
     const storedPreference = window.localStorage.getItem('prd_agent_connection_preference');
 
-    if (storedPreference === 'auto' || storedPreference === 'multica' || storedPreference === 'codex' || storedPreference === 'openai') {
+    if (
+      storedPreference === 'auto' ||
+      storedPreference === 'multica' ||
+      storedPreference === 'claude' ||
+      storedPreference === 'codex' ||
+      storedPreference === 'openai'
+    ) {
       setAgentConnectionPreference(storedPreference);
     }
 

@@ -127,7 +127,7 @@ export function readStoredReviewQueueItems({ allowMock } = { allowMock: true }):
     }
 
     return sanitized;
-  } catch (error) {
+  } catch {
     return [];
   }
 }

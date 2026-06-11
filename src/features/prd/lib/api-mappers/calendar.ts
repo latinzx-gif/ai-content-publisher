@@ -1,6 +1,4 @@
 import {
-  APP_TIMEZONE,
-  APP_TIMEZONE_OFFSET,
   DAY_IN_MS,
   createBangkokDateTime,
   formatFocusTime,

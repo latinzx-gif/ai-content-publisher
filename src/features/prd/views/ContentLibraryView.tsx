@@ -1,7 +1,7 @@
 'use client';
 
-import { useMemo, useState } from 'react';
-import { Archive, ChevronRight, Filter, Library, PenLine, Search } from 'lucide-react';
+import { useState } from 'react';
+import { ChevronRight, Filter, Search } from 'lucide-react';
 import { LibraryRow } from '@/features/prd/components/LibraryRow';
 import { contentCategories, libraryItems } from '@/features/prd/config/content-library';
 

@@ -14,6 +14,8 @@ const eslintConfig = defineConfig([
     "build/**",
     "coverage/**",
     "next-env.d.ts",
+    ".claude/**",
+    "scripts/extract-prd-page.mjs",
   ]),
 ]);
 

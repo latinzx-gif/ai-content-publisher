@@ -10,8 +10,6 @@ import {
   logExports,
   logSummary,
   userActivityLogs,
-  type AgentActivityLog,
-  type UserActivityLog,
 } from '@/features/prd/config/logs-display';
 import type { LogEvent } from '@/features/prd/types/logs';
 import { planEntitlements } from '@/features/prd/config/plan-entitlements';

@@ -251,7 +251,7 @@ export function useIntegrationConnections(returnTo = '/?page=settings') {
 
       window.location.href = buildAuthorizeUrl(provider, returnTo);
     },
-    [driveStatus?.configured, facebookStatus.facebookOAuthConfigured, returnTo, setupInfo?.google_drive.configured]
+    [driveStatus?.authMode, driveStatus?.configured, facebookStatus.facebookOAuthConfigured, returnTo, setupInfo?.google_drive.configured, setupInfo?.google_drive.serviceAccountConfigured]
   );
 
   const disconnect = useCallback(

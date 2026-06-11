@@ -4,7 +4,6 @@ import { useState } from 'react';
 import { SectionKicker } from '@/features/prd/components/primitives/SectionKicker';
 import {
   getLanguageDisplayLabels,
-  languageCodeLabelMap,
   normalizeLanguageCode,
   normalizeLanguageCodes,
 } from '@/features/prd/lib/review-display';

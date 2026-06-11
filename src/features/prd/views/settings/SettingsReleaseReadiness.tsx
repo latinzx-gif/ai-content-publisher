@@ -1,6 +1,5 @@
 'use client';
 
-import { Check, ChevronRight, ShieldCheck, UploadCloud } from 'lucide-react';
 import { Tag } from '@/features/prd/components/primitives/Tag';
 import { releaseDeployPath, releaseOpenRisks, releaseReadinessGates } from '@/features/prd/config/settings-display';
 

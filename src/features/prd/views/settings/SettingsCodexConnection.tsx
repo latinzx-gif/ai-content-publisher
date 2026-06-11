@@ -1,6 +1,6 @@
 'use client';
 
-import { Bot, Check, ChevronRight, Circle, Lock, UploadCloud } from 'lucide-react';
+import { Bot } from 'lucide-react';
 import { useState } from 'react';
 
 export function SettingsCodexConnection() {

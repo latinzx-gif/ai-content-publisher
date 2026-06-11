@@ -71,7 +71,6 @@ function ComplianceFinding({ finding }: { finding: (typeof complianceFindings)[n
 
 export function ReviewQueueView({
   items,
-  loading = false,
   error = '',
   targetReviewItemId,
   actorDisplayName,
@@ -350,6 +349,7 @@ export function ReviewQueueView({
                   const isUrl = asset.startsWith('http');
                   return isUrl ? (
                     <div key={asset} className="h-12 w-12 overflow-hidden rounded-lg border border-[#deded8] bg-[#fbfbfa]">
+                      {/* eslint-disable-next-line @next/next/no-img-element -- dynamic review asset URLs */}
                       <img src={asset} alt="Selected asset" className="h-full w-full object-cover" />
                     </div>
                   ) : (
@@ -372,6 +372,7 @@ export function ReviewQueueView({
                     .map((asset, idx) => (
                       <div key={idx} className="group relative overflow-hidden rounded-lg border border-[#e8e8e4] bg-[#fbfbfa]">
                         {asset.url ? (
+                          // eslint-disable-next-line @next/next/no-img-element -- dynamic generated asset URLs
                           <img
                             src={asset.url}
                             alt={asset.altText || 'Asset'}

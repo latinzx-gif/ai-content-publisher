@@ -7,7 +7,6 @@ import { BrandVoiceCard } from '@/features/prd/components/BrandVoiceCard';
 import { RulesPillPanel } from '@/features/prd/components/RulesPillPanel';
 import {
   coreServices,
-  imageGenerationConnector,
   prohibitedTerms,
   targetAudiences,
   teamMembers,

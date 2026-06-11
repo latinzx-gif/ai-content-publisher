@@ -45,8 +45,6 @@ export function DashboardView({
   loading,
   error,
   onNewPost,
-  onResetState,
-  onOpenRunning,
   onViewDetails,
   onStatMoreAction,
   onAddBoardItem,

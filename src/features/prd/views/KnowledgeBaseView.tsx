@@ -1,7 +1,7 @@
 'use client';
 
-import { useMemo, useState } from 'react';
-import { BookOpen, Bot, Clock3, Layers3, Link2, MessageSquareText, Search, ShieldCheck, UploadCloud } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { BookOpen, Bot, Clock3, Search, ShieldCheck, UploadCloud } from 'lucide-react';
 import { GlobeIcon } from '@/features/prd/components/icons/prd-icons';
 import { MiniPageCard } from '@/features/prd/components/MiniPageCard';
 import { KnowledgeConnectionCard } from '@/features/prd/components/KnowledgeConnectionCard';
@@ -17,7 +17,31 @@ export function KnowledgeBaseView({ apiToken, onNoopAction }: { apiToken: string
   const [ragError, setRagError] = useState('');
   const fallbackRagCitations: RagCitationCard[] = [];
   const [ragCitations, setRagCitations] = useState<RagCitationCard[]>(fallbackRagCitations);
+  const [driveConnected, setDriveConnected] = useState(false);
+  const [driveAccount, setDriveAccount] = useState<string | null>(null);
+  const [driveNotice] = useState('');
   const hasRagQuery = Boolean(ragQuery.trim());
+  const integrationsHref = '/?page=settings';
+
+  useEffect(() => {
+    const token = apiToken.trim().replace(/^Bearer\s+/i, '');
+    if (!token) {
+      return;
+    }
+
+    fetch('/api/integrations/google-drive/status', {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then((response) => response.json())
+      .then((payload: { connected?: boolean; accountName?: string | null; accountEmail?: string | null }) => {
+        setDriveConnected(Boolean(payload.connected));
+        setDriveAccount(payload.accountName ?? payload.accountEmail ?? null);
+      })
+      .catch(() => {
+        setDriveConnected(false);
+      });
+  }, [apiToken]);
+
   const runRagSearch = async () => {
     if (!hasRagQuery) {
       setRagStatus('blocked');
@@ -157,9 +181,29 @@ export function KnowledgeBaseView({ apiToken, onNoopAction }: { apiToken: string
               2 available
             </span>
           </div>
+          {driveNotice ? (
+            <p className="mt-4 rounded-xl border border-[#d9e0ef] bg-[#f4f7fd] px-3 py-2 text-xs font-semibold text-[#2f4f7f]">
+              {driveNotice}
+            </p>
+          ) : null}
           <div className="mt-4 grid gap-3 md:grid-cols-2">
-            <KnowledgeConnectionCard name="Google Drive" description="Sync PDFs, Docs, Sheets, and shared folders." icon={DriveIcon} status="Connect" />
-            <KnowledgeConnectionCard name="Obsidian" description="Index local vault notes, markdown files, and backlinks." icon={ObsidianIcon} status="Connect" />
+            <KnowledgeConnectionCard
+              name="Google Drive"
+              description={
+                driveConnected && driveAccount
+                  ? `Connected as ${driveAccount}. PDFs, Docs, Sheets, and shared folders are available for RAG.`
+                  : 'Sync PDFs, Docs, Sheets, and shared folders.'
+              }
+              icon={DriveIcon}
+              connected={driveConnected}
+              actionHref={integrationsHref}
+            />
+            <KnowledgeConnectionCard
+              name="Obsidian"
+              description="Index local vault notes, markdown files, and backlinks."
+              icon={ObsidianIcon}
+              onAction={() => onNoopAction('Obsidian connection is planned for a later phase')}
+            />
           </div>
         </section>
 
