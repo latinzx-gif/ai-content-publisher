@@ -1545,6 +1545,38 @@ export function usePrdWorkspace() {
     syncPrdStateFromLocation();
   }, [syncPrdStateFromLocation]);
 
+  // Bridge the publisher cookie session (magic link / Google / dev instant
+  // sign-in) into the PRD bearer token: one login covers both surfaces.
+  // Only runs when no token is stored yet, so a manually pasted token wins.
+  useEffect(() => {
+    if (!clientInitComplete || authBypassEnabled) {
+      return;
+    }
+    if (window.sessionStorage.getItem('prd_api_bearer_token')?.trim()) {
+      return;
+    }
+
+    let cancelled = false;
+
+    void (async () => {
+      try {
+        const { createClient } = await import('@/lib/publisher/supabase/client');
+        const { data } = await createClient().auth.getSession();
+        const accessToken = data.session?.access_token;
+
+        if (!cancelled && accessToken) {
+          setApiToken(accessToken);
+        }
+      } catch {
+        // No Supabase session available — PRD keeps asking for sign-in.
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [clientInitComplete, authBypassEnabled]);
+
   useEffect(() => {
     if (!clientInitComplete) {
       return;
