@@ -18,6 +18,7 @@
     "smoke:backend-contracts": "node scripts/smoke-backend-contracts.mjs",
     "smoke:entitlements": "node scripts/smoke-entitlements.mjs",
     "smoke:agent-execution": "node scripts/smoke-agent-execution.mjs",
+    "smoke:claude-bridge": "node scripts/smoke-claude-bridge.mjs",
     "smoke:rag-workflow": "node scripts/smoke-rag-workflow.mjs",
     "smoke:prepare": "node scripts/prepare-smoke-fixture.mjs",
     "smoke:user": "node scripts/create-smoke-user.mjs",
@@ -28,10 +29,14 @@
     "smoke:next": "node scripts/print-smoke-next-step.mjs",
     "test:e2e": "playwright test",
     "test:e2e:gate": "playwright test --project=publisher-gate",
-    "test:e2e:publisher": "playwright test --project=publisher-workflow"
+    "test:e2e:auth": "node scripts/save-publisher-playwright-auth.mjs",
+    "test:e2e:publisher": "playwright test --project=publisher-workflow",
+    "test:e2e:publisher:full": "playwright test --project=publisher-full-workflow",
+    "test:e2e:all": "npm run test:e2e:gate && npm run test:e2e:publisher"
   },
   "dependencies": {
     "@base-ui/react": "^1.5.0",
+    "@next/swc-darwin-arm64": "^16.2.9",
     "@react-three/drei": "^10.7.7",
     "@react-three/fiber": "^9.6.1",
     "@supabase/ssr": "^0.12.0",
