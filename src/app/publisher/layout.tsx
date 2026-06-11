@@ -12,9 +12,5 @@ export default function PublisherLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  return (
-    <div className="min-h-screen bg-[var(--bg)] text-[var(--ink)] antialiased overflow-auto">
-      <PublisherAppShell>{children}</PublisherAppShell>
-    </div>
-  );
+  return <PublisherAppShell>{children}</PublisherAppShell>;
 }

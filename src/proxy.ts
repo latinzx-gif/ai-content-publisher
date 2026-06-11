@@ -2,6 +2,8 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
+import { isServerApiAuthBypassEnabled } from "@/lib/auth-bypass";
+
 const PUBLIC_PUBLISHER_PATHS = ["/publisher/login", "/publisher/auth"];
 
 function isPublisherPath(pathname: string): boolean {
@@ -18,6 +20,10 @@ export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   if (!isPublisherPath(pathname)) {
+    return NextResponse.next();
+  }
+
+  if (isServerApiAuthBypassEnabled() && !isPublicPublisherPath(pathname)) {
     return NextResponse.next();
   }
 

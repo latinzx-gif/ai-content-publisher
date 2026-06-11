@@ -1,6 +1,8 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
+@import "../styles/obsidian-flux.css";
+@import "../styles/content-os-auth.css";
 
 @theme {
   --color-background: #09090b;
@@ -14,6 +16,20 @@
     margin: 0;
     padding: 0;
     overflow: hidden; /* Prevent scrolling since we're in a 3D app */
+  }
+
+  body.publisher-auth-route,
+  html.publisher-auth-route {
+    overflow: auto !important;
+    background: #f4f6fb !important;
+    color: #1d1a24 !important;
+  }
+
+  body.prd-auth-route,
+  html.prd-auth-route {
+    overflow: auto !important;
+    background: #0b1326 !important;
+    color: #dae2fd !important;
   }
 }
 

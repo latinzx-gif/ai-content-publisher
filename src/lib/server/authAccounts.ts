@@ -178,6 +178,31 @@ export async function ensureStarterTeamMember(supabase: AuthAccountClient, profi
   return normalizeTeamMember(createdMember);
 }
 
+export function oauthDisplayName(user: User) {
+  const metadata = user.user_metadata ?? {};
+  const candidates = [metadata.full_name, metadata.name, metadata.display_name];
+
+  for (const candidate of candidates) {
+    if (typeof candidate === 'string' && candidate.trim()) {
+      return candidate.trim();
+    }
+  }
+
+  if (user.email) {
+    return defaultDisplayName(user.email);
+  }
+
+  return 'Workspace user';
+}
+
+/** Create profiles + team_members for first-time Publisher OAuth / magic-link users. */
+export async function provisionWorkspaceUser(user: User) {
+  const supabase = createAuthAccountClient();
+  const profile = await ensureAuthProfile(supabase, user, oauthDisplayName(user));
+  await ensureStarterTeamMember(supabase, profile.id);
+  return profile;
+}
+
 export async function createSessionResponse(supabase: AuthAccountClient, email: string, password: string, displayName?: string): Promise<AuthAccountSession> {
   const { data, error } = await supabase.auth.signInWithPassword({
     email,

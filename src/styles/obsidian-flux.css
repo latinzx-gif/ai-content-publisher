@@ -1,0 +1,320 @@
+/* Obsidian Flux — Head Office auth & glass UI tokens */
+
+.obsidian-flux {
+  --flux-surface: #0b1326;
+  --flux-surface-dim: #0b1326;
+  --flux-surface-bright: #31394d;
+  --flux-surface-container-lowest: #060e20;
+  --flux-surface-container-low: #131b2e;
+  --flux-surface-container: #171f33;
+  --flux-surface-container-high: #222a3d;
+  --flux-surface-container-highest: #2d3449;
+  --flux-on-surface: #dae2fd;
+  --flux-on-surface-variant: #ccc3d8;
+  --flux-inverse-surface: #dae2fd;
+  --flux-inverse-on-surface: #283044;
+  --flux-outline: #958da1;
+  --flux-outline-variant: #4a4455;
+  --flux-surface-tint: #d2bbff;
+  --flux-primary: #d2bbff;
+  --flux-on-primary: #3f008e;
+  --flux-primary-container: #7c3aed;
+  --flux-on-primary-container: #ede0ff;
+  --flux-inverse-primary: #732ee4;
+  --flux-secondary: #89ceff;
+  --flux-on-secondary: #00344d;
+  --flux-secondary-container: #00a2e6;
+  --flux-on-secondary-container: #00344e;
+  --flux-tertiary: #ffb784;
+  --flux-on-tertiary: #4f2500;
+  --flux-error: #ffb4ab;
+  --flux-on-error: #690005;
+  --flux-error-container: #93000a;
+  --flux-on-error-container: #ffdad6;
+  --flux-background: #0b1326;
+  --flux-on-background: #dae2fd;
+  --flux-surface-variant: #2d3449;
+
+  --flux-radius-sm: 0.25rem;
+  --flux-radius: 0.5rem;
+  --flux-radius-md: 0.75rem;
+  --flux-radius-lg: 1rem;
+  --flux-radius-xl: 1.5rem;
+  --flux-radius-full: 9999px;
+
+  --flux-container-max: 1280px;
+  --flux-gutter: 24px;
+  --flux-stack-xs: 4px;
+  --flux-stack-md: 16px;
+  --flux-stack-xl: 48px;
+
+  color: var(--flux-on-surface);
+  background-color: var(--flux-background);
+  font-family: var(--font-inter, Inter, ui-sans-serif, system-ui, sans-serif);
+}
+
+.obsidian-flux .flux-display-lg {
+  font-size: 2rem;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+}
+
+@media (min-width: 640px) {
+  .obsidian-flux .flux-display-lg {
+    font-size: 3rem;
+    line-height: 1.1;
+  }
+}
+
+.obsidian-flux .flux-headline-md {
+  font-size: 1.5rem;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.obsidian-flux .flux-body-base {
+  font-size: 1rem;
+  font-weight: 400;
+  line-height: 1.6;
+}
+
+.obsidian-flux .flux-label-caps {
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.obsidian-flux .flux-code-sm {
+  font-family: var(--font-mono, "JetBrains Mono", ui-monospace, monospace);
+  font-size: 0.875rem;
+  font-weight: 450;
+  line-height: 1.5;
+}
+
+.obsidian-flux .flux-glass {
+  background: rgba(23, 31, 51, 0.55);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.obsidian-flux .flux-glass-elevated {
+  background: rgba(34, 42, 61, 0.72);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow:
+    0 0 0 1px rgba(210, 187, 255, 0.06),
+    0 24px 48px rgba(0, 0, 0, 0.35);
+}
+
+.obsidian-flux .flux-glow-ambient {
+  background:
+    radial-gradient(ellipse 70% 50% at 15% 0%, rgba(124, 58, 237, 0.22), transparent 55%),
+    radial-gradient(ellipse 55% 45% at 90% 100%, rgba(0, 162, 230, 0.14), transparent 50%),
+    var(--flux-background);
+}
+
+.obsidian-flux .flux-grid-bg {
+  background-image:
+    linear-gradient(rgba(218, 226, 253, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(218, 226, 253, 0.04) 1px, transparent 1px);
+  background-size: 48px 48px;
+}
+
+.obsidian-flux .flux-chip {
+  display: inline-flex;
+  align-items: center;
+  border-radius: var(--flux-radius-full);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(19, 27, 46, 0.65);
+  padding: 0.25rem 0.625rem;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--flux-on-surface-variant);
+}
+
+.obsidian-flux .flux-chip-primary {
+  background: rgba(124, 58, 237, 0.25);
+  border-color: rgba(210, 187, 255, 0.25);
+  color: var(--flux-primary);
+}
+
+.obsidian-flux .flux-btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border: none;
+  border-radius: var(--flux-radius);
+  background: linear-gradient(135deg, var(--flux-primary-container) 0%, var(--flux-secondary-container) 100%);
+  color: #fff;
+  font-size: 0.875rem;
+  font-weight: 600;
+  transition: box-shadow 0.2s ease, transform 0.15s ease, opacity 0.2s ease;
+}
+
+.obsidian-flux .flux-btn-primary:hover:not(:disabled) {
+  box-shadow: 0 0 24px rgba(124, 58, 237, 0.35), 0 0 12px rgba(0, 162, 230, 0.2);
+}
+
+.obsidian-flux .flux-btn-primary:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.obsidian-flux .flux-btn-ghost {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border-radius: var(--flux-radius);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: transparent;
+  color: var(--flux-on-surface-variant);
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+
+.obsidian-flux .flux-btn-ghost:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--flux-on-surface);
+}
+
+.obsidian-flux .flux-input {
+  width: 100%;
+  height: 2.75rem;
+  border-radius: var(--flux-radius);
+  border: 1px solid var(--flux-outline-variant);
+  background: rgba(6, 14, 32, 0.65);
+  padding: 0 0.875rem;
+  font-size: 0.875rem;
+  color: var(--flux-on-surface);
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.obsidian-flux .flux-input::placeholder {
+  color: var(--flux-outline);
+}
+
+.obsidian-flux .flux-input:focus {
+  border-color: var(--flux-primary);
+  box-shadow: 0 0 0 4px rgba(210, 187, 255, 0.12);
+}
+
+.obsidian-flux .flux-input-shell {
+  display: flex;
+  align-items: center;
+  border-radius: var(--flux-radius);
+  border: 1px solid var(--flux-outline-variant);
+  background: rgba(6, 14, 32, 0.65);
+  padding: 0 0.875rem;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.obsidian-flux .flux-input-shell:focus-within {
+  border-color: var(--flux-primary);
+  box-shadow: 0 0 0 4px rgba(210, 187, 255, 0.12);
+}
+
+.obsidian-flux .flux-input-shell .flux-input {
+  height: 2.75rem;
+  border: none;
+  background: transparent;
+  padding: 0;
+  box-shadow: none;
+}
+
+.obsidian-flux .flux-input-shell .flux-input:focus {
+  box-shadow: none;
+}
+
+.obsidian-flux .flux-segment {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.25rem;
+  padding: 0.25rem;
+  border-radius: var(--flux-radius-md);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(6, 14, 32, 0.5);
+}
+
+.obsidian-flux .flux-segment-btn {
+  display: inline-flex;
+  height: 2.5rem;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem;
+  border-radius: var(--flux-radius);
+  border: none;
+  background: transparent;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--flux-on-surface-variant);
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.obsidian-flux .flux-segment-btn[data-active='true'] {
+  background: rgba(124, 58, 237, 0.28);
+  color: var(--flux-on-primary-container);
+  box-shadow: 0 0 16px rgba(124, 58, 237, 0.2);
+}
+
+.obsidian-flux .flux-alert-success {
+  border-radius: var(--flux-radius-md);
+  border: 1px solid rgba(137, 206, 255, 0.25);
+  background: rgba(0, 52, 78, 0.35);
+  color: var(--flux-secondary);
+}
+
+.obsidian-flux .flux-alert-error {
+  border-radius: var(--flux-radius-md);
+  border: 1px solid rgba(255, 180, 171, 0.25);
+  background: rgba(147, 0, 10, 0.25);
+  color: var(--flux-error);
+}
+
+.obsidian-flux .flux-alert-neutral {
+  border-radius: var(--flux-radius-md);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(19, 27, 46, 0.55);
+  color: var(--flux-on-surface-variant);
+}
+
+.obsidian-flux .flux-link {
+  color: var(--flux-secondary);
+  font-weight: 600;
+  text-decoration: none;
+  transition: color 0.15s ease;
+}
+
+.obsidian-flux .flux-link:hover {
+  color: var(--flux-on-surface);
+}
+
+.obsidian-flux .flux-progress-shimmer {
+  background: linear-gradient(
+    90deg,
+    var(--flux-primary-container) 0%,
+    var(--flux-secondary-container) 50%,
+    var(--flux-primary-container) 100%
+  );
+  background-size: 200% 100%;
+  animation: flux-shimmer 2.4s ease-in-out infinite;
+}
+
+@keyframes flux-shimmer {
+  0% {
+    background-position: 100% 0;
+  }
+  100% {
+    background-position: -100% 0;
+  }
+}
