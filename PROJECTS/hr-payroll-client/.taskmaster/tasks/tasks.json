@@ -1,0 +1,525 @@
+{
+  "tasks": [
+    {
+      "id": "1",
+      "title": "Project Setup — Next.js 16 + Supabase + Tailwind + shadcn/ui",
+      "description": "Init Next.js 16 app ใน hr-app/ พร้อม Supabase client, Tailwind CSS, shadcn/ui, และ environment variables สำหรับ LINE + Supabase",
+      "status": "done",
+      "priority": "high",
+      "milestone": "M1",
+      "agent": "Codex",
+      "dependencies": [],
+      "details": "สร้าง Next.js 16 app, ติดตั้ง dependencies: @supabase/supabase-js, @supabase/ssr, shadcn/ui components, tailwindcss. สร้าง .env.local template พร้อม SUPABASE_URL, SUPABASE_ANON_KEY, LINE_CHANNEL_ACCESS_TOKEN, LINE_CHANNEL_SECRET, LINE_LIFF_ID, NEXT_PUBLIC_BASE_URL",
+      "testStrategy": "npm run build pass, หน้าแรก render ได้",
+      "subtasks": [],
+      "updatedAt": "2026-06-10T04:15:32.549Z"
+    },
+    {
+      "id": "2",
+      "title": "Database Schema — employees, attendance, leaves, alerts",
+      "description": "ออกแบบและสร้าง Supabase schema ทั้งหมดที่ Phase 1 ต้องการ พร้อม RLS policies",
+      "status": "done",
+      "priority": "high",
+      "milestone": "M1",
+      "agent": "Claude Code",
+      "dependencies": [
+        "1"
+      ],
+      "details": "Tables: hr_employees (id, line_user_id, name, position, department, salary, contract_start, probation_end, visa_expiry, work_permit_expiry, role, status), hr_attendance (id, employee_id, check_in_at, check_out_at, check_in_location, is_late, work_hours), hr_leaves (id, employee_id, type, start_date, end_date, reason, status, approved_by, attachment_url), hr_leave_balances (employee_id, leave_type, total_days, used_days), hr_alerts (id, employee_id, alert_type, trigger_date, sent_at, status). RLS: employees ดูข้อมูลตัวเองได้, HR ดูทุกคน",
+      "testStrategy": "tables สร้างแล้ว RLS enable แล้ว migration รันผ่าน",
+      "subtasks": [],
+      "updatedAt": "2026-06-10T05:27:33.336Z"
+    },
+    {
+      "id": "3",
+      "title": "LINE OA Setup — Webhook endpoint + Rich Menu + LIFF config",
+      "description": "สร้าง Next.js API route สำหรับ LINE Webhook, verify signature, setup Rich Menu structure, และ LIFF app config",
+      "status": "done",
+      "priority": "high",
+      "milestone": "M1",
+      "agent": "Claude Code",
+      "dependencies": [
+        "1"
+      ],
+      "details": "POST /api/line/webhook — รับ events จาก LINE, verify X-Line-Signature. Rich Menu: 5 ปุ่ม (เช็คอิน, ลา, เอกสาร, ร้องเรียน, ประกาศ). LIFF: สร้าง LIFF app ID สำหรับ leave form. ติดตั้ง @line/bot-sdk",
+      "testStrategy": "webhook รับ event ได้, signature verify ผ่าน",
+      "subtasks": [],
+      "updatedAt": "2026-06-10T06:19:11.850Z"
+    },
+    {
+      "id": "4",
+      "title": "Auth — LINE Login + Role-based (employee/hr/admin)",
+      "description": "สร้างระบบ auth ที่ผูก LINE userId กับ hr_employees table, assign role, และ protect routes",
+      "status": "done",
+      "priority": "high",
+      "milestone": "M1",
+      "agent": "Claude Code",
+      "dependencies": [
+        "2",
+        "3"
+      ],
+      "details": "LINE Login callback → ดึง line_user_id → lookup hr_employees → create Supabase session → set role cookie. Middleware protect /admin/* routes (HR/Admin only). LIFF context สำหรับพนักงาน",
+      "testStrategy": "employee login ได้, HR เข้า /admin ได้, employee ถูก redirect",
+      "subtasks": [],
+      "updatedAt": "2026-06-10T07:45:52.204Z"
+    },
+    {
+      "id": "5",
+      "title": "Web Layout — Admin Dashboard shell + navigation",
+      "description": "สร้าง layout สำหรับ Web Admin: sidebar navigation, header, responsive grid",
+      "status": "done",
+      "priority": "high",
+      "milestone": "M1",
+      "agent": "Codex",
+      "dependencies": [
+        "1",
+        "4"
+      ],
+      "details": "Layout: sidebar (Dashboard, Employees, Attendance, Leaves, Alerts) + main content area. shadcn/ui: Sheet สำหรับ mobile sidebar. Protected route wrapper. Placeholder pages สำหรับแต่ละ section",
+      "testStrategy": "navigate ระหว่าง pages ได้, responsive บน mobile",
+      "subtasks": [],
+      "updatedAt": "2026-06-10T08:19:11.685Z"
+    },
+    {
+      "id": "6",
+      "title": "Rich Menu — 5 ปุ่มพร้อม routing ใน LINE OA",
+      "description": "สร้างและ register Rich Menu กับ LINE API, routing postback events ไปยัง handlers ที่ถูกต้อง",
+      "status": "done",
+      "priority": "high",
+      "milestone": "M2",
+      "agent": "Codex",
+      "dependencies": [
+        "3",
+        "4"
+      ],
+      "details": "Rich Menu image: 2500x1686px, 5 areas. Postback data: action=checkin, action=checkout, action=leave, action=document, action=complaint. Route handler ใน webhook → ส่ง Flex Message ตอบ",
+      "testStrategy": "กดปุ่มใน LINE แล้วระบบรับ event ได้ถูก",
+      "subtasks": [],
+      "updatedAt": "2026-06-10T09:14:41.659Z"
+    },
+    {
+      "id": "7",
+      "title": "Check-in — บันทึก timestamp + Geo Location",
+      "description": "เมื่อพนักงานกดเช็คอินใน LINE: ขอ location → บันทึก hr_attendance พร้อม timestamp และ geo",
+      "status": "done",
+      "priority": "high",
+      "milestone": "M2",
+      "agent": "Claude Code",
+      "dependencies": [
+        "2",
+        "6"
+      ],
+      "details": "Webhook รับ action=checkin → ส่ง location request message → รับ location event → บันทึก hr_attendance (check_in_at = now(), check_in_location = lat/lon) → ตรวจสาย (เทียบ work_start_time config) → ส่ง Flex Message ยืนยัน",
+      "testStrategy": "เช็คอินแล้วมี record ใน hr_attendance, Flex Message ส่งถูก",
+      "subtasks": [],
+      "updatedAt": "2026-06-10T10:21:50.104Z"
+    },
+    {
+      "id": "8",
+      "title": "Check-out — สรุปชั่วโมงทำงาน, ตรวจสาย",
+      "description": "เมื่อพนักงานกดเช็คเอาท์: บันทึก check_out_at, คำนวณ work_hours, ส่งสรุปรายวัน",
+      "status": "done",
+      "priority": "high",
+      "milestone": "M2",
+      "agent": "Claude Code",
+      "dependencies": [
+        "7"
+      ],
+      "details": "รับ action=checkout → หา open attendance record (check_out_at IS NULL) ของวันนี้ → update check_out_at = now() → คำนวณ work_hours = (check_out - check_in) minutes → ส่ง Flex Message: สรุปชั่วโมง + OT ถ้ามี",
+      "testStrategy": "เช็คเอาท์แล้ว work_hours คำนวณถูก, Flex Message ส่งถูก",
+      "subtasks": [],
+      "updatedAt": "2026-06-10T10:47:11.181Z"
+    },
+    {
+      "id": "9",
+      "title": "Flex Message Templates — check-in confirm, สาย, daily summary",
+      "description": "สร้าง Flex Message templates สำหรับทุก notification ใน check-in flow",
+      "status": "done",
+      "priority": "high",
+      "milestone": "M2",
+      "agent": "Codex",
+      "dependencies": [
+        "7",
+        "8"
+      ],
+      "details": "Template 1: เช็คอินสำเร็จ (ชื่อ, เวลา, สถานที่, สถานะ on-time/สาย X นาที). Template 2: เช็คเอาท์สำเร็จ (ชื่อ, เวลาเข้า-ออก, ชั่วโมงทำงาน, OT). Template 3: แจ้งสาย (ระบุนาทีที่สาย). สีตาม status: เขียว=ปกติ, ส้ม=สาย",
+      "testStrategy": "Flex Message render ถูกต้องใน LINE app",
+      "subtasks": [],
+      "updatedAt": "2026-06-10T10:57:52.626Z"
+    },
+    {
+      "id": "10",
+      "title": "Push Notification เช้า — แจ้งเตือนถ้ายังไม่เช็คอิน",
+      "description": "Supabase Edge Function รันทุกเช้า 9:00 น. ส่ง LINE push ให้พนักงานที่ยังไม่เช็คอิน",
+      "status": "done",
+      "priority": "medium",
+      "milestone": "M2",
+      "agent": "Claude Code",
+      "dependencies": [
+        "7"
+      ],
+      "details": "Edge Function: cron 0 2 * * 1-5 (UTC = 9:00 ICT Mon-Fri) → query พนักงาน active ที่ไม่มี attendance record วันนี้ → LINE push message 'คุณยังไม่ได้เช็คอินวันนี้'",
+      "testStrategy": "Edge Function deploy แล้ว invoke ได้, ส่ง push ถูกคน",
+      "subtasks": [],
+      "updatedAt": "2026-06-10T12:03:32.085Z"
+    },
+    {
+      "id": "11",
+      "title": "QR Code check-in support",
+      "description": "สร้าง QR Code per employee สำหรับสแกนเช็คอิน (alternative to Rich Menu button)",
+      "status": "done",
+      "priority": "low",
+      "milestone": "M2",
+      "agent": "Codex",
+      "dependencies": [
+        "7"
+      ],
+      "details": "API route GET /api/checkin/qr?emp_id=[id] → สร้าง QR code ที่ link ไปยัง LIFF check-in page. LIFF รับ token → call check-in API. Admin สามารถ print QR จาก Web Dashboard",
+      "testStrategy": "scan QR → เช็คอินสำเร็จ",
+      "subtasks": [],
+      "updatedAt": "2026-06-10T11:53:54.787Z"
+    },
+    {
+      "id": "12",
+      "title": "System Dashboard — Overview cards + กราฟ",
+      "description": "Web Admin Dashboard หน้าหลัก: KPI cards + กราฟ attendance",
+      "status": "done",
+      "priority": "high",
+      "milestone": "M3",
+      "agent": "Codex",
+      "dependencies": [
+        "5",
+        "7",
+        "8"
+      ],
+      "details": "Cards: พนักงานทั้งหมด, เช็คอินแล้ววันนี้, ลา/ขาด/สาย, คำร้องรอดำเนิน. Alert summary: ทดลองงานใกล้ครบ X คน, วีซ่าใกล้หมด Y คน. กราฟ: recharts bar chart เข้างานรายวัน 7 วัน, pie chart ประเภทลา",
+      "testStrategy": "cards แสดงข้อมูลจริงจาก DB, กราฟ render ได้",
+      "subtasks": [],
+      "updatedAt": "2026-06-10T11:53:57.153Z"
+    },
+    {
+      "id": "13",
+      "title": "Employee List — ตาราง ค้นหา กรอง เรียงลำดับ",
+      "description": "หน้า /admin/employees — ตารางพนักงานทั้งหมดพร้อม search/filter/sort",
+      "status": "done",
+      "priority": "high",
+      "milestone": "M3",
+      "agent": "Codex",
+      "dependencies": [
+        "5"
+      ],
+      "details": "Table: ชื่อ, ตำแหน่ง, แผนก, สถานะ (Active/Inactive/Probation), วันเริ่มงาน, วีซ่า. Search: ชื่อ/รหัส. Filter: แผนก, สถานะ. Sort: ชื่อ, วันเริ่มงาน. Pagination: 20 รายการ/หน้า",
+      "testStrategy": "ค้นหา/กรอง/เรียงลำดับทำงานถูกต้อง",
+      "subtasks": [],
+      "updatedAt": "2026-06-10T17:28:42.424Z"
+    },
+    {
+      "id": "14",
+      "title": "Employee Profile — ข้อมูลส่วนตัว, สัญญา, เงินเดือน, วีซ่า, ทดลองงาน",
+      "description": "หน้า /admin/employees/[id] — profile รายบุคคลครบถ้วน พร้อม edit",
+      "status": "done",
+      "priority": "high",
+      "milestone": "M3",
+      "agent": "Claude Code",
+      "dependencies": [
+        "13"
+      ],
+      "details": "Sections: ข้อมูลส่วนตัว (ชื่อ-นามสกุล, วันเกิด, เบอร์, อีเมล, LINE ID), สัญญาจ้าง (วันเริ่ม, ประเภท, เงินเดือน), ทดลองงาน (วันครบ, สถานะ: รอประเมิน/ผ่าน/ไม่ผ่าน), วีซ่า/Work Permit (วันหมด, สถานะ). Edit mode: HR สามารถแก้ไขได้",
+      "testStrategy": "ข้อมูล load จาก DB ถูกต้อง, save แล้วอัปเดต DB",
+      "subtasks": [],
+      "updatedAt": "2026-06-11T06:28:35.341Z"
+    },
+    {
+      "id": "15",
+      "title": "Attendance History — ประวัติเช็คอิน-เอาท์ ใน Web",
+      "description": "หน้าแสดงประวัติ attendance ของพนักงาน แต่ละคน filterable by date",
+      "status": "done",
+      "priority": "medium",
+      "milestone": "M3",
+      "agent": "Codex",
+      "dependencies": [
+        "13",
+        "7"
+      ],
+      "details": "Table: วันที่, เวลาเข้า, เวลาออก, ชั่วโมงทำงาน, สถานะ (ปกติ/สาย/ขาด). Filter: date range. Export: CSV. สรุปรายเดือน: วันทำงาน, ชั่วโมงรวม, จำนวนสาย",
+      "testStrategy": "แสดงข้อมูล attendance ถูกต้อง, filter ทำงาน",
+      "subtasks": [],
+      "updatedAt": "2026-06-11T07:06:36.852Z"
+    },
+    {
+      "id": "16",
+      "title": "LIFF Leave Form — แบบฟอร์มขอลาผ่าน LINE",
+      "description": "LIFF app สำหรับพนักงานกรอกคำขอลา: ประเภท, วันที่, เหตุผล, แนบไฟล์",
+      "status": "done",
+      "priority": "high",
+      "milestone": "M4",
+      "agent": "Claude Code",
+      "dependencies": [
+        "4",
+        "2"
+      ],
+      "details": "LIFF page: /liff/leave. Form fields: ประเภทลา (ป่วย/กิจ/พักร้อน/อื่นๆ), วันที่เริ่ม, วันที่สิ้นสุด, คำนวณจำนวนวันอัตโนมัติ, เหตุผล, upload ใบรับรองแพทย์ (ถ้าลาป่วย). แสดงยอดวันลาคงเหลือแต่ละประเภท",
+      "testStrategy": "form submit แล้ว record สร้างใน hr_leaves, ไฟล์ upload ไป Supabase Storage",
+      "subtasks": [],
+      "updatedAt": "2026-06-10T17:29:20.057Z"
+    },
+    {
+      "id": "17",
+      "title": "Leave Request flow — บันทึก + แจ้ง HR ทาง LINE",
+      "description": "เมื่อพนักงาน submit leave form: บันทึก DB + ส่ง Flex Message แจ้ง HR",
+      "status": "done",
+      "priority": "high",
+      "milestone": "M4",
+      "agent": "Claude Code",
+      "dependencies": [
+        "16"
+      ],
+      "details": "POST /api/leave/request → insert hr_leaves (status=pending) → ดึง hr leave balance → ส่ง Flex Message ยืนยันให้พนักงาน → push LINE ให้ HR (มีปุ่ม อนุมัติ/ไม่อนุมัติ ใน Flex Message) หรือ web notification",
+      "testStrategy": "leave record created, พนักงานรับ confirm, HR รับ notification",
+      "subtasks": [],
+      "updatedAt": "2026-06-11T07:06:39.236Z"
+    },
+    {
+      "id": "18",
+      "title": "Leave Approval — Web Dashboard อนุมัติ/ปฏิเสธ",
+      "description": "หน้า /admin/leaves — รายการคำขอลา อนุมัติ/ปฏิเสธพร้อมเหตุผล",
+      "status": "done",
+      "priority": "high",
+      "milestone": "M4",
+      "agent": "Codex",
+      "dependencies": [
+        "17"
+      ],
+      "details": "Table: ชื่อพนักงาน, ประเภทลา, วันที่, จำนวนวัน, เหตุผล, เอกสารแนบ, สถานะ, วันที่ยื่น. Actions: อนุมัติ (พร้อม comment), ปฏิเสธ (ต้องใส่เหตุผล). Filter: สถานะ, วันที่, แผนก",
+      "testStrategy": "approve/reject แล้ว status อัปเดต, พนักงานรับ LINE notification",
+      "subtasks": [],
+      "updatedAt": "2026-06-11T07:06:41.643Z"
+    },
+    {
+      "id": "19",
+      "title": "Leave Balance auto-update + LINE notify result",
+      "description": "หลัง HR อนุมัติ: หักยอดวันลา + ส่ง Flex Message ผลอนุมัติกลับพนักงาน",
+      "status": "done",
+      "priority": "high",
+      "milestone": "M4",
+      "agent": "Claude Code",
+      "dependencies": [
+        "18"
+      ],
+      "details": "POST /api/leave/approve → update hr_leaves.status = approved → update hr_leave_balances.used_days += จำนวนวัน → ส่ง LINE push ให้พนักงาน (Flex Message: ผลอนุมัติ + ยอดวันลาคงเหลือ). ถ้า reject: ไม่หักยอด + ส่ง Flex พร้อมเหตุผล",
+      "testStrategy": "อนุมัติแล้วยอดลดถูก, พนักงานรับ Flex Message ถูกต้อง",
+      "subtasks": [],
+      "updatedAt": "2026-06-11T07:06:44.270Z"
+    },
+    {
+      "id": "20",
+      "title": "Leave Calendar + Report + ยอดคงเหลือ",
+      "description": "Web: ปฏิทินวันลา, รายงานสถิติ, หน้าสรุปยอดวันลา",
+      "status": "done",
+      "priority": "medium",
+      "milestone": "M4",
+      "agent": "Codex",
+      "dependencies": [
+        "19"
+      ],
+      "details": "Calendar view: วันหยุด + วันลาของพนักงาน (ใช้ react-calendar หรือ shadcn). Report table: สรุปการลาแต่ละประเภทต่อเดือน. Leave balance card: แต่ละประเภท (ใช้/คงเหลือ/ทั้งหมด)",
+      "testStrategy": "calendar แสดงวันลาถูก, report data ถูกต้อง",
+      "subtasks": [],
+      "updatedAt": "2026-06-11T07:06:46.779Z"
+    },
+    {
+      "id": "21",
+      "title": "Probation Alert Cron — 30/14/7/1 วัน",
+      "description": "Supabase Edge Function แจ้งเตือนทดลองงานใกล้ครบ ส่งทั้ง HR และพนักงาน",
+      "status": "done",
+      "priority": "high",
+      "milestone": "M5",
+      "agent": "Claude Code",
+      "dependencies": [
+        "2"
+      ],
+      "details": "Edge Function: cron 0 1 * * * (รายวัน 8:00 ICT) → query hr_employees WHERE probation_end IN (today+30, today+14, today+7, today+1) → ส่ง LINE push ให้พนักงาน + HR group. บันทึกใน hr_alerts (ป้องกัน duplicate). Message: 'ทดลองงานของ [ชื่อ] ครบในอีก [X] วัน'",
+      "testStrategy": "invoke Edge Function manually → ส่ง alert ถูก employee, บันทึก hr_alerts",
+      "subtasks": [],
+      "updatedAt": "2026-06-10T17:41:39.360Z"
+    },
+    {
+      "id": "22",
+      "title": "Visa/Work Permit Alert Cron — 60/30/14/7/1 วัน",
+      "description": "Supabase Edge Function แจ้งเตือนวีซ่า/Work Permit ใกล้หมด",
+      "status": "done",
+      "priority": "high",
+      "milestone": "M5",
+      "agent": "Claude Code",
+      "dependencies": [
+        "2"
+      ],
+      "details": "Edge Function: cron เดียวกับ probation หรือ combine → query hr_employees WHERE visa_expiry IN (today+60,+30,+14,+7,+1) OR work_permit_expiry IN (...) → ส่ง LINE push HR + ถ้า employee มี LINE. บันทึก hr_alerts",
+      "testStrategy": "invoke manually → alert ส่งถูก, ไม่ส่ง duplicate",
+      "subtasks": [],
+      "updatedAt": "2026-06-11T07:06:49.364Z"
+    },
+    {
+      "id": "23",
+      "title": "Alert Dashboard — Web UI สำหรับ HR ดูรายการ alert",
+      "description": "หน้า /admin/alerts — แสดงรายชื่อพนักงานที่มี probation/visa ใกล้ถึงกำหนด",
+      "status": "done",
+      "priority": "high",
+      "milestone": "M5",
+      "agent": "Codex",
+      "dependencies": [
+        "21",
+        "22"
+      ],
+      "details": "Tabs: Probation | Visa | Work Permit. Table: ชื่อ, วันครบ, เหลืออีก X วัน, สถานะ (รอดำเนิน/ดำเนินการแล้ว). Action: บันทึกผลทดลองงาน (ผ่าน/ไม่ผ่าน/ต่อสัญญา), อัปเดตวีซ่า (วันหมดใหม่). Badge count บน sidebar",
+      "testStrategy": "แสดงรายการ alert ถูกต้อง, update สถานะแล้วหาย badge",
+      "subtasks": [],
+      "updatedAt": "2026-06-11T07:06:52.056Z"
+    },
+    {
+      "id": "24",
+      "title": "Daily Attendance Summary Cron — ส่งพนักงาน LINE ตอนเย็น",
+      "description": "Supabase Edge Function รันตอน 18:00 ส่งสรุปการเข้างานวันนี้ให้พนักงานแต่ละคน",
+      "status": "done",
+      "priority": "medium",
+      "milestone": "M5",
+      "agent": "Claude Code",
+      "dependencies": [
+        "7",
+        "8"
+      ],
+      "details": "Edge Function: cron 0 11 * * 1-5 (UTC = 18:00 ICT) → query hr_attendance WHERE date = today → ส่ง LINE push ให้พนักงานแต่ละคน: Flex Message สรุป (เข้า X:XX, ออก X:XX, ชั่วโมงทำงาน X.X ชม., สถานะ). ถ้าไม่เช็คเอาท์: แจ้งด้วย",
+      "testStrategy": "invoke manually → ส่ง push ทุกคนที่ active วันนั้น",
+      "subtasks": [],
+      "updatedAt": "2026-06-11T07:06:54.406Z"
+    },
+    {
+      "id": "25",
+      "title": "HR Group LINE Summary — สรุปภาพรวมรายวัน",
+      "description": "ส่งสรุปภาพรวมทีม HR ทาง LINE Group ทุกวัน",
+      "status": "done",
+      "priority": "medium",
+      "milestone": "M5",
+      "agent": "Claude Code",
+      "dependencies": [
+        "24"
+      ],
+      "details": "รวมกับ cron ใน T24 หรือ cron แยก → query aggregate: เข้างาน/ขาด/สาย/ลา วันนี้ → ส่ง Flex Message ไปยัง HR LINE Group ID. Config: HR_LINE_GROUP_ID ใน env",
+      "testStrategy": "ส่ง summary ไปยัง GROUP ถูกต้อง",
+      "subtasks": [],
+      "updatedAt": "2026-06-11T07:06:56.857Z"
+    },
+    {
+      "id": "26",
+      "title": "Security Review — RLS, LINE webhook verify, auth bypass",
+      "description": "ตรวจสอบ security ก่อน demo: RLS gaps, webhook signature, route protection, secrets",
+      "status": "done",
+      "priority": "high",
+      "milestone": "M6",
+      "agent": "Claude Code (Opus)",
+      "dependencies": [
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7",
+        "8",
+        "9",
+        "10",
+        "11",
+        "12",
+        "13",
+        "14",
+        "15",
+        "16",
+        "17",
+        "18",
+        "19",
+        "20",
+        "21",
+        "22",
+        "23",
+        "24",
+        "25"
+      ],
+      "details": "ใช้ skill 10-security-review. Check: RLS ทุก table ถูกต้อง, LINE webhook verify X-Line-Signature ทุก request, admin routes มี auth middleware, secrets ไม่ใน code, Edge Functions มี auth header",
+      "testStrategy": "Security checklist ผ่านทุกข้อ, ไม่มี RLS gap",
+      "subtasks": [],
+      "updatedAt": "2026-06-11T07:36:03.229Z"
+    },
+    {
+      "id": "27",
+      "title": "E2E Test — check-in flow, leave flow, alert flow",
+      "description": "เขียน E2E tests ครอบคลุม happy path ทั้ง 3 flow หลัก",
+      "status": "done",
+      "priority": "medium",
+      "milestone": "M6",
+      "agent": "Claude Code",
+      "dependencies": [
+        "26"
+      ],
+      "details": "ใช้ Playwright หรือ manual test script. Flow 1: เช็คอิน → ยืนยัน → เช็คเอาท์ → ดูประวัติ. Flow 2: ขอลา → HR อนุมัติ → ยอดลด → พนักงานรับ notify. Flow 3: trigger alert cron → ส่ง LINE → แสดงใน dashboard",
+      "testStrategy": "ทุก flow ผ่าน end-to-end",
+      "subtasks": [],
+      "updatedAt": "2026-06-11T08:35:01.807Z"
+    },
+    {
+      "id": "28",
+      "title": "Deployment — production deploy + Vercel config",
+      "description": "Deploy ไปยัง Vercel production, ตั้งค่า env, Supabase production project",
+      "status": "in-progress",
+      "priority": "high",
+      "milestone": "M6",
+      "agent": "Cursor",
+      "dependencies": [
+        "26",
+        "27"
+      ],
+      "details": "ใช้ skill 14-deployment-checklist. Vercel: connect repo, set env vars (LINE, Supabase), custom domain ถ้ามี. Supabase: production project แยกจาก dev. Edge Functions: deploy cron functions. LINE Webhook URL: อัปเดตเป็น production URL",
+      "testStrategy": "production URL ทำงานได้, webhook รับ event จาก LINE production",
+      "subtasks": [],
+      "updatedAt": "2026-06-11T08:35:36.712Z"
+    },
+    {
+      "id": "29",
+      "title": "Demo Prep — script + known issues + fallback",
+      "description": "เตรียม demo script, seed demo data, รายการ known issues พร้อม workaround",
+      "status": "pending",
+      "priority": "medium",
+      "milestone": "M6",
+      "agent": "Cursor",
+      "dependencies": [
+        "28"
+      ],
+      "details": "Demo data: 5 พนักงาน test accounts พร้อม LINE accounts จริง. Demo script: 1) เช็คอิน, 2) ดู dashboard, 3) ขอลา + อนุมัติ, 4) ดู alert. Known issues doc. Fallback: screenshot/recording ถ้า LINE API ปัญหา",
+      "testStrategy": "demo run ผ่านทุก step โดยไม่ติด",
+      "subtasks": []
+    },
+    {
+      "id": "30",
+      "title": "Delivery Audit — Pre-demo quality gate",
+      "description": "รัน delivery audit ด้วย Opus ก่อน demo",
+      "status": "pending",
+      "priority": "high",
+      "milestone": "M6",
+      "agent": "Claude Code (Opus)",
+      "dependencies": [
+        "29"
+      ],
+      "details": "ใช้ skill 07-delivery-audit. ตรวจ: feature completeness vs PRD, security, performance, error handling, UX. Verdict: 🟢 Ready / 🟡 Ready with caveats / 🔴 Not ready",
+      "testStrategy": "DELIVERY_READINESS_AUDIT.md สร้างแล้ว verdict 🟢 หรือ 🟡",
+      "subtasks": []
+    }
+  ],
+  "metadata": {
+    "version": "1.0.0",
+    "lastModified": "2026-06-11T08:35:36.712Z",
+    "taskCount": 30,
+    "completedCount": 27,
+    "tags": [
+      "master"
+    ]
+  }
+}

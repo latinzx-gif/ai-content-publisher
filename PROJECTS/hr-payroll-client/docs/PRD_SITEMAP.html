@@ -1,0 +1,836 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LINE OA HR & Payroll Management Platform — PRD Sitemap</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800;900&family=Noto+Sans+Thai:wght@300;400;500;600;700;800&display=swap');
+  
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  
+  body {
+    font-family: 'Noto Sans Thai', 'Inter', sans-serif;
+    background: #f8f6f2;
+    color: #1a1a2e;
+    line-height: 1.7;
+  }
+
+  /* === HEADER === */
+  .hero {
+    background: linear-gradient(135deg, #0f2742 0%, #1a3a5c 50%, #2d5a87 100%);
+    color: white;
+    padding: 60px 40px 50px;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -20%;
+    width: 600px;
+    height: 600px;
+    background: radial-gradient(circle, rgba(0,185,80,0.08) 0%, transparent 70%);
+    border-radius: 50%;
+  }
+  .hero-badge {
+    display: inline-block;
+    background: #00b950;
+    color: white;
+    font-weight: 700;
+    font-size: 13px;
+    padding: 5px 14px;
+    border-radius: 20px;
+    letter-spacing: 0.5px;
+    margin-bottom: 16px;
+  }
+  .hero h1 {
+    font-size: 42px;
+    font-weight: 900;
+    margin-bottom: 8px;
+    letter-spacing: -0.5px;
+    position: relative;
+    z-index: 1;
+  }
+  .hero .subtitle {
+    font-size: 18px;
+    opacity: 0.85;
+    font-weight: 400;
+    margin-bottom: 20px;
+    position: relative;
+    z-index: 1;
+  }
+  .hero-meta {
+    display: flex;
+    gap: 30px;
+    flex-wrap: wrap;
+    font-size: 14px;
+    opacity: 0.7;
+    position: relative;
+    z-index: 1;
+  }
+  .hero-meta span { display: flex; align-items: center; gap: 6px; }
+
+  /* === CONTAINER === */
+  .container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 40px 24px;
+  }
+
+  /* === OVERVIEW SECTION === */
+  .overview {
+    background: white;
+    border-radius: 16px;
+    padding: 36px;
+    margin-bottom: 36px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+    border: 1px solid #e8e4dd;
+  }
+  .overview h2 {
+    font-size: 22px;
+    font-weight: 800;
+    color: #0f2742;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .overview-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+    margin-top: 20px;
+  }
+  .stat-card {
+    background: #f8f6f2;
+    border-radius: 12px;
+    padding: 20px;
+    text-align: center;
+  }
+  .stat-card .num {
+    font-size: 32px;
+    font-weight: 900;
+    color: #0f2742;
+  }
+  .stat-card .label {
+    font-size: 13px;
+    color: #667085;
+    margin-top: 4px;
+  }
+
+  /* === PLATFORM === */
+  .platform-section {
+    background: linear-gradient(135deg, #f0fff4 0%, #e8f5e9 100%);
+    border: 2px solid #00b950;
+    border-radius: 16px;
+    padding: 36px;
+    margin-bottom: 36px;
+    position: relative;
+  }
+  .platform-section::before {
+    content: 'PLATFORM';
+    position: absolute;
+    top: -10px;
+    left: 24px;
+    background: #00b950;
+    color: white;
+    font-size: 11px;
+    font-weight: 800;
+    padding: 3px 12px;
+    border-radius: 6px;
+    letter-spacing: 1px;
+  }
+  .platform-section h2 {
+    font-size: 20px;
+    font-weight: 800;
+    color: #0f2742;
+    margin-bottom: 12px;
+  }
+  .platform-section p {
+    color: #344054;
+    font-size: 15px;
+    margin-bottom: 8px;
+  }
+
+  /* === FEATURES === */
+  .feature {
+    background: white;
+    border-radius: 16px;
+    margin-bottom: 28px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+    border: 1px solid #e8e4dd;
+    overflow: hidden;
+  }
+  .feature-header {
+    padding: 28px 32px 20px;
+    cursor: default;
+    border-bottom: 1px solid #f0ede8;
+  }
+  .feature-tag {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 800;
+    padding: 3px 10px;
+    border-radius: 6px;
+    letter-spacing: 0.5px;
+    margin-bottom: 10px;
+  }
+  .tag-p1 { background: #e4f3ec; color: #217a58; }
+  .tag-p2 { background: #f5ead3; color: #7a5c1f; }
+  .tag-p3 { background: #e8edf5; color: #2d5a87; }
+  
+  .feature-header h3 {
+    font-size: 24px;
+    font-weight: 800;
+    color: #0f2742;
+    margin-bottom: 4px;
+  }
+  .feature-header .en {
+    font-size: 14px;
+    color: #98a2b3;
+    font-weight: 400;
+    font-family: 'Inter', sans-serif;
+  }
+  .feature-header p {
+    margin-top: 10px;
+    color: #667085;
+    font-size: 15px;
+  }
+
+  .feature-body {
+    padding: 24px 32px 28px;
+  }
+
+  /* === SUB-FEATURES === */
+  .sub-features {
+    display: grid;
+    gap: 16px;
+    margin-bottom: 20px;
+  }
+  .sub-feature {
+    background: #faf9f7;
+    border-radius: 12px;
+    padding: 20px;
+    border: 1px solid #e8e4dd;
+  }
+  .sub-feature h4 {
+    font-size: 16px;
+    font-weight: 700;
+    color: #0f2742;
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .sub-feature h4 .icon { font-size: 20px; }
+  .sub-feature p { color: #667085; font-size: 14px; margin-bottom: 10px; }
+  
+  .detail-list {
+    list-style: none;
+    padding: 0;
+  }
+  .detail-list li {
+    font-size: 13px;
+    color: #344054;
+    padding: 4px 0 4px 20px;
+    position: relative;
+    line-height: 1.6;
+  }
+  .detail-list li::before {
+    content: '›';
+    position: absolute;
+    left: 4px;
+    color: #00b950;
+    font-weight: 700;
+    font-size: 16px;
+  }
+
+  /* === LINE INTEGRATION === */
+  .line-box {
+    background: #f0fff4;
+    border: 1px dashed #00b950;
+    border-radius: 12px;
+    padding: 20px;
+    margin-top: 16px;
+  }
+  .line-box h5 {
+    color: #00b950;
+    font-size: 14px;
+    font-weight: 700;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .line-box .detail-list li::before { color: #00b950; }
+
+  /* === TECH === */
+  .tech-section {
+    background: white;
+    border-radius: 16px;
+    padding: 36px;
+    margin-top: 36px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+    border: 1px solid #e8e4dd;
+  }
+  .tech-section h2 {
+    font-size: 20px;
+    font-weight: 800;
+    color: #0f2742;
+    margin-bottom: 16px;
+  }
+  .tech-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 12px;
+  }
+  .tech-item {
+    background: #f8f6f2;
+    border-radius: 10px;
+    padding: 14px 16px;
+    font-size: 13px;
+  }
+  .tech-item strong { color: #0f2742; display: block; margin-bottom: 2px; }
+  .tech-item span { color: #667085; }
+
+  /* === SITEMAP === */
+  .sitemap {
+    background: white;
+    border-radius: 16px;
+    padding: 36px;
+    margin-bottom: 36px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+    border: 1px solid #e8e4dd;
+  }
+  .sitemap h2 {
+    font-size: 20px;
+    font-weight: 800;
+    color: #0f2742;
+    margin-bottom: 20px;
+  }
+  .sitemap-tree {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-family: 'Inter', 'Noto Sans Thai', monospace;
+    font-size: 14px;
+  }
+  .sitemap-tree .level-0 { color: #0f2742; font-weight: 800; font-size: 16px; padding: 8px 0; }
+  .sitemap-tree .level-1 { color: #344054; padding-left: 24px; font-weight: 600; }
+  .sitemap-tree .level-2 { color: #667085; padding-left: 48px; }
+  .sitemap-tree .badge-sm {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 1px 8px;
+    border-radius: 4px;
+    margin-left: 6px;
+    vertical-align: middle;
+  }
+
+  /* === RESPONSIVE === */
+  @media (max-width: 768px) {
+    .hero { padding: 36px 20px 30px; }
+    .hero h1 { font-size: 28px; }
+    .feature-header, .feature-body { padding: 20px; }
+    .overview { padding: 24px; }
+    .sub-features { grid-template-columns: 1fr; }
+  }
+
+  hr { border: none; border-top: 1px solid #e8e4dd; margin: 16px 0; }
+</style>
+</head>
+<body>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-badge">📋 PRD Sitemap v1.0</div>
+  <h1>LINE OA HR &amp; Payroll<br>Management Platform</h1>
+  <p class="subtitle">ระบบบริหารจัดการทรัพยากรบุคคลและPayroll ผ่าน LINE Official Account — ครบวงจร ตั้งแต่เช็คอิน จนถึงรายงานDashboard</p>
+  <div class="hero-meta">
+    <span>📅 8 มิถุนายน 2026</span>
+    <span>🏢 องค์กร / SME</span>
+    <span>📱 LINE OA + Web Dashboard</span>
+    <span>👥 HR, พนักงาน, ผู้บริหาร</span>
+  </div>
+</div>
+
+<div class="container">
+
+<!-- OVERVIEW -->
+<div class="overview">
+  <h2>📊 ภาพรวมระบบ (System Overview)</h2>
+  <p>ระบบบริหารจัดการ HR ผ่าน LINE OA ที่ช่วยให้พนักงานสามารถทำธุรกรรมด้านบุคลากรได้ผ่าน LINE โดยไม่ต้องเข้าเว็บไซต์
+  ส่วน HR และผู้บริหารสามารถดู Dashboard และจัดการข้อมูลผ่าน Web Backend</p>
+  <div class="overview-grid">
+    <div class="stat-card"><div class="num">9</div><div class="label">ระบบหลัก (Features)</div></div>
+    <div class="stat-card"><div class="num">3</div><div class="label">กลุ่มผู้ใช้งาน</div></div>
+    <div class="stat-card"><div class="num">LINE OA</div><div class="label">Platform หลัก</div></div>
+    <div class="stat-card"><div class="num">Web</div><div class="label">Admin Backend</div></div>
+  </div>
+</div>
+
+<!-- PLATFORM -->
+<div class="platform-section">
+  <h2>💬 LINE OA — Platform หลักของระบบ</h2>
+  <p>ระบบทำงานบน <strong>LINE Official Account (LINE OA)</strong> เป็นช่องทางหลักที่พนักงานใช้โต้ตอบกับระบบ</p>
+  <p>พนักงานสามารถ: เช็คอิน-เช็คเอาท์, ขอลางาน, ขอเอกสาร, ร้องเรียน, ดูประกาศHR, และรับการแจ้งเตือนทั้งหมดผ่าน LINE</p>
+  <p>HR/Admin จัดการข้อมูลผ่าน <strong>Web Dashboard</strong> ที่เชื่อมต่อกับ LINE OA Backend</p>
+  
+  <div class="overview-grid" style="margin-top:16px;">
+    <div class="stat-card" style="background:white;"><div class="num" style="font-size:24px;">Rich Menu</div><div class="label">LINE OA เมนูหลัก</div></div>
+    <div class="stat-card" style="background:white;"><div class="num" style="font-size:24px;">Flex Message</div><div class="label">UI แจ้งเตือนแบบ Interactive</div></div>
+    <div class="stat-card" style="background:white;"><div class="num" style="font-size:24px;">Webhook</div><div class="label">รับ-ส่งข้อมูล Real-time</div></div>
+    <div class="stat-card" style="background:white;"><div class="num" style="font-size:24px;">ไลน์ Liff</div><div class="label">เว็บใน LINE สำหรับฟอร์ม</div></div>
+  </div>
+</div>
+
+<!-- SITEMAP -->
+<div class="sitemap">
+  <h2>🗺️ Sitemap — โครงสร้างระบบ</h2>
+  <div class="sitemap-tree">
+    <div class="level-0">📱 LINE OA (ผู้ใช้: พนักงาน)</div>
+    <div class="level-1">├── 🏠 หน้าแรก (Rich Menu)</div>
+    <div class="level-2">│   ├── ปุ่มเช็คอิน / เช็คเอาท์</div>
+    <div class="level-2">│   ├── ปุ่มขอลางาน</div>
+    <div class="level-2">│   ├── ปุ่มขอเอกสาร</div>
+    <div class="level-2">│   ├── ปุ่มร้องเรียน</div>
+    <div class="level-2">│   └── ปุ่มประกาศ HR</div>
+    <div class="level-1">├── 📍 ระบบเช็คอิน-เช็คเอาท์</div>
+    <div class="level-2">│   ├── เช็คอินเข้างาน (Geo/QR)</div>
+    <div class="level-2">│   ├── เช็คเอาท์เลิกงาน</div>
+    <div class="level-2">│   └── ดูประวัติการเข้าออก</div>
+    <div class="level-1">├── 🏖️ ระบบลางาน</div>
+    <div class="level-2">│   ├── แบบฟอร์มขออนุญาตลา</div>
+    <div class="level-2">│   ├── เลือกประเภทลา</div>
+    <div class="level-2">│   └── สถานะคำขอ / อนุมัติ</div>
+    <div class="level-1">├── 📄 ระบบขอเอกสาร</div>
+    <div class="level-2">│   ├── เลือกประเภทเอกสาร</div>
+    <div class="level-2">│   └── สถานะการดำเนินการ</div>
+    <div class="level-1">├── 🛡️ ช่องทางการร้องเรียน</div>
+    <div class="level-2">│   ├── แบบฟอร์มแจ้งเรื่องร้องเรียน</div>
+    <div class="level-2">│   └── เลือกระดับความเร่งด่วน</div>
+    <div class="level-1">├── 🔔 การแจ้งเตือน (ระบบ Push)</div>
+    <div class="level-2">│   ├── แจ้งเตือนเช็คอิน/เอาท์</div>
+    <div class="level-2">│   ├── แจ้งเตือนวันทดลองงานครบ</div>
+    <div class="level-2">│   ├── แจ้งเตือนวีซ่าหมดอายุ</div>
+    <div class="level-2">│   └── สรุปภาพรวมประจำวัน</div>
+    <div class="level-1">└── 📢 ประกาศจาก HR</div>
+    <div class="level-2">    └── ข้อความประกาศ / ข่าวสาร</div>
+    <div style="height:12px;"></div>
+    <div class="level-0">🖥️ Web Admin Dashboard (ผู้ใช้: HR / Admin)</div>
+    <div class="level-1">├── 📊 Dashboard ภาพรวมระบบ</div>
+    <div class="level-2">│   ├── จำนวนพนักงานวันนี้</div>
+    <div class="level-2">│   ├── จำนวนผู้มาทำงาน/ขาด/ลา</div>
+    <div class="level-2">│   ├── การแจ้งเตือนด่วน</div>
+    <div class="level-2">│   └── กราฟสถิติรายวัน/สัปดาห์</div>
+    <div class="level-1">├── 👥 Dashboard ข้อมูลพนักงาน</div>
+    <div class="level-2">│   ├── รายชื่อพนักงานทั้งหมด</div>
+    <div class="level-2">│   ├── ข้อมูลส่วนตัว / สัญญา</div>
+    <div class="level-2">│   ├── ประวัติการทำงาน</div>
+    <div class="level-2">│   └── สถานะวีซ่า / ทดลองงาน</div>
+    <div class="level-1">├── ⏱️ ข้อมูลเวลา (Time & Attendance)</div>
+    <div class="level-2">│   ├── ประวัติเช็คอิน-เอาท์</div>
+    <div class="level-2">│   ├── สรุปชั่วโมงทำงาน</div>
+    <div class="level-2">│   └── สาย / ขาด / ลา</div>
+    <div class="level-1">├── 🏖️ จัดการคำขอลางาน</div>
+    <div class="level-2">│   ├── อนุมัติ / ไม่อนุมัติ</div>
+    <div class="level-2">│   └── ประวัติการลา</div>
+    <div class="level-1">├── 📄 จัดการคำขอเอกสาร</div>
+    <div class="level-2">│   └── ดำเนินการ / ออกเอกสาร</div>
+    <div class="level-1">├── 🛡️ จัดการเรื่องร้องเรียน</div>
+    <div class="level-2">│   ├── ดูเรื่องร้องเรียน</div>
+    <div class="level-2">│   └── ดำเนินการ / ตอบกลับ</div>
+    <div class="level-1">├── 🔔 สร้างประกาศ / แจ้งเตือน</div>
+    <div class="level-2">│   ├── สร้างประกาศ HR</div>
+    <div class="level-2">│   ├── แจ้งเตือนทดลองงาน</div>
+    <div class="level-2">│   └── แจ้งเตือนวีซ่า</div>
+    <div class="level-1">└── ⚙️ ตั้งค่าระบบ</div>
+    <div class="level-2">    ├── ข้อมูลบริษัท / สาขา</div>
+    <div class="level-2">    ├── ประเภทการลา</div>
+    <div class="level-2">    ├── ช่วงเวลาเช็คอิน</div>
+    <div class="level-2">    └── LINE OA Config</div>
+  </div>
+</div>
+
+<!-- FEATURE 1: Dashboard ภาพรวมระบบ -->
+<div class="feature">
+  <div class="feature-header">
+    <span class="feature-tag tag-p1">🔵 P1 — Core</span>
+    <h3>1. Dashboard ภาพรวมระบบ <span class="en">System Dashboard</span></h3>
+    <p>หน้าหลักของ Web Admin — แสดงภาพรวมสถานะขององค์กรแบบ Real-time</p>
+  </div>
+  <div class="feature-body">
+    <div class="sub-features">
+      <div class="sub-feature">
+        <h4><span class="icon">📊</span> แผงภาพรวม (Overview Cards)</h4>
+        <p>แสดงตัวเลขสถานะแบบการ์ดสรุปทันทีเมื่อเข้า Dashboard</p>
+        <ul class="detail-list">
+          <li>จำนวนพนักงานทั้งหมด / ประจำวันนี้</li>
+          <li>จำนวนเข้างาน เช็คอินแล้ว / ยังไม่เช็คอิน</li>
+          <li>จำนวนพนักงานลา / ขาด / มาสายวันนี้</li>
+          <li>จำนวนคำร้องรอดำเนินการ (ลา/เอกสาร/ร้องเรียน)</li>
+          <li>การแจ้งเตือนด่วน (ทดลองงานใกล้ครบ, วีซ่าใกล้หมด)</li>
+        </ul>
+      </div>
+      <div class="sub-feature">
+        <h4><span class="icon">📈</span> กราฟและสถิติ</h4>
+        <p>แสดงแนวโน้มข้อมูลในรูปแบบกราฟเพื่อให้ผู้บริหารเห็นภาพ</p>
+        <ul class="detail-list">
+          <li>กราฟการเข้างานรายวัน / รายสัปดาห์ / รายเดือน</li>
+          <li>สัดส่วนประเภทการลา (ป่วย, ลากิจ, พักร้อน)</li>
+          <li>สถิติสาย-ขาด-ลา รายแผนก</li>
+          <li>อัตราการเข้างาน (Attendance Rate) %</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- FEATURE 2: Dashboard ข้อมูลพนักงาน -->
+<div class="feature">
+  <div class="feature-header">
+    <span class="feature-tag tag-p1">🔵 P1 — Core</span>
+    <h3>2. Dashboard ข้อมูลพนักงาน <span class="en">Employee Data Dashboard</span></h3>
+    <p>ระบบจัดการข้อมูลบุคลากรแบบครบวงจร — ดู แก้ไข ติดตามสถานะพนักงาน</p>
+  </div>
+  <div class="feature-body">
+    <div class="sub-features">
+      <div class="sub-feature">
+        <h4><span class="icon">👥</span> รายชื่อพนักงาน</h4>
+        <p>แสดงรายการพนักงานทั้งหมด ค้นหาและกรองได้</p>
+        <ul class="detail-list">
+          <li>ตารางรายชื่อ แบบเรียงลำดับได้</li>
+          <li>ค้นหาตามชื่อ, แผนก, ตำแหน่ง, สถานะ</li>
+          <li>กรองตามสถานะ: ปฏิบัติงาน, ทดลองงาน, ลาออก</li>
+          <li>แสดงรูปโปรไฟล์พนักงาน</li>
+        </ul>
+      </div>
+      <div class="sub-feature">
+        <h4><span class="icon">📋</span> ข้อมูลรายบุคคล (Profile)</h4>
+        <p>หน้าข้อมูลพนักงานแบบละเอียด</p>
+        <ul class="detail-list">
+          <li>ข้อมูลส่วนตัว: ชื่อ-นามสกุล, ที่อยู่, เบอร์โทร, อีเมล</li>
+          <li>ข้อมูลสัญญาจ้าง: ตำแหน่ง, แผนก, วันที่เริ่มงาน, วันที่สิ้นสุดสัญญา</li>
+          <li>ข้อมูลเงินเดือน: เงินเดือน, ค่าจ้างรายวัน, เลขที่บัญชี</li>
+          <li>สถานะวีซ่า / Work Permit (สำหรับแรงงานต่างด้าว)</li>
+          <li>สถานะทดลองงาน: วันที่เริ่มทดลอง, วันที่ครบกำหนด</li>
+          <li>ประวัติการลา + ยอดวันลาคงเหลือ</li>
+          <li>ประวัติการเช็คอิน-เช็คเอาท์</li>
+        </ul>
+      </div>
+      <div class="sub-feature">
+        <h4><span class="icon">🔔</span> การแจ้งเตือนเกี่ยวกับพนักงาน</h4>
+        <ul class="detail-list">
+          <li>ระบบแจ้งเตือนพนักงานทดลองงานใกล้ครบกำหนด (Probat​ion)</li>
+          <li>ระบบแจ้งเตือนวีซ่า / Work Permit ใกล้หมดอายุ</li>
+          <li>ระบบแจ้งเตือนสัญญาจ้างใกล้สิ้นสุด</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- FEATURE 3: เช็คอิน-เช็คเอาท์ -->
+<div class="feature">
+  <div class="feature-header">
+    <span class="feature-tag tag-p1">🔵 P1 — Core</span>
+    <h3>3. ระบบเช็คอิน-เช็คเอาท์ <span class="en">Check-in / Check-out</span></h3>
+    <p>พนักงานลงเวลาเข้างาน-เลิกงานผ่าน LINE OA พร้อมบันทึกตำแหน่งที่ตั้ง</p>
+  </div>
+  <div class="feature-body">
+    <div class="sub-features">
+      <div class="sub-feature">
+        <h4><span class="icon">📍</span> เช็คอินเข้างาน</h4>
+        <ul class="detail-list">
+          <li>กดปุ่มเช็คอินผ่าน LINE Rich Menu</li>
+          <li>ระบบบันทึกเวลาเข้างาน (Timestamp) + ตำแหน่ง Geo Location</li>
+          <li>แจ้งเตือนยืนยันการเช็คอินผ่าน LINE Flex Message</li>
+          <li>เช็คสาย: ถ้าเกินเวลาที่กำหนด แสดงข้อความแจ้งเตือนว่า "มาสาย"</li>
+          <li>รองรับการเช็คอินผ่าน QR Code (สแกนหน้างาน)</li>
+        </ul>
+      </div>
+      <div class="sub-feature">
+        <h4><span class="icon">🚪</span> เช็คเอาท์เลิกงาน</h4>
+        <ul class="detail-list">
+          <li>กดปุ่มเช็คเอาท์เพื่อบันทึกเวลาเลิกงาน</li>
+          <li>สรุปชั่วโมงทำงานของวันนั้น (เช็คอิน → เช็คเอาท์)</li>
+          <li>แสดงเวลาทำงานสุทธิ (หักเวลาพัก)</li>
+        </ul>
+      </div>
+      <div class="sub-feature">
+        <h4><span class="icon">📅</span> ประวัติการเข้าออก</h4>
+        <ul class="detail-list">
+          <li>พนักงานสามารถดูประวัติการเช็คอิน-เช็คเอาท์ของตัวเองได้</li>
+          <li>แสดงข้อมูลรายวัน: เวลาเข้า, เวลาออก, ชั่วโมง, สถานะ (ปกติ/สาย)</li>
+        </ul>
+      </div>
+    </div>
+    <div class="line-box">
+      <h5>💬 LINE Integration</h5>
+      <ul class="detail-list">
+        <li>Rich Menu มีปุ่มเช็คอิน / เช็คเอาท์</li>
+        <li>Flex Message ยืนยันผลการเช็คอินพร้อมเวลาและตำแหน่ง</li>
+        <li>Push Notification แจ้งเตือนให้เช็คอินทุกเช้า (ถ้ายังไม่เช็คอิน)</li>
+        <li>ข้อความสรุปการเข้างานประจำวันส่งให้พนักงานทาง LINE</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- FEATURE 4: ระบบลางาน -->
+<div class="feature">
+  <div class="feature-header">
+    <span class="feature-tag tag-p1">🔵 P1 — Core</span>
+    <h3>4. ระบบลางาน <span class="en">Leave Management</span></h3>
+    <p>พนักงานขอลางานผ่าน LINE OA — HR อนุมัติผ่าน Web Dashboard</p>
+  </div>
+  <div class="feature-body">
+    <div class="sub-features">
+      <div class="sub-feature">
+        <h4><span class="icon">✍️</span> การขอลางาน (LINE)</h4>
+        <ul class="detail-list">
+          <li>เลือกประเภทการลา: ลาป่วย, ลากิจ, ลาพักร้อน, ลาคลอด, ฯลฯ</li>
+          <li>ระบุวันที่เริ่มลา - สิ้นสุด (เลือกหลายวันได้)</li>
+          <li>ระบุเหตุผล / แนบไฟล์ใบรับรองแพทย์ (optional)</li>
+          <li>ระบบแสดงยอดวันลาคงเหลือให้พนักงานเห็นก่อนส่ง</li>
+          <li>ส่งคำขอผ่าน LINE -> ระบบส่งไปยัง HR เพื่ออนุมัติ</li>
+        </ul>
+      </div>
+      <div class="sub-feature">
+        <h4><span class="icon">✅</span> การอนุมัติ (Web Admin)</h4>
+        <ul class="detail-list">
+          <li>HR ดูรายการคำขอลางานใน Dashboard</li>
+          <li>อนุมัติ / ไม่อนุมัติ พร้อมระบุเหตุผล</li>
+          <li>ระบบหักยอดวันลาอัตโนมัติเมื่ออนุมัติ</li>
+          <li>LINE ส่งผลการอนุมัติกลับไปหาพนักงาน</li>
+        </ul>
+      </div>
+      <div class="sub-feature">
+        <h4><span class="icon">📋</span> การจัดการและรายงาน</h4>
+        <ul class="detail-list">
+          <li>ปฏิทินวันลาของพนักงานในองค์กร</li>
+          <li>รายงานสถิติการลา รายเดือน / รายปี</li>
+          <li>ยอดวันลาคงเหลือของพนักงานแต่ละคน</li>
+          <li>ประวัติการลาทั้งหมด</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- FEATURE 5: ขอเอกสาร -->
+<div class="feature">
+  <div class="feature-header">
+    <span class="feature-tag tag-p2">🟡 P2 — Support</span>
+    <h3>5. ระบบขอเอกสาร <span class="en">Document Request</span></h3>
+    <p>พนักงานขอเอกสารทางราชการ/บริษัทผ่าน LINE — HR ดำเนินการออกเอกสาร</p>
+  </div>
+  <div class="feature-body">
+    <div class="sub-features">
+      <div class="sub-feature">
+        <h4><span class="icon">📄</span> ประเภทเอกสาร</h4>
+        <ul class="detail-list">
+          <li>หนังสือรับรองเงินเดือน / รายได้</li>
+          <li>หนังสือรับรองการทำงาน</li>
+          <li>สลิปเงินเดือนย้อนหลัง</li>
+          <li>ใบรับรองการผ่านทดลองงาน</li>
+          <li>เอกสารอื่น ๆ ที่กำหนดโดยบริษัท</li>
+        </ul>
+      </div>
+      <div class="sub-feature">
+        <h4><span class="icon">📝</span> ขั้นตอนการขอ</h4>
+        <ul class="detail-list">
+          <li>เลือกประเภทเอกสารจากเมนูใน LINE</li>
+          <li>ระบบอาจถามข้อมูลเพิ่มเติม เช่น ใช้ยื่นธนาคารไหน</li>
+          <li>ส่งคำขอถึง HR</li>
+          <li>HR ดำเนินการออกเอกสารและแจ้งพนักงาน</li>
+          <li>พนักงานรับเอกสาร ( Download / รับที่ออฟฟิศ / ส่งEMS )</li>
+          <li>ติดตามสถานะคำขอได้ทาง LINE</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- FEATURE 6: ร้องเรียน -->
+<div class="feature">
+  <div class="feature-header">
+    <span class="feature-tag tag-p2">🟡 P2 — Support</span>
+    <h3>6. ช่องทางการร้องเรียน <span class="en">Whistleblowing / Complaint Channel</span></h3>
+    <p>ช่องทางแจ้งเรื่องร้องเรียนหรือแจ้งเบาะแสแบบไม่เปิดเผยตัวตน ผ่าน LINE</p>
+  </div>
+  <div class="feature-body">
+    <div class="sub-features">
+      <div class="sub-feature">
+        <h4><span class="icon">🛡️</span> การแจ้งเรื่องร้องเรียน</h4>
+        <ul class="detail-list">
+          <li>พนักงานเลือก "แจ้งเรื่องร้องเรียน" จากเมนู LINE</li>
+          <li>ตัวเลือก: แจ้งแบบระบุตัวตน หรือ ไม่ระบุตัวตน</li>
+          <li>เลือกหมวดหมู่: สภาพแวดล้อมในการทำงาน, การเลือกปฏิบัติ, คุกคาม, ทุจริต, อื่น ๆ</li>
+          <li>เลือกระดับความเร่งด่วน: ปกติ / ด่วน / ด่วนมาก</li>
+          <li>กรอกรายละเอียด / แนบไฟล์หรือรูปภาพ (ถ้ามี)</li>
+          <li>ส่งเรื่องเข้า Web Admin ให้ HR/ผู้บริหารจัดการ</li>
+        </ul>
+      </div>
+      <div class="sub-feature">
+        <h4><span class="icon">🔐</span> การจัดการและการตอบกลับ</h4>
+        <ul class="detail-list">
+          <li>HR ดูรายการเรื่องร้องเรียนใน Web Dashboard</li>
+          <li>กำหนดสถานะ: รับเรื่อง / กำลังดำเนินการ / ดำเนินการเสร็จ</li>
+          <li>ตอบกลับพนักงาน (กรณีระบุตัวตน) ผ่าน LINE</li>
+          <li>บันทึกประวัติการดำเนินการทุกขั้นตอน</li>
+        </ul>
+      </div>
+    </div>
+    <div class="line-box">
+      <h5>💬 LINE Integration</h5>
+      <ul class="detail-list">
+        <li>ใช้ LIFF (LINE Front-end Framework) สำหรับฟอร์มร้องเรียนแบบหลายขั้นตอน</li>
+        <li>ตัวเลือกระบุตัวตน / ไม่ระบุตัวตน (Anonymous)</li>
+        <li>ยืนยันการรับเรื่องผ่าน Flex Message</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- FEATURE 7: แจ้งเตือน Probation + Visa -->
+<div class="feature">
+  <div class="feature-header">
+    <span class="feature-tag tag-p1">🔵 P1 — Core</span>
+    <h3>7. ระบบแจ้งเตือนทดลองงานและวีซ่า <span class="en">Probation & Visa Alerts</span></h3>
+    <p>ระบบติดตามและแจ้งเตือนอัตโนมัติเมื่อพนักงานใกล้ครบกำหนดทดลองงาน หรือวีซ่า/Work Permit ใกล้หมดอายุ</p>
+  </div>
+  <div class="feature-body">
+    <div class="sub-features">
+      <div class="sub-feature">
+        <h4><span class="icon">⏰</span> แจ้งเตือนทดลองงาน (Probation Alert)</h4>
+        <ul class="detail-list">
+          <li>ระบบนับถอยหลังวันที่ครบกำหนดทดลองงานของพนักงานแต่ละคน</li>
+          <li>แจ้งเตือน HR ก่อนครบกำหนด: 30 วัน, 14 วัน, 7 วัน, 1 วัน</li>
+          <li>แจ้งเตือนพนักงานผ่าน LINE เมื่อถึงวันครบกำหนด</li>
+          <li>HR สามารถบันทึกผลการประเมินทดลองงาน (ผ่าน/ไม่ผ่าน/ขยายเวลา)</li>
+        </ul>
+      </div>
+      <div class="sub-feature">
+        <h4><span class="icon">🛂</span> แจ้งเตือนวีซ่า / Work Permit (Visa Alert)</h4>
+        <ul class="detail-list">
+          <li>ระบบบันทึกวันหมดอายุ Visa / Work Permit ของพนักงานต่างด้าว</li>
+          <li>แจ้งเตือน HR และพนักงานก่อนหมดอายุ: 60 วัน, 30 วัน, 14 วัน, 7 วัน, 1 วัน</li>
+          <li>แสดงรายชื่อพนักงานที่ Visa กำลังจะหมดอายุใน Dashboard</li>
+          <li>HR อัปเดตสถานะ Visa หลังจากต่ออายุแล้ว</li>
+          <li>แจ้งเตือนผ่าน LINE ทั้งถึง HR และพนักงาน</li>
+        </ul>
+      </div>
+    </div>
+    <div class="line-box">
+      <h5>💬 LINE Integration</h5>
+      <ul class="detail-list">
+        <li>Push Notification ถึงพนักงานโดยตรงทาง LINE</li>
+        <li>Flex Message แสดงวันที่และรายละเอียดที่ชัดเจน</li>
+        <li>แจ้งเตือน HR ทาง LINE เช่นกัน (หรือ LINE Group)</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- FEATURE 8: HR Announcements -->
+<div class="feature">
+  <div class="feature-header">
+    <span class="feature-tag tag-p2">🟡 P2 — Support</span>
+    <h3>8. ระบบประกาศแจ้งเตือนจาก HR <span class="en">HR Announcements</span></h3>
+    <p>HR สร้างและส่งประกาลถึงพนักงานทุกคนผ่าน LINE ทันที</p>
+  </div>
+  <div class="feature-body">
+    <div class="sub-features">
+      <div class="sub-feature">
+        <h4><span class="icon">📢</span> การสร้างประกาศ</h4>
+        <ul class="detail-list">
+          <li>HR สร้างประกาศผ่าน Web Dashboard</li>
+          <li>รองรับ: ข้อความ, รูปภาพ, แนบไฟล์, ลิงก์</li>
+          <li>กำหนดกลุ่มเป้าหมาย: พนักงานทั้งหมด / เฉพาะแผนก / เฉพาะบุคคล</li>
+          <li>กำหนดการส่ง: ส่งทันที / กำหนดเวลาส่งภายหลัง</li>
+          <li>ตัวอย่างประเภทประกาศ: ประชุมบริษัท, วันหยุด, กิจกรรม, กฎระเบียบใหม่, ฯลฯ</li>
+        </ul>
+      </div>
+      <div class="sub-feature">
+        <h4><span class="icon">📱</span> การรับประกาศ (LINE)</h4>
+        <ul class="detail-list">
+          <li>พนักงานได้รับประกาศเป็น Flex Message ผ่าน LINE</li>
+          <li>ข้อความแสดง: หัวข้อ, รายละเอียด, รูปภาพ, วันที่ประกาศ</li>
+          <li>พนักงานสามารถดูประกาศย้อนหลังได้จากเมนูใน LINE</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- FEATURE 9: Attendance Summary -->
+<div class="feature">
+  <div class="feature-header">
+    <span class="feature-tag tag-p1">🔵 P1 — Core</span>
+    <h3>9. สรุปภาพรวมการมาทำงาน <span class="en">Attendance Summary</span></h3>
+    <p>ระบบสรุปการทำงานของพนักงานในแต่ละวัน/สัปดาห์ ส่งผ่าน LINE ให้ทราบ</p>
+  </div>
+  <div class="feature-body">
+    <div class="sub-features">
+      <div class="sub-feature">
+        <h4><span class="icon">📊</span> รายงานสรุปสำหรับพนักงาน</h4>
+        <ul class="detail-list">
+          <li>สรุปการเข้างานประจำวันส่งให้พนักงานทาง LINE ตอนเย็น</li>
+          <li>แสดง: เวลาเข้า, เวลาออก, ชั่วโมงทำงาน, สถานะ (ปกติ/สาย/ขาด)</li>
+          <li>สรุปรายสัปดาห์: จำนวนวันที่ทำงาน, จำนวนวันที่สาย, จำนวนวันที่ลา</li>
+          <li>สรุปรายเดือน: สถิติการทำงานทั้งหมดในเดือนนั้น</li>
+        </ul>
+      </div>
+      <div class="sub-feature">
+        <h4><span class="icon">👥</span> สรุปภาพรวมสำหรับ HR</h4>
+        <ul class="detail-list">
+          <li>รายงานสรุปประจำวัน: จำนวนมา, จำนวนขาด, จำนวนลา, จำนวนมาสาย</li>
+          <li>ส่งสรุปไปยัง HR / ผู้บริหารทาง LINE Group</li>
+          <li>ดูรายละเอียดเพิ่มเติมใน Web Dashboard</li>
+        </ul>
+      </div>
+    </div>
+    <div class="line-box">
+      <h5>💬 LINE Integration</h5>
+      <ul class="detail-list">
+        <li>ส่ง Flex Message สรุปประจำวันให้พนักงานแบบส่วนตัว</li>
+        <li>ส่งสรุปภาพรวมให้ HR ผ่าน LINE Group หรือส่วนตัว</li>
+        <li>สามารถตั้งเวลาส่งอัตโนมัติ (เช่น 17:00 น. ทุกวัน)</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- TECH STACK -->
+<div class="tech-section">
+  <h2>🛠️ Tech Stack แนะนำ</h2>
+  <div class="tech-grid">
+    <div class="tech-item"><strong>LINE OA API</strong><span>Messaging API, LIFF, Flex Message, Webhook</span></div>
+    <div class="tech-item"><strong>Frontend (Admin)</strong><span>Next.js 16, shadcn/ui, Tailwind CSS</span></div>
+    <div class="tech-item"><strong>Backend</strong><span>Next.js API Routes / Node.js</span></div>
+    <div class="tech-item"><strong>Database</strong><span>PostgreSQL / Supabase</span></div>
+    <div class="tech-item"><strong>LINE LIFF</strong><span>ฟอร์มขอเอกสาร, ร้องเรียน, ลางาน</span></div>
+    <div class="tech-item"><strong>Push Notification</strong><span>LINE Messaging API Push</span></div>
+    <div class="tech-item"><strong>Geo Location</strong><span>LINE Location Picker / GPS</span></div>
+    <div class="tech-item"><strong>Authentication</strong><span>LINE Login + Role-based (พนักงาน/HR/Admin)</span></div>
+    <div class="tech-item"><strong>File Storage</strong><span>Supabase Storage</span></div>
+    <div class="tech-item"><strong>Cron Jobs</strong><span>Probation/Visa reminders, Daily summary</span></div>
+    <div class="tech-item"><strong>Deploy</strong><span>Vercel</span></div>
+    <div class="tech-item"><strong>Node.js REPL</strong><span>Codex node_repl MCP</span></div>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<div style="text-align:center;padding:40px 0 20px;color:#98a2b3;font-size:13px;">
+  <p>LINE OA HR & Payroll Management Platform — PRD Sitemap v1.0</p>
+  <p>Generated 2026-06-08 | Hermes PM &middot; แยก Feature ละเอียดทีละระบบ</p>
+</div>
+
+</div>
+
+</body>
+</html>

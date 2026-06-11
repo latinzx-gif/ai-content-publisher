@@ -1,0 +1,125 @@
+"use client"
+
+import Link from "next/link"
+import { usePathname } from "next/navigation"
+import { ChevronRight } from "lucide-react"
+
+import {
+  ADMIN_NAV_ITEMS,
+  isAdminNavActive,
+  type AdminNavItem,
+} from "@/components/admin/admin-nav"
+import { BrandMark } from "@/components/brand/BrandMark"
+import { cn } from "@/lib/utils"
+
+function SidebarPromo() {
+  return (
+    <div className="relative mx-3 mb-3 min-h-[132px] overflow-hidden rounded-2xl bg-gradient-to-br from-[#FFF6F6] via-[#FFF0F0] to-[#FFE4E4] px-4 pb-2 pt-4">
+      <div
+        className="pointer-events-none absolute inset-x-0 bottom-0 h-12 bg-[radial-gradient(ellipse_120%_80%_at_50%_100%,rgba(229,57,53,0.12),transparent)]"
+        aria-hidden
+      />
+      <div className="relative flex items-end justify-between gap-1">
+        <p className="max-w-[9.5rem] text-left text-[17px] font-bold leading-[1.25] text-brand-red">
+          Together, We
+          <br />
+          Build a Stronger
+          <br />
+          Team!
+        </p>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/brand/mascot-hd.png"
+          alt=""
+          width={108}
+          height={130}
+          className="-mb-1 -mr-1 h-[108px] w-auto shrink-0 object-contain object-bottom drop-shadow-sm"
+        />
+      </div>
+    </div>
+  )
+}
+
+/** @deprecated Use ADMIN_NAV_ITEMS from admin-nav.ts */
+export const NAV_ITEMS = ADMIN_NAV_ITEMS
+
+export function isNavActive(pathname: string, href: string): boolean {
+  return isAdminNavActive(pathname, href)
+}
+
+export function AdminNavLinks({
+  onNavigate,
+}: {
+  onNavigate?: () => void
+  alertBadge?: number
+}) {
+  const pathname = usePathname()
+
+  return (
+    <nav className="flex flex-col gap-0.5 px-2">
+      {ADMIN_NAV_ITEMS.map((item) => (
+        <AdminNavLink
+          key={item.href}
+          item={item}
+          active={isAdminNavActive(pathname, item.href)}
+          onNavigate={onNavigate}
+        />
+      ))}
+    </nav>
+  )
+}
+
+function AdminNavLink({
+  item,
+  active,
+  onNavigate,
+}: {
+  item: AdminNavItem
+  active: boolean
+  onNavigate?: () => void
+}) {
+  const { label, href, icon: Icon } = item
+
+  return (
+    <Link
+      href={href}
+      onClick={onNavigate}
+      className={cn(
+        "flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
+        active
+          ? "bg-brand-red text-white shadow-sm"
+          : "text-foreground/80 hover:bg-muted hover:text-foreground"
+      )}
+    >
+      <Icon className="size-4 shrink-0" />
+      <span className="min-w-0 flex-1 truncate">{label}</span>
+      {!active ? (
+        <ChevronRight
+          className="size-4 shrink-0 text-muted-foreground/45"
+          aria-hidden
+        />
+      ) : null}
+    </Link>
+  )
+}
+
+export function AdminSidebar() {
+  return (
+    <aside className="hidden h-full max-h-dvh w-64 shrink-0 flex-col overflow-hidden border-r border-border/80 bg-white md:flex">
+      <div className="shrink-0 border-b border-border/80 px-5 py-5 [@media(max-height:900px)]:py-4">
+        <BrandMark variant="sidebar" />
+      </div>
+      <div className="min-h-0 flex-1 overflow-y-auto py-3">
+        <AdminNavLinks />
+      </div>
+      <div className="shrink-0 [@media(max-height:900px)]:origin-bottom [@media(max-height:900px)]:scale-[0.92]">
+        <SidebarPromo />
+      </div>
+      <p className="px-4 pb-4 text-center text-[10px] leading-relaxed text-muted-foreground">
+        © 2025 Zhongguomingtang
+        <br />
+        All rights reserved.
+      </p>
+    </aside>
+  )
+}

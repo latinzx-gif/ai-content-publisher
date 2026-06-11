@@ -1,0 +1,8 @@
+.DS_Store
+.cursor/
+hr-app/node_modules/
+hr-app/.next/
+hr-app/out/
+hr-app/.env.local
+hr-app/.vercel/
+*.tsbuildinfo

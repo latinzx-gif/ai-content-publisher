@@ -1,0 +1,42 @@
+import type { messagingApi } from "@line/bot-sdk"
+
+import type { RichMenuPostbackAction } from "@/lib/line/types"
+import { announcementAction } from "@/lib/line/handlers/actions/announcement"
+import { checkinAction } from "@/lib/line/handlers/actions/checkin"
+import { checkinInAction } from "@/lib/line/handlers/actions/checkin-in"
+import {
+  checkoutAction,
+  checkoutConfirmAction,
+} from "@/lib/line/handlers/actions/checkout"
+import { complaintAction } from "@/lib/line/handlers/actions/complaint"
+import { documentAction } from "@/lib/line/handlers/actions/document"
+import { contactHrAction } from "@/lib/line/handlers/actions/contact-hr"
+import { leaveAction } from "@/lib/line/handlers/actions/leave"
+import { overtimeAction } from "@/lib/line/handlers/actions/overtime"
+
+export type ActionContext = {
+  lineUserId?: string
+}
+
+const ACTION_HANDLERS: Record<
+  RichMenuPostbackAction,
+  (ctx: ActionContext) => messagingApi.Message[] | Promise<messagingApi.Message[]>
+> = {
+  checkin: checkinAction,
+  checkin_in: checkinInAction,
+  checkout: checkoutAction,
+  checkout_confirm: checkoutConfirmAction,
+  leave: leaveAction,
+  overtime: overtimeAction,
+  document: documentAction,
+  complaint: complaintAction,
+  announcement: announcementAction,
+  contact_hr: contactHrAction,
+}
+
+export async function buildActionMessages(
+  action: RichMenuPostbackAction,
+  ctx: ActionContext
+): Promise<messagingApi.Message[]> {
+  return ACTION_HANDLERS[action](ctx)
+}
