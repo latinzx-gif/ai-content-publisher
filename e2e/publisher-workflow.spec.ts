@@ -26,14 +26,27 @@ test.describe("Publisher 12-step route smoke (authenticated)", () => {
     });
   }
 
-  test("create page saves local draft", async ({ page }) => {
+  test("create page saves local draft and continues to briefs", async ({ page }) => {
     await page.goto("/publisher/create");
     await expect(page.getByRole("heading", { name: "Create" })).toBeVisible();
 
-    await page.getByPlaceholder("Describe the single post topic.").fill("E2E smoke topic");
-    await page.getByLabel("Brand").selectOption("Head Office");
-    await page.getByLabel("Platform").selectOption("Facebook");
-    await page.getByRole("button", { name: "Save" }).click();
+    const main = page.locator("main");
+    await main.getByPlaceholder("Describe the single post topic.").fill("E2E smoke topic");
+    await main
+      .locator("label")
+      .filter({ has: page.getByText("Brand", { exact: true }) })
+      .getByRole("combobox")
+      .selectOption("Head Office");
+    await main
+      .locator("label")
+      .filter({ has: page.getByText("Platform", { exact: true }) })
+      .getByRole("combobox")
+      .selectOption("Facebook");
+    await main.getByRole("button", { name: "Save", exact: true }).click();
     await expect(page.getByText("Draft saved locally.")).toBeVisible();
+
+    await main.getByRole("button", { name: "Continue to Brief Builder" }).click();
+    await expect(page.getByRole("heading", { name: "Brief Builder" })).toBeVisible();
+    expect(new URL(page.url()).searchParams.get("post_id")).toBeTruthy();
   });
 });

@@ -20,18 +20,24 @@ npm run test:e2e:gate
 
 ## Full 12-step smoke (authenticated)
 
-Requires a saved Supabase session (magic-link login once).
+Requires a saved Supabase session.
 
-### 1. Save auth state
+### 1. Save auth state (automated)
 
 ```bash
 npm run dev -- -p 3001
 # another terminal:
+npm run test:e2e:auth
+```
+
+Uses service role + dedicated E2E user (`publisher-e2e@headoffice.local`) to write `playwright/.auth/publisher.json`. Override with `PLAYWRIGHT_BASE_URL`, `E2E_PUBLISHER_EMAIL`, or `E2E_PUBLISHER_PASSWORD` if needed.
+
+Manual alternative:
+
+```bash
 npx playwright codegen http://localhost:3001/publisher/login \
   --save-storage=playwright/.auth/publisher.json
 ```
-
-Complete magic-link login in the opened browser, then close codegen.
 
 ### 2. Run workflow tests
 

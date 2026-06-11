@@ -19,7 +19,7 @@ test.describe("Publisher auth gate", () => {
   test("login page is public", async ({ page }) => {
     const res = await page.goto("/publisher/login");
     expect(res?.status()).toBeLessThan(400);
-    await expect(page.getByRole("heading", { name: "Sign in" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: /Sign in or create account/i })).toBeVisible();
   });
 
   for (const route of PROTECTED_ROUTES) {

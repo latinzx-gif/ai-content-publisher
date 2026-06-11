@@ -25,6 +25,14 @@ export default defineConfig({
       use: { ...devices["Desktop Chrome"] },
     },
     {
+      name: "publisher-full-workflow",
+      testMatch: /publisher-full-workflow\.spec\.ts/,
+      use: {
+        ...devices["Desktop Chrome"],
+        storageState: hasAuth ? authFile : undefined,
+      },
+    },
+    {
       name: "publisher-workflow",
       testMatch: /publisher-workflow\.spec\.ts/,
       use: {
