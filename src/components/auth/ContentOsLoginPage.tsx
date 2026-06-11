@@ -3,8 +3,12 @@
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
-import { signIn, signInWithGoogle } from '@/app/publisher/actions';
+import { signIn, signInInstantly, signInWithGoogle } from '@/app/publisher/actions';
 import { createClient } from '@/lib/publisher/supabase/client';
+
+// NODE_ENV is inlined at build time — the instant sign-in button never ships
+// in a production build (the server action is independently gated too).
+const instantSignInEnabled = process.env.NODE_ENV !== 'production';
 
 const pipelineSteps = [
   { step: '01', title: 'Brief & sources', detail: 'RAG + Drive + official links' },
@@ -50,6 +54,7 @@ export function ContentOsLoginPage() {
   });
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
+  const [instantLoading, setInstantLoading] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
 
   useEffect(() => {
@@ -127,6 +132,27 @@ export function ContentOsLoginPage() {
     }
 
     setSent(true);
+  }
+
+  async function handleInstantSignIn() {
+    if (!email.trim()) {
+      setError('กรอกอีเมลก่อน แล้วกดเข้าระบบทันที');
+      return;
+    }
+
+    setInstantLoading(true);
+    setError(null);
+    setNotice(null);
+
+    const result = await signInInstantly(email.trim());
+
+    if (result.error) {
+      setInstantLoading(false);
+      setError(result.error);
+      return;
+    }
+
+    window.location.assign('/publisher/create');
   }
 
   async function handleGoogleSignIn() {
@@ -277,7 +303,7 @@ export function ContentOsLoginPage() {
                       <p className="rounded-xl border border-red-200/80 bg-red-50 px-3 py-2.5 text-sm text-red-800">{error}</p>
                     ) : null}
 
-                    <button className="cos-btn-primary" disabled={loading} type="submit">
+                    <button className="cos-btn-primary" disabled={loading || instantLoading} type="submit">
                       {loading ? (
                         <>
                           <span className="material-symbols-outlined animate-spin text-[20px]">sync</span>
@@ -290,6 +316,27 @@ export function ContentOsLoginPage() {
                         </>
                       )}
                     </button>
+
+                    {instantSignInEnabled ? (
+                      <button
+                        className="cos-btn-outline"
+                        disabled={loading || instantLoading}
+                        onClick={handleInstantSignIn}
+                        type="button"
+                      >
+                        {instantLoading ? (
+                          <>
+                            <span className="material-symbols-outlined animate-spin text-[20px]">sync</span>
+                            <span>Signing in…</span>
+                          </>
+                        ) : (
+                          <>
+                            <span className="material-symbols-outlined text-[20px]">bolt</span>
+                            <span>เข้าระบบทันที (dev — ไม่ส่งเมล)</span>
+                          </>
+                        )}
+                      </button>
+                    ) : null}
                   </form>
                 )}
               </div>
