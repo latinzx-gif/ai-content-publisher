@@ -2,9 +2,10 @@ import type { Employee } from "@/lib/auth/session"
 
 export const ASSIGNABLE_ROLES = [
   "employee",
-  "branch_manager",
-  "hr",
   "admin",
+  "hr",
+  "branch_manager",
+  "dev",
   "ceo",
 ] as const satisfies readonly Employee["role"][]
 

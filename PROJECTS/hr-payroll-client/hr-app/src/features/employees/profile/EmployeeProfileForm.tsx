@@ -27,8 +27,14 @@ import {
 import { roleDisplayLabel } from "@/lib/auth/labels"
 import { cn } from "@/lib/utils"
 
-const inputClassName =
-  "mt-1 h-9 w-full rounded-lg border border-input bg-transparent px-3 text-sm outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+const inputBase =
+  "mt-1 h-9 rounded-lg border border-input bg-transparent px-3 text-sm outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+
+/** Full-width within card, capped for long text fields */
+const inputClassName = cn(inputBase, "w-full max-w-md")
+
+/** Dates, amounts, short selects — fit content width */
+const inputClassNameCompact = cn(inputBase, "w-full max-w-[11rem]")
 
 const PROBATION_LABEL: Record<EmployeeProfile["probationStatus"], string> = {
   pending: "รอประเมิน",
@@ -270,7 +276,7 @@ export function EmployeeProfileForm({
             <Field label="วันเกิด">
               <input
                 type="date"
-                className={inputClassName}
+                className={inputClassNameCompact}
                 value={form.date_of_birth}
                 onChange={(e) => setField("date_of_birth", e.target.value)}
               />
@@ -376,8 +382,8 @@ export function EmployeeProfileForm({
               </Field>
             </div>
             <p className="text-xs text-muted-foreground">
-              Employee = LIFF เท่านั้น · Branch Manager / HR / Admin / CEO =
-              Dashboard
+              Employee = LIFF เท่านั้น · Admin / HR / Branch Manager / Developers /
+              CEO = Dashboard
             </p>
             <Field label="สาขา">
               <select
@@ -418,18 +424,18 @@ export function EmployeeProfileForm({
         </WidgetCard>
 
         <WidgetCard title="สัญญาจ้าง">
-          <div className="flex flex-col gap-3">
+          <div className="grid gap-3 sm:grid-cols-2">
             <Field label="วันเริ่มงาน">
               <input
                 type="date"
-                className={inputClassName}
+                className={inputClassNameCompact}
                 value={form.contract_start}
                 onChange={(e) => setField("contract_start", e.target.value)}
               />
             </Field>
             <Field label="ประเภทสัญญา">
               <select
-                className={inputClassName}
+                className={inputClassNameCompact}
                 value={form.contract_type ?? ""}
                 onChange={(e) =>
                   setField(
@@ -450,14 +456,14 @@ export function EmployeeProfileForm({
                 type="number"
                 min="0"
                 step="0.01"
-                className={inputClassName}
+                className={inputClassNameCompact}
                 value={form.salary}
                 onChange={(e) => setField("salary", e.target.value)}
               />
             </Field>
             <Field label="สถานะพนักงาน">
               <select
-                className={inputClassName}
+                className={inputClassNameCompact}
                 value={form.status}
                 onChange={(e) =>
                   setField("status", e.target.value as "active" | "inactive")
@@ -557,7 +563,7 @@ export function EmployeeProfileForm({
             <Field label="วันครบทดลองงาน">
               <input
                 type="date"
-                className={inputClassName}
+                className={inputClassNameCompact}
                 value={form.probation_end}
                 onChange={(e) => setField("probation_end", e.target.value)}
               />
@@ -608,7 +614,7 @@ export function EmployeeProfileForm({
               </div>
               <input
                 type="date"
-                className={inputClassName}
+                className={inputClassNameCompact}
                 value={form.visa_expiry}
                 onChange={(e) => setField("visa_expiry", e.target.value)}
               />
@@ -623,7 +629,7 @@ export function EmployeeProfileForm({
               </div>
               <input
                 type="date"
-                className={inputClassName}
+                className={inputClassNameCompact}
                 value={form.work_permit_expiry}
                 onChange={(e) => setField("work_permit_expiry", e.target.value)}
               />
