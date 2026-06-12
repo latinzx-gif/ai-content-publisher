@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server"
 
+import { canManageHr } from "@/lib/auth/roles"
 import { getCurrentEmployee } from "@/lib/auth/session"
 import { documentStatusFlex } from "@/lib/line/flex/document-request"
 import { pushToLineUser } from "@/lib/line/notify-hr"
@@ -13,7 +14,7 @@ export async function POST(
   context: { params: Promise<{ id: string }> }
 ) {
   const caller = await getCurrentEmployee()
-  if (!caller || (caller.role !== "hr" && caller.role !== "admin")) {
+  if (!caller || !canManageHr(caller.role)) {
     return NextResponse.json({ error: "forbidden" }, { status: 403 })
   }
 

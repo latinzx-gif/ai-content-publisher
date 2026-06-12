@@ -37,4 +37,4 @@ export async function getManagedBranchId(managerId: string): Promise<string | nu
   return (data?.id as string) ?? null
 }
 
-export { isBranchManager, isHrAdmin as isHrOrAdmin } from "@/lib/auth/roles"
+export { isBranchManager, canManageHr as isHrOrAdmin } from "@/lib/auth/roles"

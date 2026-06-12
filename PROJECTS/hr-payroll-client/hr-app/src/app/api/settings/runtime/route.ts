@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server"
 
+import { canManageHr } from "@/lib/auth/roles"
 import { getCurrentEmployee } from "@/lib/auth/session"
 import { clearRuntimeConfigCache } from "@/lib/runtime-config"
 import { createClient } from "@/lib/supabase/server"
@@ -12,7 +13,7 @@ const ALLOWED_KEYS = new Set([
 
 export async function GET() {
   const caller = await getCurrentEmployee()
-  if (!caller || (caller.role !== "hr" && caller.role !== "admin")) {
+  if (!caller || !canManageHr(caller.role)) {
     return NextResponse.json({ error: "forbidden" }, { status: 403 })
   }
 
@@ -26,7 +27,7 @@ export async function GET() {
 
 export async function PATCH(request: NextRequest) {
   const caller = await getCurrentEmployee()
-  if (!caller || (caller.role !== "hr" && caller.role !== "admin")) {
+  if (!caller || !canManageHr(caller.role)) {
     return NextResponse.json({ error: "forbidden" }, { status: 403 })
   }
 

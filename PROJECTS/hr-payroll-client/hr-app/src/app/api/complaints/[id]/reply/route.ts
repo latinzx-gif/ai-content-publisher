@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server"
 
+import { canManageHr } from "@/lib/auth/roles"
 import { getCurrentEmployee } from "@/lib/auth/session"
 import { complaintReplyFlex } from "@/lib/line/flex/complaint-submit"
 import { pushToLineUser } from "@/lib/line/notify-hr"
@@ -15,7 +16,7 @@ export async function POST(
   context: { params: Promise<{ id: string }> }
 ) {
   const caller = await getCurrentEmployee()
-  if (!caller || (caller.role !== "hr" && caller.role !== "admin")) {
+  if (!caller || !canManageHr(caller.role)) {
     return NextResponse.json({ error: "forbidden" }, { status: 403 })
   }
 
@@ -27,7 +28,13 @@ export async function POST(
     return NextResponse.json({ error: "invalid body" }, { status: 400 })
   }
 
-  const message = typeof body.message === "string" ? body.message.trim() : ""
+  const rawMessage = typeof body.message === "string" ? body.message.trim() : ""
+  const message =
+    rawMessage.length >= 3
+      ? rawMessage
+      : body.close
+        ? "ปิดเรื่องแล้ว"
+        : ""
   if (message.length < 3) {
     return NextResponse.json({ error: "message required" }, { status: 400 })
   }

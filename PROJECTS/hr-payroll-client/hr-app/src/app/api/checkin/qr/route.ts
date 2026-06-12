@@ -2,6 +2,7 @@ import QRCode from "qrcode"
 import { NextResponse, type NextRequest } from "next/server"
 
 import { getAdminClient } from "@/lib/auth/admin-client"
+import { canManageHr } from "@/lib/auth/roles"
 import { getCurrentEmployee } from "@/lib/auth/session"
 import { createCheckinToken } from "@/lib/checkin/qr-token"
 
@@ -9,7 +10,7 @@ import { createCheckinToken } from "@/lib/checkin/qr-token"
 // one employee. Printed daily (token expires at ICT midnight).
 export async function GET(request: NextRequest) {
   const caller = await getCurrentEmployee()
-  if (!caller || (caller.role !== "hr" && caller.role !== "admin")) {
+  if (!caller || !canManageHr(caller.role)) {
     return NextResponse.json({ error: "forbidden" }, { status: 403 })
   }
 

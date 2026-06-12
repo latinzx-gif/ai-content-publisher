@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from "next/server"
 
 import { ANNOUNCEMENT_TARGET_TYPES } from "@/features/announcements/types"
 import { getAdminClient } from "@/lib/auth/admin-client"
+import { canManageHr } from "@/lib/auth/roles"
 import { getCurrentEmployee } from "@/lib/auth/session"
 import { announcementBroadcastFlex } from "@/lib/line/flex/announcement-list"
 import { getLineClient } from "@/lib/line/client"
@@ -11,7 +12,7 @@ const MULTICAST_LIMIT = 500
 
 export async function GET() {
   const caller = await getCurrentEmployee()
-  if (!caller || (caller.role !== "hr" && caller.role !== "admin")) {
+  if (!caller || !canManageHr(caller.role)) {
     return NextResponse.json({ error: "forbidden" }, { status: 403 })
   }
 
@@ -33,7 +34,7 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   const caller = await getCurrentEmployee()
-  if (!caller || (caller.role !== "hr" && caller.role !== "admin")) {
+  if (!caller || !canManageHr(caller.role)) {
     return NextResponse.json({ error: "forbidden" }, { status: 403 })
   }
 
