@@ -149,8 +149,9 @@ async function hrApprovalNotifications(): Promise<{
     onboardingRes,
     registrationCountRes,
     onboardingCountRes,
-    leaveRes,
-    leaveCountRes,
+    leavePendingRes,
+    leavePendingCountRes,
+    leaveHrCountRes,
     attRes,
     attCountRes,
     otRes,
@@ -182,11 +183,15 @@ async function hrApprovalNotifications(): Promise<{
     supabase
       .from("hr_leaves")
       .select(
-        "id, type, start_date, end_date, created_at, hr_employees!employee_id(name)"
+        "id, type, start_date, end_date, created_at, approval_status, hr_employees!employee_id(name)"
       )
-      .eq("approval_status", "pending_hr")
+      .eq("status", "pending")
       .order("created_at", { ascending: false })
       .limit(LIST_LIMIT),
+    supabase
+      .from("hr_leaves")
+      .select("id", { count: "exact", head: true })
+      .eq("status", "pending"),
     supabase
       .from("hr_leaves")
       .select("id", { count: "exact", head: true })
@@ -266,13 +271,17 @@ async function hrApprovalNotifications(): Promise<{
     })
   }
 
-  for (const row of leaveRes.data ?? []) {
+  for (const row of leavePendingRes.data ?? []) {
     const typeLabel =
       LEAVE_TYPE_LABELS[row.type as LeaveType] ?? row.type
+    const approvalStatus = row.approval_status as string | null
     items.push({
       id: `leave-${row.id}`,
       kind: "leave",
-      title: "ขอลารออนุมัติ",
+      title:
+        approvalStatus === "pending_manager"
+          ? "ขอลารอ BM อนุมัติ"
+          : "ขอลารออนุมัติ",
       summary: `${employeeName(row.hr_employees)} · ${typeLabel} ${row.start_date}–${row.end_date}`,
       href: "/admin/leaves?status=pending",
       createdAt: row.created_at as string | null,
@@ -333,7 +342,7 @@ async function hrApprovalNotifications(): Promise<{
   const total =
     (registrationCountRes.count ?? 0) +
     (onboardingCountRes.count ?? 0) +
-    (leaveCountRes.count ?? 0) +
+    (leavePendingCountRes.count ?? 0) +
     (attCountRes.count ?? 0) +
     (otCountRes.count ?? 0) +
     (docCountRes.count ?? 0) +
@@ -345,7 +354,8 @@ async function hrApprovalNotifications(): Promise<{
     counts: {
       registration: registrationCountRes.count ?? 0,
       onboarding: onboardingCountRes.count ?? 0,
-      leave: leaveCountRes.count ?? 0,
+      leavePending: leavePendingCountRes.count ?? 0,
+      leaveHr: leaveHrCountRes.count ?? 0,
       attendance: attCountRes.count ?? 0,
       overtime: otCountRes.count ?? 0,
       document: docCountRes.count ?? 0,

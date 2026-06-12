@@ -3,7 +3,10 @@ import type { AdminNavItem } from "@/components/admin/admin-nav-types"
 export type HrApprovalCounts = {
   registration: number
   onboarding: number
-  leave: number
+  /** All leaves with status=pending — matches Leave Management page */
+  leavePending: number
+  /** Leaves awaiting HR final approval — matches HR Approval Queue */
+  leaveHr: number
   attendance: number
   overtime: number
   document: number
@@ -16,7 +19,7 @@ export function hrApprovalCountsTotal(counts: HrApprovalCounts): number {
   return (
     counts.registration +
     counts.onboarding +
-    counts.leave +
+    counts.leavePending +
     counts.attendance +
     counts.overtime +
     counts.document +
@@ -33,7 +36,7 @@ export function buildHrNavBadges(
   const approvalTotal = hrApprovalCountsTotal(counts)
 
   const managerQueueTotal =
-    counts.leave + counts.attendance + counts.overtime
+    counts.leaveHr + counts.attendance + counts.overtime
 
   if (approvalTotal > 0) {
     badges["/admin"] = approvalTotal
@@ -48,7 +51,7 @@ export function buildHrNavBadges(
   }
 
   if (counts.attendance > 0) badges["/admin/attendance"] = counts.attendance
-  if (counts.leave > 0) badges["/admin/leaves"] = counts.leave
+  if (counts.leavePending > 0) badges["/admin/leaves"] = counts.leavePending
   if (counts.overtime > 0) badges["/admin/overtime"] = counts.overtime
   if (counts.document > 0) badges["/admin/documents"] = counts.document
   if (counts.complaint > 0) badges["/admin/complaints"] = counts.complaint
