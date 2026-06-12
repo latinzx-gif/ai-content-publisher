@@ -59,8 +59,7 @@ export async function notifyBranchManager({
     }
 
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL ?? "https://hr-app-two-iota.vercel.app"
-    const path =
-      kind === "attendance" ? "/admin/branch/attendance" : "/admin/branch"
+    const path = "/admin/branch"
     const label = KIND_LABEL[kind]
 
     await pushToLineUser(lineUserId, [

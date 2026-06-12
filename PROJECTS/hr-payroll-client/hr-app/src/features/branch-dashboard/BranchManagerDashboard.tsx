@@ -25,9 +25,11 @@ import { cn } from "@/lib/utils"
 
 import type { BranchDashboardData } from "./data"
 
-const QUICK_ACTIONS = [
-  { label: "Review Attendance", href: "/admin/branch/attendance", icon: Clock },
-] as const
+const QUICK_ACTIONS: readonly {
+  label: string
+  href: string
+  icon: typeof Clock
+}[] = []
 
 const ACTIVITY_ICONS: Record<string, { icon: LucideIcon; className: string }> = {
   leave: { icon: CalendarDays, className: "text-sky-600 bg-sky-100" },
@@ -118,7 +120,7 @@ export function BranchManagerDashboard({
       </div>
 
       <div className="grid min-h-0 flex-1 gap-2 md:gap-2.5 lg:grid-cols-3">
-        <WidgetCard compact title="Today's Attendance" href="/admin/branch/attendance">
+        <WidgetCard compact title="Today's Attendance">
           {data.attendanceDonut.length === 0 ? (
             <DevelopmentEmptyState
               compact
@@ -175,10 +177,7 @@ export function BranchManagerDashboard({
 
         <WidgetCard compact title="Approval Queue">
           <div className="space-y-2">
-            <Link
-              href="/admin/branch/attendance"
-              className="flex items-center justify-between rounded-lg bg-muted/40 px-3 py-2 transition-colors hover:bg-muted/60"
-            >
+            <div className="flex items-center justify-between rounded-lg bg-muted/40 px-3 py-2">
               <span className="flex items-center gap-2 text-xs">
                 <Clock className="size-5 text-brand-red" strokeWidth={1.6} />
                 Daily attendance
@@ -186,7 +185,7 @@ export function BranchManagerDashboard({
               <span className="text-xs font-semibold tabular-nums text-brand-red">
                 {data.pendingAttendance} pending
               </span>
-            </Link>
+            </div>
             <div className="flex items-center justify-between rounded-lg bg-muted/40 px-3 py-2">
               <span className="flex items-center gap-2 text-xs">
                 <CalendarDays className="size-5 text-brand-red" strokeWidth={1.6} />
@@ -301,22 +300,24 @@ export function BranchManagerDashboard({
           )}
         </WidgetCard>
 
-        <WidgetCard compact title="Quick Actions">
-          <div className="grid grid-cols-2 gap-1.5">
-            {QUICK_ACTIONS.map((action) => (
-              <Link
-                key={action.href}
-                href={action.href}
-                className="flex flex-col items-center gap-1 rounded-lg border border-border/80 bg-muted/20 px-1 py-2 text-center transition-colors hover:border-brand-red/40 hover:bg-brand-red/5"
-              >
-                <action.icon className="size-7 text-brand-red" strokeWidth={1.6} />
-                <span className="text-[9px] font-medium leading-tight">
-                  {action.label}
-                </span>
-              </Link>
-            ))}
-          </div>
-        </WidgetCard>
+        {QUICK_ACTIONS.length > 0 ? (
+          <WidgetCard compact title="Quick Actions">
+            <div className="grid grid-cols-2 gap-1.5">
+              {QUICK_ACTIONS.map((action) => (
+                <Link
+                  key={action.href}
+                  href={action.href}
+                  className="flex flex-col items-center gap-1 rounded-lg border border-border/80 bg-muted/20 px-1 py-2 text-center transition-colors hover:border-brand-red/40 hover:bg-brand-red/5"
+                >
+                  <action.icon className="size-7 text-brand-red" strokeWidth={1.6} />
+                  <span className="text-[9px] font-medium leading-tight">
+                    {action.label}
+                  </span>
+                </Link>
+              ))}
+            </div>
+          </WidgetCard>
+        ) : null}
       </div>
     </div>
   )

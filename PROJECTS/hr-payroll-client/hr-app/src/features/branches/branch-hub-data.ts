@@ -6,6 +6,7 @@ import {
   getBranchLeaveQueue,
   getBranchOvertimeQueue,
 } from "@/features/branches/branch-queues"
+import { fetchBranchById } from "@/features/branches/branch-query"
 import { createClient } from "@/lib/supabase/server"
 
 export {
@@ -54,29 +55,7 @@ export type BranchEmployeeWithAlerts = {
 
 export async function getBranchById(branchId: string): Promise<BranchDetail | null> {
   const supabase = await createClient()
-  const { data, error } = await supabase
-    .from("hr_branches")
-    .select(
-      "id, name, code, address, manager_employee_id, hr_employees!manager_employee_id(name)"
-    )
-    .eq("id", branchId)
-    .maybeSingle()
-
-  if (error) throw error
-  if (!data) return null
-
-  const mgr = Array.isArray(data.hr_employees)
-    ? data.hr_employees[0]
-    : data.hr_employees
-
-  return {
-    id: data.id as string,
-    name: data.name as string,
-    code: data.code as string | null,
-    address: data.address as string | null,
-    manager_employee_id: data.manager_employee_id as string | null,
-    manager_name: (mgr as { name?: string } | null)?.name ?? null,
-  }
+  return fetchBranchById(supabase, branchId)
 }
 
 export async function getBranchHubDashboard(

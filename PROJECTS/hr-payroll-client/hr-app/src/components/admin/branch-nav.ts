@@ -15,12 +15,11 @@ export const HIDDEN_BRANCH_PATHS = [
   "/admin/branch/team",
   "/admin/branch/leaves",
   "/admin/branch/overtime",
+  "/admin/branch/attendance",
 ] as const
 
-/** Dev all-mode only — BM tools ที่ยังเปิดใช้ (ไม่รวม team/leaves/overtime) */
-export const BRANCH_SECTION_ITEMS: AdminNavItem[] = [
-  { label: "Attendance", href: "/admin/branch/attendance", icon: "clock" },
-]
+/** BM sub-routes ซ่อนทั้งหมด — ใช้ Branch Dashboard เท่านั้น */
+export const BRANCH_SECTION_ITEMS: AdminNavItem[] = []
 
 /** Sidebar สำหรับ Branch Manager — hub only; tools อยู่ใน /admin/branch */
 export const BRANCH_NAV_ITEMS: AdminNavItem[] = [

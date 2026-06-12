@@ -451,7 +451,7 @@ async function branchApprovalNotifications(
       kind: "attendance",
       title: "ส่งเวลางานรอ BM",
       summary: `${employeeName(row.hr_employees)} · วันที่ ${row.work_date}`,
-      href: "/admin/branch/attendance",
+      href: "/admin/branch",
       createdAt: row.submitted_at as string | null,
       urgency: "normal",
     })

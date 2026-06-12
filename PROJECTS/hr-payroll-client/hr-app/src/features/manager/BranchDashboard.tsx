@@ -99,9 +99,9 @@ export function BranchDashboard({
       {(pendingAttendance > 5 || pendingLeaves > 5) && (
         <div className="flex flex-wrap gap-3 text-sm">
           {pendingAttendance > 5 ? (
-            <Link href="/admin/branch/attendance" className="text-brand-red underline">
-              ดูคิวเข้างานทั้งหมด ({pendingAttendance})
-            </Link>
+            <span className="text-muted-foreground">
+              คิวเข้างานทั้งหมด ({pendingAttendance}) — ดูบน Branch Dashboard
+            </span>
           ) : null}
           {pendingLeaves > 5 ? (
             <span className="text-muted-foreground">
