@@ -519,9 +519,15 @@ export function announcementGuideFlex(): messagingApi.FlexMessage {
   })
 }
 
-export function notRegisteredFlex(): messagingApi.FlexMessage {
+function lineRegisterUrl(): string {
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL?.trim() ?? ""
-  const registerUrl = baseUrl ? `${baseUrl}/login` : "/login"
+  return baseUrl
+    ? `${baseUrl}/api/auth/line/start`
+    : "/api/auth/line/start"
+}
+
+export function notRegisteredFlex(): messagingApi.FlexMessage {
+  const registerUrl = lineRegisterUrl()
   return guide("ไม่พบข้อมูลพนักงานในระบบ", {
     emoji: "⚠️",
     title: "ไม่พบข้อมูล",
@@ -530,11 +536,12 @@ export function notRegisteredFlex(): messagingApi.FlexMessage {
     description:
       "บัญชี LINE ของคุณยังไม่ได้ลงทะเบียน จึงไม่สามารถใช้เมนู HR ได้",
     steps: [
-      `เปิดลิงก์ลงทะเบียน: ${registerUrl}`,
-      "Login ด้วย LINE แล้วกรอกชื่อ เบอร์ และสาขา",
+      "กดปุ่ม \"ลงทะเบียนพนักงาน\" ด้านล่าง",
+      "Login ด้วย LINE แล้วกรอกรหัสพนักงาน ชื่อ เบอร์ และสาขา",
       "รอ HR อนุมัติก่อนใช้งานเมนู HR",
     ],
-    tip: "กดเมนู \"ติดต่อ HR\" หากต้องการความช่วยเหลือ",
+    tip: "หรือกดเมนู \"ติดต่อ HR\" แล้วเลือกลงทะเบียน",
+    button: { label: "ลงทะเบียนพนักงาน", uri: registerUrl },
   })
 }
 
@@ -573,16 +580,17 @@ export function menuHintFlex(): messagingApi.FlexMessage {
 }
 
 export function contactHrGuideFlex(): messagingApi.FlexMessage {
+  const registerUrl = lineRegisterUrl()
   return guide("ติดต่อ HR", {
     emoji: "🎧",
     title: "ติดต่อ HR",
     subtitle: "ช่องทางติดต่อทีม HR",
     accentColor: "#5C6BC0",
     description:
-      "กดปุ่มด้านล่างเพื่อส่งคำขอให้ทีม HR — ระบบจะแจ้งในกลุ่ม HR และติดต่อกลับผ่าน LINE OA นี้",
+      "สอบถาม HR หรือลงทะเบียนพนักงานใหม่ — ระบบจะแจ้งทีม HR และติดต่อกลับผ่าน LINE OA นี้",
     steps: [
-      "กด \"แจ้งทีม HR\" ด้านล่าง",
-      "รอ HR ติดต่อกลับทางแชท LINE นี้",
+      "ยังไม่เคยลงทะเบียน? กด \"ลงทะเบียนพนักงาน\" ด้านล่าง",
+      "ต้องการคุยกับ HR? กด \"แจ้งทีม HR\"",
       "เรื่องเร่งด่วน แจ้งหัวหน้างานโดยตรงด้วย",
     ],
     tip: "เวลาทำการ จ–ศ 09:00–18:00 น. (ยกเว้นวันหยุดนักขัตฤกษ์)",
@@ -590,5 +598,6 @@ export function contactHrGuideFlex(): messagingApi.FlexMessage {
       label: "แจ้งทีม HR",
       data: "action=contact_hr_notify",
     },
+    button: { label: "ลงทะเบียนพนักงาน", uri: registerUrl },
   })
 }

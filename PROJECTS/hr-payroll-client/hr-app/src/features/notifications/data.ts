@@ -6,6 +6,7 @@ import type {
   NotificationItem,
   NotificationKind,
 } from "@/features/notifications/types"
+import { NOTIFICATION_LIST_LIMIT } from "@/features/notifications/types"
 import type { DevViewAs } from "@/lib/auth/dev-view"
 import { getManagedBranchId } from "@/lib/auth/branch"
 import { canManageHr } from "@/lib/auth/roles"
@@ -15,7 +16,7 @@ import { createClient } from "@/lib/supabase/server"
 const DAY_MS = 86_400_000
 const COMPLIANCE_WINDOW_DAYS = 60
 const COMPLIANCE_URGENT_DAYS = 14
-const LIST_LIMIT = 8
+const LIST_LIMIT = NOTIFICATION_LIST_LIMIT
 
 const KIND_ORDER: Record<NotificationKind, number> = {
   registration: 0,
@@ -144,7 +145,7 @@ async function hrApprovalNotifications(): Promise<{
   ] = await Promise.all([
     supabase
       .from("hr_employees")
-      .select("id, name, phone, created_at, hr_branches(name)")
+      .select("id, employee_code, name, phone, created_at, hr_branches(name)")
       .eq("status", "inactive")
       .eq("role", "employee")
       .order("created_at", { ascending: false })
@@ -224,7 +225,14 @@ async function hrApprovalNotifications(): Promise<{
       id: `registration-${row.id}`,
       kind: "registration",
       title: "ลงทะเบียนใหม่",
-      summary: `${row.name}${branch?.name ? ` · ${branch.name}` : ""}${row.phone ? ` · ${row.phone}` : ""}`,
+      summary: [
+        row.employee_code as string | null,
+        row.name,
+        branch?.name,
+        row.phone,
+      ]
+        .filter(Boolean)
+        .join(" · "),
       href: `/admin/employees/${row.id}`,
       createdAt: row.created_at as string | null,
       urgency: "urgent",

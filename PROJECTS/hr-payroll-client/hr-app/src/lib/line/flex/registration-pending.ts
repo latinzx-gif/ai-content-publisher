@@ -4,6 +4,7 @@ import { BRAND_RED, cardBody, brandedTitleHeader } from "@/lib/line/flex/base"
 
 export type RegistrationNotifyPayload = {
   employeeId: string
+  employeeCode: string | null
   name: string
   phone: string | null
   branchName: string | null
@@ -39,7 +40,8 @@ function detailRow(label: string, value: string): messagingApi.FlexComponent {
 export function registrationPendingFlex(
   payload: RegistrationNotifyPayload
 ): messagingApi.FlexMessage {
-  const { employeeId, name, phone, branchName, department, position } = payload
+  const { employeeId, employeeCode, name, phone, branchName, department, position } =
+    payload
 
   return {
     type: "flex",
@@ -55,6 +57,7 @@ export function registrationPendingFlex(
         statusLabel: "รออนุมัติ",
       }),
       body: cardBody([
+        detailRow("รหัสพนักงาน", employeeCode ?? "—"),
         detailRow("ชื่อ", name),
         detailRow("เบอร์", phone ?? "—"),
         detailRow("สาขา", branchName ?? "—"),

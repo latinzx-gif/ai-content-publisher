@@ -15,7 +15,7 @@ export async function notifyRegistrationPending(
     const { data: employee, error } = await admin
       .from("hr_employees")
       .select(
-        "id, name, phone, department, position, branch_id, hr_branches(name)"
+        "id, employee_code, name, phone, department, position, branch_id, hr_branches(name)"
       )
       .eq("id", employeeId)
       .maybeSingle()
@@ -32,6 +32,7 @@ export async function notifyRegistrationPending(
 
     const flex = registrationPendingFlex({
       employeeId,
+      employeeCode: employee.employee_code as string | null,
       name: employee.name as string,
       phone: employee.phone as string | null,
       branchName: branchName ?? null,
@@ -43,6 +44,9 @@ export async function notifyRegistrationPending(
       type: "text" as const,
       text: [
         "📝 พนักงานใหม่ลงทะเบียน (รออนุมัติ)",
+        employee.employee_code
+          ? `รหัส: ${employee.employee_code}`
+          : null,
         `ชื่อ: ${employee.name}`,
         employee.phone ? `เบอร์: ${employee.phone}` : null,
         branchName ? `สาขา: ${branchName}` : null,

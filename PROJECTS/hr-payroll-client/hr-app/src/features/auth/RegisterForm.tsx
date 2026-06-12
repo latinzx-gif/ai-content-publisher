@@ -13,6 +13,7 @@ type BranchOption = { id: string; name: string; code: string | null }
 
 export function RegisterForm() {
   const router = useRouter()
+  const [employeeCode, setEmployeeCode] = useState("")
   const [name, setName] = useState("")
   const [phone, setPhone] = useState("")
   const [branchId, setBranchId] = useState("")
@@ -43,6 +44,10 @@ export function RegisterForm() {
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault()
+    if (!employeeCode.trim()) {
+      setError("กรุณากรอกรหัสพนักงาน")
+      return
+    }
     if (!name.trim()) {
       setError("กรุณากรอกชื่อ-นามสกุล")
       return
@@ -64,6 +69,7 @@ export function RegisterForm() {
         headers: { "content-type": "application/json" },
         credentials: "include",
         body: JSON.stringify({
+          employee_code: employeeCode.trim(),
           name: name.trim(),
           phone: phone.trim(),
           branch_id: branchId,
@@ -97,6 +103,18 @@ export function RegisterForm() {
         กรอกข้อมูลเพื่อขอเข้าใช้งาน — <strong>HR จะอนุมัติก่อน</strong>{" "}
         จึงจะใช้เมนู HR ใน LINE ได้ (ไม่มี Web Dashboard)
       </p>
+
+      <label className="block text-sm">
+        <span className="text-muted-foreground">รหัสพนักงาน *</span>
+        <input
+          className={inputClassName}
+          value={employeeCode}
+          onChange={(e) => setEmployeeCode(e.target.value)}
+          placeholder="เช่น EMP-001"
+          required
+          autoComplete="off"
+        />
+      </label>
 
       <label className="block text-sm">
         <span className="text-muted-foreground">ชื่อ-นามสกุล *</span>

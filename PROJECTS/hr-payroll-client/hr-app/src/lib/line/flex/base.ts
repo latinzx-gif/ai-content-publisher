@@ -364,26 +364,35 @@ export function menuGuideBubble({
   }
 
   if (button || postbackButton) {
+    const footerButtons: messagingApi.FlexComponent[] = []
+    if (postbackButton) {
+      footerButtons.push({
+        type: "button",
+        style: "primary",
+        color: accentColor,
+        height: "sm",
+        action: {
+          type: "postback",
+          label: postbackButton.label,
+          data: postbackButton.data,
+        },
+      })
+    }
+    if (button) {
+      footerButtons.push({
+        type: "button",
+        style: postbackButton ? "secondary" : "primary",
+        color: postbackButton ? undefined : accentColor,
+        height: "sm",
+        action: { type: "uri", label: button.label, uri: button.uri },
+      })
+    }
     bubble.footer = {
       type: "box",
       layout: "vertical",
       spacing: "sm",
       paddingAll: "12px",
-      contents: [
-        {
-          type: "button",
-          style: "primary",
-          color: accentColor,
-          height: "sm",
-          action: postbackButton
-            ? {
-                type: "postback",
-                label: postbackButton.label,
-                data: postbackButton.data,
-              }
-            : { type: "uri", label: button!.label, uri: button!.uri },
-        },
-      ],
+      contents: footerButtons,
     }
   }
 

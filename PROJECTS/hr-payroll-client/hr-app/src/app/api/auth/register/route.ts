@@ -10,6 +10,7 @@ import {
 import { notifyRegistrationPending } from "@/lib/line/notify-registration"
 
 type RegisterBody = {
+  employee_code?: string | null
   name?: string
   phone?: string | null
   branch_id?: string | null
@@ -35,10 +36,14 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "invalid body" }, { status: 400 })
   }
 
+  const employeeCode = body.employee_code?.trim() ?? ""
   const name = body.name?.trim()
   const phone = body.phone?.trim() ?? ""
   const branchId = body.branch_id?.trim() ?? ""
 
+  if (!employeeCode) {
+    return NextResponse.json({ error: "กรุณากรอกรหัสพนักงาน" }, { status: 400 })
+  }
   if (!name) {
     return NextResponse.json({ error: "name is required" }, { status: 400 })
   }
@@ -79,6 +84,7 @@ export async function POST(request: NextRequest) {
 
   const row = {
     line_user_id: lineUserId,
+    employee_code: employeeCode,
     name,
     phone,
     branch_id: branchId,
@@ -97,7 +103,13 @@ export async function POST(request: NextRequest) {
       .eq("id", existing.id)
 
     if (updateError) {
-      return NextResponse.json({ error: updateError.message }, { status: 500 })
+      const msg =
+        updateError.code === "23505"
+          ? updateError.message.includes("employee_code")
+            ? "รหัสพนักงานนี้มีในระบบแล้ว"
+            : "บัญชี LINE นี้ลงทะเบียนแล้ว"
+          : updateError.message
+      return NextResponse.json({ error: msg }, { status: 500 })
     }
     employeeId = existing.id
   } else {
@@ -110,7 +122,9 @@ export async function POST(request: NextRequest) {
     if (insertError || !inserted) {
       const msg =
         insertError?.code === "23505"
-          ? "บัญชี LINE นี้ลงทะเบียนแล้ว"
+          ? insertError.message.includes("employee_code")
+            ? "รหัสพนักงานนี้มีในระบบแล้ว"
+            : "บัญชี LINE นี้ลงทะเบียนแล้ว"
           : (insertError?.message ?? "insert failed")
       return NextResponse.json({ error: msg }, { status: 500 })
     }

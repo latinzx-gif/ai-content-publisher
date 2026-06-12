@@ -1,3 +1,6 @@
+/** Max items shown in the admin bell dropdown */
+export const NOTIFICATION_LIST_LIMIT = 10
+
 export type NotificationKind =
   | "registration"
   | "leave"

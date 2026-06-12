@@ -13,9 +13,10 @@ import {
   type LucideIcon,
 } from "lucide-react"
 
-import type {
-  NotificationItem,
-  NotificationKind,
+import {
+  NOTIFICATION_LIST_LIMIT,
+  type NotificationItem,
+  type NotificationKind,
 } from "@/features/notifications/types"
 import { cn } from "@/lib/utils"
 
@@ -75,7 +76,7 @@ export function AdminNotificationBell({
   const approvalTotal = cache?.approvalTotal ?? initialApprovalTotal
   const total = cache?.total ?? initialTotal
   const complianceTotal = cache?.complianceTotal ?? Math.max(0, total - approvalTotal)
-  const items = cache?.items ?? initialItems
+  const items = (cache?.items ?? initialItems).slice(0, NOTIFICATION_LIST_LIMIT)
 
   const refresh = useCallback(async (opts?: { showLoading?: boolean }) => {
     if (opts?.showLoading) setLoading(true)
@@ -181,10 +182,10 @@ export function AdminNotificationBell({
         <div
           role="dialog"
           aria-label="รายการแจ้งเตือน"
-          className="absolute right-0 top-full z-50 mt-2 w-[min(22rem,calc(100vw-1.5rem))] overflow-hidden rounded-xl border border-border/80 bg-white shadow-lg"
+          className="absolute right-0 top-full z-50 mt-1.5 w-[min(19rem,calc(100vw-1.5rem))] overflow-hidden rounded-lg border border-border/80 bg-white shadow-lg"
         >
-          <div className="flex items-center justify-between border-b border-border/60 px-3 py-2.5">
-            <p className="text-sm font-semibold">การแจ้งเตือน</p>
+          <div className="flex items-center justify-between border-b border-border/60 px-2.5 py-2">
+            <p className="text-xs font-semibold">การแจ้งเตือน</p>
             {loading ? (
               <span className="text-xs text-muted-foreground">กำลังโหลด…</span>
             ) : (
@@ -206,13 +207,13 @@ export function AdminNotificationBell({
             )}
           </div>
 
-          <div className="max-h-80 overflow-y-auto">
+          <div className="max-h-[17.5rem] overflow-y-auto">
             {items.length === 0 ? (
-              <p className="px-3 py-6 text-center text-sm text-muted-foreground">
+              <p className="px-2.5 py-4 text-center text-xs text-muted-foreground">
                 ไม่มีรายการค้าง
               </p>
             ) : (
-              <ul className="divide-y divide-border/50">
+              <ul className="divide-y divide-border/40">
                 {items.map((item) => {
                   const meta = KIND_META[item.kind]
                   const Icon = meta.icon
@@ -221,32 +222,32 @@ export function AdminNotificationBell({
                       <Link
                         href={item.href}
                         onClick={() => setOpen(false)}
-                        className="flex gap-2.5 px-3 py-2.5 transition-colors hover:bg-muted/50"
+                        className="flex gap-2 px-2 py-1.5 transition-colors hover:bg-muted/50"
                       >
                         <span
                           className={cn(
-                            "mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-lg bg-muted/60",
+                            "flex size-6 shrink-0 items-center justify-center rounded-md bg-muted/60",
                             meta.tone
                           )}
                         >
-                          <Icon className="size-4" strokeWidth={1.75} />
+                          <Icon className="size-3.5" strokeWidth={1.75} />
                         </span>
                         <div className="min-w-0 flex-1">
-                          <div className="flex items-start justify-between gap-2">
-                            <p className="text-sm font-medium leading-tight">
+                          <div className="flex items-center justify-between gap-1">
+                            <p className="truncate text-[11px] font-medium leading-tight">
                               {item.title}
                             </p>
                             {item.urgency === "urgent" ? (
-                              <span className="shrink-0 rounded-full bg-brand-red/10 px-1.5 py-0.5 text-[10px] font-semibold text-brand-red">
+                              <span className="shrink-0 rounded bg-brand-red/10 px-1 py-px text-[9px] font-semibold text-brand-red">
                                 ด่วน
                               </span>
                             ) : null}
                           </div>
-                          <p className="mt-0.5 line-clamp-2 text-xs text-muted-foreground">
+                          <p className="line-clamp-1 text-[10px] leading-snug text-muted-foreground">
                             {item.summary}
                           </p>
                           {item.createdAt ? (
-                            <p className="mt-1 text-[10px] text-muted-foreground/80">
+                            <p className="text-[9px] text-muted-foreground/75">
                               {formatWhen(item.createdAt)}
                             </p>
                           ) : null}
@@ -259,17 +260,17 @@ export function AdminNotificationBell({
             )}
           </div>
 
-          <div className="flex flex-col gap-1 border-t border-border/60 bg-muted/20 px-3 py-2">
-            {total > items.length ? (
-              <p className="text-center text-[10px] text-muted-foreground">
-                แสดง {items.length} จาก {total} รายการ
+          <div className="flex flex-col gap-0.5 border-t border-border/60 bg-muted/20 px-2.5 py-1.5">
+            {total > NOTIFICATION_LIST_LIMIT ? (
+              <p className="text-center text-[9px] text-muted-foreground">
+                แสดง {NOTIFICATION_LIST_LIMIT} จาก {total} รายการ
               </p>
             ) : null}
             {showComplianceLink ? (
               <Link
                 href="/admin/alerts"
                 onClick={() => setOpen(false)}
-                className="text-center text-xs font-medium text-brand-red hover:underline"
+                className="text-center text-[10px] font-medium text-brand-red hover:underline"
               >
                 ดูแจ้งเตือนทดลองงาน / วีซ่า / Work Permit
               </Link>
