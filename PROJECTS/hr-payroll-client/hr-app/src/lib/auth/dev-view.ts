@@ -57,7 +57,10 @@ export function parseDevViewAs(value: string | undefined): DevViewAs {
 export function getDevNavItems(view: DevViewAs): AdminNavItem[] {
   switch (view) {
     case "hr":
-      return ADMIN_NAV_ITEMS
+      return [
+        { label: "↳ Branch Dashboard", href: "/admin/branch", icon: "layout-dashboard" },
+        ...ADMIN_NAV_ITEMS,
+      ]
     case "ceo":
       return CEO_NAV_ITEMS
     case "branch":

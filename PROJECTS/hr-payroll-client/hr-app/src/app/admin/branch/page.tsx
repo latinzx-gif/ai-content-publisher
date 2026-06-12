@@ -11,11 +11,11 @@ export default async function BranchDashboardPage() {
 
   if (!data.branch) {
     return (
-      <div className="flex h-full min-h-0 flex-1 flex-col overflow-hidden rounded-xl border border-border/80 bg-card shadow-sm">
+      <div className="flex h-full min-h-0 flex-1 flex-col overflow-hidden rounded-xl border border-border/80 bg-card p-6 shadow-sm">
         <DevelopmentEmptyState
           icon={Building2}
           title="ยังไม่ได้มอบหมายสาขา"
-          description="ติดต่อ HR เพื่อมอบหมายคุณเป็นหัวหน้าสาขา — อยู่ในช่วงพัฒนาปรับปรุงระบบ"
+          description="ติดต่อ HR ให้ตั้ง Role เป็น Branch Manager และผูกสาขา (manager_employee_id หรือ branch_id) ที่เมนู Branches"
         />
       </div>
     )

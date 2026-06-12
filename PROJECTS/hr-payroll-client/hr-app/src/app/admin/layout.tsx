@@ -4,6 +4,7 @@ import { redirect } from "next/navigation"
 import { AdminShell } from "@/components/admin/AdminShell"
 import {
   getNavItemsForRole,
+  isBranchPortalPath,
 } from "@/components/admin/branch-nav"
 import { withNavAlertBadges } from "@/features/notifications/nav-badges"
 import {
@@ -47,7 +48,7 @@ export default async function AdminLayout({
     if (
       branchManager &&
       pathname.startsWith("/admin") &&
-      !pathname.startsWith("/admin/branch")
+      !isBranchPortalPath(pathname)
     ) {
       redirect("/admin/branch")
     }

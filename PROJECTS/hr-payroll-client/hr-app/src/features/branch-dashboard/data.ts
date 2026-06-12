@@ -124,10 +124,38 @@ export async function getBranchDashboardDataForBranch(
   })
 }
 
+async function resolveBranchIdForCaller(caller: Employee): Promise<string | null> {
+  const managed = await getManagedBranchId(caller.id)
+  if (managed) return managed
+
+  const supabase = await createClient()
+
+  if (caller.role === "branch_manager") {
+    const { data: row } = await supabase
+      .from("hr_employees")
+      .select("branch_id")
+      .eq("id", caller.id)
+      .maybeSingle()
+    if (row?.branch_id) return row.branch_id as string
+  }
+
+  if (caller.role === "dev") {
+    const { data: row } = await supabase
+      .from("hr_branches")
+      .select("id")
+      .order("code", { ascending: true })
+      .limit(1)
+      .maybeSingle()
+    if (row?.id) return row.id as string
+  }
+
+  return null
+}
+
 export async function getBranchDashboardData(
   caller: Employee
 ): Promise<BranchDashboardData> {
-  const branchId = await getManagedBranchId(caller.id)
+  const branchId = await resolveBranchIdForCaller(caller)
   if (!branchId) return emptyBranchDashboard()
   return getBranchDashboardDataForBranch(branchId)
 }

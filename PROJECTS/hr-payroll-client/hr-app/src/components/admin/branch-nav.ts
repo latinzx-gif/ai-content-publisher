@@ -5,6 +5,11 @@ import {
 import { CEO_NAV_ITEMS } from "@/components/admin/ceo-nav"
 import { isManagementDepartment } from "@/lib/auth/department-access"
 
+/** BM portal — ไม่รวม /admin/branches (HR) */
+export function isBranchPortalPath(pathname: string): boolean {
+  return pathname === "/admin/branch" || pathname.startsWith("/admin/branch/")
+}
+
 /** ซ่อนจาก nav — redirect ไป /admin/branch */
 export const HIDDEN_BRANCH_PATHS = [
   "/admin/branch/team",
@@ -19,7 +24,11 @@ export const BRANCH_SECTION_ITEMS: AdminNavItem[] = [
 
 /** Sidebar สำหรับ Branch Manager — hub only; tools อยู่ใน /admin/branch */
 export const BRANCH_NAV_ITEMS: AdminNavItem[] = [
-  { label: "Dashboard", href: "/admin/branch", icon: "layout-dashboard" },
+  {
+    label: "Branch Dashboard",
+    href: "/admin/branch",
+    icon: "layout-dashboard",
+  },
 ]
 
 /** แผนก Management + role Employee — Dashboard เท่านั้น */
@@ -53,7 +62,7 @@ export function withBranchPendingBadges(
 
 export function isBranchNavActive(pathname: string, href: string): boolean {
   if (href === "/admin/branch") {
-    return pathname === "/admin/branch"
+    return isBranchPortalPath(pathname)
   }
   return pathname.startsWith(href)
 }
