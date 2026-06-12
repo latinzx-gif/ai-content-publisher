@@ -65,7 +65,9 @@ export function OvertimeForm() {
 
   if (success) {
     return (
-      <p className="text-sm text-green-700">ส่งคำขอ OT แล้ว — HR จะแจ้งผลทาง LINE</p>
+      <p className="text-sm text-green-700">
+        ส่งคำขอ OT แล้ว — รอหัวหน้าสาขาอนุมัติ แล้ว HR จะแจ้งผลทาง LINE
+      </p>
     )
   }
 

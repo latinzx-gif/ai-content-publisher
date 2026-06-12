@@ -30,3 +30,15 @@ export function mapLeaveQueueItems(rows: Array<Record<string, unknown>>) {
     }
   })
 }
+
+export function mapOvertimeQueueItems(rows: Array<Record<string, unknown>>) {
+  return rows.map((r) => {
+    const emp = Array.isArray(r.hr_employees) ? r.hr_employees[0] : r.hr_employees
+    return {
+      id: r.id as string,
+      label: (emp as { name: string })?.name ?? "—",
+      meta: `${r.work_date} · ${String(r.start_time).slice(0, 5)}–${String(r.end_time).slice(0, 5)}`,
+      decidePath: `/api/overtime/${r.id}/decide`,
+    }
+  })
+}

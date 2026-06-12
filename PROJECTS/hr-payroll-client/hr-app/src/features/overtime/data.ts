@@ -13,6 +13,7 @@ export type OvertimeRequestRow = {
   endTime: string
   reason: string
   status: OtStatus
+  approvalStatus: string
   decisionNote: string | null
   createdAt: string
 }
@@ -23,7 +24,7 @@ export async function getOvertimeRequests(page = 1, status: OtStatus | "all" = "
   let query = supabase
     .from("hr_overtime_requests")
     .select(
-      "id, employee_id, work_date, start_time, end_time, reason, status, decision_note, created_at, hr_employees!employee_id!inner(name, department)",
+      "id, employee_id, work_date, start_time, end_time, reason, status, approval_status, decision_note, created_at, hr_employees!employee_id!inner(name, department)",
       { count: "exact" }
     )
     .order("created_at", { ascending: false })
@@ -46,6 +47,7 @@ export async function getOvertimeRequests(page = 1, status: OtStatus | "all" = "
     end_time: string
     reason: string
     status: string
+    approval_status: string
     decision_note: string | null
     created_at: string
     hr_employees: { name: string; department: string | null } | { name: string; department: string | null }[]
@@ -63,6 +65,7 @@ export async function getOvertimeRequests(page = 1, status: OtStatus | "all" = "
       endTime: row.end_time.slice(0, 5),
       reason: row.reason,
       status: row.status as OtStatus,
+      approvalStatus: row.approval_status,
       decisionNote: row.decision_note,
       createdAt: row.created_at,
     }
@@ -71,7 +74,7 @@ export async function getOvertimeRequests(page = 1, status: OtStatus | "all" = "
   const pending = await supabase
     .from("hr_overtime_requests")
     .select("id", { count: "exact", head: true })
-    .eq("status", "pending")
+    .eq("approval_status", "pending_hr")
 
   return { rows, total: count ?? 0, pendingCount: pending.count ?? 0 }
 }

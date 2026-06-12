@@ -14,7 +14,7 @@
 | ฟีเจอร์ | สถานะ |
 |---------|--------|
 | โครงสร้างสาขา / แผนก | ✅ |
-| Branch Manager (BM) — อนุมัติลา + ลงเวลา + OT ในสาขา | ✅ |
+| Branch Manager (BM) — อนุมัติลา + OT สาขา + ลงเวลา | ✅ |
 | CEO Dashboard — ภาพรวมองค์กร | ✅ |
 | อนุมัติ 2 ขั้น (BM → HR) ลา + สรุปวันเข้างาน | ✅ |
 | SLA 48 ชม. — คำขอค้างหมดอายุอัตโนมัติ | ✅ (cron) |
@@ -40,7 +40,7 @@ Smoke routes: `reports/E2E_P5_1_RESULTS.md`
 | **Branch Manager home** | https://hr-app-two-iota.vercel.app/admin/branch |
 | BM — อนุมัติลงเวลา | `/admin/branch/attendance` |
 | BM — อนุมัติลา | `/admin/branch/leaves` |
-| BM — OT | `/admin/branch/overtime` |
+| BM — อนุมัติ OT | `/admin/branch/overtime` |
 | BM — ทีมสาขา | `/admin/branch/team` |
 | จัดการสาขา (HR) | `/admin/branches` |
 | LIFF — ขอลา | `/liff/leave` |
@@ -77,6 +77,14 @@ CEO เข้าได้เฉพาะ prefix: `/admin/ceo`, `/admin/branches`
 5. หลังอนุมัติ (`active`) → พนักงานใช้ **LINE OA + LIFF เท่านั้น** (ไม่มี Web Dashboard — `/employee` เป็นหน้าข้อมูลสั้นๆ)
 
 > ไม่ต้อง copy LINE User ID สำหรับพนักงานทั่วไป · HR/BM/CEO ยังใช้ Dashboard ตาม role
+
+### 4.1 ขอ OT (พนักงานยื่นเอง — BM → HR)
+
+1. พนักงาน (active) เปิด **LINE → ขอ OT** หรือ `/liff/overtime` → กรอกวันที่/เวลา/เหตุผล
+2. สถานะ **`pending_manager`** → แจ้ง **BM สาขา**
+3. **BM** เปิด `/admin/branch/overtime` → อนุมัติ/ปฏิเสธ → **`pending_hr`**
+4. **HR** เปิด `/admin/overtime` → อนุมัติ/ปฏิเสธ → **`approved`** (ชั่วโมง OT เข้า payroll)
+5. แจ้งผลทาง LINE ทุกขั้น · คำขอที่ค้างเกินกำหนด → **`expired`**
 
 ---
 

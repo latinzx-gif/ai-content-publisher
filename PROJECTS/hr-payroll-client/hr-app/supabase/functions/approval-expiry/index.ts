@@ -7,7 +7,7 @@ const handler = {
     const admin = ctx.supabaseAdmin;
     const now = new Date().toISOString();
 
-    const [att, leaves] = await Promise.all([
+    const [att, leaves, overtime] = await Promise.all([
       admin
         .from("hr_attendance_submissions")
         .update({ approval_status: "expired" })
@@ -20,11 +20,18 @@ const handler = {
         .in("approval_status", ["pending_manager", "pending_hr"])
         .lt("expires_at", now)
         .select("id"),
+      admin
+        .from("hr_overtime_requests")
+        .update({ approval_status: "expired", status: "rejected" })
+        .in("approval_status", ["pending_manager", "pending_hr"])
+        .lt("expires_at", now)
+        .select("id"),
     ]);
 
     return Response.json({
       attendanceExpired: att.data?.length ?? 0,
       leavesExpired: leaves.data?.length ?? 0,
+      overtimeExpired: overtime.data?.length ?? 0,
     });
   }),
 };

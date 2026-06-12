@@ -1,33 +1,28 @@
 import { Timer } from "lucide-react"
 
 import { AdminPageShell } from "@/components/brand/AdminPageShell"
-import { DevelopmentEmptyState } from "@/components/brand/DevelopmentEmptyState"
-import { ManagerOvertimeForm } from "@/features/manager/ManagerOvertimeForm"
-import { getBranchEmployees } from "@/features/manager/data"
+import { ApprovalQueue } from "@/features/manager/ApprovalQueue"
+import { getManagerOvertimeQueue } from "@/features/manager/data"
+import { mapOvertimeQueueItems } from "@/features/manager/map-queue-items"
 import { requireRole } from "@/lib/auth/require-role"
 
 export default async function BranchOvertimePage() {
   const employee = await requireRole("branch_manager", "dev")
-  const employees = await getBranchEmployees(employee)
+  const queue = await getManagerOvertimeQueue(employee)
 
   return (
     <div className="flex h-full min-h-0 flex-1 flex-col overflow-hidden">
       <AdminPageShell
         fill
-        title="ยื่นคำขอ OT"
-        description="ยื่น OT ให้พนักงานในสาขา — HR อนุมัติขั้นสุดท้าย"
+        title="อนุมัติ OT"
+        description="อนุมัติขั้นแรก — พนักงานยื่นเองผ่าน LINE/LIFF แล้วส่งต่อ HR"
       >
-        {employees.length === 0 ? (
-          <DevelopmentEmptyState
-            icon={Timer}
-            title="ไม่มีพนักงานในสาขาที่ดูแล"
-            description="อยู่ในช่วงพัฒนาปรับปรุงระบบ — เมื่อมีพนักงานในสาขาแล้วจะยื่น OT ได้ที่นี่"
-          />
-        ) : (
-          <div className="min-h-0 overflow-y-auto">
-            <ManagerOvertimeForm employees={employees} />
-          </div>
-        )}
+        <ApprovalQueue
+          title={`รออนุมัติ (${queue.length})`}
+          emptyText="ไม่มีคำขอ OT รออนุมัติ"
+          emptyIcon={Timer}
+          items={mapOvertimeQueueItems(queue)}
+        />
       </AdminPageShell>
     </div>
   )

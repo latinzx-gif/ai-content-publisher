@@ -1,11 +1,12 @@
 import { getAdminClient } from "@/lib/auth/admin-client"
 import { pushToLineUser } from "@/lib/line/notify-hr"
 
-export type BranchManagerNotifyKind = "leave" | "attendance"
+export type BranchManagerNotifyKind = "leave" | "attendance" | "overtime"
 
 const KIND_LABEL: Record<BranchManagerNotifyKind, string> = {
   leave: "คำขอลา",
   attendance: "สรุปเข้างานรายวัน",
+  overtime: "คำขอ OT",
 }
 
 /**
@@ -59,7 +60,11 @@ export async function notifyBranchManager({
 
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL ?? "https://hr-app-two-iota.vercel.app"
     const path =
-      kind === "leave" ? "/admin/branch/leaves" : "/admin/branch/attendance"
+      kind === "leave"
+        ? "/admin/branch/leaves"
+        : kind === "overtime"
+          ? "/admin/branch/overtime"
+          : "/admin/branch/attendance"
     const label = KIND_LABEL[kind]
 
     await pushToLineUser(lineUserId, [

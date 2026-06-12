@@ -7,3 +7,11 @@ export const OT_STATUS_LABELS: Record<OtStatus, string> = {
   approved: "อนุมัติ",
   rejected: "ไม่อนุมัติ",
 }
+
+export const OT_APPROVAL_LABELS: Record<string, string> = {
+  pending_manager: "รอ BM",
+  pending_hr: "รอ HR",
+  approved: "อนุมัติ",
+  rejected: "ไม่อนุมัติ",
+  expired: "หมดอายุ",
+}

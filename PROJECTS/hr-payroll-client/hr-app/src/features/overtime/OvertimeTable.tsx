@@ -8,7 +8,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { OT_STATUS_LABELS } from "@/features/overtime/types"
+import { OT_APPROVAL_LABELS, OT_STATUS_LABELS } from "@/features/overtime/types"
 import { OvertimeDecisionActions } from "@/features/overtime/OvertimeDecisionActions"
 import type { OvertimeRequestRow } from "@/features/overtime/data"
 
@@ -52,8 +52,16 @@ export function OvertimeTable({ rows }: { rows: OvertimeRequestRow[] }) {
               <TableCell className="max-w-[200px] truncate">{row.reason}</TableCell>
               <TableCell>
                 <StatusPill
-                  label={OT_STATUS_LABELS[row.status]}
-                  variant={VARIANT[row.status]}
+                  label={
+                    OT_APPROVAL_LABELS[row.approvalStatus] ??
+                    OT_STATUS_LABELS[row.status]
+                  }
+                  variant={
+                    row.approvalStatus === "pending_hr" ||
+                    row.approvalStatus === "pending_manager"
+                      ? "pending"
+                      : VARIANT[row.status]
+                  }
                 />
               </TableCell>
               <TableCell>

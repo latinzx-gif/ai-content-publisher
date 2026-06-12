@@ -10,7 +10,7 @@ export const BRANCH_NAV_ITEMS: AdminNavItem[] = [
   { label: "Employees", href: "/admin/branch/team", icon: "users" },
   { label: "Attendance", href: "/admin/branch/attendance", icon: "clock" },
   { label: "Leave Management", href: "/admin/branch/leaves", icon: "calendar" },
-  { label: "Submit OT", href: "/admin/branch/overtime", icon: "timer" },
+  { label: "Approve OT", href: "/admin/branch/overtime", icon: "timer" },
 ]
 
 export function getNavItemsForRole(

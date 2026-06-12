@@ -9,7 +9,7 @@
 1. **Self-register** — LINE login → `/register` → employee LIFF/portal
 2. **HR onboarding queue** — `/admin/employees?status=onboarding`
 3. **Employee Web Portal** — `/portal` (profile, attendance, leave, documents)
-4. **OT** — employees cannot submit via LIFF (BM only)
+4. **OT** — พนักงานยื่นเองผ่าน LIFF → BM อนุมัติ → HR อนุมัติ
 
 ## Key URLs
 

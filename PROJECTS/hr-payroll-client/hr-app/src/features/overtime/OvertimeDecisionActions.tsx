@@ -13,8 +13,12 @@ export function OvertimeDecisionActions({ ot }: { ot: OvertimeRequestRow }) {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  if (ot.status !== "pending") {
-    return <span className="text-xs text-muted-foreground">{ot.decisionNote ?? "—"}</span>
+  if (ot.approvalStatus !== "pending_hr") {
+    return (
+      <span className="text-xs text-muted-foreground">
+        {ot.decisionNote ?? "—"}
+      </span>
+    )
   }
 
   async function submit(action: "approve" | "reject") {

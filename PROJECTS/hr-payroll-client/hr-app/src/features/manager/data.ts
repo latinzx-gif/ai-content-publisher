@@ -58,6 +58,28 @@ export async function getManagerLeaveQueue(caller: Employee) {
   })
 }
 
+export async function getManagerOvertimeQueue(caller: Employee) {
+  const { branchId, isHr } = await getManagerScope(caller)
+  const supabase = await createClient()
+
+  const { data, error } = await supabase
+    .from("hr_overtime_requests")
+    .select(
+      "id, work_date, start_time, end_time, hr_employees!employee_id(name, branch_id)"
+    )
+    .eq("approval_status", isHr ? "pending_hr" : "pending_manager")
+    .order("submitted_at", { ascending: true })
+    .limit(50)
+
+  if (error) throw error
+
+  return (data ?? []).filter((row) => {
+    if (isHr) return true
+    const emp = Array.isArray(row.hr_employees) ? row.hr_employees[0] : row.hr_employees
+    return (emp as { branch_id?: string })?.branch_id === branchId
+  })
+}
+
 export async function getBranchEmployees(caller: Employee) {
   const branchId = await getManagedBranchId(caller.id)
   if (!branchId) return []

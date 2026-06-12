@@ -8,7 +8,12 @@ export function overtimeSubmitConfirmFlex(options: {
   workDate: string
   startTime: string
   endTime: string
+  stage?: "manager" | "hr"
 }): messagingApi.FlexMessage {
+  const waiting =
+    options.stage === "hr"
+      ? "รอ HR อนุมัติ"
+      : "รอหัวหน้าสาขาอนุมัติ"
   return flexMessage(
     "ส่งคำขอ OT แล้ว",
     simpleBubble({
@@ -18,9 +23,12 @@ export function overtimeSubmitConfirmFlex(options: {
         { label: "พนักงาน", value: options.employeeName },
         { label: "วันที่", value: options.workDate },
         { label: "เวลา", value: `${options.startTime} – ${options.endTime}` },
-        { label: "สถานะ", value: "รออนุมัติ", valueColor: "#F59E0B" },
+        { label: "สถานะ", value: waiting, valueColor: "#F59E0B" },
       ],
-      footerNote: "HR จะแจ้งผลการอนุมัติทาง LINE",
+      footerNote:
+        options.stage === "hr"
+          ? "HR จะแจ้งผลการอนุมัติทาง LINE"
+          : "หัวหน้าสาขาอนุมัติแล้วส่งต่อ HR",
     })
   )
 }

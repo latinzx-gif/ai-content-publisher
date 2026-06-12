@@ -1,9 +1,17 @@
 import { NextResponse, type NextRequest } from "next/server"
 
 import { recordPayrollHours } from "@/lib/approval/payroll-ledger"
-import { getCurrentEmployeeWithBranch, isHrOrAdmin } from "@/lib/auth/branch"
-import { overtimeResultFlex } from "@/lib/line/flex/overtime-request"
-import { pushToLineUser } from "@/lib/line/notify-hr"
+import {
+  getCurrentEmployeeWithBranch,
+  getManagedBranchId,
+  isBranchManager,
+  isHrOrAdmin,
+} from "@/lib/auth/branch"
+import {
+  overtimeResultFlex,
+  overtimeSubmitHrNotifyFlex,
+} from "@/lib/line/flex/overtime-request"
+import { notifyHr, pushToLineUser } from "@/lib/line/notify-hr"
 import { createClient } from "@/lib/supabase/server"
 
 type DecideBody = {
@@ -22,9 +30,7 @@ export async function POST(
   context: { params: Promise<{ id: string }> }
 ) {
   const caller = await getCurrentEmployeeWithBranch()
-  if (!caller || !isHrOrAdmin(caller.role)) {
-    return NextResponse.json({ error: "forbidden" }, { status: 403 })
-  }
+  if (!caller) return NextResponse.json({ error: "unauthorized" }, { status: 401 })
 
   const { id } = await context.params
   let body: DecideBody
@@ -43,67 +49,166 @@ export async function POST(
     return NextResponse.json({ error: "reject reason required" }, { status: 400 })
   }
 
-  const status = body.action === "approve" ? "approved" : "rejected"
   const supabase = await createClient()
-
   const { data: ot, error: fetchError } = await supabase
     .from("hr_overtime_requests")
     .select(
-      "id, work_date, start_time, end_time, approval_status, employee_id, hr_employees!employee_id(line_user_id, branch_id)"
+      "id, work_date, start_time, end_time, reason, status, approval_status, employee_id, hr_employees!employee_id(line_user_id, name, branch_id, department)"
     )
     .eq("id", id)
     .maybeSingle()
 
   if (fetchError) return NextResponse.json({ error: fetchError.message }, { status: 500 })
   if (!ot) return NextResponse.json({ error: "not found" }, { status: 404 })
-  if (ot.approval_status !== "pending_hr") {
-    return NextResponse.json({ error: "already decided" }, { status: 409 })
+  if (ot.approval_status === "expired") {
+    return NextResponse.json({ error: "คำขอหมดอายุแล้ว" }, { status: 400 })
   }
 
-  const { error: updateError } = await supabase
-    .from("hr_overtime_requests")
-    .update({
-      status,
-      approval_status: status,
-      decision_note: note || null,
-      hr_decided_by: caller.id,
-      hr_decided_at: new Date().toISOString(),
-    })
-    .eq("id", id)
+  type Emp = {
+    line_user_id: string | null
+    name: string
+    branch_id: string | null
+    department: string | null
+  }
+  const empRaw = ot.hr_employees as Emp | Emp[]
+  const emp = Array.isArray(empRaw) ? empRaw[0] : empRaw
+  const lineUserId = emp?.line_user_id
+  const branchId = emp?.branch_id ?? null
 
-  if (updateError) return NextResponse.json({ error: updateError.message }, { status: 500 })
+  const notifyEmployee = async (approved: boolean) => {
+    if (!lineUserId) return
+    try {
+      await pushToLineUser(lineUserId, [
+        overtimeResultFlex({
+          workDate: ot.work_date as string,
+          approved,
+          note: note || undefined,
+        }),
+      ])
+    } catch (lineError) {
+      console.error("overtime decide LINE notify failed:", lineError)
+    }
+  }
 
-  if (status === "approved") {
-    const emp = Array.isArray(ot.hr_employees) ? ot.hr_employees[0] : ot.hr_employees
+  const finalizeReject = async (stage: "manager" | "hr") => {
+    const patch =
+      stage === "manager"
+        ? {
+            approval_status: "rejected",
+            status: "rejected",
+            manager_decided_by: caller.id,
+            manager_decided_at: new Date().toISOString(),
+            decision_note: note,
+          }
+        : {
+            approval_status: "rejected",
+            status: "rejected",
+            hr_decided_by: caller.id,
+            hr_decided_at: new Date().toISOString(),
+            decision_note: note,
+          }
+
+    const { error } = await supabase.from("hr_overtime_requests").update(patch).eq("id", id)
+    if (error) throw error
+    await notifyEmployee(false)
+    return { id, status: "rejected" }
+  }
+
+  const finalizeApprove = async () => {
+    const { error: updateError } = await supabase
+      .from("hr_overtime_requests")
+      .update({
+        status: "approved",
+        approval_status: "approved",
+        decision_note: note || null,
+        hr_decided_by: caller.id,
+        hr_decided_at: new Date().toISOString(),
+      })
+      .eq("id", id)
+
+    if (updateError) throw updateError
+
     const hours = otHours(String(ot.start_time), String(ot.end_time))
     await recordPayrollHours({
       employeeId: ot.employee_id as string,
-      branchId: (emp as { branch_id?: string })?.branch_id ?? null,
+      branchId,
       workDate: ot.work_date as string,
       hours,
       lineType: "overtime",
       sourceType: "overtime",
       sourceId: id,
     })
+
+    await notifyEmployee(true)
+    return { id, status: "approved" }
   }
 
-  type Emp = { line_user_id: string | null }
-  const empRaw = ot.hr_employees as Emp | Emp[]
-  const emp = Array.isArray(empRaw) ? empRaw[0] : empRaw
+  if (ot.approval_status === "pending_manager") {
+    if (!isBranchManager(caller.role) && !isHrOrAdmin(caller.role)) {
+      return NextResponse.json({ error: "forbidden" }, { status: 403 })
+    }
+    if (isBranchManager(caller.role)) {
+      const managed = await getManagedBranchId(caller.id)
+      if (managed !== branchId) {
+        return NextResponse.json({ error: "forbidden" }, { status: 403 })
+      }
+    }
 
-  try {
-    if (emp?.line_user_id) {
-      await pushToLineUser(emp.line_user_id, [
-        overtimeResultFlex({
+    if (body.action === "reject") {
+      try {
+        return NextResponse.json(await finalizeReject("manager"))
+      } catch (e) {
+        return NextResponse.json({ error: String(e) }, { status: 500 })
+      }
+    }
+
+    const { error } = await supabase
+      .from("hr_overtime_requests")
+      .update({
+        approval_status: "pending_hr",
+        manager_decided_by: caller.id,
+        manager_decided_at: new Date().toISOString(),
+      })
+      .eq("id", id)
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+
+    try {
+      await notifyHr([
+        overtimeSubmitHrNotifyFlex({
+          employeeName: emp?.name ?? "—",
+          department: emp?.department ?? null,
           workDate: ot.work_date as string,
-          approved: status === "approved",
-          note: note || undefined,
+          startTime: String(ot.start_time).slice(0, 5),
+          endTime: String(ot.end_time).slice(0, 5),
+          reason: ot.reason as string,
         }),
       ])
+    } catch (lineError) {
+      console.error("overtime BM→HR notify failed:", lineError)
     }
-  } catch (lineError) {
-    console.error("overtime decide LINE notify failed:", lineError)
+
+    return NextResponse.json({ id, approval_status: "pending_hr" })
   }
 
-  return NextResponse.json({ id, status })
+  if (ot.approval_status === "pending_hr") {
+    if (!isHrOrAdmin(caller.role)) {
+      return NextResponse.json({ error: "forbidden" }, { status: 403 })
+    }
+
+    if (body.action === "reject") {
+      try {
+        return NextResponse.json(await finalizeReject("hr"))
+      } catch (e) {
+        return NextResponse.json({ error: String(e) }, { status: 500 })
+      }
+    }
+
+    try {
+      return NextResponse.json(await finalizeApprove())
+    } catch (e) {
+      return NextResponse.json({ error: String(e) }, { status: 500 })
+    }
+  }
+
+  return NextResponse.json({ error: "already decided" }, { status: 409 })
 }
