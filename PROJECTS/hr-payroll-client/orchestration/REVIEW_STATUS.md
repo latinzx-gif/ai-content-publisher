@@ -33,6 +33,21 @@ T81–T108 → **Done** (T96–T101 → **Canceled**)
 - `linear-hrp-review.mjs` comment on T108 skipped (401 auth) — Linear state synced via `linear-sync-hr-payroll.mjs`
 - Manual UAT (LINE OAuth full flow) pending client sign-off — non-blocking
 
+## Ad-hoc client UAT hotfixes (2026-06-12)
+
+**Not a Taskmaster task** — deployed outside M38, pre-UAT feedback.
+
+| Area | Commit(s) | Status |
+|------|-----------|--------|
+| Notification bell + leave alerts | `0624eeb`, `d26adca` | ✅ prod |
+| Permanent employee delete + cascade | `080c9be`, `728288b` + migration `20260618140000` | ✅ prod |
+| Sidebar hide (Perf/Recruit/Training) | `d76ac1d`, `012fc39` | ✅ prod |
+| BM sidebar → branch hub only | `57eed46` | ✅ prod |
+
+**Deploy HEAD:** `57eed46` — https://hr-app-two-iota.vercel.app
+
+---
+
 ## Close-out (2026-06-10)
 
 - ✅ `vercel --prod` deployed

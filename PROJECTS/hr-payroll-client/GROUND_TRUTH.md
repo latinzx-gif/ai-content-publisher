@@ -46,36 +46,32 @@ Cron Jobs: แจ้งเตือน Probation/Visa อัตโนมัต�
 
 | Phase | Status | หมายเหตุ |
 |-------|--------|----------|
-| **M1: Foundation** | ✅ **CLOSED** | T01–T05 |
-| **M2: Check-in/Check-out** | ✅ **CLOSED** | T06–T11 |
-| **M3: Web Dashboard** | ✅ **CLOSED** | T12–T16 |
-| **M4: Leave Management** | ✅ **CLOSED** | T17–T21 |
-| **M5: Alerts & Summary** | ✅ **CLOSED** | T22–T26 |
-| **M6: Delivery** | ✅ **CLOSED** | T27–T30; audit 🟡 `DELIVERY_READINESS_AUDIT.md` |
-| **M7: Document Request (F7)** | ✅ **CLOSED** | T31–T34 |
-| **M8: Complaints (F8)** | ✅ **CLOSED** | T35–T38 |
-| **M9: Announcements (F9)** | ✅ **CLOSED** | T39–T42 |
-| **M10: Phase 2 Delivery** | ✅ **CLOSED** | T43–T45; audit P2 🟢 |
-| **Phase 3 (M11–M15)** | ✅ **CLOSED** | T46–T60; audit P3 🟢 `DELIVERY_READINESS_AUDIT_P3.md` |
-| **Phase 4 (M16–M20)** | ✅ **CLOSED** | T61–T75 |
-| **Phase 5 (M21–M28)** | ✅ **CLOSED** | T76–T80; MVP + self-register deployed |
-| **Phase 6–7 (M29–M33)** | ✅ **CLOSED** | T81–T87; onboarding, E2E, security P6 |
-| **Phase 8 (M32–M33)** | ✅ **CLOSED** | T88–T95; Employee `/portal` |
-| **Phase 9 Payroll** | ⏸ **DEFERRED** | T96–T101 cancelled — needs client CR |
-| **Phase 10 Workforce lite** | ✅ **CLOSED** | T102–T105 |
-| **Phase 11 Delivery** | ✅ **CLOSED** | T106–T108 batch approved |
+| **M1–M20** | ✅ **CLOSED** | T01–T75 |
+| **M21–M37** | ✅ **CLOSED** | T76–T108; tag `hr-payroll-v1.0` |
+| **Post-v1.0 patches** | ✅ **DEPLOYED** | Register gate, OT 2-tier, client UAT hotfixes (`57eed46`) |
+| **M38 Phase 12 Go-Live** | 🔜 **NEXT** | T109–T114 → tag `hr-payroll-v1.1` |
+| **M39 Payroll Baht** | 🔒 **LOCKED** | T115–T120 — needs signed CR |
+| **M40–M42** | 🔒 **OPTIONAL** | Portal v2 / Workforce / cleanup |
+
+**Business rules (production):**
+- พนักงาน: **LINE/LIFF only** — ไม่มี web dashboard (ยกเว้น `dev`)
+- Onboarding: register → **inactive** → HR approve → active
+- OT: **พนักงานยื่นเอง** → BM → HR → approved
+- Payroll: **ชม.เท่านั้น** — บาทรอ M39
 
 ---
 
 ## 4. Active Task
 
-**None — project batch T77–T108 CLOSED**
+**None — M38 planned, not started**
 
 | Field | Value |
 |-------|-------|
 | Production | https://hr-app-two-iota.vercel.app |
-| Taskmaster | 102 done, 6 cancelled |
-| Next | Optional client UAT + git tag (T108) |
+| Deploy HEAD | `57eed46` (2026-06-12) |
+| Last release | `hr-payroll-v1.0` |
+| Next milestone | **M38** — `orchestration/PHASE_12_PLAN.md` |
+| Next tag target | `hr-payroll-v1.1` |
 
 ดูรายละเอียดเต็ม: `orchestration/CURRENT_TASK.md`
 
@@ -116,7 +112,8 @@ Cron Jobs: แจ้งเตือน Probation/Visa อัตโนมัต�
 |----------------|---------|
 | งานปัจจุบัน | `orchestration/CURRENT_TASK.md` |
 | Approval history | `orchestration/REVIEW_STATUS.md` |
-| Milestones + tasks overview | `MILESTONES.md` ← **roadmap จนจบ project (T78–T108)** |
+| Milestones + tasks overview | `MILESTONES.md` ← **M38 next (T109–T114)** |
+| Phase 12 plan | `orchestration/PHASE_12_PLAN.md` |
 | PRD ฉบับเต็ม | `docs/PRD.md` |
 | All tasks (Taskmaster) | `.taskmaster/tasks/tasks.json` |
 | Demo readiness | `hr-app/reports/DELIVERY_READINESS_AUDIT.md` |
@@ -151,4 +148,4 @@ WORK_START_MINUTE=0
 
 ---
 
-*Last updated: 2026-06-10 — Full project roadmap M29–M37 in MILESTONES.md*
+*Last updated: 2026-06-12 — Client UAT hotfixes deployed; M38 planned*
