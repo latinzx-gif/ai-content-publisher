@@ -439,7 +439,7 @@ async function branchApprovalNotifications(
       kind: "leave",
       title: "ขอลารอ BM อนุมัติ",
       summary: `${employeeName(row.hr_employees)} · ${typeLabel} ${row.start_date}–${row.end_date}`,
-      href: "/admin/branch/leaves",
+      href: "/admin/branch",
       createdAt: row.created_at as string | null,
       urgency: "normal",
     })
@@ -463,7 +463,7 @@ async function branchApprovalNotifications(
       kind: "overtime",
       title: "ขอ OT รอ BM",
       summary: `${employeeName(row.hr_employees)} · ${row.work_date} ${row.start_time}–${row.end_time}`,
-      href: "/admin/branch/overtime",
+      href: "/admin/branch",
       createdAt: row.submitted_at as string | null,
       urgency: "normal",
     })

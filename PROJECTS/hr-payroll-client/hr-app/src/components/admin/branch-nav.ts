@@ -5,12 +5,16 @@ import {
 import { CEO_NAV_ITEMS } from "@/components/admin/ceo-nav"
 import { isManagementDepartment } from "@/lib/auth/department-access"
 
-/** Branch section routes — hub links only, not in BM left sidebar */
+/** ซ่อนจาก nav — redirect ไป /admin/branch */
+export const HIDDEN_BRANCH_PATHS = [
+  "/admin/branch/team",
+  "/admin/branch/leaves",
+  "/admin/branch/overtime",
+] as const
+
+/** Dev all-mode only — BM tools ที่ยังเปิดใช้ (ไม่รวม team/leaves/overtime) */
 export const BRANCH_SECTION_ITEMS: AdminNavItem[] = [
-  { label: "Employees", href: "/admin/branch/team", icon: "users" },
   { label: "Attendance", href: "/admin/branch/attendance", icon: "clock" },
-  { label: "Leave Management", href: "/admin/branch/leaves", icon: "calendar" },
-  { label: "Approve OT", href: "/admin/branch/overtime", icon: "timer" },
 ]
 
 /** Sidebar สำหรับ Branch Manager — hub only; tools อยู่ใน /admin/branch */

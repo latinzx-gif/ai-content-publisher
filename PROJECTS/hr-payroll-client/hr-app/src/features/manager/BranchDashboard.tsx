@@ -53,16 +53,13 @@ export function BranchDashboard({
           icon={Users}
           accent="success"
         />
-        <Link
-          href="/admin/branch/overtime"
-          className="flex items-center gap-3 rounded-xl border border-dashed border-brand-red/40 bg-brand-red/5 p-4 transition-colors hover:bg-brand-red/10"
-        >
-          <Timer className="size-8 text-brand-red" />
-          <div>
-            <p className="text-sm font-semibold">ยื่นคำขอ OT</p>
-            <p className="text-xs text-muted-foreground">ให้พนักงานในสาขา</p>
-          </div>
-        </Link>
+        <KpiCard
+          compact
+          label="OT"
+          value="—"
+          detail="ดูสรุปบน Branch Dashboard"
+          icon={Timer}
+        />
       </div>
 
       <div className="grid gap-4 lg:grid-cols-2">
@@ -107,9 +104,9 @@ export function BranchDashboard({
             </Link>
           ) : null}
           {pendingLeaves > 5 ? (
-            <Link href="/admin/branch/leaves" className="text-brand-red underline">
-              ดูคิวลาทั้งหมด ({pendingLeaves})
-            </Link>
+            <span className="text-muted-foreground">
+              คิวลาทั้งหมด ({pendingLeaves}) — ดูบน Dashboard
+            </span>
           ) : null}
         </div>
       )}

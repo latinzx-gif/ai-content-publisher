@@ -26,10 +26,7 @@ import { cn } from "@/lib/utils"
 import type { BranchDashboardData } from "./data"
 
 const QUICK_ACTIONS = [
-  { label: "Approve Leave", href: "/admin/branch/leaves", icon: CalendarCheck },
   { label: "Review Attendance", href: "/admin/branch/attendance", icon: Clock },
-  { label: "Submit OT", href: "/admin/branch/overtime", icon: Timer },
-  { label: "View Team", href: "/admin/branch/team", icon: Users },
 ] as const
 
 const ACTIVITY_ICONS: Record<string, { icon: LucideIcon; className: string }> = {
@@ -148,12 +145,7 @@ export function BranchManagerDashboard({
           )}
         </WidgetCard>
 
-        <WidgetCard
-          compact
-          title="Pending Leave Approvals"
-          href="/admin/branch/leaves"
-          actionLabel="View All"
-        >
+        <WidgetCard compact title="Pending Leave Approvals">
           {data.pendingLeaveRows.length === 0 ? (
             <DevelopmentEmptyState
               compact
@@ -195,10 +187,7 @@ export function BranchManagerDashboard({
                 {data.pendingAttendance} pending
               </span>
             </Link>
-            <Link
-              href="/admin/branch/leaves"
-              className="flex items-center justify-between rounded-lg bg-muted/40 px-3 py-2 transition-colors hover:bg-muted/60"
-            >
+            <div className="flex items-center justify-between rounded-lg bg-muted/40 px-3 py-2">
               <span className="flex items-center gap-2 text-xs">
                 <CalendarDays className="size-5 text-brand-red" strokeWidth={1.6} />
                 Leave requests
@@ -206,14 +195,11 @@ export function BranchManagerDashboard({
               <span className="text-xs font-semibold tabular-nums text-brand-red">
                 {data.pendingLeaves} pending
               </span>
-            </Link>
-            <Link
-              href="/admin/branch/overtime"
-              className="flex items-center gap-2 rounded-lg border border-dashed border-brand-red/30 p-2.5 text-xs transition-colors hover:bg-brand-red/5"
-            >
-              <Timer className="size-6 text-brand-red" strokeWidth={1.6} />
-              Submit overtime for branch employees
-            </Link>
+            </div>
+            <div className="flex items-center gap-2 rounded-lg border border-dashed border-border/80 bg-muted/20 p-2.5 text-xs text-muted-foreground">
+              <Timer className="size-6 text-muted-foreground" strokeWidth={1.6} />
+              OT requests — ดูสรุปบน Dashboard
+            </div>
           </div>
         </WidgetCard>
       </div>
