@@ -1,5 +1,7 @@
 "use client"
 
+import { INBOUND_SCAN_LIFF_ID } from "@/lib/line/inbound-order-id"
+
 export type LiffContext = {
   ready: boolean
   inClient: boolean
@@ -8,9 +10,9 @@ export type LiffContext = {
   error?: string
 }
 
+// Cache only successful inits — a failed init (e.g. network blip during the
+// liff.state redirect) must be retryable on the next call.
 const initCache = new Map<string, Promise<LiffContext>>()
-
-import { INBOUND_SCAN_LIFF_ID } from "@/lib/line/inbound-order-id"
 
 export function getInboundScanLiffId(): string | undefined {
   return INBOUND_SCAN_LIFF_ID || undefined
@@ -20,6 +22,60 @@ export function getInboundScanLiffId(): string | undefined {
 export function isLikelyLineBrowser(): boolean {
   if (typeof navigator === "undefined") return false
   return /Line\//i.test(navigator.userAgent)
+}
+
+function isFetchLikeError(err: unknown): boolean {
+  if (!(err instanceof Error)) return false
+  return /failed to fetch|networkerror|load failed|timeout|aborted/i.test(
+    err.message
+  )
+}
+
+function describeLiffInitError(err: unknown): string {
+  if (isFetchLikeError(err)) {
+    return "เชื่อมต่อ LINE ไม่สำเร็จ — ตรวจอินเทอร์เน็ตแล้วกดสแกนอีกครั้ง"
+  }
+  if (err instanceof Error && err.message) {
+    return err.message
+  }
+  return "LIFF init ไม่สำเร็จ — ตรวจ endpoint URL ใน LINE Console"
+}
+
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
+
+async function doInit(id: string): Promise<LiffContext> {
+  const liff = (await import("@line/liff")).default
+
+  let lastError: unknown
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    try {
+      await liff.init({ liffId: id })
+      const inClient = liff.isInClient()
+      const scanCodeAvailable = inClient && liff.isApiAvailable("scanCodeV2")
+      return {
+        ready: true,
+        inClient,
+        scanCodeAvailable,
+        liffId: id,
+      }
+    } catch (err) {
+      lastError = err
+      // Retry only transient network failures, once, after a short pause
+      if (attempt === 0 && isFetchLikeError(err)) {
+        await sleep(800)
+        continue
+      }
+      break
+    }
+  }
+
+  return {
+    ready: false,
+    inClient: isLikelyLineBrowser(),
+    scanCodeAvailable: false,
+    liffId: id,
+    error: describeLiffInitError(lastError),
+  }
 }
 
 export function initLiffClient(liffId?: string): Promise<LiffContext> {
@@ -48,33 +104,13 @@ export function initLiffClient(liffId?: string): Promise<LiffContext> {
   const cached = initCache.get(id)
   if (cached) return cached
 
-  const promise = (async (): Promise<LiffContext> => {
-    try {
-      const liff = (await import("@line/liff")).default
-      await liff.init({ liffId: id })
-      const inClient = liff.isInClient()
-      const scanCodeAvailable =
-        inClient && liff.isApiAvailable("scanCodeV2")
-      return {
-        ready: true,
-        inClient,
-        scanCodeAvailable,
-        liffId: id,
-      }
-    } catch (err) {
-      const inClient = isLikelyLineBrowser()
-      return {
-        ready: false,
-        inClient,
-        scanCodeAvailable: false,
-        liffId: id,
-        error:
-          err instanceof Error
-            ? err.message
-            : "LIFF init ไม่สำเร็จ — ตรวจ endpoint URL ใน LINE Console",
-      }
+  const promise = doInit(id).then((ctx) => {
+    if (!ctx.ready) {
+      // Drop failed result so the next call retries from scratch
+      initCache.delete(id)
     }
-  })()
+    return ctx
+  })
 
   initCache.set(id, promise)
   return promise

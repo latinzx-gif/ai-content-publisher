@@ -161,6 +161,11 @@ export function InboundBarcodeScanner({
     setScanError(null)
     setBusy(true)
     try {
+      // Re-init first — failed inits are not cached, so this retries after
+      // a transient network error and clears the stale error hint
+      const ctx = await initInboundScanLiff()
+      setLiffCtx(ctx)
+
       const value = await scanBarcodeWithLiff()
       onScanned(value)
     } catch (err) {
@@ -211,9 +216,7 @@ export function InboundBarcodeScanner({
 
       {inLine && liffCtx && !liffCtx.ready && liffCtx.error ? (
         <p className="text-xs text-muted-foreground">
-          LIFF: {liffCtx.error}. ตั้ง LIFF endpoint เป็น{" "}
-          <span className="font-mono">/liff/inbound-scan</span> + Scan QR หรือพิมพ์
-          barcode ด้านล่าง
+          {liffCtx.error} — กดสแกนเพื่อลองใหม่ หรือพิมพ์ barcode ด้านล่าง
         </p>
       ) : null}
 

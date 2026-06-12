@@ -95,14 +95,25 @@ export function InboundScanPageContent({
     const trimmed = value.trim()
     if (!trimmed) return
 
-    const res = await fetch(
-      `/api/inventory/inbound/lookup?barcode=${encodeURIComponent(trimmed)}`
-    )
+    let res: Response
+    try {
+      res = await fetch(
+        `/api/inventory/inbound/lookup?barcode=${encodeURIComponent(trimmed)}`
+      )
+    } catch {
+      setError("เชื่อมต่อไม่สำเร็จ — ตรวจอินเทอร์เน็ตแล้วกดค้นหาอีกครั้ง")
+      return
+    }
+
     const data = (await res.json().catch(() => null)) as {
       sku?: { code: string; name: string }
       error?: string
     } | null
 
+    if (res.status === 401) {
+      setError("เซสชันหมดอายุ — เปิดเมนูคลังสินค้าใน LINE ใหม่อีกครั้ง")
+      return
+    }
     if (!res.ok || !data?.sku) {
       setError(data?.error ?? "ไม่พบ SKU")
       return
@@ -138,13 +149,19 @@ export function InboundScanPageContent({
     }
 
     startTransition(async () => {
-      const result = await scanInvInboundItem({
-        order_id: orderId,
-        barcode: barcode.trim(),
-        quantity: qty,
-        lot_number: lot.trim() || null,
-        expiry_date: expiry || null,
-      })
+      let result: Awaited<ReturnType<typeof scanInvInboundItem>>
+      try {
+        result = await scanInvInboundItem({
+          order_id: orderId,
+          barcode: barcode.trim(),
+          quantity: qty,
+          lot_number: lot.trim() || null,
+          expiry_date: expiry || null,
+        })
+      } catch {
+        setError("เชื่อมต่อไม่สำเร็จ — ตรวจอินเทอร์เน็ตแล้วกดบันทึกอีกครั้ง")
+        return
+      }
 
       if (result.success) {
         setMessage(`บันทึก ${lookup?.code ?? barcode} จำนวน ${qty} แล้ว`)
