@@ -24,7 +24,7 @@ type Action =
   | { type: "RESET" }
   | { type: "HYDRATE"; state: State };
 
-const STORAGE_KEY = "demo-store-v1";
+const STORAGE_KEY = "demo-store-r2-v1"; // r2: คนละ key กับรอบแรก กัน state เก่าค้างใน browser
 
 function now(): string {
   return new Date().toISOString();
