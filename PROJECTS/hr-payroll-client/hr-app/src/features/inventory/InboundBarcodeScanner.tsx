@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button"
 import {
   initInboundScanLiff,
   isLikelyLineBrowser,
+  scanBarcodeWithLiff,
   type LiffContext,
 } from "@/lib/line/liff-client"
 
@@ -347,12 +348,29 @@ export function InboundBarcodeScanner({
   function handleOpenCamera() {
     if (inLine) {
       setScanError(
-        "ใน LINE ใช้ปุ่ม「ถ่ายรูป barcode」— กล้องสดใช้ไม่ได้ในแอป LINE"
+        "ใน LINE ใช้ปุ่ม「สแกน barcode」หรือ「ถ่ายรูป barcode」"
       )
       return
     }
     setScanError(null)
     setCameraOpen(true)
+  }
+
+  async function handleLineScan() {
+    setScanError(null)
+    setBusy(true)
+    try {
+      const value = await scanBarcodeWithLiff(liffCtx?.liffId)
+      onScanned(value)
+    } catch (err) {
+      setScanError(
+        err instanceof Error
+          ? err.message
+          : "เปิดสแกนใน LINE ไม่สำเร็จ — ถ่ายรูป barcode หรือพิมพ์เลขแทน"
+      )
+    } finally {
+      setBusy(false)
+    }
   }
 
   // Decode a still photo (native camera capture) — works inside the LINE
@@ -423,32 +441,48 @@ export function InboundBarcodeScanner({
   }
 
   const photoPickerDisabled = disabled || busy || cameraOpen
+  const photoInputId = `inbound-photo-${readerId}`
 
   return (
     <>
       <div className="flex flex-col gap-2">
-        <div className="relative">
+        {inLine ? (
           <Button
             type="button"
             className="w-full"
-            disabled={photoPickerDisabled}
-            tabIndex={-1}
+            disabled={disabled || busy}
+            onClick={() => void handleLineScan()}
           >
+            <Camera className="size-4" />
+            {busy ? "กำลังเปิดสแกน…" : "สแกน barcode"}
+          </Button>
+        ) : null}
+
+        <label
+          htmlFor={photoPickerDisabled ? undefined : photoInputId}
+          className={[
+            "group/button inline-flex h-8 w-full shrink-0 items-center justify-center gap-1.5 rounded-lg border border-transparent bg-primary bg-clip-padding px-2.5 text-sm font-medium whitespace-nowrap text-primary-foreground transition-all outline-none select-none hover:bg-primary/80",
+            photoPickerDisabled
+              ? "pointer-events-none opacity-50"
+              : "cursor-pointer active:translate-y-px",
+            inLine ? "bg-secondary text-secondary-foreground hover:bg-secondary" : "",
+          ].join(" ")}
+        >
             <ImageUp className="size-4" />
             {busy ? "กำลังอ่านรูป…" : "ถ่ายรูป barcode"}
-          </Button>
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/*"
-            capture="environment"
-            aria-label="ถ่ายรูป barcode"
-            className="absolute inset-0 h-full w-full cursor-pointer opacity-0 disabled:cursor-not-allowed"
-            disabled={photoPickerDisabled}
-            onClick={() => setScanError(null)}
-            onChange={(e) => void handlePhotoSelected(e)}
-          />
-        </div>
+        </label>
+        <input
+          id={photoInputId}
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          capture="environment"
+          aria-label="ถ่ายรูป barcode"
+          className="sr-only"
+          disabled={photoPickerDisabled}
+          onClick={() => setScanError(null)}
+          onChange={(e) => void handlePhotoSelected(e)}
+        />
 
         {showCamera ? (
           <Button
