@@ -11,6 +11,29 @@ async function deleteByEmployeeId(
   return error?.message ?? null
 }
 
+async function clearEmployeeReferences(
+  admin: SupabaseClient,
+  employeeId: string
+): Promise<string | null> {
+  const clears: Array<{ table: string; column: string }> = [
+    { table: "hr_leaves", column: "approved_by" },
+    { table: "hr_leaves", column: "manager_decided_by" },
+    { table: "hr_leaves", column: "hr_decided_by" },
+    { table: "hr_overtime_requests", column: "manager_decided_by" },
+    { table: "hr_overtime_requests", column: "hr_decided_by" },
+    { table: "hr_overtime_requests", column: "submitted_by" },
+    { table: "hr_attendance_submissions", column: "manager_decided_by" },
+    { table: "hr_attendance_submissions", column: "hr_decided_by" },
+  ]
+
+  for (const { table, column } of clears) {
+    const { error } = await admin.from(table).update({ [column]: null }).eq(column, employeeId)
+    if (error) return error.message
+  }
+
+  return null
+}
+
 /**
  * Permanently removes an employee and all dependent rows (attendance, leaves,
  * compliance/blacklist notes, payroll lines, etc.). Uses the service-role client
@@ -67,6 +90,10 @@ export async function permanentDeleteEmployee(
     {
       label: "compliance notes",
       run: () => deleteByEmployeeId(admin, "hr_compliance_notes", employeeId),
+    },
+    {
+      label: "approval references",
+      run: () => clearEmployeeReferences(admin, employeeId),
     },
     {
       label: "employee",
