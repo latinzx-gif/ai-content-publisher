@@ -42,6 +42,48 @@ function formatCameraError(err: unknown): string {
   return msg || "เปิดกล้องไม่สำเร็จ"
 }
 
+type BarcodeDetectorLike = {
+  detect: (source: CanvasImageSource | Blob) => Promise<{ rawValue: string }[]>
+}
+
+const BARCODE_DETECTOR_FORMATS = [
+  "ean_13",
+  "ean_8",
+  "code_128",
+  "code_39",
+  "upc_a",
+  "upc_e",
+  "qr_code",
+  "itf",
+]
+
+/** Native Android/Chrome decoder — far more reliable on still photos than JS */
+async function decodeWithBarcodeDetector(
+  file: File
+): Promise<string | null> {
+  const Ctor = (
+    globalThis as unknown as {
+      BarcodeDetector?: new (opts?: { formats?: string[] }) => BarcodeDetectorLike
+    }
+  ).BarcodeDetector
+  if (!Ctor) return null
+
+  let detector: BarcodeDetectorLike
+  try {
+    detector = new Ctor({ formats: BARCODE_DETECTOR_FORMATS })
+  } catch {
+    detector = new Ctor()
+  }
+
+  const bitmap = await createImageBitmap(file)
+  try {
+    const results = await detector.detect(bitmap)
+    return results[0]?.rawValue?.trim() || null
+  } finally {
+    bitmap.close?.()
+  }
+}
+
 async function waitForElement(id: string, attempts = 20): Promise<HTMLElement> {
   for (let i = 0; i < attempts; i += 1) {
     const el = document.getElementById(id)
@@ -216,25 +258,38 @@ export function InboundBarcodeScanner({
     setScanError(null)
     setBusy(true)
     try {
-      const scanner =
-        fileScannerRef.current ??
-        new Html5Qrcode(`inbound-file-${readerId}`, {
-          formatsToSupport: CAMERA_FORMATS,
-          verbose: false,
-        })
-      fileScannerRef.current = scanner
+      // 1) Native BarcodeDetector (Android/Chrome) — best accuracy on photos
+      let value: string | null = null
+      try {
+        value = await decodeWithBarcodeDetector(file)
+      } catch {
+        value = null
+      }
 
-      const result = await scanner.scanFile(file, false)
-      const value = result?.trim()
+      // 2) Fallback to html5-qrcode scanFile
       if (!value) {
-        setScanError("อ่าน barcode จากรูปไม่ได้ — ถ่ายใหม่ให้ชัดและเต็มกรอบ")
+        const scanner =
+          fileScannerRef.current ??
+          new Html5Qrcode(`inbound-file-${readerId}`, {
+            formatsToSupport: CAMERA_FORMATS,
+            verbose: false,
+          })
+        fileScannerRef.current = scanner
+        try {
+          const result = await scanner.scanFile(file, false)
+          value = result?.trim() || null
+        } catch {
+          value = null
+        }
+      }
+
+      if (!value) {
+        setScanError(
+          "อ่าน barcode จากรูปไม่ได้ — ถ่ายให้ชัด เลขเต็มกรอบ ไม่เอียง หรือพิมพ์ barcode ด้านล่าง"
+        )
         return
       }
       onScanned(value)
-    } catch {
-      setScanError(
-        "อ่าน barcode จากรูปไม่ได้ — ถ่ายให้ชัด เลขอยู่กลางภาพ หรือพิมพ์ barcode ด้านล่าง"
-      )
     } finally {
       setBusy(false)
     }
