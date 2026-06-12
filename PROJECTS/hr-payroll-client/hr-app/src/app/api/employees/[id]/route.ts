@@ -7,6 +7,7 @@ import { isAssignableRole } from "@/lib/auth/employee-roles"
 import { canEditEmployeeRecord, canManageHr } from "@/lib/auth/roles"
 import { getCurrentEmployee } from "@/lib/auth/session"
 import { normalizeBankFields } from "@/lib/employees/bank-fields"
+import { permanentDeleteEmployee } from "@/lib/employees/permanent-delete"
 import { createClient } from "@/lib/supabase/server"
 
 const DAY_MS = 86_400_000
@@ -221,13 +222,9 @@ export async function DELETE(
     )
   }
 
-  const { error } = await supabase.from("hr_employees").delete().eq("id", id)
-
-  if (error) {
-    const msg = error.code === "23503"
-      ? "ลบไม่ได้ — พนักงานมีข้อมูลที่เชื่อมอยู่ (เช่น ประกาศ) ให้ใช้ Leave Blacklist แทน"
-      : error.message
-    return NextResponse.json({ error: msg }, { status: 500 })
+  const result = await permanentDeleteEmployee(id)
+  if (!result.ok) {
+    return NextResponse.json({ error: result.error }, { status: 500 })
   }
 
   return NextResponse.json({ ok: true })
