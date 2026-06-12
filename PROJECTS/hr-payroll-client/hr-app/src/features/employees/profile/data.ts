@@ -4,6 +4,7 @@ import {
   expiryStatusLabel,
   type ExpiryStatusLabel,
 } from "@/features/employees/profile/visa-status"
+import type { WorkShiftSummary } from "@/features/shifts/types"
 import { employeeAvatarPublicUrl } from "@/lib/employees/avatar"
 import { createClient } from "@/lib/supabase/server"
 
@@ -22,6 +23,8 @@ export type EmployeeProfile = {
   position: string | null
   department: string | null
   branch_id: string | null
+  work_shift_id: string | null
+  workShift: WorkShiftSummary | null
   salary: number | null
   contract_start: string | null
   contract_type: ContractType
@@ -70,7 +73,7 @@ export async function getEmployeeProfile(
   const { data, error } = await supabase
     .from("hr_employees")
     .select(
-      "id, employee_code, line_user_id, name, date_of_birth, phone, email, position, department, branch_id, salary, contract_start, contract_type, contract_end, contract_file_path, contract_file_name, contract_uploaded_at, probation_end, probation_outcome, probation_outcome_note, probation_extended_until, visa_expiry, work_permit_expiry, salary_payment_method, bank_name, bank_account_name, bank_account_number, bank_branch, leave_blacklisted, leave_blacklist_reason, leave_blacklisted_at, avatar_path, role, status"
+      "id, employee_code, line_user_id, name, date_of_birth, phone, email, position, department, branch_id, work_shift_id, salary, contract_start, contract_type, contract_end, contract_file_path, contract_file_name, contract_uploaded_at, probation_end, probation_outcome, probation_outcome_note, probation_extended_until, visa_expiry, work_permit_expiry, salary_payment_method, bank_name, bank_account_name, bank_account_number, bank_branch, leave_blacklisted, leave_blacklist_reason, leave_blacklisted_at, avatar_path, role, status, hr_work_shifts(id, code, name, start_hour, start_minute, end_hour, end_minute, crosses_midnight, grace_minutes, standard_hours, is_active)"
     )
     .eq("id", id)
     .maybeSingle()
@@ -81,9 +84,14 @@ export async function getEmployeeProfile(
   const status = data.status as "active" | "inactive"
 
   const avatar_path = (data.avatar_path as string | null) ?? null
+  const joinedShift = data.hr_work_shifts as WorkShiftSummary | null | WorkShiftSummary[]
+  const workShift = Array.isArray(joinedShift) ? joinedShift[0] ?? null : joinedShift
+  const { hr_work_shifts: _shiftJoin, ...row } = data
 
   return {
-    ...data,
+    ...row,
+    work_shift_id: (data.work_shift_id as string | null) ?? null,
+    workShift,
     avatar_path,
     avatarUrl: employeeAvatarPublicUrl(avatar_path),
     contract_type: (data.contract_type as ContractType) ?? null,

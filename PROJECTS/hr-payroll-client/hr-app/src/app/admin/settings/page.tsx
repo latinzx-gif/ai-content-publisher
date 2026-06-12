@@ -1,12 +1,17 @@
 import { AdminPageShell } from "@/components/brand/AdminPageShell"
 import { SettingsPanel } from "@/features/settings/SettingsPanel"
+import { listWorkShifts } from "@/features/shifts/data"
+import { WorkShiftsPanel } from "@/features/shifts/WorkShiftsPanel"
 import { getAdminClient } from "@/lib/auth/admin-client"
 import { getWorkStart } from "@/lib/runtime-config"
 
 export default async function AdminSettingsPage() {
   const admin = getAdminClient()
-  const { data: configRows } = await admin.from("hr_runtime_config").select("key, value, updated_at")
-  const workStart = await getWorkStart()
+  const [{ data: configRows }, workStart, workShifts] = await Promise.all([
+    admin.from("hr_runtime_config").select("key, value, updated_at"),
+    getWorkStart(),
+    listWorkShifts(),
+  ])
 
   const groupId =
     configRows?.find((r) => r.key === "hr_line_group_id")?.value ??
@@ -35,7 +40,8 @@ export default async function AdminSettingsPage() {
               {workStart.hour}:{String(workStart.minute).padStart(2, "0")} ICT
             </p>
             <p className="mt-2 text-xs text-muted-foreground">
-              LINE User Chat: {process.env.LINE_USER_CHAT_ENABLED === "true" ? "เปิด" : "ปิด"}
+              Fallback สำหรับพนักงานที่ยังไม่กำหนดกะ · LINE User Chat:{" "}
+              {process.env.LINE_USER_CHAT_ENABLED === "true" ? "เปิด" : "ปิด"}
             </p>
           </section>
           <section className="rounded-xl border p-4">
@@ -52,6 +58,7 @@ export default async function AdminSettingsPage() {
             </ul>
           </section>
         </div>
+        <WorkShiftsPanel shifts={workShifts} />
       </div>
     </AdminPageShell>
   )

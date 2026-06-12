@@ -10,6 +10,7 @@ import Link from "next/link"
 
 import { EmployeeAvatar } from "@/components/brand/EmployeeAvatar"
 import { StatusPill } from "@/components/brand/StatusPill"
+import { formatShiftTimeRange } from "@/features/shifts/format"
 import type { EmployeeProfile } from "@/features/employees/profile/data"
 import { paymentMethodLabel } from "@/features/employees/profile/payment-method"
 import {
@@ -136,6 +137,14 @@ export function EmployeeProfileView({
             }
           />
           <ProfileField label="Role" value={profile.role} />
+          <ProfileField
+            label="กะทำงาน"
+            value={
+              profile.workShift
+                ? `${profile.workShift.name} · ${formatShiftTimeRange(profile.workShift)} · ${profile.workShift.standard_hours}h`
+                : "— ใช้ Settings fallback —"
+            }
+          />
           <ProfileField label="Salary (THB)" value={profile.salary?.toLocaleString() ?? "—"} />
           <ProfileField label="Status" value={profile.status} />
           <ProfileField

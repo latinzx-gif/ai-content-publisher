@@ -9,6 +9,7 @@ import {
 import { canManageHr } from "@/lib/auth/roles"
 import { getCurrentEmployee } from "@/lib/auth/session"
 import { validateEmployeeDepartmentRole } from "@/lib/employees/validate-department-role"
+import { validateWorkShiftId } from "@/features/shifts/validate"
 import { normalizeBankFields } from "@/lib/employees/bank-fields"
 import { createClient } from "@/lib/supabase/server"
 
@@ -37,6 +38,7 @@ type CreateBody = {
   bank_account_name?: string | null
   bank_account_number?: string | null
   bank_branch?: string | null
+  work_shift_id?: string | null
 }
 
 export async function POST(request: Request) {
@@ -105,6 +107,15 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: bank.error }, { status: 400 })
   }
 
+  let workShiftId: string | null = null
+  if (body.work_shift_id !== undefined) {
+    try {
+      workShiftId = await validateWorkShiftId(supabase, body.work_shift_id)
+    } catch {
+      return NextResponse.json({ error: "work shift not found" }, { status: 400 })
+    }
+  }
+
   const { data, error } = await supabase
     .from("hr_employees")
     .insert({
@@ -125,6 +136,7 @@ export async function POST(request: Request) {
       work_permit_expiry: body.work_permit_expiry || null,
       status: body.status === "inactive" ? "inactive" : "active",
       role,
+      work_shift_id: workShiftId,
       ...bank.updates,
     })
     .select("id")

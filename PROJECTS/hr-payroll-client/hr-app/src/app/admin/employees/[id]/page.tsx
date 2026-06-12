@@ -5,6 +5,7 @@ import { EmployeeProfilePageClient } from "@/features/employees/profile/Employee
 import { getComplianceNotes, getEmployeeProfile } from "@/features/employees/profile/data"
 import { listBranches } from "@/features/branches/data"
 import { getOrganizationMasterData } from "@/features/organization/master-data"
+import { listWorkShifts } from "@/features/shifts/data"
 import { canEditEmployeeRecord } from "@/lib/auth/roles"
 import { getCurrentEmployee } from "@/lib/auth/session"
 
@@ -17,11 +18,12 @@ export default async function EmployeeProfilePage({
   const caller = await getCurrentEmployee()
   const readOnly = caller ? !canEditEmployeeRecord(caller.role) : true
 
-  const [profile, notes, branches, organization] = await Promise.all([
+  const [profile, notes, branches, organization, workShifts] = await Promise.all([
     getEmployeeProfile(id),
     getComplianceNotes(id),
     listBranches(),
     getOrganizationMasterData(),
+    listWorkShifts(),
   ])
   if (!profile) notFound()
 
@@ -38,6 +40,7 @@ export default async function EmployeeProfilePage({
         branches={branches}
         departments={organization.departments}
         positions={organization.positions}
+        workShifts={workShifts}
         readOnly={readOnly}
       />
     </div>

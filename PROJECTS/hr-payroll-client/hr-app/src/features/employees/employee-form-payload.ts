@@ -53,6 +53,7 @@ export type ProfilePatchInput = {
   role: AssignableRole
   employee_code: string
   branch_id: string
+  work_shift_id: string
 } & BankFields
 
 export function buildProfilePatchBody(form: ProfilePatchInput): Record<string, unknown> {
@@ -73,6 +74,7 @@ export function buildProfilePatchBody(form: ProfilePatchInput): Record<string, u
     role: form.role,
     employee_code: form.employee_code.trim() || null,
     branch_id: form.branch_id || null,
+    work_shift_id: form.work_shift_id || null,
     ...buildBankPatchFields(form),
   }
 }
@@ -95,6 +97,7 @@ export type AddEmployeeFormState = {
   role: AssignableRole
   employee_code: string
   date_of_birth: string
+  work_shift_id: string
 } & BankFields
 
 export function buildAddEmployeeBody(form: AddEmployeeFormState): Record<string, unknown> {
@@ -116,6 +119,7 @@ export function buildAddEmployeeBody(form: AddEmployeeFormState): Record<string,
     status: form.status,
     role: form.role,
     employee_code: form.employee_code.trim() || null,
+    work_shift_id: form.work_shift_id || null,
     ...buildBankPatchFields(form),
   }
 }

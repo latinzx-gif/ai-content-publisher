@@ -25,6 +25,9 @@ import type {
 import type { ContractType } from "@/features/employees/profile/data"
 import { PAYMENT_METHOD_OPTIONS, type SalaryPaymentMethod } from "@/features/employees/profile/payment-method"
 import { ProfileSectionCard } from "@/features/employees/profile/ProfileSectionCard"
+import { suggestShiftId } from "@/features/shifts/helpers"
+import type { WorkShiftSummary } from "@/features/shifts/types"
+import { WorkShiftField } from "@/features/shifts/WorkShiftField"
 import {
   allowedRolesForDepartment,
   defaultRoleForDepartment,
@@ -67,9 +70,11 @@ function FormField({
 export function AddEmployeeForm({
   departments,
   positions,
+  workShifts,
 }: {
   departments: OrgDepartment[]
   positions: OrgPosition[]
+  workShifts: WorkShiftSummary[]
 }) {
   const router = useRouter()
   const [saving, setSaving] = useState(false)
@@ -111,7 +116,21 @@ export function AddEmployeeForm({
     status: "active" as "active" | "inactive",
     role: "employee" as AssignableRole,
     employee_code: "",
+    work_shift_id: "",
   })
+
+  function suggestShiftForAddForm(input: {
+    role: AssignableRole
+    department: string
+  }): string {
+    const branchId =
+      departments.find((d) => d.name === input.department)?.branch_id ?? null
+    return suggestShiftId(workShifts, {
+      role: input.role,
+      department: input.department || null,
+      branchId,
+    })
+  }
 
   function setField<K extends keyof typeof form>(key: K, value: (typeof form)[K]) {
     setForm((prev) => ({ ...prev, [key]: value }))
@@ -408,7 +427,14 @@ export function AddEmployeeForm({
               className={inputClassName}
               value={form.role}
               onChange={(e) =>
-                setField("role", e.target.value as AssignableRole)
+                setForm((prev) => {
+                  const nextRole = e.target.value as AssignableRole
+                  const next = { ...prev, role: nextRole }
+                  return {
+                    ...next,
+                    work_shift_id: suggestShiftForAddForm(next),
+                  }
+                })
               }
             >
               {roleOptions.map((role) => (
@@ -437,11 +463,15 @@ export function AddEmployeeForm({
                   const nextRole = defaultRoleForDepartment(nextDept)
                   const allowed = allowedRolesForDepartment(nextDept)
                   const role = allowed.includes(prev.role) ? prev.role : nextRole
-                  return {
+                  const next = {
                     ...prev,
                     department: nextDept,
                     position: stillValid ? prev.position : "",
                     role,
+                  }
+                  return {
+                    ...next,
+                    work_shift_id: suggestShiftForAddForm(next),
                   }
                 })
               }}
@@ -476,6 +506,15 @@ export function AddEmployeeForm({
                 </option>
               ))}
             </select>
+          </FormField>
+          <FormField label="กะทำงาน" className="sm:col-span-2">
+            <WorkShiftField
+              shifts={workShifts}
+              value={form.work_shift_id}
+              onChange={(shiftId) => setField("work_shift_id", shiftId)}
+              inputClassName={inputClassName}
+              hint="แนะนำอัตโนมัติจากแผนก/Role — แก้ได้ด้วยตนเอง"
+            />
           </FormField>
           <FormField label="Employment Type">
             <select

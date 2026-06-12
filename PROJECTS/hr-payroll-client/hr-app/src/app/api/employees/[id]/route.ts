@@ -8,6 +8,7 @@ import { canEditEmployeeRecord, canManageHr } from "@/lib/auth/roles"
 import { getCurrentEmployee } from "@/lib/auth/session"
 import { validateEmployeeDepartmentRole } from "@/lib/employees/validate-department-role"
 import { normalizeBankFields } from "@/lib/employees/bank-fields"
+import { validateWorkShiftId } from "@/features/shifts/validate"
 import { permanentDeleteEmployee } from "@/lib/employees/permanent-delete"
 import { createClient } from "@/lib/supabase/server"
 
@@ -42,6 +43,7 @@ type PatchBody = {
   bank_account_name?: string | null
   bank_account_number?: string | null
   bank_branch?: string | null
+  work_shift_id?: string | null
 }
 
 export async function PATCH(
@@ -153,6 +155,14 @@ export async function PATCH(
           return NextResponse.json({ error: "branch not found" }, { status: 400 })
         }
         updates.branch_id = body.branch_id
+      }
+    }
+
+    if (body.work_shift_id !== undefined) {
+      try {
+        updates.work_shift_id = await validateWorkShiftId(supabase, body.work_shift_id)
+      } catch {
+        return NextResponse.json({ error: "work shift not found" }, { status: 400 })
       }
     }
 
