@@ -13,7 +13,7 @@ export async function GET() {
   const supabase = await createClient()
   const { data, error } = await supabase
     .from("hr_branches")
-    .select("id, name, code, manager_employee_id")
+    .select("id, name, code, address, manager_employee_id")
     .order("name")
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })

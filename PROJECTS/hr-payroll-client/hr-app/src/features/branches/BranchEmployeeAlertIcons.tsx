@@ -36,8 +36,11 @@ function AlertChip({
 
 export function BranchEmployeeAlertIcons({
   alerts,
+  inline = false,
 }: {
   alerts: BranchEmployeeAlerts
+  /** แสดงต่อท้ายชื่อพนักงาน */
+  inline?: boolean
 }) {
   const hasAny =
     alerts.pendingLeave > 0 ||
@@ -47,11 +50,16 @@ export function BranchEmployeeAlertIcons({
     alerts.complianceDue
 
   if (!hasAny) {
-    return <span className="text-[10px] text-muted-foreground">—</span>
+    return inline ? null : <span className="text-[10px] text-muted-foreground">—</span>
   }
 
   return (
-    <div className="flex flex-wrap items-center justify-end gap-1">
+    <div
+      className={cn(
+        "flex flex-wrap items-center gap-1",
+        inline ? "shrink-0" : "justify-end"
+      )}
+    >
       {alerts.pendingApproval ? (
         <AlertChip
           icon={UserPlus}

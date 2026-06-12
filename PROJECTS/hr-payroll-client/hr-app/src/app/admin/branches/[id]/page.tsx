@@ -7,7 +7,9 @@ import {
   getBranchById,
   getBranchEmployeesWithAlerts,
   getBranchHubDashboard,
+  getBranchOvertimeQueue,
 } from "@/features/branches/branch-hub-data"
+import { isCeo, isDev } from "@/lib/auth/roles"
 import { requireRole } from "@/lib/auth/require-role"
 
 export default async function BranchDetailPage({
@@ -15,13 +17,15 @@ export default async function BranchDetailPage({
 }: {
   params: Promise<{ id: string }>
 }) {
-  await requireRole("hr", "admin", "ceo", "dev")
+  const employee = await requireRole("hr", "admin", "ceo", "dev")
   const { id } = await params
+  const readOnly = isCeo(employee.role) && !isDev(employee.role)
 
-  const [branch, dashboard, employees] = await Promise.all([
+  const [branch, dashboard, employees, overtimeQueue] = await Promise.all([
     getBranchById(id),
     getBranchHubDashboard(id),
     getBranchEmployeesWithAlerts(id),
+    getBranchOvertimeQueue(id),
   ])
 
   if (!branch) notFound()
@@ -38,7 +42,13 @@ export default async function BranchDetailPage({
         title={branch.name}
         description={`จัดการสาขา — พนักงาน ลา เข้างาน OT (${branch.code ?? "—"})`}
       >
-        <HrBranchHub branch={branch} dashboard={dashboard} employees={employees} />
+        <HrBranchHub
+          branch={branch}
+          dashboard={dashboard}
+          employees={employees}
+          overtimeQueue={overtimeQueue}
+          readOnly={readOnly}
+        />
       </AdminPageShell>
     </div>
   )

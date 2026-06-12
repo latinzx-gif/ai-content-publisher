@@ -1,6 +1,5 @@
 "use client"
 
-import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useState } from "react"
 
@@ -80,6 +79,7 @@ export function BranchesPanel({
             <tr>
               <th className="px-3 py-2">ชื่อสาขา</th>
               <th className="px-3 py-2">รหัส</th>
+              <th className="px-3 py-2">ที่อยู่</th>
               <th className="px-3 py-2">Manager</th>
             </tr>
           </thead>
@@ -87,19 +87,26 @@ export function BranchesPanel({
             {branches.map((b) => (
               <tr
                 key={b.id}
-                className="border-b last:border-0 hover:bg-muted/30"
+                role="link"
+                tabIndex={0}
+                onClick={() => router.push(`/admin/branches/${b.id}`)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault()
+                    router.push(`/admin/branches/${b.id}`)
+                  }
+                }}
+                className="cursor-pointer border-b last:border-0 hover:bg-muted/30"
               >
                 <td className="px-3 py-2">
-                  <Link
-                    href={`/admin/branches/${b.id}`}
-                    className="font-medium text-brand-red hover:underline"
-                  >
-                    {b.name}
-                  </Link>
+                  <span className="font-medium text-brand-red">{b.name}</span>
                 </td>
                 <td className="px-3 py-2">{b.code ?? "—"}</td>
+                <td className="max-w-[200px] truncate px-3 py-2 text-muted-foreground">
+                  {b.address?.trim() || "—"}
+                </td>
                 <td className="px-3 py-2 text-muted-foreground">
-                  {b.manager_employee_id ? "มอบหมายแล้ว" : "ยังไม่มอบหมาย"}
+                  {b.manager_name ?? (b.manager_employee_id ? "มอบหมายแล้ว" : "ยังไม่มอบหมาย")}
                 </td>
               </tr>
             ))}
