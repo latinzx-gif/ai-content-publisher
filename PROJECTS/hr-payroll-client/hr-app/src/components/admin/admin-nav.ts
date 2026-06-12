@@ -13,8 +13,7 @@ export const ADMIN_NAV_ITEMS: AdminNavItem[] = [
   { label: "Leave Management", href: "/admin/leaves", icon: "calendar" },
   { label: "Overtime", href: "/admin/overtime", icon: "timer" },
   { label: "Payroll", href: "/admin/payroll", icon: "wallet" },
-  { label: "Performance", href: "/admin/performance", icon: "target", comingSoon: true },
-  // Recruitment & Training hidden from sidebar — routes remain at /admin/recruitment, /admin/training
+  // Performance, Recruitment & Training hidden — routes remain at /admin/performance, /admin/recruitment, /admin/training
   { label: "Documents", href: "/admin/documents", icon: "file-text" },
   { label: "Complaints", href: "/admin/complaints", icon: "message-warning" },
   { label: "Announcements", href: "/admin/announcements", icon: "megaphone" },
