@@ -71,9 +71,16 @@ export async function POST(request: NextRequest) {
 
   const { data: existing } = await admin
     .from("hr_employees")
-    .select("id, role, status")
+    .select("id, role, status, leave_blacklisted")
     .eq("line_user_id", lineUserId)
     .maybeSingle()
+
+  if (existing?.leave_blacklisted) {
+    return NextResponse.json(
+      { error: "บัญชี LINE นี้อยู่ใน Leave Blacklist — ติดต่อ HR" },
+      { status: 403 }
+    )
+  }
 
   if (existing?.status === "active") {
     return NextResponse.json(

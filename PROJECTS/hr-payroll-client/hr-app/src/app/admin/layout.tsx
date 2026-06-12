@@ -4,9 +4,8 @@ import { redirect } from "next/navigation"
 import { AdminShell } from "@/components/admin/AdminShell"
 import {
   getNavItemsForRole,
-  withBranchPendingBadges,
 } from "@/components/admin/branch-nav"
-import { getBranchPendingCounts } from "@/features/manager/branch-pending-counts"
+import { withNavAlertBadges } from "@/features/notifications/nav-badges"
 import {
   getNotificationInbox,
   resolveNotificationScope,
@@ -68,15 +67,20 @@ export default async function AdminLayout({
   const notificationScope = resolveNotificationScope(employee, devView)
   const notificationInbox = notificationScope
     ? await getNotificationInbox(employee, notificationScope)
-    : { items: [], total: 0, approvalTotal: 0, complianceTotal: 0 }
+    : {
+        items: [],
+        total: 0,
+        approvalTotal: 0,
+        complianceTotal: 0,
+        navBadges: {},
+      }
   const alertBadge = notificationInbox.total
   const approvalBadge = notificationInbox.approvalTotal
   let navItems =
     dev && devView ? getDevNavItems(devView) : getNavItemsForRole(employee.role)
 
-  if (branchManager || (dev && devView === "branch")) {
-    const counts = await getBranchPendingCounts(employee)
-    navItems = withBranchPendingBadges(navItems, counts)
+  if (Object.keys(notificationInbox.navBadges).length > 0) {
+    navItems = withNavAlertBadges(navItems, notificationInbox.navBadges)
   }
 
   return (

@@ -6,7 +6,13 @@ import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import type { DepartmentRow } from "@/features/organization/data"
 
-export function DepartmentManager({ rows }: { rows: DepartmentRow[] }) {
+export function DepartmentManager({
+  rows,
+  canManage = false,
+}: {
+  rows: DepartmentRow[]
+  canManage?: boolean
+}) {
   const router = useRouter()
   const [name, setName] = useState("")
   const [busy, setBusy] = useState(false)
@@ -37,17 +43,23 @@ export function DepartmentManager({ rows }: { rows: DepartmentRow[] }) {
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex gap-2">
-        <input
-          className="h-9 flex-1 rounded-lg border border-input px-3 text-sm"
-          placeholder="ชื่อแผนกใหม่"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-        />
-        <Button size="sm" disabled={busy} onClick={addDepartment}>
-          เพิ่มแผนก
-        </Button>
-      </div>
+      {canManage ? (
+        <div className="flex gap-2">
+          <input
+            className="h-9 flex-1 rounded-lg border border-input px-3 text-sm"
+            placeholder="ชื่อแผนกใหม่"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+          />
+          <Button size="sm" disabled={busy} onClick={addDepartment}>
+            เพิ่มแผนก
+          </Button>
+        </div>
+      ) : (
+        <p className="text-sm text-muted-foreground">
+          ดูรายชื่อแผนกได้อย่างเดียว — ต้องใช้บัญชี HR/Admin ในการเพิ่มแผนก
+        </p>
+      )}
       {error ? <p className="text-sm text-destructive">{error}</p> : null}
       <ul className="divide-y rounded-xl border">
         {rows.length === 0 ? (

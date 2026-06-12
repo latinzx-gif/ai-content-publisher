@@ -7,6 +7,11 @@ import type {
   NotificationKind,
 } from "@/features/notifications/types"
 import { NOTIFICATION_LIST_LIMIT } from "@/features/notifications/types"
+import {
+  buildBranchNavBadges,
+  buildHrNavBadges,
+  type HrApprovalCounts,
+} from "@/features/notifications/nav-badges"
 import type { DevViewAs } from "@/lib/auth/dev-view"
 import { getManagedBranchId } from "@/lib/auth/branch"
 import { canManageHr } from "@/lib/auth/roles"
@@ -43,14 +48,20 @@ function employeeName(
   return Array.isArray(joined) ? joined[0].name : joined.name
 }
 
-function sortItems(items: NotificationItem[]): NotificationItem[] {
+function notificationTime(iso: string | null): number {
+  if (!iso) return 0
+  const normalized = iso.includes("T") ? iso : `${iso}T12:00:00Z`
+  const t = Date.parse(normalized)
+  return Number.isNaN(t) ? 0 : t
+}
+
+/** Newest first — used for the bell dropdown (max 10 latest). */
+function sortItemsByRecency(items: NotificationItem[]): NotificationItem[] {
   return [...items].sort((a, b) => {
-    const kindDiff = KIND_ORDER[a.kind] - KIND_ORDER[b.kind]
-    if (kindDiff !== 0) return kindDiff
+    const timeDiff = notificationTime(b.createdAt) - notificationTime(a.createdAt)
+    if (timeDiff !== 0) return timeDiff
     if (a.urgency !== b.urgency) return a.urgency === "urgent" ? -1 : 1
-    const ad = a.createdAt ?? ""
-    const bd = b.createdAt ?? ""
-    return bd.localeCompare(ad)
+    return KIND_ORDER[a.kind] - KIND_ORDER[b.kind]
   })
 }
 
@@ -121,12 +132,13 @@ async function complianceNotifications(
     }
   }
 
-  return { items: sortItems(items), total }
+  return { items: sortItemsByRecency(items), total }
 }
 
 async function hrApprovalNotifications(): Promise<{
   items: NotificationItem[]
   total: number
+  counts: HrApprovalCounts
 }> {
   const supabase = await createClient()
   const [
@@ -311,14 +323,35 @@ async function hrApprovalNotifications(): Promise<{
     (docCountRes.count ?? 0) +
     (complaintCountRes.count ?? 0)
 
-  return { items: sortItems(items), total }
+  return {
+    items: sortItemsByRecency(items),
+    total,
+    counts: {
+      registration: regCountRes.count ?? 0,
+      leave: leaveCountRes.count ?? 0,
+      attendance: attCountRes.count ?? 0,
+      overtime: otCountRes.count ?? 0,
+      document: docCountRes.count ?? 0,
+      complaint: complaintCountRes.count ?? 0,
+    },
+  }
 }
 
 async function branchApprovalNotifications(
   caller: Employee
-): Promise<{ items: NotificationItem[]; total: number }> {
+): Promise<{
+  items: NotificationItem[]
+  total: number
+  counts: { leave: number; attendance: number; overtime: number }
+}> {
   const branchId = await getManagedBranchId(caller.id)
-  if (!branchId) return { items: [], total: 0 }
+  if (!branchId) {
+    return {
+      items: [],
+      total: 0,
+      counts: { leave: 0, attendance: 0, overtime: 0 },
+    }
+  }
 
   const supabase = await createClient()
   const [leaveRes, leaveCountRes, attRes, attCountRes, otRes, otCountRes] =
@@ -372,7 +405,6 @@ async function branchApprovalNotifications(
   }
 
   for (const row of (leaveRes.data ?? []).filter((r) => inBranch(r.hr_employees))) {
-    if (items.length >= LIST_LIMIT) break
     const typeLabel =
       LEAVE_TYPE_LABELS[row.type as LeaveType] ?? row.type
     items.push({
@@ -387,7 +419,6 @@ async function branchApprovalNotifications(
   }
 
   for (const row of (attRes.data ?? []).filter((r) => inBranch(r.hr_employees))) {
-    if (items.length >= LIST_LIMIT) break
     items.push({
       id: `attendance-${row.id}`,
       kind: "attendance",
@@ -400,7 +431,6 @@ async function branchApprovalNotifications(
   }
 
   for (const row of (otRes.data ?? []).filter((r) => inBranch(r.hr_employees))) {
-    if (items.length >= LIST_LIMIT) break
     items.push({
       id: `overtime-${row.id}`,
       kind: "overtime",
@@ -417,7 +447,15 @@ async function branchApprovalNotifications(
     (attCountRes.count ?? 0) +
     (otCountRes.count ?? 0)
 
-  return { items: sortItems(items), total }
+  return {
+    items: sortItemsByRecency(items).slice(0, LIST_LIMIT),
+    total,
+    counts: {
+      leave: leaveCountRes.count ?? 0,
+      attendance: attCountRes.count ?? 0,
+      overtime: otCountRes.count ?? 0,
+    },
+  }
 }
 
 export type NotificationScope = "hr" | "branch"
@@ -454,6 +492,12 @@ export async function getNotificationInbox(
       total: branch.total,
       approvalTotal: branch.total,
       complianceTotal: 0,
+      navBadges: buildBranchNavBadges({
+        attendance: branch.counts.attendance,
+        leaves: branch.counts.leave,
+        overtime: branch.counts.overtime,
+        total: branch.total,
+      }),
     }
   }
 
@@ -462,16 +506,17 @@ export async function getNotificationInbox(
     complianceNotifications(today, windowEnd),
   ])
 
-  const merged = sortItems([...approvals.items, ...compliance.items]).slice(
-    0,
-    LIST_LIMIT
-  )
+  const merged = sortItemsByRecency([
+    ...approvals.items,
+    ...compliance.items,
+  ]).slice(0, LIST_LIMIT)
 
   return {
     items: merged,
     total: approvals.total + compliance.total,
     approvalTotal: approvals.total,
     complianceTotal: compliance.total,
+    navBadges: buildHrNavBadges(approvals.counts, compliance.total),
   }
 }
 

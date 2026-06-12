@@ -36,6 +36,9 @@ export type EmployeeProfile = {
   bank_account_name: string | null
   bank_account_number: string | null
   bank_branch: string | null
+  leave_blacklisted: boolean
+  leave_blacklist_reason: string | null
+  leave_blacklisted_at: string | null
   role: string
   status: "active" | "inactive"
   probationStatus: "pending" | "passed" | "not_applicable"
@@ -61,7 +64,7 @@ export async function getEmployeeProfile(
   const { data, error } = await supabase
     .from("hr_employees")
     .select(
-      "id, employee_code, line_user_id, name, date_of_birth, phone, email, position, department, branch_id, salary, contract_start, contract_type, contract_end, probation_end, probation_outcome, probation_outcome_note, probation_extended_until, visa_expiry, work_permit_expiry, salary_payment_method, bank_name, bank_account_name, bank_account_number, bank_branch, role, status"
+      "id, employee_code, line_user_id, name, date_of_birth, phone, email, position, department, branch_id, salary, contract_start, contract_type, contract_end, probation_end, probation_outcome, probation_outcome_note, probation_extended_until, visa_expiry, work_permit_expiry, salary_payment_method, bank_name, bank_account_name, bank_account_number, bank_branch, leave_blacklisted, leave_blacklist_reason, leave_blacklisted_at, role, status"
     )
     .eq("id", id)
     .maybeSingle()
@@ -79,6 +82,9 @@ export async function getEmployeeProfile(
     bank_account_name: data.bank_account_name as string | null,
     bank_account_number: data.bank_account_number as string | null,
     bank_branch: data.bank_branch as string | null,
+    leave_blacklisted: Boolean(data.leave_blacklisted),
+    leave_blacklist_reason: data.leave_blacklist_reason as string | null,
+    leave_blacklisted_at: data.leave_blacklisted_at as string | null,
     probation_outcome: data.probation_outcome as string | null,
     probation_outcome_note: data.probation_outcome_note as string | null,
     probation_extended_until: data.probation_extended_until as string | null,

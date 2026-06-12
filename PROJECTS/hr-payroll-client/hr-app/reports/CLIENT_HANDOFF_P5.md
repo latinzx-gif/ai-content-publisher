@@ -29,6 +29,38 @@ Smoke routes: `reports/E2E_P5_1_RESULTS.md`
 
 ---
 
+## 1.1 Release update (2026-06-18) — deploy ถัดจาก `ff3ec4b`
+
+| หมวด | รายการ |
+|------|--------|
+| **Head Office** | เปลี่ยนสาขา default จาก `สาขาหลัก` / `MAIN` → **`Head Office` / `000`** |
+| **Organization** | เพิ่มแผนก **IT** (สาขา Head Office) |
+| **Organization** | เพิ่ม master ตำแหน่ง **Developers** (ตาราง `hr_positions` ผูกแผนก IT) |
+| **Sidebar alerts** | จุดแดง + ตัเลข badge ตามจำนวนแจ้งเตือนต่อเมนู (HR + BM) |
+| **การแจ้งเตือน (bell)** | แสดงสูงสุด **10 รายการล่าสุด** เรียงตามเวลา (ไม่ใช่ตามประเภท) |
+| **Organization API** | แก้เพิ่มแผนก forbidden — รองรับ role `dev` + default branch `000` |
+| **Employee profile** | Leave Blacklist / ลบพนักงานถาวร (Danger zone) |
+| **Employee forms** | Auto-save ขณะกรอก (Edit Profile + Add Employee) |
+| **Register** | บล็อกพนักงานที่ถูก blacklist จากการลงทะเบียนซ้ำ |
+
+**Migrations (Supabase):**
+
+| ไฟล์ | เนื้อหา |
+|------|---------|
+| `20260618100000_employee_leave_blacklist.sql` | `leave_blacklisted`, เหตุผล, compliance note |
+| `20260618120000_head_office_it_developers.sql` | Head Office `000`, IT, `hr_positions`, Developers |
+
+**Head Office — ข้อมูล master ปัจจุบัน:**
+
+| รายการ | ค่า |
+|--------|-----|
+| สาขา | Head Office |
+| รหัสสาขา | `000` |
+| แผนก | IT |
+| ตำแหน่ง (master) | Developers |
+
+---
+
 ## 2. URL สำคัญ
 
 | จุดเข้าใช้ | URL |
@@ -114,8 +146,8 @@ POST /api/branches
 Content-Type: application/json
 
 {
-  "name": "สาขาหลัก",
-  "code": "MAIN",
+  "name": "Head Office",
+  "code": "000",
   "managerEmployeeId": "<uuid พนักงาน role branch_manager>"
 }
 ```
@@ -186,7 +218,7 @@ Cron อื่นที่ยังเรียก Edge Function (morning-push, 
 | สลิปเงินเดือน / baht | **นอก scope** Phase 5 — มีแค่รายงานชั่วโมง (Phase 9 ใน roadmap) |
 | HR Admin Dashboard หน้าแรก | **locked** — ห้าม refactor โดย vendor |
 | Employee profile pages | HR แก้ role/สาขาได้; layout หลัก locked |
-| งานถัดไป | **T79–T108** ใน Taskmaster — ดู `MILESTONES.md` |
+| งานถัดไป | **M38** (T109–T114) Go-Live sign-off — ดู `orchestration/PHASE_12_PLAN.md` |
 | Edge Function cron auth | บาง job อาจต้อง `sb_secret` ใน Vault (ดู §7) |
 | Rotate API keys | แนะนำหลัง handoff — อย่า commit keys ลง git |
 
@@ -215,4 +247,4 @@ Cron อื่นที่ยังเรียก Edge Function (morning-push, 
 - [ ] CEO dashboard เปิดได้
 - [ ] LINE webhook ตอบกลับใน production
 
-**Contact / vendor:** HEAD-OFFICE — งานถัดไป: **T81+** (Phase 6 Onboarding) ดู `MILESTONES.md`
+**Contact / vendor:** HEAD-OFFICE — งานถัดไป: **M38** Go-Live & sign-off → tag `hr-payroll-v1.1`

@@ -18,6 +18,7 @@ export async function POST(
     action?: string
     outcome?: string
     note?: string
+    reason?: string
     extendedUntil?: string
     visaExpiry?: string | null
     workPermitExpiry?: string | null
@@ -84,6 +85,57 @@ export async function POST(
         created_by: caller.id,
       })
     }
+
+    return NextResponse.json({ ok: true })
+  }
+
+  if (body.action === "leave_blacklist") {
+    const reason = (body.reason ?? body.note)?.trim() ?? ""
+    if (reason.length < 3) {
+      return NextResponse.json({ error: "กรุณาระบุเหตุผลอย่างน้อย 3 ตัวอักษร" }, { status: 400 })
+    }
+
+    const now = new Date().toISOString()
+    const { error } = await supabase
+      .from("hr_employees")
+      .update({
+        status: "inactive",
+        leave_blacklisted: true,
+        leave_blacklist_reason: reason,
+        leave_blacklisted_at: now,
+      })
+      .eq("id", id)
+
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+
+    await supabase.from("hr_compliance_notes").insert({
+      employee_id: id,
+      category: "blacklist",
+      note: reason,
+      created_by: caller.id,
+    })
+
+    return NextResponse.json({ ok: true })
+  }
+
+  if (body.action === "clear_blacklist") {
+    const { error } = await supabase
+      .from("hr_employees")
+      .update({
+        leave_blacklisted: false,
+        leave_blacklist_reason: null,
+        leave_blacklisted_at: null,
+      })
+      .eq("id", id)
+
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+
+    await supabase.from("hr_compliance_notes").insert({
+      employee_id: id,
+      category: "blacklist",
+      note: "ยกเลิก Leave Blacklist",
+      created_by: caller.id,
+    })
 
     return NextResponse.json({ ok: true })
   }

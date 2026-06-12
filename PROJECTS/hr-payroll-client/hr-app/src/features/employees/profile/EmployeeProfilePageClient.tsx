@@ -4,6 +4,7 @@ import { Pencil } from "lucide-react"
 import { useState } from "react"
 
 import { Button } from "@/components/ui/button"
+import { EmployeeDangerZone } from "@/features/employees/profile/EmployeeDangerZone"
 import { EmployeeProfileForm } from "@/features/employees/profile/EmployeeProfileForm"
 import { EmployeeProfileView } from "@/features/employees/profile/EmployeeProfileView"
 import { LifecyclePanel } from "@/features/employees/profile/LifecyclePanel"
@@ -81,6 +82,7 @@ export function EmployeeProfilePageClient({
         <h2 className="mb-3 text-sm font-semibold">Employee Lifecycle (F5)</h2>
         <LifecyclePanel profile={profile} notes={notes} />
       </section>
+      {!readOnly ? <EmployeeDangerZone profile={profile} /> : null}
     </div>
   )
 }

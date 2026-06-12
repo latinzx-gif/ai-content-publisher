@@ -63,6 +63,9 @@ export function EmployeeProfileView({
                     label={profile.status === "active" ? "Active" : "Inactive"}
                     variant={profile.status === "active" ? "approved" : "neutral"}
                   />
+                  {profile.leave_blacklisted ? (
+                    <StatusPill label="Leave Blacklist" variant="rejected" />
+                  ) : null}
                 </div>
                 <p className="text-sm text-white/85">
                   รหัสพนักงาน · {employeeCode}

@@ -29,4 +29,6 @@ export type NotificationInbox = {
   /** Pending approval queue only — shown on bell badge */
   approvalTotal: number
   complianceTotal: number
+  /** Sidebar red-dot counts keyed by nav href */
+  navBadges: Record<string, number>
 }

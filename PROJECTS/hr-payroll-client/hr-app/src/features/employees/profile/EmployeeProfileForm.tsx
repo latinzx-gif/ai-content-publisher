@@ -1,11 +1,14 @@
 "use client"
 
 import { useRouter } from "next/navigation"
-import { useState } from "react"
+import { useCallback, useMemo, useState } from "react"
 
 import { StatusPill } from "@/components/brand/StatusPill"
 import { WidgetCard } from "@/components/brand/WidgetCard"
 import { Button } from "@/components/ui/button"
+import { AutoSaveIndicator } from "@/features/employees/AutoSaveIndicator"
+import { buildProfilePatchBody } from "@/features/employees/employee-form-payload"
+import { useDebouncedAutoSave } from "@/features/employees/use-debounced-auto-save"
 import type { BranchRow } from "@/features/branches/data"
 import type { ContractType, EmployeeProfile } from "@/features/employees/profile/data"
 import { PendingRegistrationApproval } from "@/features/employees/profile/PendingRegistrationApproval"
@@ -132,56 +135,45 @@ export function EmployeeProfileForm({
     setForm((prev) => ({ ...prev, [key]: value }))
   }
 
-  async function saveProfile() {
-    setSaving(true)
-    setError(null)
-    setMessage(null)
-    try {
+  const formSnapshot = useMemo(() => JSON.stringify(form), [form])
+
+  const persistProfile = useCallback(
+    async (opts?: { silent?: boolean }) => {
+      if (!form.name.trim()) {
+        throw new Error("กรุณากรอกชื่อ-นามสกุล")
+      }
+
       const res = await fetch(`/api/employees/${profile.id}`, {
         method: "PATCH",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({
-          name: form.name.trim(),
-          date_of_birth: form.date_of_birth || null,
-          phone: form.phone.trim() || null,
-          email: form.email.trim() || null,
-          position: form.position.trim() || null,
-          department: form.department.trim() || null,
-          salary: form.salary ? Number.parseFloat(form.salary) : null,
-          contract_start: form.contract_start || null,
-          contract_type: form.contract_type,
-          probation_end: form.probation_end || null,
-          visa_expiry: form.visa_expiry || null,
-          work_permit_expiry: form.work_permit_expiry || null,
-          status: form.status,
-          role: form.role,
-          employee_code: form.employee_code.trim() || null,
-          branch_id: form.branch_id || null,
-          salary_payment_method: form.salary_payment_method,
-          bank_name:
-            form.salary_payment_method === "bank"
-              ? form.bank_name.trim() || null
-              : null,
-          bank_account_name:
-            form.salary_payment_method === "bank"
-              ? form.bank_account_name.trim() || null
-              : null,
-          bank_account_number:
-            form.salary_payment_method === "bank"
-              ? form.bank_account_number.trim() || null
-              : null,
-          bank_branch:
-            form.salary_payment_method === "bank"
-              ? form.bank_branch.trim() || null
-              : null,
-        }),
+        body: JSON.stringify(buildProfilePatchBody(form)),
       })
       if (!res.ok) {
         const body = (await res.json().catch(() => null)) as { error?: string } | null
         throw new Error(body?.error ?? "บันทึกไม่สำเร็จ")
       }
-      setMessage("บันทึกข้อมูลแล้ว")
+      if (!opts?.silent) {
+        setMessage("บันทึกข้อมูลแล้ว")
+      }
       router.refresh()
+    },
+    [form, profile.id, router]
+  )
+
+  const { status: autoSaveStatus, error: autoSaveError, markSaved } =
+    useDebouncedAutoSave({
+      snapshot: formSnapshot,
+      enabled: Boolean(form.name.trim()),
+      onSave: () => persistProfile({ silent: true }),
+    })
+
+  async function saveProfile() {
+    setSaving(true)
+    setError(null)
+    setMessage(null)
+    try {
+      await persistProfile()
+      markSaved(formSnapshot)
     } catch (e) {
       setError(e instanceof Error ? e.message : "บันทึกไม่สำเร็จ")
     } finally {
@@ -230,6 +222,12 @@ export function EmployeeProfileForm({
 
   return (
     <div className="flex flex-col gap-6">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <AutoSaveIndicator status={autoSaveStatus} error={autoSaveError} />
+        {!form.name.trim() ? (
+          <p className="text-xs text-muted-foreground">กรอกชื่อเพื่อเริ่มบันทึกอัตโนมัติ</p>
+        ) : null}
+      </div>
       {isPendingRegistration ? (
         <PendingRegistrationApproval employeeId={profile.id} />
       ) : null}

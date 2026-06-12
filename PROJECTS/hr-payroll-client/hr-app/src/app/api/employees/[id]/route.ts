@@ -185,3 +185,50 @@ export async function PATCH(
 
   return NextResponse.json(data)
 }
+
+export async function DELETE(
+  _request: NextRequest,
+  context: { params: Promise<{ id: string }> }
+) {
+  const caller = await getCurrentEmployee()
+  if (!caller || !canManageHr(caller.role)) {
+    return NextResponse.json({ error: "forbidden" }, { status: 403 })
+  }
+
+  const { id } = await context.params
+  if (caller.id === id) {
+    return NextResponse.json({ error: "ไม่สามารถลบบัญชีของตนเองได้" }, { status: 400 })
+  }
+
+  const supabase = await createClient()
+  const { data: target, error: loadError } = await supabase
+    .from("hr_employees")
+    .select("id, role")
+    .eq("id", id)
+    .maybeSingle()
+
+  if (loadError) {
+    return NextResponse.json({ error: loadError.message }, { status: 500 })
+  }
+  if (!target) {
+    return NextResponse.json({ error: "not found" }, { status: 404 })
+  }
+
+  if (target.role === "admin" || target.role === "dev") {
+    return NextResponse.json(
+      { error: "ไม่สามารถลบบัญชี Admin/Dev ได้" },
+      { status: 400 }
+    )
+  }
+
+  const { error } = await supabase.from("hr_employees").delete().eq("id", id)
+
+  if (error) {
+    const msg = error.code === "23503"
+      ? "ลบไม่ได้ — พนักงานมีข้อมูลที่เชื่อมอยู่ (เช่น ประกาศ) ให้ใช้ Leave Blacklist แทน"
+      : error.message
+    return NextResponse.json({ error: msg }, { status: 500 })
+  }
+
+  return NextResponse.json({ ok: true })
+}

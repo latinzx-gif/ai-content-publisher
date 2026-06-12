@@ -10,11 +10,14 @@ import {
 } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { useState } from "react"
+import { useCallback, useMemo, useRef, useState } from "react"
 
 import { EmployeeAvatar } from "@/components/brand/EmployeeAvatar"
 import { StatusPill } from "@/components/brand/StatusPill"
 import { Button, buttonVariants } from "@/components/ui/button"
+import { AutoSaveIndicator } from "@/features/employees/AutoSaveIndicator"
+import { buildAddEmployeeBody } from "@/features/employees/employee-form-payload"
+import { useDebouncedAutoSave } from "@/features/employees/use-debounced-auto-save"
 import type { ContractType } from "@/features/employees/profile/data"
 import { PAYMENT_METHOD_OPTIONS, type SalaryPaymentMethod } from "@/features/employees/profile/payment-method"
 import { ProfileSectionCard } from "@/features/employees/profile/ProfileSectionCard"
@@ -57,6 +60,8 @@ export function AddEmployeeForm() {
   const router = useRouter()
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [draftId, setDraftId] = useState<string | null>(null)
+  const draftIdRef = useRef<string | null>(null)
 
   const [form, setForm] = useState({
     name: "",
@@ -98,6 +103,57 @@ export function AddEmployeeForm() {
     setForm((prev) => ({ ...prev, [key]: value }))
   }
 
+  const formSnapshot = useMemo(() => JSON.stringify(form), [form])
+
+  const persistDraft = useCallback(async (): Promise<string | null> => {
+    if (form.name.trim().length < 2) {
+      return draftIdRef.current
+    }
+
+    const payload = buildAddEmployeeBody(form)
+    const currentId = draftIdRef.current
+
+    if (!currentId) {
+      const res = await fetch("/api/employees", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify(payload),
+      })
+      const body = (await res.json().catch(() => null)) as
+        | { id?: string; error?: string }
+        | null
+      if (!res.ok) {
+        throw new Error(body?.error ?? "บันทึกร่างไม่สำเร็จ")
+      }
+      if (body?.id) {
+        draftIdRef.current = body.id
+        setDraftId(body.id)
+        return body.id
+      }
+      return null
+    }
+
+    const res = await fetch(`/api/employees/${currentId}`, {
+      method: "PATCH",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(payload),
+    })
+    if (!res.ok) {
+      const body = (await res.json().catch(() => null)) as { error?: string } | null
+      throw new Error(body?.error ?? "บันทึกไม่สำเร็จ")
+    }
+    return currentId
+  }, [form])
+
+  const { status: autoSaveStatus, error: autoSaveError, markSaved } =
+    useDebouncedAutoSave({
+      snapshot: formSnapshot,
+      enabled: form.name.trim().length >= 2,
+      onSave: async () => {
+        await persistDraft()
+      },
+    })
+
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (!form.name.trim()) {
@@ -108,42 +164,13 @@ export function AddEmployeeForm() {
     setSaving(true)
     setError(null)
     try {
-      const email = form.work_email.trim() || form.personal_email.trim() || null
-      const res = await fetch("/api/employees", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({
-          name: form.name.trim(),
-          line_user_id: form.line_user_id.trim() || null,
-          email,
-          phone: form.work_phone.trim() || null,
-          date_of_birth: form.date_of_birth || null,
-          department: form.department.trim() || null,
-          position: form.position.trim() || null,
-          contract_type: form.contract_type,
-          contract_start: form.contract_start || null,
-          probation_end: form.probation_end || null,
-          salary: form.salary ? Number.parseFloat(form.salary) : null,
-          visa_expiry: form.visa_expiry || null,
-          work_permit_expiry: form.work_permit_expiry || null,
-          status: form.status,
-          role: form.role,
-          employee_code: form.employee_code.trim() || null,
-          salary_payment_method: form.salary_payment_method || null,
-          bank_name: form.bank_name.trim() || null,
-          bank_account_name: form.bank_account_name.trim() || null,
-          bank_account_number: form.bank_account_number.trim() || null,
-          bank_branch: form.bank_branch.trim() || null,
-        }),
-      })
-      const body = (await res.json().catch(() => null)) as
-        | { id?: string; error?: string }
-        | null
-      if (!res.ok) {
-        throw new Error(body?.error ?? "สร้างพนักงานไม่สำเร็จ")
+      const id = await persistDraft()
+      markSaved(formSnapshot)
+      if (id) {
+        router.push(`/admin/employees/${id}`)
+      } else {
+        router.refresh()
       }
-      router.push(`/admin/employees/${body?.id}`)
-      router.refresh()
     } catch (err) {
       setError(err instanceof Error ? err.message : "สร้างพนักงานไม่สำเร็จ")
     } finally {
@@ -181,8 +208,15 @@ export function AddEmployeeForm() {
                 <p className="text-xs text-white/85">
                   {form.employee_code.trim()
                     ? `รหัสพนักงาน · ${form.employee_code.trim()}`
-                    : "รหัสพนักงาน · ระบุในฟอร์มด้านล่าง (ไม่บังคับ)"}
+                    : draftId
+                      ? "บันทึกร่างแล้ว — แก้ไขต่อได้"
+                      : "กรอกชื่อ 2 ตัวอักษรขึ้นไปเพื่อบันทึกอัตโนมัติ"}
                 </p>
+                <AutoSaveIndicator
+                  status={autoSaveStatus}
+                  error={autoSaveError}
+                  className="text-white/80"
+                />
               </div>
             </div>
             <div className="flex flex-wrap items-center gap-2">
@@ -192,7 +226,11 @@ export function AddEmployeeForm() {
                 disabled={saving}
                 className="bg-white text-brand-red hover:bg-white/90"
               >
-                {saving ? "Saving…" : "Create Employee"}
+                {saving
+                  ? "Saving…"
+                  : draftId
+                    ? "ไปที่โปรไฟล์"
+                    : "Create Employee"}
               </Button>
               <Link
                 href="/admin/employees"

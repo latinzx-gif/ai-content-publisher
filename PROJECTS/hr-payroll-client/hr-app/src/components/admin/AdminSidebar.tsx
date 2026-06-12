@@ -99,7 +99,20 @@ function AdminNavLink({
           : "text-foreground/80 hover:bg-muted hover:text-foreground"
       )}
     >
-      <AdminNavIcon name={icon} className="size-4 shrink-0" />
+      <span className="relative shrink-0">
+        <AdminNavIcon name={icon} className="size-4" />
+        {badge && badge > 0 ? (
+          <span
+            className={cn(
+              "absolute -right-0.5 -top-0.5 size-2 rounded-full",
+              active
+                ? "bg-white ring-2 ring-brand-red"
+                : "bg-brand-red ring-2 ring-white"
+            )}
+            aria-hidden
+          />
+        ) : null}
+      </span>
       <span className="min-w-0 flex-1 leading-snug">{label}</span>
       {badge && badge > 0 ? (
         <span
@@ -107,6 +120,7 @@ function AdminNavLink({
             "inline-flex min-w-5 shrink-0 items-center justify-center rounded-full px-1.5 py-0.5 text-[10px] font-semibold tabular-nums",
             active ? "bg-white/20 text-white" : "bg-brand-red text-white"
           )}
+          title={`${badge} รายการรอดำเนินการ`}
         >
           {badge > 99 ? "99+" : badge}
         </span>

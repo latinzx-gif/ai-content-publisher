@@ -185,7 +185,12 @@ export function AdminNotificationBell({
           className="absolute right-0 top-full z-50 mt-1.5 w-[min(19rem,calc(100vw-1.5rem))] overflow-hidden rounded-lg border border-border/80 bg-white shadow-lg"
         >
           <div className="flex items-center justify-between border-b border-border/60 px-2.5 py-2">
-            <p className="text-xs font-semibold">การแจ้งเตือน</p>
+            <div>
+              <p className="text-xs font-semibold">การแจ้งเตือน</p>
+              <p className="text-[10px] text-muted-foreground">
+                แสดงสูงสุด {NOTIFICATION_LIST_LIMIT} รายการล่าสุด
+              </p>
+            </div>
             {loading ? (
               <span className="text-xs text-muted-foreground">กำลังโหลด…</span>
             ) : (
