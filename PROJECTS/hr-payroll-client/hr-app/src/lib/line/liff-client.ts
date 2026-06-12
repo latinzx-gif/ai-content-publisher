@@ -8,6 +8,58 @@ export type LiffContext = {
   scanCodeAvailable: boolean
   liffId?: string
   error?: string
+  errorCode?: string
+}
+
+export type LiffInitDiagnostics = {
+  liffId: string
+  attempt: number
+  errorName?: string
+  errorCode?: string
+  errorMessage?: string
+  stack?: string
+  userAgent: string
+  isLineWebView: boolean
+  online: boolean
+  durationMs: number
+  url: string
+  timestamp: string
+}
+
+let lastInitDiagnostics: LiffInitDiagnostics | null = null
+
+/** Latest liff.init() failure details — for UI display and live debugging */
+export function getLastLiffInitDiagnostics(): LiffInitDiagnostics | null {
+  return lastInitDiagnostics
+}
+
+function readLiffErrorCode(err: unknown): string | undefined {
+  if (typeof err !== "object" || err === null) return undefined
+  const code = (err as { code?: unknown }).code
+  return typeof code === "string" && code ? code : undefined
+}
+
+function buildDiagnostics(
+  liffId: string,
+  attempt: number,
+  err: unknown,
+  durationMs: number
+): LiffInitDiagnostics {
+  const error = err instanceof Error ? err : undefined
+  return {
+    liffId,
+    attempt,
+    errorName: error?.name,
+    errorCode: readLiffErrorCode(err),
+    errorMessage: error?.message ?? (err == null ? undefined : String(err)),
+    stack: error?.stack?.slice(0, 500),
+    userAgent: typeof navigator === "undefined" ? "" : navigator.userAgent,
+    isLineWebView: isLikelyLineBrowser(),
+    online: typeof navigator === "undefined" ? true : navigator.onLine,
+    durationMs: Math.round(durationMs),
+    url: typeof location === "undefined" ? "" : location.href,
+    timestamp: new Date().toISOString(),
+  }
 }
 
 // Cache only successful inits — a failed init (e.g. network blip during the
@@ -48,6 +100,7 @@ async function doInit(id: string): Promise<LiffContext> {
 
   let lastError: unknown
   for (let attempt = 0; attempt < 2; attempt += 1) {
+    const startedAt = performance.now()
     try {
       await liff.init({ liffId: id })
       const inClient = liff.isInClient()
@@ -60,6 +113,13 @@ async function doInit(id: string): Promise<LiffContext> {
       }
     } catch (err) {
       lastError = err
+      lastInitDiagnostics = buildDiagnostics(
+        id,
+        attempt + 1,
+        err,
+        performance.now() - startedAt
+      )
+      console.error("[liff-init] attempt failed", lastInitDiagnostics)
       // Retry only transient network failures, once, after a short pause
       if (attempt === 0 && isFetchLikeError(err)) {
         await sleep(800)
@@ -69,12 +129,17 @@ async function doInit(id: string): Promise<LiffContext> {
     }
   }
 
+  if (lastInitDiagnostics) {
+    console.error("[liff-init] FINAL FAILURE", lastInitDiagnostics)
+  }
+
   return {
     ready: false,
     inClient: isLikelyLineBrowser(),
     scanCodeAvailable: false,
     liffId: id,
     error: describeLiffInitError(lastError),
+    errorCode: lastInitDiagnostics?.errorCode ?? lastInitDiagnostics?.errorName,
   }
 }
 

@@ -360,7 +360,17 @@ export function InboundBarcodeScanner({
     setScanError(null)
     setBusy(true)
     try {
-      const value = await scanBarcodeWithLiff(liffCtx?.liffId)
+      const ctx = await initInboundScanLiff()
+      setLiffCtx(ctx)
+      if (!ctx.ready) {
+        const code = ctx.errorCode ? ` (รหัส: ${ctx.errorCode})` : ""
+        setScanError(
+          `เชื่อมต่อ LINE ไม่ได้${code} — ใช้ปุ่ม「ถ่ายรูป barcode」แทนได้เลย ถ้าพบซ้ำกรุณาแคปหน้าจอนี้แจ้งผู้ดูแล`
+        )
+        return
+      }
+
+      const value = await scanBarcodeWithLiff(ctx.liffId)
       onScanned(value)
     } catch (err) {
       setScanError(
