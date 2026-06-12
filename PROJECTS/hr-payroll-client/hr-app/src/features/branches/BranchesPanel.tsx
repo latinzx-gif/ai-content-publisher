@@ -1,5 +1,6 @@
 "use client"
 
+import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useState } from "react"
 
@@ -84,8 +85,18 @@ export function BranchesPanel({
           </thead>
           <tbody>
             {branches.map((b) => (
-              <tr key={b.id} className="border-b last:border-0">
-                <td className="px-3 py-2">{b.name}</td>
+              <tr
+                key={b.id}
+                className="border-b last:border-0 hover:bg-muted/30"
+              >
+                <td className="px-3 py-2">
+                  <Link
+                    href={`/admin/branches/${b.id}`}
+                    className="font-medium text-brand-red hover:underline"
+                  >
+                    {b.name}
+                  </Link>
+                </td>
                 <td className="px-3 py-2">{b.code ?? "—"}</td>
                 <td className="px-3 py-2 text-muted-foreground">
                   {b.manager_employee_id ? "มอบหมายแล้ว" : "ยังไม่มอบหมาย"}

@@ -5,7 +5,10 @@ import { getManagedBranchId } from "@/lib/auth/branch"
 import type { Employee } from "@/lib/auth/session"
 import { createClient } from "@/lib/supabase/server"
 
-import { getManagerAttendanceQueue, getManagerLeaveQueue } from "@/features/manager/data"
+import {
+  getBranchAttendanceQueue,
+  getBranchLeaveQueue,
+} from "@/features/branches/branch-queues"
 
 const DAY_MS = 86_400_000
 const ICT_OFFSET_MS = 7 * 60 * 60 * 1000
@@ -47,35 +50,32 @@ export type BranchDashboardData = {
   presentRate: number
 }
 
-export async function getBranchDashboardData(
-  caller: Employee
+const emptyBranchDashboard = (): BranchDashboardData => ({
+  branch: null,
+  headcount: 0,
+  presentToday: 0,
+  lateToday: 0,
+  onLeaveToday: 0,
+  absentToday: 0,
+  otHoursMonth: 0,
+  pendingAttendance: 0,
+  pendingLeaves: 0,
+  attendanceDonut: [],
+  weekTrend: [],
+  pendingLeaveRows: [],
+  departmentRows: [],
+  recentActivity: [],
+  announcements: [],
+  presentRate: 0,
+})
+
+export async function getBranchDashboardDataForBranch(
+  branchId: string
 ): Promise<BranchDashboardData> {
   const supabase = await createClient()
-  const branchId = await getManagedBranchId(caller.id)
   const now = new Date()
   const today = ictToday()
   const { start: todayStart, end: todayEnd } = ictDayRangeUtc(now)
-
-  const empty: BranchDashboardData = {
-    branch: null,
-    headcount: 0,
-    presentToday: 0,
-    lateToday: 0,
-    onLeaveToday: 0,
-    absentToday: 0,
-    otHoursMonth: 0,
-    pendingAttendance: 0,
-    pendingLeaves: 0,
-    attendanceDonut: [],
-    weekTrend: [],
-    pendingLeaveRows: [],
-    departmentRows: [],
-    recentActivity: [],
-    announcements: [],
-    presentRate: 0,
-  }
-
-  if (!branchId) return empty
 
   const [branchRes, employeesRes, attTodayRes, leavesTodayRes, attendanceQueue, leaveQueue, annRes] =
     await Promise.all([
@@ -99,8 +99,8 @@ export async function getBranchDashboardData(
         .eq("hr_employees.branch_id", branchId)
         .lte("start_date", today)
         .gte("end_date", today),
-      getManagerAttendanceQueue(caller),
-      getManagerLeaveQueue(caller),
+      getBranchAttendanceQueue(branchId),
+      getBranchLeaveQueue(branchId),
       supabase
         .from("hr_announcements")
         .select("title, sent_at")
@@ -109,12 +109,58 @@ export async function getBranchDashboardData(
         .limit(3),
     ])
 
-  const employees = employeesRes.data ?? []
+  return buildBranchDashboardPayload({
+    branchRes: branchRes.data,
+    employees: employeesRes.data ?? [],
+    attRows: attTodayRes.data ?? [],
+    leavesToday: leavesTodayRes.data ?? [],
+    attendanceQueue,
+    leaveQueue,
+    announcements: annRes.data ?? [],
+    branchId,
+    todayStart,
+    todayEnd,
+    supabase,
+  })
+}
+
+export async function getBranchDashboardData(
+  caller: Employee
+): Promise<BranchDashboardData> {
+  const branchId = await getManagedBranchId(caller.id)
+  if (!branchId) return emptyBranchDashboard()
+  return getBranchDashboardDataForBranch(branchId)
+}
+
+async function buildBranchDashboardPayload({
+  branchRes,
+  employees,
+  attRows,
+  leavesToday,
+  attendanceQueue,
+  leaveQueue,
+  announcements,
+  branchId,
+  todayStart,
+  todayEnd,
+  supabase,
+}: {
+  branchRes: { id: string; name: string; code: string | null } | null
+  employees: Array<Record<string, unknown>>
+  attRows: Array<Record<string, unknown>>
+  leavesToday: Array<Record<string, unknown>> | null
+  attendanceQueue: Array<Record<string, unknown>>
+  leaveQueue: Array<Record<string, unknown>>
+  announcements: Array<Record<string, unknown>>
+  branchId: string
+  todayStart: Date
+  todayEnd: Date
+  supabase: Awaited<ReturnType<typeof createClient>>
+}): Promise<BranchDashboardData> {
   const headcount = employees.length
-  const attRows = attTodayRes.data ?? []
   const presentToday = attRows.length
   const lateToday = attRows.filter((r) => r.is_late).length
-  const onLeaveToday = leavesTodayRes.data?.length ?? 0
+  const onLeaveToday = leavesToday?.length ?? 0
   const absentToday = Math.max(0, headcount - presentToday - onLeaveToday)
 
   const presentRate = headcount > 0 ? Math.round((presentToday / headcount) * 1000) / 10 : 0
@@ -212,7 +258,7 @@ export async function getBranchDashboardData(
   }
 
   return {
-    branch: branchRes.data as BranchDashboardData["branch"],
+    branch: branchRes,
     headcount,
     presentToday,
     lateToday,
@@ -226,7 +272,7 @@ export async function getBranchDashboardData(
     pendingLeaveRows,
     departmentRows,
     recentActivity,
-    announcements: (annRes.data ?? []).map((a) => ({
+    announcements: announcements.map((a) => ({
       title: a.title as string,
       date: a.sent_at
         ? new Date(a.sent_at as string).toLocaleDateString("th-TH")
