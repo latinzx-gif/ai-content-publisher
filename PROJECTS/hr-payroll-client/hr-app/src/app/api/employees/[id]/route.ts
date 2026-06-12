@@ -3,9 +3,10 @@ import { NextResponse, type NextRequest } from "next/server"
 import { ictToday } from "@/features/employees/data"
 import type { ContractType } from "@/features/employees/profile/data"
 import type { SalaryPaymentMethod } from "@/features/employees/profile/payment-method"
-import { isAssignableRole } from "@/lib/auth/employee-roles"
+import { isAssignableRole, type AssignableRole } from "@/lib/auth/employee-roles"
 import { canEditEmployeeRecord, canManageHr } from "@/lib/auth/roles"
 import { getCurrentEmployee } from "@/lib/auth/session"
+import { validateEmployeeDepartmentRole } from "@/lib/employees/validate-department-role"
 import { normalizeBankFields } from "@/lib/employees/bank-fields"
 import { permanentDeleteEmployee } from "@/lib/employees/permanent-delete"
 import { createClient } from "@/lib/supabase/server"
@@ -164,6 +165,35 @@ export async function PATCH(
 
   if (Object.keys(updates).length === 0) {
     return NextResponse.json({ error: "no changes" }, { status: 400 })
+  }
+
+  if (body.role !== undefined || body.department !== undefined) {
+    const { data: current } = await supabase
+      .from("hr_employees")
+      .select("department, role")
+      .eq("id", id)
+      .maybeSingle()
+
+    if (!current) {
+      return NextResponse.json({ error: "not found" }, { status: 404 })
+    }
+
+    const nextDepartment =
+      body.department !== undefined
+        ? body.department
+        : (current.department as string | null)
+    const nextRole = (
+      body.role !== undefined ? body.role : current.role
+    ) as AssignableRole
+
+    const roleMismatch = validateEmployeeDepartmentRole(
+      nextDepartment,
+      nextRole,
+      caller
+    )
+    if (roleMismatch) {
+      return NextResponse.json({ error: roleMismatch }, { status: 400 })
+    }
   }
 
   const { data, error } = await supabase

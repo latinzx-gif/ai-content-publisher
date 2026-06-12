@@ -22,6 +22,10 @@ import type { ContractType } from "@/features/employees/profile/data"
 import { PAYMENT_METHOD_OPTIONS, type SalaryPaymentMethod } from "@/features/employees/profile/payment-method"
 import { ProfileSectionCard } from "@/features/employees/profile/ProfileSectionCard"
 import {
+  allowedRolesForDepartment,
+  defaultRoleForDepartment,
+} from "@/lib/auth/department-role-defaults"
+import {
   ASSIGNABLE_ROLES,
   type AssignableRole,
 } from "@/lib/auth/employee-roles"
@@ -102,6 +106,11 @@ export function AddEmployeeForm() {
   function setField<K extends keyof typeof form>(key: K, value: (typeof form)[K]) {
     setForm((prev) => ({ ...prev, [key]: value }))
   }
+
+  const roleOptions = useMemo(() => {
+    const allowed = allowedRolesForDepartment(form.department)
+    return ASSIGNABLE_ROLES.filter((role) => allowed.includes(role))
+  }, [form.department])
 
   const formSnapshot = useMemo(() => JSON.stringify(form), [form])
 
@@ -383,7 +392,7 @@ export function AddEmployeeForm() {
                 setField("role", e.target.value as AssignableRole)
               }
             >
-              {ASSIGNABLE_ROLES.map((role) => (
+              {roleOptions.map((role) => (
                 <option key={role} value={role}>
                   {roleDisplayLabel(role)}
                 </option>
@@ -397,7 +406,15 @@ export function AddEmployeeForm() {
             <input
               className={inputClassName}
               value={form.department}
-              onChange={(e) => setField("department", e.target.value)}
+              onChange={(e) => {
+                const nextDept = e.target.value
+                setForm((prev) => {
+                  const nextRole = defaultRoleForDepartment(nextDept)
+                  const allowed = allowedRolesForDepartment(nextDept)
+                  const role = allowed.includes(prev.role) ? prev.role : nextRole
+                  return { ...prev, department: nextDept, role }
+                })
+              }}
             />
           </FormField>
           <FormField label="Position">

@@ -21,6 +21,7 @@ import {
   isBranchManager,
   isCeo,
   isCeoAllowedPath,
+  hasFullDataAccess,
   isDev,
   isManagementDashboardEmployee,
 } from "@/lib/auth/roles"
@@ -99,7 +100,7 @@ export default async function AdminLayout({
       alertBadge={alertBadge}
       approvalBadge={approvalBadge}
       notificationItems={notificationInbox.items}
-      showComplianceLink={notificationScope === "hr"}
+      showComplianceLink={notificationScope === "hr" || hasFullDataAccess(employee.role)}
       branchMode={navMode?.branchMode ?? branchManager}
       ceoMode={navMode?.ceoMode ?? ceo}
       devAllMode={navMode?.devAllMode ?? false}

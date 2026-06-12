@@ -493,7 +493,6 @@ export function resolveNotificationScope(
 ): NotificationScope | null {
   if (caller.role === "dev") {
     if (devView === "branch") return "branch"
-    if (devView === "ceo") return null
     return "hr"
   }
   if (canManageHr(caller.role)) return "hr"

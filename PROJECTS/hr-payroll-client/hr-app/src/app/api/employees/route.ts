@@ -4,9 +4,11 @@ import type { ContractType } from "@/features/employees/profile/data"
 import type { SalaryPaymentMethod } from "@/features/employees/profile/payment-method"
 import {
   isAssignableRole,
+  type AssignableRole,
 } from "@/lib/auth/employee-roles"
 import { canManageHr } from "@/lib/auth/roles"
 import { getCurrentEmployee } from "@/lib/auth/session"
+import { validateEmployeeDepartmentRole } from "@/lib/employees/validate-department-role"
 import { normalizeBankFields } from "@/lib/employees/bank-fields"
 import { createClient } from "@/lib/supabase/server"
 
@@ -69,6 +71,15 @@ export async function POST(request: Request) {
   const role = body.role ?? "employee"
   if (!isAssignableRole(role)) {
     return NextResponse.json({ error: "invalid role" }, { status: 400 })
+  }
+
+  const roleMismatch = validateEmployeeDepartmentRole(
+    body.department,
+    role as AssignableRole,
+    caller
+  )
+  if (roleMismatch) {
+    return NextResponse.json({ error: roleMismatch }, { status: 400 })
   }
 
   const supabase = await createClient()

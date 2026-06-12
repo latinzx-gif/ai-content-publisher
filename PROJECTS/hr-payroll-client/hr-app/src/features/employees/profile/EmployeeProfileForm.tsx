@@ -21,6 +21,10 @@ import {
   type SalaryPaymentMethod,
 } from "@/features/employees/profile/payment-method"
 import {
+  allowedRolesForDepartment,
+  defaultRoleForDepartment,
+} from "@/lib/auth/department-role-defaults"
+import {
   ASSIGNABLE_ROLES,
   type AssignableRole,
 } from "@/lib/auth/employee-roles"
@@ -160,6 +164,11 @@ export function EmployeeProfileForm({
     const match = branchDepartments.find((d) => d.name === form.department)
     return match?.id ?? ""
   }, [branchDepartments, form.department])
+
+  const roleOptions = useMemo(() => {
+    const allowed = allowedRolesForDepartment(form.department)
+    return ASSIGNABLE_ROLES.filter((role) => allowed.includes(role))
+  }, [form.department])
 
   const departmentPositions = useMemo(() => {
     if (!selectedDepartmentId) {
@@ -311,10 +320,14 @@ export function EmployeeProfileForm({
                           branchDepartments.find((d) => d.name === nextDept)?.id ===
                             p.department_id)
                     )
+                    const nextRole = defaultRoleForDepartment(nextDept)
+                    const allowed = allowedRolesForDepartment(nextDept)
+                    const role = allowed.includes(prev.role) ? prev.role : nextRole
                     return {
                       ...prev,
                       department: nextDept,
                       position: stillValid ? prev.position : "",
+                      role,
                     }
                   })
                 }}
@@ -373,18 +386,23 @@ export function EmployeeProfileForm({
                     setField("role", e.target.value as AssignableRole)
                   }
                 >
-                  {ASSIGNABLE_ROLES.map((role) => (
+                  {roleOptions.map((role) => (
                     <option key={role} value={role}>
                       {roleDisplayLabel(role)}
                     </option>
                   ))}
+                  {form.role && !roleOptions.includes(form.role) ? (
+                    <option value={form.role}>
+                      {roleDisplayLabel(form.role)} (เดิม)
+                    </option>
+                  ) : null}
                 </select>
               </Field>
             </div>
             <p className="text-xs text-muted-foreground">
-              แผนก Management — ทุกคนใช้ Dashboard ได้ · สิทธิ์ตาม Role (Admin /
-              HR / Branch Manager / Developers / CEO) · พนักงานสาขาอื่น (Employee)
-              = LINE เท่านั้น
+              จับคู่แนะนำ: Management → CEO/Admin · HR Officer → HR · IT →
+              Developers · Admin → Admin/HR · Accounting/Inventory → Admin ·
+              สาขาอื่น → Employee/Branch Manager · Developers = สิทธิ์เต็มทุกข้อมูล
             </p>
             <Field label="สาขา">
               <select

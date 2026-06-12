@@ -51,6 +51,11 @@ export function canManageHr(role: AppRole): boolean {
   return isHrAdmin(role) || isDev(role)
 }
 
+/** Dev + HR Admin — เข้าถึงข้อมูลและจัดการได้ทั้งหมด */
+export function hasFullDataAccess(role: AppRole): boolean {
+  return isDev(role) || canManageHr(role)
+}
+
 /** Edit employee records (profile, lifecycle) — HR, Dev, CEO */
 export function canEditEmployeeRecord(role: AppRole): boolean {
   return canManageHr(role) || isCeo(role)
@@ -76,7 +81,7 @@ export function adminLoginPath(
   department: string | null = null
 ): string {
   if (status === "inactive") return PENDING_REGISTRATION_PATH
-  if (role === "dev") return "/admin/ceo"
+  if (role === "dev") return "/admin"
   if (role === "branch_manager") return "/admin/branch"
   if (role === "ceo") return "/admin/ceo"
   if (isHrAdmin(role) || isManagementDepartment(department)) return "/admin"
