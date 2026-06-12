@@ -232,6 +232,7 @@ export default function CreatePage() {
   const [generatingText, setGeneratingText] = useState(false);
   const [generatingImage, setGeneratingImage] = useState(false);
   const [imageMeta, setImageMeta] = useState<{ gradient: string; label: string } | null>(null);
+  const [aiDegraded, setAiDegraded] = useState(false);
   const abortRef = useRef<AbortController | null>(null);
 
   const platform = PLATFORMS.find((p) => p.id === activePlatform)!;
@@ -249,18 +250,70 @@ export default function CreatePage() {
     setCaption("");
     setHashtags("");
     setImageMeta(null);
+    setAiDegraded(false);
 
-    // brief thinking delay
-    await new Promise((r) => setTimeout(r, 600));
-    if (ctrl.signal.aborted) return;
+    try {
+      const { CONTENT_AGENT_PROMPT } = await import('@/lib/agents/runtime/prompts');
+      const systemPrompt = CONTENT_AGENT_PROMPT({
+        brand: "DataClaw",
+        platform: activePlatform,
+        count: 1,
+        topic: "",
+        language: "TH",
+        wordCount: "150w",
+        imageStyle: "Professional",
+      });
 
-    await typewrite(AI_CAPTIONS[activePlatform], setCaption, ctrl.signal);
-    if (ctrl.signal.aborted) return;
+      const res = await fetch('/api/agent/stream', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          prompt: `เขียน caption สั้น 1 โพสต์สำหรับ ${activePlatform} ของ DataClaw`,
+          systemPrompt,
+          runtimeType: 'gemini',
+        }),
+        signal: ctrl.signal,
+      });
 
-    await new Promise((r) => setTimeout(r, 300));
-    await typewrite(AI_HASHTAGS[activePlatform], setHashtags, ctrl.signal, 6, 12);
+      if (!res.ok || !res.body) throw new Error(`HTTP ${res.status}`);
 
-    setGeneratingText(false);
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = "";
+
+      outer: while (!ctrl.signal.aborted) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split("\n");
+        buffer = lines.pop() ?? "";
+        for (const line of lines) {
+          if (ctrl.signal.aborted) break outer;
+          if (!line.startsWith("data:")) continue;
+          const raw = line.slice(5).trim();
+          if (raw === "[DONE]") break outer;
+          let parsed: { chunk?: string; error?: string };
+          try { parsed = JSON.parse(raw); } catch { continue; }
+          if (parsed.error) throw new Error(parsed.error);
+          if (parsed.chunk) setCaption((prev) => prev + parsed.chunk!);
+        }
+      }
+
+      if (ctrl.signal.aborted) return;
+      await new Promise((r) => setTimeout(r, 300));
+      await typewrite(AI_HASHTAGS[activePlatform], setHashtags, ctrl.signal, 6, 12);
+    } catch (err) {
+      if (ctrl.signal.aborted || (err as Error).name === "AbortError") return;
+      // AI failed — show degraded state and fall back to local example content
+      setAiDegraded(true);
+      setCaption("");
+      await typewrite(AI_CAPTIONS[activePlatform], setCaption, ctrl.signal);
+      if (ctrl.signal.aborted) return;
+      await new Promise((r) => setTimeout(r, 300));
+      await typewrite(AI_HASHTAGS[activePlatform], setHashtags, ctrl.signal, 6, 12);
+    }
+
+    if (!ctrl.signal.aborted) setGeneratingText(false);
   }
 
   async function handleGenerateImage() {
@@ -328,6 +381,14 @@ export default function CreatePage() {
                   : <><Sparkles size={14} /> Generate Text</>}
               </button>
             </div>
+
+            {/* AI degraded state notice */}
+            {aiDegraded && (
+              <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800 flex items-center gap-2">
+                <span>⚠</span>
+                <span><span className="font-semibold">AI unavailable</span> — showing local example content</span>
+              </div>
+            )}
 
             {/* Caption textarea */}
             <div className="flex flex-col gap-1.5 flex-1">

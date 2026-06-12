@@ -57,6 +57,8 @@ export function QuickCreateForm({ onSubmit: _onSubmit }: QuickCreateFormProps) {
   const [generating, setGenerating] = useState(false);
   const [generated, setGenerated] = useState(false);
   const [aiResult, setAiResult] = useState<string | null>(null);
+  const [aiError, setAiError] = useState<string | null>(null);
+  const [streamingText, setStreamingText] = useState("");
 
   function togglePlatform(p: string) {
     setSelectedPlatforms((prev) =>
@@ -66,6 +68,9 @@ export function QuickCreateForm({ onSubmit: _onSubmit }: QuickCreateFormProps) {
 
   async function handleGenerate() {
     setGenerating(true);
+    setAiError(null);
+    setStreamingText("");
+    setAiResult(null);
     try {
       const { CONTENT_AGENT_PROMPT } = await import('@/lib/agents/runtime/prompts');
 
@@ -79,34 +84,48 @@ export function QuickCreateForm({ onSubmit: _onSubmit }: QuickCreateFormProps) {
         imageStyle,
       });
 
-      const res = await fetch('/api/agent/run', {
+      const res = await fetch('/api/agent/stream', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           prompt: `สร้าง ${postCount} โพสตามที่กำหนด`,
           systemPrompt,
-          runtimeType: 'gemini', // default to gemini (fast + free)
+          runtimeType: 'gemini',
         }),
       });
 
-      const data = await res.json();
+      if (!res.ok || !res.body) throw new Error(`HTTP ${res.status}`);
 
-      if (data.success) {
-        // Try to parse JSON from result
-        const jsonMatch = data.result.match(/\[[\s\S]*\]/);
-        if (jsonMatch) {
-          // Successfully got real AI posts - set generated
-          setGenerated(true);
-          // Store raw result for display
-          setAiResult(data.result);
-        } else {
-          setGenerated(true); // fallback: show mock
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let accumulated = "";
+      let buffer = "";
+
+      outer: while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split("\n");
+        buffer = lines.pop() ?? "";
+        for (const line of lines) {
+          if (!line.startsWith("data:")) continue;
+          const raw = line.slice(5).trim();
+          if (raw === "[DONE]") break outer;
+          let parsed: { chunk?: string; error?: string };
+          try { parsed = JSON.parse(raw); } catch { continue; }
+          if (parsed.error) throw new Error(parsed.error);
+          if (parsed.chunk) {
+            accumulated += parsed.chunk;
+            setStreamingText(accumulated);
+          }
         }
-      } else {
-        setGenerated(true); // fallback to mock on error
       }
-    } catch {
-      setGenerated(true); // fallback to mock
+
+      setAiResult(accumulated || null);
+      setGenerated(true);
+    } catch (err) {
+      setAiError((err as Error).message || "AI generation failed");
+      setGenerated(false);
     } finally {
       setGenerating(false);
     }
@@ -307,14 +326,27 @@ export function QuickCreateForm({ onSubmit: _onSubmit }: QuickCreateFormProps) {
           </div>
 
           {!generated ? (
-            <button
-              className="w-full py-3 rounded-xl text-white font-bold text-base transition-opacity hover:opacity-90 disabled:opacity-60 enabled:active:scale-[0.98]"
-              style={{ backgroundColor: "#d92d20" }}
-              onClick={handleGenerate}
-              disabled={generating}
-            >
-              {generating ? "Generating..." : `Generate ${postCount} Posts`}
-            </button>
+            <>
+              {aiError && (
+                <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800 flex items-start gap-2">
+                  <span>⚠</span>
+                  <span><span className="font-semibold">AI unavailable:</span> {aiError}</span>
+                </div>
+              )}
+              <button
+                className="w-full py-3 rounded-xl text-white font-bold text-base transition-opacity hover:opacity-90 disabled:opacity-60 enabled:active:scale-[0.98]"
+                style={{ backgroundColor: "#d92d20" }}
+                onClick={handleGenerate}
+                disabled={generating}
+              >
+                {generating ? "Generating..." : `Generate ${postCount} Posts`}
+              </button>
+              {generating && streamingText && (
+                <div className="rounded-xl bg-slate-50 border border-slate-200 p-3 text-xs text-slate-700 font-mono whitespace-pre-wrap max-h-32 overflow-auto">
+                  {streamingText}
+                </div>
+              )}
+            </>
           ) : (
             <div className="space-y-3">
               <p className="text-xs font-semibold text-green-700 bg-green-50 px-3 py-2 rounded-lg">
