@@ -35,6 +35,11 @@ export function canManageHr(role: AppRole): boolean {
   return isHrAdmin(role) || isDev(role)
 }
 
+/** Edit employee records (profile, lifecycle) — HR, Dev, CEO */
+export function canEditEmployeeRecord(role: AppRole): boolean {
+  return canManageHr(role) || isCeo(role)
+}
+
 export const CEO_ALLOWED_PREFIXES = [
   "/admin/ceo",
   "/admin/branches",

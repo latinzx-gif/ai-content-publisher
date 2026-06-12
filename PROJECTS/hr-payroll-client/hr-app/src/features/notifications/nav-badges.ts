@@ -30,9 +30,14 @@ export function buildHrNavBadges(
   const badges: NavAlertBadgeMap = {}
   const approvalTotal = hrApprovalCountsTotal(counts)
 
+  const managerQueueTotal =
+    counts.leave + counts.attendance + counts.overtime
+
   if (approvalTotal > 0) {
     badges["/admin"] = approvalTotal
-    badges["/admin/manager"] = approvalTotal
+  }
+  if (managerQueueTotal > 0) {
+    badges["/admin/manager"] = managerQueueTotal
   }
 
   const employees = counts.registration + complianceTotal

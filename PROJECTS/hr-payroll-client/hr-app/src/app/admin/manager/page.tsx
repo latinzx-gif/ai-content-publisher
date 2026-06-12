@@ -3,27 +3,32 @@ import { ApprovalQueue } from "@/features/manager/ApprovalQueue"
 import {
   getManagerAttendanceQueue,
   getManagerLeaveQueue,
+  getManagerOvertimeQueue,
 } from "@/features/manager/data"
 import {
   mapAttendanceQueueItems,
   mapLeaveQueueItems,
+  mapOvertimeQueueItems,
 } from "@/features/manager/map-queue-items"
 import { requireRole } from "@/lib/auth/require-role"
 
-/** คิวอนุมัติขั้นสุดท้ายสำหรับ HR เท่านั้น */
+const HR_QUEUE = "hr" as const
+
+/** คิวอนุมัติขั้นสุดท้ายสำหรับ HR / Admin / Dev */
 export default async function HrApprovalQueuePage() {
-  const employee = await requireRole("hr", "admin")
-  const [attendance, leaves] = await Promise.all([
-    getManagerAttendanceQueue(employee),
-    getManagerLeaveQueue(employee),
+  const employee = await requireRole("hr", "admin", "dev")
+  const [attendance, leaves, overtime] = await Promise.all([
+    getManagerAttendanceQueue(employee, HR_QUEUE),
+    getManagerLeaveQueue(employee, HR_QUEUE),
+    getManagerOvertimeQueue(employee, HR_QUEUE),
   ])
 
   return (
     <AdminPageShell
       title="HR Approval Queue"
-      description="อนุมัติขั้นสุดท้าย — หลัง Branch Manager อนุมัติแล้ว"
+      description="อนุมัติขั้นสุดท้าย — หลัง Branch Manager อนุมัติแล้ว (ลา · เข้างาน · OT)"
     >
-      <div className="grid gap-4 lg:grid-cols-2">
+      <div className="grid gap-4 lg:grid-cols-3">
         <ApprovalQueue
           title="สรุปเข้างาน (pending HR)"
           emptyText="ไม่มีคิวรออนุมัติ"
@@ -33,6 +38,11 @@ export default async function HrApprovalQueuePage() {
           title="คำขอลา (pending HR)"
           emptyText="ไม่มีคำขอลารออนุมัติ"
           items={mapLeaveQueueItems(leaves)}
+        />
+        <ApprovalQueue
+          title="ขอ OT (pending HR)"
+          emptyText="ไม่มีคำขอ OT รออนุมัติ"
+          items={mapOvertimeQueueItems(overtime)}
         />
       </div>
     </AdminPageShell>

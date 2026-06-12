@@ -10,6 +10,10 @@ import { AutoSaveIndicator } from "@/features/employees/AutoSaveIndicator"
 import { buildProfilePatchBody } from "@/features/employees/employee-form-payload"
 import { useDebouncedAutoSave } from "@/features/employees/use-debounced-auto-save"
 import type { BranchRow } from "@/features/branches/data"
+import type {
+  OrgDepartment,
+  OrgPosition,
+} from "@/features/organization/master-data"
 import type { ContractType, EmployeeProfile } from "@/features/employees/profile/data"
 import { PendingRegistrationApproval } from "@/features/employees/profile/PendingRegistrationApproval"
 import {
@@ -120,9 +124,13 @@ function Field({
 export function EmployeeProfileForm({
   profile,
   branches,
+  departments,
+  positions,
 }: {
   profile: EmployeeProfile
   branches: BranchRow[]
+  departments: OrgDepartment[]
+  positions: OrgPosition[]
 }) {
   const router = useRouter()
   const [form, setForm] = useState<FormState>(() => toFormState(profile))
@@ -136,6 +144,24 @@ export function EmployeeProfileForm({
   }
 
   const formSnapshot = useMemo(() => JSON.stringify(form), [form])
+
+  const branchDepartments = useMemo(() => {
+    if (!form.branch_id) return departments
+    return departments.filter((d) => d.branch_id === form.branch_id)
+  }, [departments, form.branch_id])
+
+  const selectedDepartmentId = useMemo(() => {
+    const match = branchDepartments.find((d) => d.name === form.department)
+    return match?.id ?? ""
+  }, [branchDepartments, form.department])
+
+  const departmentPositions = useMemo(() => {
+    if (!selectedDepartmentId) {
+      if (!form.branch_id) return positions
+      return positions.filter((p) => p.branch_id === form.branch_id)
+    }
+    return positions.filter((p) => p.department_id === selectedDepartmentId)
+  }, [positions, selectedDepartmentId, form.branch_id])
 
   const persistProfile = useCallback(
     async (opts?: { silent?: boolean }) => {
@@ -265,19 +291,64 @@ export function EmployeeProfileForm({
                 onChange={(e) => setField("email", e.target.value)}
               />
             </Field>
+            <Field label="แผนก">
+              <select
+                className={inputClassName}
+                value={form.department}
+                onChange={(e) => {
+                  const nextDept = e.target.value
+                  setForm((prev) => {
+                    const stillValid = positions.some(
+                      (p) =>
+                        p.name === prev.position &&
+                        (!nextDept ||
+                          branchDepartments.find((d) => d.name === nextDept)?.id ===
+                            p.department_id)
+                    )
+                    return {
+                      ...prev,
+                      department: nextDept,
+                      position: stillValid ? prev.position : "",
+                    }
+                  })
+                }}
+              >
+                <option value="">— เลือกแผนก —</option>
+                {branchDepartments.map((d) => (
+                  <option key={d.id} value={d.name}>
+                    {d.name}
+                  </option>
+                ))}
+                {form.department &&
+                !branchDepartments.some((d) => d.name === form.department) ? (
+                  <option value={form.department}>{form.department} (เดิม)</option>
+                ) : null}
+              </select>
+              <p className="mt-1 text-[11px] text-muted-foreground">
+                จาก Organization — เพิ่มแผนกที่{" "}
+                <a href="/admin/organization" className="text-brand-red hover:underline">
+                  /admin/organization
+                </a>
+              </p>
+            </Field>
             <Field label="ตำแหน่ง">
-              <input
+              <select
                 className={inputClassName}
                 value={form.position}
                 onChange={(e) => setField("position", e.target.value)}
-              />
-            </Field>
-            <Field label="แผนก">
-              <input
-                className={inputClassName}
-                value={form.department}
-                onChange={(e) => setField("department", e.target.value)}
-              />
+                disabled={!form.department && departmentPositions.length === 0}
+              >
+                <option value="">— เลือกตำแหน่ง —</option>
+                {departmentPositions.map((p) => (
+                  <option key={p.id} value={p.name}>
+                    {p.name}
+                  </option>
+                ))}
+                {form.position &&
+                !departmentPositions.some((p) => p.name === form.position) ? (
+                  <option value={form.position}>{form.position} (เดิม)</option>
+                ) : null}
+              </select>
             </Field>
             <div className="grid gap-3 sm:grid-cols-2">
               <Field label="รหัสพนักงาน">
@@ -312,7 +383,21 @@ export function EmployeeProfileForm({
               <select
                 className={inputClassName}
                 value={form.branch_id}
-                onChange={(e) => setField("branch_id", e.target.value)}
+                onChange={(e) => {
+                  const nextBranchId = e.target.value
+                  setForm((prev) => {
+                    const nextDepts = nextBranchId
+                      ? departments.filter((d) => d.branch_id === nextBranchId)
+                      : departments
+                    const deptOk = nextDepts.some((d) => d.name === prev.department)
+                    return {
+                      ...prev,
+                      branch_id: nextBranchId,
+                      department: deptOk ? prev.department : "",
+                      position: deptOk ? prev.position : "",
+                    }
+                  })
+                }}
               >
                 <option value="">— ไม่ระบุ —</option>
                 {branches.map((b) => (

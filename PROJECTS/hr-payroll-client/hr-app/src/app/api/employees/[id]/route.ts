@@ -4,7 +4,7 @@ import { ictToday } from "@/features/employees/data"
 import type { ContractType } from "@/features/employees/profile/data"
 import type { SalaryPaymentMethod } from "@/features/employees/profile/payment-method"
 import { isAssignableRole } from "@/lib/auth/employee-roles"
-import { canManageHr } from "@/lib/auth/roles"
+import { canEditEmployeeRecord, canManageHr } from "@/lib/auth/roles"
 import { getCurrentEmployee } from "@/lib/auth/session"
 import { normalizeBankFields } from "@/lib/employees/bank-fields"
 import { createClient } from "@/lib/supabase/server"
@@ -47,7 +47,7 @@ export async function PATCH(
   context: { params: Promise<{ id: string }> }
 ) {
   const caller = await getCurrentEmployee()
-  if (!caller || !canManageHr(caller.role)) {
+  if (!caller || !canEditEmployeeRecord(caller.role)) {
     return NextResponse.json({ error: "forbidden" }, { status: 403 })
   }
 

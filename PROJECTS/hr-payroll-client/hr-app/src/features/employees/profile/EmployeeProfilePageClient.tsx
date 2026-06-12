@@ -12,6 +12,10 @@ import { PendingRegistrationApproval } from "@/features/employees/profile/Pendin
 import type { EmployeeProfile } from "@/features/employees/profile/data"
 
 import type { BranchRow } from "@/features/branches/data"
+import type {
+  OrgDepartment,
+  OrgPosition,
+} from "@/features/organization/master-data"
 
 type ComplianceNote = {
   id: string
@@ -24,11 +28,15 @@ export function EmployeeProfilePageClient({
   profile,
   notes,
   branches,
+  departments,
+  positions,
   readOnly = false,
 }: {
   profile: EmployeeProfile
   notes: ComplianceNote[]
   branches: BranchRow[]
+  departments: OrgDepartment[]
+  positions: OrgPosition[]
   readOnly?: boolean
 }) {
   const [editing, setEditing] = useState(false)
@@ -50,7 +58,12 @@ export function EmployeeProfilePageClient({
           </Button>
         </div>
         <div className="min-h-0 flex-1 overflow-y-auto pr-1">
-          <EmployeeProfileForm profile={profile} branches={branches} />
+          <EmployeeProfileForm
+            profile={profile}
+            branches={branches}
+            departments={departments}
+            positions={positions}
+          />
         </div>
       </div>
     )

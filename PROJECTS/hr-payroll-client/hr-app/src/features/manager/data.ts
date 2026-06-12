@@ -3,20 +3,34 @@ import { canManageHr } from "@/lib/auth/roles"
 import type { Employee } from "@/lib/auth/session"
 import { createClient } from "@/lib/supabase/server"
 
-export async function getManagerScope(caller: Employee) {
+export type ManagerQueueScope = "hr" | "branch"
+
+export async function getManagerScope(
+  caller: Employee,
+  scope: ManagerQueueScope = "branch"
+) {
+  if (scope === "hr" && canManageHr(caller.role)) {
+    return { branchId: null as string | null, isHr: true }
+  }
+
   if (caller.role === "dev") {
     const branchId = await getManagedBranchId(caller.id)
     return { branchId, isHr: false }
   }
+
   if (canManageHr(caller.role)) {
-    return { branchId: null as string | null, isHr: true }
+    return { branchId: null as string | null, isHr: scope === "hr" }
   }
+
   const branchId = await getManagedBranchId(caller.id)
   return { branchId, isHr: false }
 }
 
-export async function getManagerAttendanceQueue(caller: Employee) {
-  const { branchId, isHr } = await getManagerScope(caller)
+export async function getManagerAttendanceQueue(
+  caller: Employee,
+  scope: ManagerQueueScope = "branch"
+) {
+  const { branchId, isHr } = await getManagerScope(caller, scope)
   const supabase = await createClient()
 
   const query = supabase
@@ -36,8 +50,11 @@ export async function getManagerAttendanceQueue(caller: Employee) {
   })
 }
 
-export async function getManagerLeaveQueue(caller: Employee) {
-  const { branchId, isHr } = await getManagerScope(caller)
+export async function getManagerLeaveQueue(
+  caller: Employee,
+  scope: ManagerQueueScope = "branch"
+) {
+  const { branchId, isHr } = await getManagerScope(caller, scope)
   const supabase = await createClient()
 
   const { data, error } = await supabase
@@ -58,8 +75,11 @@ export async function getManagerLeaveQueue(caller: Employee) {
   })
 }
 
-export async function getManagerOvertimeQueue(caller: Employee) {
-  const { branchId, isHr } = await getManagerScope(caller)
+export async function getManagerOvertimeQueue(
+  caller: Employee,
+  scope: ManagerQueueScope = "branch"
+) {
+  const { branchId, isHr } = await getManagerScope(caller, scope)
   const supabase = await createClient()
 
   const { data, error } = await supabase
