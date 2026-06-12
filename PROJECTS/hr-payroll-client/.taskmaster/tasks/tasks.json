@@ -1766,24 +1766,320 @@
         "id": "109",
         "title": "Grouped Admin Sitemap & Nav (P1-NAV)",
         "description": "3-section sidebar + /admin/report + inventory placeholder + open nav for Management employee/CEO",
-        "status": "in-progress",
+        "status": "done",
         "priority": "high",
         "milestone": "M38",
         "agent": "Claude Code",
         "dependencies": [
           "108"
         ],
-        "details": "See hr-app/reports/SITEMAP_NAV_PLAN.md — Human Management / Accounting / Management groups; /admin/ceo and /admin/reports redirect to /admin/report; BM portal unchanged.",
+        "details": "See hr-app/reports/SITEMAP_NAV_PLAN.md — grouped nav deployed; build pass 2026-06-12.",
         "testStrategy": "build+typecheck+lint pass; smoke all nav hrefs; vercel --prod",
         "subtasks": [],
-        "updatedAt": "2026-06-12T12:00:00.000Z"
+        "updatedAt": "2026-06-12T22:00:00.000Z"
+      },
+      {
+        "id": "110",
+        "title": "E2E — registration approval + OT 2-tier",
+        "description": "flow-registration-approval.mjs + flow-overtime-two-tier.mjs on production",
+        "status": "pending",
+        "priority": "high",
+        "milestone": "M38",
+        "agent": "Claude Code",
+        "dependencies": [
+          "124",
+          "129"
+        ],
+        "details": "See orchestration/PHASE_12_PLAN.md T110.",
+        "testStrategy": "E2E_P12_RESULTS.md all pass on production",
+        "subtasks": [],
+        "updatedAt": "2026-06-12T22:00:00.000Z"
+      },
+      {
+        "id": "111",
+        "title": "Security review P7 — register gate + OT RLS",
+        "description": "SECURITY_REVIEW_P7.md",
+        "status": "pending",
+        "priority": "high",
+        "milestone": "M38",
+        "agent": "Claude Opus",
+        "dependencies": [
+          "122"
+        ],
+        "details": "skill 10-security-review after portal auth.",
+        "testStrategy": "No critical findings",
+        "subtasks": [],
+        "updatedAt": "2026-06-12T22:00:00.000Z"
+      },
+      {
+        "id": "112",
+        "title": "Client UAT fix batch",
+        "description": "Fixes from handoff §10",
+        "status": "pending",
+        "priority": "medium",
+        "milestone": "M38",
+        "agent": "Claude Code",
+        "dependencies": [
+          "110"
+        ],
+        "details": "May be no-op if UAT passes.",
+        "testStrategy": "Client checklist §10 green",
+        "subtasks": [],
+        "updatedAt": "2026-06-12T22:00:00.000Z"
+      },
+      {
+        "id": "113",
+        "title": "Ops hardening — cron OT expiry + runbook",
+        "description": "OPS_RUNBOOK_P12.md",
+        "status": "pending",
+        "priority": "medium",
+        "milestone": "M38",
+        "agent": "Claude Code",
+        "dependencies": [],
+        "details": "Parallel with T110–112.",
+        "testStrategy": "Cron covers leave+attendance+OT",
+        "subtasks": [],
+        "updatedAt": "2026-06-12T22:00:00.000Z"
+      },
+      {
+        "id": "114",
+        "title": "Formal sign-off + tag hr-payroll-v1.1",
+        "description": "Client sign-off + git tag",
+        "status": "pending",
+        "priority": "high",
+        "milestone": "M38",
+        "agent": "Cursor",
+        "dependencies": [
+          "110",
+          "111",
+          "112",
+          "113"
+        ],
+        "details": "HR delivery closure — payroll baht remains M39 onsite.",
+        "testStrategy": "Tag pushed; PHASE_12 AC pass",
+        "subtasks": [],
+        "updatedAt": "2026-06-12T22:00:00.000Z"
+      },
+      {
+        "id": "130",
+        "title": "Inventory Phase 1 — Master Data + Report KPIs",
+        "description": "inv_* schema, master CRUD under /admin/inventory, CEO read-only, 3 KPI widgets on /admin/report",
+        "status": "done",
+        "priority": "high",
+        "milestone": "M43",
+        "agent": "Claude Code",
+        "dependencies": [],
+        "details": "See hr-app/reports/INVENTORY_ROADMAP.md Phase 1. Commits: 6f7b990 (schema+CRUD), 51a925b (report widgets). Migration 20260622100000_inventory_schema.sql applied.",
+        "testStrategy": "HR CRUD flow; /admin/report inventory widgets; build+typecheck; vercel --prod",
+        "subtasks": [],
+        "updatedAt": "2026-06-12T18:00:00.000Z"
+      },
+      {
+        "id": "131",
+        "title": "Inventory Phase 1.5 — UAT & RLS fixes",
+        "description": "Dev role RLS, Thai validation UX, demo seed data, smoke CRUD",
+        "status": "done",
+        "priority": "medium",
+        "milestone": "M43",
+        "agent": "Claude Code",
+        "dependencies": [
+          "130"
+        ],
+        "details": "See INVENTORY_ROADMAP.md Phase 1.5 — RLS for dev, Thai error UX, delete confirm, demo seed migration 20260624100000_inventory_demo_seed.sql.",
+        "testStrategy": "HR full master-data flow without errors; dev role can write if required",
+        "subtasks": [],
+        "updatedAt": "2026-06-12T20:00:00.000Z"
+      },
+      {
+        "id": "132",
+        "title": "Inventory Phase 2 — Stock visibility",
+        "description": "/admin/inventory/stock — inv_stock_balances table, filters, CEO read-only",
+        "status": "done",
+        "priority": "high",
+        "milestone": "M43",
+        "agent": "Claude Code",
+        "dependencies": [
+          "131"
+        ],
+        "details": "See INVENTORY_ROADMAP.md Phase 2. /admin/inventory/stock — listInvStockRows, filters, hub card, sub-nav.",
+        "testStrategy": "Stock table matches KPI queries; filters work; build+typecheck+lint",
+        "subtasks": [],
+        "updatedAt": "2026-06-12T20:00:00.000Z"
+      },
+      {
+        "id": "133",
+        "title": "Inventory Phase 3 — HR-inv branch mapping (optional)",
+        "description": "Optional link hr_branches ↔ inv_branches for org-aligned reporting",
+        "status": "pending",
+        "priority": "low",
+        "milestone": "M43",
+        "agent": "Claude Code",
+        "dependencies": [
+          "132"
+        ],
+        "details": "See INVENTORY_ROADMAP.md Phase 3. Skip if client uses inv branch codes only.",
+        "testStrategy": "Mapping UI or FK; report filter by HR branch when mapped",
+        "subtasks": [],
+        "updatedAt": "2026-06-12T18:00:00.000Z"
+      },
+      {
+        "id": "134",
+        "title": "Inventory Phase 4 — Inbound + LIFF scanner",
+        "description": "Inbound orders web UI + approve flow; LIFF/mobile barcode scan per PRD",
+        "status": "done",
+        "priority": "high",
+        "milestone": "M43",
+        "agent": "Claude Code",
+        "dependencies": [
+          "132"
+        ],
+        "details": "Inbound web /admin/inventory/inbound + approve RPC + LIFF /liff/inbound-scan. Migration 20260625100000_inbound_phase4.sql.",
+        "testStrategy": "Create inbound → pending → scan → approve → stock increases; build+typecheck+lint",
+        "subtasks": [],
+        "updatedAt": "2026-06-12T23:00:00.000Z"
+      },
+      {
+        "id": "121",
+        "title": "Portal v2 — UX spec & scope lock",
+        "description": "Client-approved M40: enable /portal for employees; document pages in scope",
+        "status": "done",
+        "priority": "high",
+        "milestone": "M40",
+        "agent": "Cursor",
+        "dependencies": [
+          "109"
+        ],
+        "details": "Locked in PORTAL_ROADMAP.md + HR_DELIVERY_CLOSURE.md — client approved 2026-06-12.",
+        "testStrategy": "PORTAL_ROADMAP acceptance criteria documented",
+        "subtasks": [],
+        "updatedAt": "2026-06-12T22:00:00.000Z"
+      },
+      {
+        "id": "122",
+        "title": "Portal v2 — Enable employee auth",
+        "description": "canAccessEmployeePortal(employee); adminLoginPath → /portal; security review",
+        "status": "done",
+        "priority": "high",
+        "milestone": "M40",
+        "agent": "Claude Code",
+        "dependencies": [
+          "121"
+        ],
+        "details": "canAccessEmployeePortal(employee+dev); adminLoginPath→/portal; portal layout guards; /employee redirect hub.",
+        "testStrategy": "Active employee login → /portal; cannot access /admin; build+lint",
+        "subtasks": [],
+        "updatedAt": "2026-06-12T22:00:00.000Z"
+      },
+      {
+        "id": "123",
+        "title": "Portal v2 — Widgets + LIFF deep links",
+        "description": "Verify portal data; action buttons to LIFF for leave/checkin/OT/docs",
+        "status": "in-progress",
+        "priority": "high",
+        "milestone": "M40",
+        "agent": "Claude Code",
+        "dependencies": [
+          "122"
+        ],
+        "details": "See PORTAL_ROADMAP.md T123. No M41 workforce modules.",
+        "testStrategy": "Portal home shows real data; LIFF links open correctly",
+        "subtasks": [],
+        "updatedAt": "2026-06-12T21:00:00.000Z"
+      },
+      {
+        "id": "124",
+        "title": "Portal v2 — Mobile QA + handoff",
+        "description": "Mobile smoke all /portal routes; update CLIENT_HANDOFF_FINAL",
+        "status": "pending",
+        "priority": "medium",
+        "milestone": "M40",
+        "agent": "Claude Code",
+        "dependencies": [
+          "123"
+        ],
+        "details": "See PORTAL_ROADMAP.md T124. Optional E2E flow-portal-employee.mjs.",
+        "testStrategy": "Mobile viewport smoke pass; handoff documents dual LINE+portal",
+        "subtasks": [],
+        "updatedAt": "2026-06-12T21:00:00.000Z"
+      },
+      {
+        "id": "125",
+        "title": "Workforce — Schedule / Shifts (real module)",
+        "description": "M41 — full schedule module (deferred)",
+        "status": "cancelled",
+        "priority": "low",
+        "milestone": "M41",
+        "agent": "Claude Code",
+        "dependencies": [],
+        "details": "Cancelled 2026-06-12 — client does not want M41 now.",
+        "testStrategy": "N/A",
+        "subtasks": [],
+        "updatedAt": "2026-06-12T21:00:00.000Z"
+      },
+      {
+        "id": "126",
+        "title": "Workforce — Recruitment lite (real)",
+        "description": "M41 — expand recruitment beyond stub",
+        "status": "cancelled",
+        "priority": "low",
+        "milestone": "M41",
+        "agent": "Codex",
+        "dependencies": [],
+        "details": "Cancelled 2026-06-12 — client does not want M41 now.",
+        "testStrategy": "N/A",
+        "subtasks": [],
+        "updatedAt": "2026-06-12T21:00:00.000Z"
+      },
+      {
+        "id": "127",
+        "title": "Workforce — Training lite (real)",
+        "description": "M41 — expand training beyond stub",
+        "status": "cancelled",
+        "priority": "low",
+        "milestone": "M41",
+        "agent": "Codex",
+        "dependencies": [],
+        "details": "Cancelled 2026-06-12 — client does not want M41 now.",
+        "testStrategy": "N/A",
+        "subtasks": [],
+        "updatedAt": "2026-06-12T21:00:00.000Z"
+      },
+      {
+        "id": "128",
+        "title": "Workforce — Performance lite (real)",
+        "description": "M41 — expand performance beyond stub",
+        "status": "cancelled",
+        "priority": "low",
+        "milestone": "M41",
+        "agent": "Codex",
+        "dependencies": [],
+        "details": "Cancelled 2026-06-12 — client does not want M41 now.",
+        "testStrategy": "N/A",
+        "subtasks": [],
+        "updatedAt": "2026-06-12T21:00:00.000Z"
+      },
+      {
+        "id": "129",
+        "title": "De-scope cleanup — docs + nav sync",
+        "description": "M42: remove outdated LINE-only copy; sync handoff after portal enabled",
+        "status": "pending",
+        "priority": "medium",
+        "milestone": "M42",
+        "agent": "Claude Code",
+        "dependencies": [
+          "124"
+        ],
+        "details": "See PORTAL_ROADMAP.md T129. Do NOT remove /portal — update docs only.",
+        "testStrategy": "No conflicting LINE-only statements in handoff; build pass",
+        "subtasks": [],
+        "updatedAt": "2026-06-12T21:00:00.000Z"
       }
     ],
     "metadata": {
       "version": "1.0.0",
-      "lastModified": "2026-06-12T12:00:00.000Z",
-      "taskCount": 109,
-      "completedCount": 102,
+      "lastModified": "2026-06-12T21:00:00.000Z",
+      "taskCount": 142,
+      "completedCount": 107,
       "tags": [
         "master"
       ]

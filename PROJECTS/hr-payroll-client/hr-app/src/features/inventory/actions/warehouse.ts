@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache"
 import {
   assertInventoryManage,
   formatInventoryError,
+  mapSupabaseInventoryError,
 } from "@/features/inventory/actions/auth"
 import type {
   InvWarehouse,
@@ -34,7 +35,7 @@ export async function createInvWarehouse(
     const payload = invWarehouseSchema.parse(formDataToObject(formData))
     const supabase = await createClient()
     const { error } = await supabase.from("inv_warehouses").insert(payload)
-    if (error) return { success: false, error: error.message }
+    if (error) return { success: false, error: mapSupabaseInventoryError(error) }
     revalidatePath(LIST_PATH)
     return { success: true }
   } catch (error) {
@@ -51,7 +52,7 @@ export async function updateInvWarehouse(
     const payload = invWarehouseSchema.parse(formDataToObject(formData))
     const supabase = await createClient()
     const { error } = await supabase.from("inv_warehouses").update(payload).eq("id", id)
-    if (error) return { success: false, error: error.message }
+    if (error) return { success: false, error: mapSupabaseInventoryError(error) }
     revalidatePath(LIST_PATH)
     return { success: true }
   } catch (error) {
@@ -64,7 +65,7 @@ export async function deleteInvWarehouse(id: string): Promise<InventoryActionSta
     await assertInventoryManage()
     const supabase = await createClient()
     const { error } = await supabase.from("inv_warehouses").delete().eq("id", id)
-    if (error) return { success: false, error: error.message }
+    if (error) return { success: false, error: mapSupabaseInventoryError(error) }
     revalidatePath(LIST_PATH)
     return { success: true }
   } catch (error) {

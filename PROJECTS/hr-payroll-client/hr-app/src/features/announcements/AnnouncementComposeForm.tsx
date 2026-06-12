@@ -2,7 +2,7 @@
 
 import Image from "next/image"
 import { useRouter } from "next/navigation"
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import { ImagePlus, X } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
@@ -25,20 +25,19 @@ export function AnnouncementComposeForm({
   const [targetValue, setTargetValue] = useState("")
   const [scheduleAt, setScheduleAt] = useState("")
   const [imageFile, setImageFile] = useState<File | null>(null)
-  const [imagePreview, setImagePreview] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [message, setMessage] = useState<string | null>(null)
 
+  const imagePreview = useMemo(
+    () => (imageFile ? URL.createObjectURL(imageFile) : null),
+    [imageFile]
+  )
+
   useEffect(() => {
-    if (!imageFile) {
-      setImagePreview(null)
-      return
-    }
-    const url = URL.createObjectURL(imageFile)
-    setImagePreview(url)
-    return () => URL.revokeObjectURL(url)
-  }, [imageFile])
+    if (!imagePreview) return
+    return () => URL.revokeObjectURL(imagePreview)
+  }, [imagePreview])
 
   function clearImage() {
     setImageFile(null)

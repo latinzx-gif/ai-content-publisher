@@ -111,12 +111,12 @@ T114 — หลัง AC1–AC5 ผ่าน
 
 | Milestone | ชื่อ | Tasks | เงื่อนไข kickoff |
 |-----------|------|-------|------------------|
+| **M40** | Employee Web Portal v2 | T121–T124 | **Client approved 2026-06-12** — หลัง T109 |
+| **M42** | Cleanup / docs sync | T129 | หลัง M40 — ไม่ลบ portal |
+| ~~**M41**~~ | ~~Workforce lite~~ | ~~T125–T128~~ | **Cancelled** — ไม่ต้องการตอนนี้ |
 | **M39** | Payroll Baht & Payslip | T115–T120 (เดิม T96–T101) | **Signed CR** + กติกาคำนวณเงิน |
-| **M40** | Employee Web Portal v2 | T121–T124 | ลูกค้าต้องการ **web dashboard** สำหรับพนักงาน (ขัด LINE-only ปัจจุบัน) |
-| **M41** | Workforce lite (real) | T125–T128 | optional — schedule/recruitment/training/performance จาก stub → จริง |
-| **M42** | Cleanup / de-scope | T129 | ลบ `/portal` stub + nav ถ้าลูกค้ายืนยัน LINE-only ถาวร |
 
-**แนะนำ:** ปิด M38 + sign-off ก่อน → ลูกค้าเลือก M39 (payroll) หรือ M42 (cleanup) เป็น CR แยก
+**แนะนำ:** ปิด T109 → M40 (T121–124) → M42 (T129) → M38 sign-off / Inventory ตาม priority
 
 ---
 

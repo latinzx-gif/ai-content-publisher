@@ -8,8 +8,8 @@ export const invSkuSchema = z.object({
   category: optionalString,
   unit_id: optionalString,
   barcode: optionalString,
-  min_stock: z.coerce.number().nonnegative("Min stock ต้อง ≥ 0"),
-  max_stock: z.coerce.number().nonnegative("Max stock ต้อง ≥ 0"),
+  min_stock: z.coerce.number().nonnegative("Min ต้อง ≥ 0"),
+  max_stock: z.coerce.number().nonnegative("Max ต้อง ≥ 0"),
   image_url: optionalString,
   is_active: checkboxBoolean.default(true),
 })

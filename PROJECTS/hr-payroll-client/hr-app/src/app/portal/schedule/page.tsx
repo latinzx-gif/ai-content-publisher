@@ -8,10 +8,11 @@ export default function PortalSchedulePage() {
     <AdminPageShell title="ตารางงาน" description="My Schedule (T102 lite)">
       <WidgetCard title="ตารางงาน">
         <p className="text-sm text-muted-foreground">
-          โมดูล shift/calendar จะมาใน Phase 10 — ตอนนี้ดูการเข้างานได้ที่{" "}
+          ดูประวัติการเข้างานได้ที่{" "}
           <Link href="/portal/attendance" className="text-brand-red underline">
             การเข้างาน
           </Link>
+          {" "}· ขอ OT / ลา ใช้ทางลัด LIFF จากหน้าหลัก
         </p>
       </WidgetCard>
     </AdminPageShell>

@@ -42,9 +42,9 @@ export function isManagementDashboardEmployee(employee: Employee): boolean {
   )
 }
 
-/** Worker web portal disabled — employees use LINE OA only. */
+/** Worker web portal — active employees + dev (for QA). */
 export function canAccessEmployeePortal(role: AppRole): boolean {
-  return isDev(role)
+  return role === "employee" || isDev(role)
 }
 
 export function canManageHr(role: AppRole): boolean {
@@ -75,6 +75,7 @@ export function adminLoginPath(
   if (role === "dev") return "/admin"
   if (role === "branch_manager") return "/admin/branch"
   if (role === "ceo") return "/admin/report"
+  if (role === "employee") return "/portal"
   if (isHrAdmin(role) || isManagementDepartment(department)) return "/admin"
   return EMPLOYEE_INFO_PATH
 }

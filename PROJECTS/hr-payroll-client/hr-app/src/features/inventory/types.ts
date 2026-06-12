@@ -58,4 +58,41 @@ export type InvUnit = {
 export type InventoryActionState = {
   success: boolean
   error?: string
+  id?: string
+}
+
+export type InvInboundStatus = "draft" | "pending" | "approved" | "cancelled"
+
+export type InvInboundOrder = {
+  id: string
+  supplier_id: string | null
+  warehouse_id: string | null
+  status: InvInboundStatus
+  received_date: string | null
+  notes: string | null
+  created_by: string | null
+  created_at: string
+  updated_at: string
+}
+
+export type InvInboundOrderRow = InvInboundOrder & {
+  supplier_name: string
+  warehouse_name: string
+  item_count: number
+}
+
+export type InvInboundItem = {
+  id: string
+  inbound_order_id: string
+  sku_id: string | null
+  quantity: number
+  cost_per_unit: number | null
+  lot_number: string | null
+  expiry_date: string | null
+  created_at: string
+}
+
+export type InvInboundItemRow = InvInboundItem & {
+  sku_code: string
+  sku_name: string
 }

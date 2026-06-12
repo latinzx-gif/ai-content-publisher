@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache"
 import {
   assertInventoryManage,
   formatInventoryError,
+  mapSupabaseInventoryError,
 } from "@/features/inventory/actions/auth"
 import type { InventoryActionState, InvSku, InvUnit } from "@/features/inventory/types"
 import { invSkuSchema } from "@/features/inventory/validators/sku"
@@ -32,7 +33,7 @@ export async function createInvSku(formData: FormData): Promise<InventoryActionS
     const payload = invSkuSchema.parse(formDataToObject(formData))
     const supabase = await createClient()
     const { error } = await supabase.from("inv_skus").insert(payload)
-    if (error) return { success: false, error: error.message }
+    if (error) return { success: false, error: mapSupabaseInventoryError(error) }
     revalidatePath(LIST_PATH)
     return { success: true }
   } catch (error) {
@@ -49,7 +50,7 @@ export async function updateInvSku(
     const payload = invSkuSchema.parse(formDataToObject(formData))
     const supabase = await createClient()
     const { error } = await supabase.from("inv_skus").update(payload).eq("id", id)
-    if (error) return { success: false, error: error.message }
+    if (error) return { success: false, error: mapSupabaseInventoryError(error) }
     revalidatePath(LIST_PATH)
     return { success: true }
   } catch (error) {
@@ -62,7 +63,7 @@ export async function deleteInvSku(id: string): Promise<InventoryActionState> {
     await assertInventoryManage()
     const supabase = await createClient()
     const { error } = await supabase.from("inv_skus").delete().eq("id", id)
-    if (error) return { success: false, error: error.message }
+    if (error) return { success: false, error: mapSupabaseInventoryError(error) }
     revalidatePath(LIST_PATH)
     return { success: true }
   } catch (error) {

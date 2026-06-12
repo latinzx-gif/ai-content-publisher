@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache"
 import {
   assertInventoryManage,
   formatInventoryError,
+  mapSupabaseInventoryError,
 } from "@/features/inventory/actions/auth"
 import type { InvBranch, InventoryActionState } from "@/features/inventory/types"
 import { invBranchSchema } from "@/features/inventory/validators/branch"
@@ -29,7 +30,7 @@ export async function createInvBranch(
     const payload = invBranchSchema.parse(formDataToObject(formData))
     const supabase = await createClient()
     const { error } = await supabase.from("inv_branches").insert(payload)
-    if (error) return { success: false, error: error.message }
+    if (error) return { success: false, error: mapSupabaseInventoryError(error) }
     revalidatePath(LIST_PATH)
     revalidatePath("/admin/inventory/warehouses")
     return { success: true }
@@ -47,7 +48,7 @@ export async function updateInvBranch(
     const payload = invBranchSchema.parse(formDataToObject(formData))
     const supabase = await createClient()
     const { error } = await supabase.from("inv_branches").update(payload).eq("id", id)
-    if (error) return { success: false, error: error.message }
+    if (error) return { success: false, error: mapSupabaseInventoryError(error) }
     revalidatePath(LIST_PATH)
     revalidatePath("/admin/inventory/warehouses")
     return { success: true }
@@ -61,7 +62,7 @@ export async function deleteInvBranch(id: string): Promise<InventoryActionState>
     await assertInventoryManage()
     const supabase = await createClient()
     const { error } = await supabase.from("inv_branches").delete().eq("id", id)
-    if (error) return { success: false, error: error.message }
+    if (error) return { success: false, error: mapSupabaseInventoryError(error) }
     revalidatePath(LIST_PATH)
     revalidatePath("/admin/inventory/warehouses")
     return { success: true }

@@ -49,12 +49,14 @@ Cron Jobs: แจ้งเตือน Probation/Visa อัตโนมัต�
 | **M1–M20** | ✅ **CLOSED** | T01–T75 |
 | **M21–M37** | ✅ **CLOSED** | T76–T108; tag `hr-payroll-v1.0` |
 | **Post-v1.0 patches** | ✅ **DEPLOYED** | Register gate, OT 2-tier, client UAT hotfixes (`57eed46`) |
-| **M38 Phase 12 Go-Live** | 🔜 **NEXT** | T109–T114 → tag `hr-payroll-v1.1` |
+| **M38 Phase 12 Go-Live** | 🔜 **NEXT** | T109 in-progress → T110–T114 planned |
+| **M40 Portal v2** | 🔜 **QUEUED** | T121–T124 — หลัง T109 (client 2026-06-12) |
+| **M42 Cleanup** | 🔜 **QUEUED** | T129 — หลัง M40 |
+| **M41 Workforce** | ❌ **CANCELLED** | T125–T128 — ไม่ต้องการตอนนี้ |
 | **M39 Payroll Baht** | 🔒 **LOCKED** | T115–T120 — needs signed CR |
-| **M40–M42** | 🔒 **OPTIONAL** | Portal v2 / Workforce / cleanup |
 
 **Business rules (production):**
-- พนักงาน: **LINE/LIFF only** — ไม่มี web dashboard (ยกเว้น `dev`)
+- พนักงาน: **LINE/LIFF** (+ **Portal v2** กำลังวางแผน — ดู `PORTAL_ROADMAP.md`)
 - Onboarding: register → **inactive** → HR approve → active
 - OT: **พนักงานยื่นเอง** → BM → HR → approved
 - Payroll: **ชม.เท่านั้น** — บาทรอ M39
@@ -63,15 +65,14 @@ Cron Jobs: แจ้งเตือน Probation/Visa อัตโนมัต�
 
 ## 4. Active Task
 
-**None — M38 planned, not started**
+**T123 — Portal v2 Widgets + LIFF (M40)** — EXECUTE
 
 | Field | Value |
 |-------|-------|
-| Production | https://hr-app-two-iota.vercel.app |
-| Deploy HEAD | `57eed46` (2026-06-12) |
-| Last release | `hr-payroll-v1.0` |
-| Next milestone | **M38** — `orchestration/PHASE_12_PLAN.md` |
-| Next tag target | `hr-payroll-v1.1` |
+| Delivery plan | `hr-app/reports/HR_DELIVERY_CLOSURE.md` |
+| Portal roadmap | `hr-app/reports/PORTAL_ROADMAP.md` |
+| Queue | T123–124 → T129 → T134 → T110–114 → tag v1.1 |
+| Payroll baht | **M39 onsite only** — out of HR closure |
 
 ดูรายละเอียดเต็ม: `orchestration/CURRENT_TASK.md`
 
@@ -117,6 +118,8 @@ Cron Jobs: แจ้งเตือน Probation/Visa อัตโนมัต�
 | PRD ฉบับเต็ม | `docs/PRD.md` |
 | All tasks (Taskmaster) | `.taskmaster/tasks/tasks.json` |
 | Demo readiness | `hr-app/reports/DELIVERY_READINESS_AUDIT.md` |
+| Inventory roadmap | `hr-app/reports/INVENTORY_ROADMAP.md` |
+| Portal roadmap | `hr-app/reports/PORTAL_ROADMAP.md` |
 | Phase 2 plan | `orchestration/PHASE_2_PLAN.md` |
 | Phase 3 plan | `orchestration/PHASE_3_PLAN.md` |
 | Phase 4 plan | `orchestration/PHASE_4_PLAN.md` |

@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache"
 import {
   assertInventoryManage,
   formatInventoryError,
+  mapSupabaseInventoryError,
 } from "@/features/inventory/actions/auth"
 import type { InventoryActionState, InvSupplier } from "@/features/inventory/types"
 import { invSupplierSchema } from "@/features/inventory/validators/supplier"
@@ -30,7 +31,7 @@ export async function createInvSupplier(
     const payload = invSupplierSchema.parse(formDataToObject(formData))
     const supabase = await createClient()
     const { error } = await supabase.from("inv_suppliers").insert(payload)
-    if (error) return { success: false, error: error.message }
+    if (error) return { success: false, error: mapSupabaseInventoryError(error) }
     revalidatePath(LIST_PATH)
     return { success: true }
   } catch (error) {
@@ -47,7 +48,7 @@ export async function updateInvSupplier(
     const payload = invSupplierSchema.parse(formDataToObject(formData))
     const supabase = await createClient()
     const { error } = await supabase.from("inv_suppliers").update(payload).eq("id", id)
-    if (error) return { success: false, error: error.message }
+    if (error) return { success: false, error: mapSupabaseInventoryError(error) }
     revalidatePath(LIST_PATH)
     return { success: true }
   } catch (error) {
@@ -60,7 +61,7 @@ export async function deleteInvSupplier(id: string): Promise<InventoryActionStat
     await assertInventoryManage()
     const supabase = await createClient()
     const { error } = await supabase.from("inv_suppliers").delete().eq("id", id)
-    if (error) return { success: false, error: error.message }
+    if (error) return { success: false, error: mapSupabaseInventoryError(error) }
     revalidatePath(LIST_PATH)
     return { success: true }
   } catch (error) {

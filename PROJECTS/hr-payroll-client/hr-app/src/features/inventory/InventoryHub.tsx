@@ -1,9 +1,21 @@
 import Link from "next/link"
-import { Building2, Package, Truck, Warehouse } from "lucide-react"
+import { BarChart3, Building2, Package, PackagePlus, Truck, Warehouse } from "lucide-react"
 
 import { WidgetCard } from "@/components/brand/WidgetCard"
 
 const SECTIONS = [
+  {
+    title: "รับเข้าสินค้า",
+    description: "Inbound — สร้างใบรับเข้า สแกน LIFF อนุมัติเพิ่มสต็อก",
+    href: "/admin/inventory/inbound",
+    icon: PackagePlus,
+  },
+  {
+    title: "สต็อกคงเหลือ",
+    description: "ยอดตาม SKU และคลัง — กรองต่ำกว่า Min",
+    href: "/admin/inventory/stock",
+    icon: BarChart3,
+  },
   {
     title: "SKU / วัตถุดิบ",
     description: "รหัสสินค้า Barcode หน่วย Min/Max",

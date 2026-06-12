@@ -15,11 +15,12 @@
 | **Phase 5 MVP** | M21–M28 | T76–T77 + ad-hoc | ✅ CLOSED |
 | **Phase 5–11 Close-out** | M29–M37 | T78–T108 | ✅ CLOSED — tag `hr-payroll-v1.0` |
 | **Post-v1.0 patches** | — | ad-hoc | ✅ deployed — register gate + OT 2-tier |
-| **Phase 12 Go-Live** | **M38** | **T109–T114** | 🔜 **ถัดไป** |
+| **Phase 12 Go-Live** | **M38** | **T109–T114** | 🔜 T109 in-progress |
+| **Inventory module** | **M43** | **T130–T134** | Phase 1–2 ✅ · T133 optional · T134 backlog |
+| **Portal v2** | **M40** | **T121–T124** | 🔜 **ถัดไปหลัง T109** (client 2026-06-12) |
+| **De-scope cleanup** | **M42** | **T129** | 🔜 หลัง M40 |
+| **Workforce lite** | ~~M41~~ | ~~T125–T128~~ | ❌ **cancelled** — ไม่ต้องการตอนนี้ |
 | **Phase 9 Payroll (Baht)** | M39 | T115–T120 | 🔒 ต้อง signed CR |
-| **Portal v2 (optional)** | M40 | T121–T124 | 🔒 ลูกค้าเลือก (ขัด LINE-only ปัจจุบัน) |
-| **Workforce lite (optional)** | M41 | T125–T128 | 🔒 optional |
-| **De-scope cleanup** | M42 | T129 | 🔒 ถ้ายืนยัน LINE-only ถาวร |
 
 **แผนเต็ม Phase 12:** `orchestration/PHASE_12_PLAN.md`
 
@@ -58,6 +59,24 @@
 
 ---
 
+## 🔜 Inventory Module — M43
+
+**Goal:** ระบบคลังสินค้า Web Admin + mobile scan (ตาม PRD)  
+**Plan:** `hr-app/reports/INVENTORY_ROADMAP.md`
+
+| ID | Task | Agent | Status |
+|----|------|-------|--------|
+| **T130** | Phase 1 — Master data + report KPIs | Claude Code | ✅ DONE |
+| **T131** | Phase 1.5 — UAT & RLS fixes | Claude Code | ✅ DONE |
+| **T132** | Phase 2 — Stock visibility | Claude Code | ✅ DONE |
+| **T133** | Phase 3 — HR ↔ inv branch (optional) | Claude Code | 📋 Backlog |
+| **T134** | Phase 4 — Inbound + LIFF scanner | Claude Code | 📋 Backlog |
+
+**Acceptance Phase 2:** `/admin/inventory/stock` + filters; KPI widgets สอดคล้องกับ stock data  
+**Acceptance Phase 4:** inbound approve → `inv_stock_balances` เพิ่ม; LIFF scan smoke
+
+---
+
 ## 🔒 Phase 9 Payroll Baht — M39 (~4–6 สัปดาห์)
 
 **Goal:** สลิปเงินเดือน / คำนวณบาท — **ต้อง signed CR ก่อน kickoff**
@@ -77,31 +96,38 @@
 
 ## 🔒 Optional Forks (หลัง M38)
 
-### M40 — Employee Web Portal v2
+### M40 — Employee Web Portal v2 🔜 **APPROVED (2026-06-12)**
 
-เปิด `/portal` ให้พนักงานจริง (ปัจจุบัน **LINE-only**, portal = dev เท่านั้น)
+เปิด `/portal` ให้พนักงาน `employee` ใช้จริง (คู่กับ LINE OA)
 
-| ID | Task |
-|----|------|
-| T121 | Client decision + UX spec |
-| T122 | Enable portal auth สำหรับ `employee` |
-| T123 | Widget data + LIFF deep links |
-| T124 | Mobile QA + handoff update |
+**Plan:** `hr-app/reports/PORTAL_ROADMAP.md`  
+**Queue:** หลัง T109 → T121 → T122 → T123 → T124
 
-### M41 — Workforce lite (real modules)
+| ID | Task | Agent |
+|----|------|-------|
+| T121 | UX spec & scope lock | Cursor |
+| T122 | Enable portal auth สำหรับ `employee` | Claude Code |
+| T123 | Widget data + LIFF deep links | Claude Code |
+| T124 | Mobile QA + handoff update | Claude Code |
 
-| ID | Task |
-|----|------|
-| T125 | Schedule / Shifts |
-| T126 | Recruitment lite |
-| T127 | Training lite |
-| T128 | Performance lite |
+### M41 — Workforce lite ❌ **CANCELLED**
 
-### M42 — De-scope cleanup
+ลูกค้าไม่ต้องการตอนนี้ — T125–T128 cancelled
 
-| ID | Task |
-|----|------|
-| T129 | ลบ portal stub / nav ที่ไม่ใช้ + อัปเดต handoff "LINE-only permanent" |
+| ID | Task | Status |
+|----|------|--------|
+| T125 | Schedule / Shifts (real) | cancelled |
+| T126 | Recruitment lite | cancelled |
+| T127 | Training lite | cancelled |
+| T128 | Performance lite | cancelled |
+
+### M42 — De-scope cleanup 🔜 **หลัง M40**
+
+| ID | Task | Agent |
+|----|------|-------|
+| T129 | อัปเดต handoff/docs + ลบข้อความ LINE-only ที่ outdated (ไม่ลบ portal) | Cursor + Claude Code |
+
+**Depends:** T124
 
 ---
 
@@ -124,9 +150,9 @@ Payroll:     รายงานชั่วโมงเท่านั้น —
 |-------|----------|--------|
 | **v1.0** | T01–T108 batch | ✅ tag `hr-payroll-v1.0` |
 | **v1.1 Stable** | M38 sign-off | 🔜 T109–T114 |
+| **v1.2 Portal** | M40 + M42 | 🔜 T121–T124 → T129 |
 | **v2.0 Payroll** | M39 | 🔒 CR |
-| **v2.x Portal** | M40 | 🔒 optional |
-| **Full** | M39 + M41 | 🔒 optional |
+| ~~**Workforce**~~ | ~~M41~~ | ❌ cancelled |
 
 ---
 

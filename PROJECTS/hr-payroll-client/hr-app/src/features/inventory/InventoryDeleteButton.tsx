@@ -16,7 +16,7 @@ export function InventoryDeleteButton({
   const [busy, setBusy] = useState(false)
 
   async function handleDelete() {
-    if (!window.confirm(`ลบ${label}?`)) return
+    if (!window.confirm(`ยืนยันลบ${label}?\n\nการลบไม่สามารถย้อนกลับได้`)) return
     setBusy(true)
     try {
       const result = await onDelete()

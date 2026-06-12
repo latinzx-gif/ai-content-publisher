@@ -7,6 +7,8 @@ import { cn } from "@/lib/utils"
 
 const LINKS = [
   { href: "/admin/inventory", label: "ภาพรวม", exact: true },
+  { href: "/admin/inventory/stock", label: "สต็อก" },
+  { href: "/admin/inventory/inbound", label: "รับเข้า" },
   { href: "/admin/inventory/sku", label: "SKU" },
   { href: "/admin/inventory/suppliers", label: "Supplier" },
   { href: "/admin/inventory/branches", label: "สาขา (คลัง)" },
