@@ -1,10 +1,11 @@
 "use client"
 
-import { Suspense, useCallback, useState, useTransition } from "react"
+import { Suspense, useCallback, useEffect, useState, useTransition } from "react"
+import Link from "next/link"
 import { useSearchParams } from "next/navigation"
 import { Barcode, CheckCircle2 } from "lucide-react"
 
-import { Button } from "@/components/ui/button"
+import { Button, buttonVariants } from "@/components/ui/button"
 import {
   Card,
   CardContent,
@@ -14,10 +15,36 @@ import {
 } from "@/components/ui/card"
 import { scanInvInboundItem } from "@/features/inventory/actions/inbound"
 import { InboundBarcodeScanner } from "@/features/inventory/InboundBarcodeScanner"
+import { cn } from "@/lib/utils"
+
+function readOrderIdFromLocation(): string {
+  if (typeof window === "undefined") return ""
+  const params = new URLSearchParams(window.location.search)
+  return params.get("order")?.trim() ?? ""
+}
+
+function useInboundOrderId(): string {
+  const searchParams = useSearchParams()
+  const [orderId, setOrderId] = useState(() => searchParams.get("order")?.trim() ?? "")
+
+  useEffect(() => {
+    const fromParams = searchParams.get("order")?.trim()
+    if (fromParams) {
+      setOrderId(fromParams)
+      return
+    }
+
+    const fromLocation = readOrderIdFromLocation()
+    if (fromLocation) {
+      setOrderId(fromLocation)
+    }
+  }, [searchParams])
+
+  return orderId
+}
 
 function InboundScanForm() {
-  const searchParams = useSearchParams()
-  const orderId = searchParams.get("order") ?? ""
+  const orderId = useInboundOrderId()
   const [barcode, setBarcode] = useState("")
   const [quantity, setQuantity] = useState("1")
   const [lot, setLot] = useState("")
@@ -101,19 +128,31 @@ function InboundScanForm() {
 
   if (!orderId) {
     return (
-      <Card>
+      <Card className="w-full">
         <CardHeader>
           <CardTitle>สแกนรับเข้า</CardTitle>
-          <CardDescription>เปิดลิงก์จากใบรับเข้าในระบบ HR (มี ?order=...)</CardDescription>
+          <CardDescription className="leading-relaxed">
+            เปิดจากเมนู <span className="font-medium">คลังสินค้า</span> แล้วกด{" "}
+            <span className="font-medium">สแกน</span> ที่ใบรับเข้า — ไม่พบรหัสใบ
+            (order)
+          </CardDescription>
         </CardHeader>
+        <CardContent>
+          <Link
+            href="/portal/inbound"
+            className={cn(buttonVariants({ variant: "outline" }), "w-full")}
+          >
+            ไปหน้าคลังสินค้า
+          </Link>
+        </CardContent>
       </Card>
     )
   }
 
   return (
-    <Card>
+    <Card className="w-full">
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
+        <CardTitle className="flex w-full min-w-0 items-center gap-2">
           <Barcode className="size-5 text-brand-red" />
           สแกนรับเข้าสินค้า
         </CardTitle>
@@ -208,8 +247,16 @@ function InboundScanForm() {
 
 export default function InboundScanPage() {
   return (
-    <main className="mx-auto min-h-screen max-w-md bg-background p-4">
-      <Suspense fallback={<p className="text-sm text-muted-foreground">กำลังโหลด…</p>}>
+    <main className="mx-auto flex min-h-screen w-full max-w-md flex-col gap-4 bg-background p-4">
+      <Suspense
+        fallback={
+          <Card className="w-full">
+            <CardContent className="py-8 text-sm text-muted-foreground">
+              กำลังโหลด…
+            </CardContent>
+          </Card>
+        }
+      >
         <InboundScanForm />
       </Suspense>
     </main>
