@@ -279,15 +279,61 @@ function ReviewModal({
   );
 }
 
+// ── Schedule inline picker (datetime-local pattern from DemoRightPanel) ──────
+function ScheduleInline({ postId, onSchedule }: { postId: string; onSchedule: (id: string, iso: string) => void }) {
+  const [open, setOpen] = useState(false);
+  const [value, setValue] = useState("");
+
+  if (!open) {
+    return (
+      <div className="flex gap-1 pt-1">
+        <button
+          onClick={(e) => { e.stopPropagation(); setOpen(true); }}
+          className="flex-1 flex items-center justify-center gap-1 text-[10px] py-1.5 rounded-lg bg-emerald-50 text-emerald-600 font-bold border border-emerald-200 hover:bg-emerald-100 active:scale-[0.98] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-[#4f46e5]"
+        >
+          <Clock size={10} /> Schedule
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="pt-1 flex flex-col gap-1.5" onClick={(e) => e.stopPropagation()}>
+      <input
+        type="datetime-local"
+        value={value}
+        onChange={(e) => setValue(e.target.value)}
+        className="w-full text-[11px] border border-[#e5e7eb] rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-[#6366f1] transition-colors"
+      />
+      <div className="flex gap-1">
+        <button
+          onClick={() => { if (value) { onSchedule(postId, new Date(value).toISOString()); setOpen(false); setValue(""); } }}
+          disabled={!value}
+          className="flex-1 py-1.5 rounded-lg text-[10px] font-bold bg-emerald-600 text-white hover:bg-emerald-700 disabled:opacity-40 transition-colors"
+        >
+          Confirm
+        </button>
+        <button
+          onClick={() => { setOpen(false); setValue(""); }}
+          className="px-2.5 py-1.5 rounded-lg text-[10px] border border-[#e5e7eb] text-gray-500 hover:bg-gray-50 transition-colors"
+        >
+          Cancel
+        </button>
+      </div>
+    </div>
+  );
+}
+
 // ── Approval card (kanban) ────────────────────────────────────────────────────
 function ApprovalCard({
-  post, onOpen, onApprove, onRequestChanges, onReject,
+  post, onOpen, onApprove, onRequestChanges, onReject, onSchedule,
 }: {
   post: DemoPost;
   onOpen: (id: string) => void;
   onApprove: (id: string) => void;
   onRequestChanges: (id: string) => void;
   onReject: (id: string) => void;
+  onSchedule?: (id: string, iso: string) => void;
 }) {
   const platform = post.platform as "facebook" | "instagram" | "linkedin" | "tiktok";
 
@@ -335,31 +381,35 @@ function ApprovalCard({
           {post.caption}
         </p>
 
-        {/* 3 quick actions */}
-        <div className="flex gap-1 pt-1" onClick={(e) => e.stopPropagation()}>
-          <button
-            onClick={() => onApprove(post.id)}
-            className="flex-1 flex items-center justify-center gap-1 text-[10px] py-1.5 rounded-lg bg-emerald-50 text-emerald-600 font-bold border border-emerald-200 hover:bg-emerald-100 active:scale-[0.98] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-[#4f46e5]"
-          >
-            <Check size={10} strokeWidth={3} /> Approve
-          </button>
-          <button
-            aria-label="Request changes"
-            onClick={() => onRequestChanges(post.id)}
-            className="flex items-center justify-center px-2.5 py-2 rounded-lg border border-[#e5e7eb] text-gray-400 hover:text-[#f59e0b] hover:border-[#fde68a] hover:bg-[#fffbeb] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-[#4f46e5]"
-            title="Request changes"
-          >
-            <RotateCcw size={10} />
-          </button>
-          <button
-            aria-label="Reject"
-            onClick={() => onReject(post.id)}
-            className="flex items-center justify-center px-2.5 py-2 rounded-lg border border-[#e5e7eb] text-gray-400 hover:text-[#dc2626] hover:border-[#fecaca] hover:bg-[#fef2f2] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-[#4f46e5]"
-            title="Reject"
-          >
-            <XCircle size={10} />
-          </button>
-        </div>
+        {/* Quick actions: Schedule for creative_approved, else Approve/Changes/Reject */}
+        {post.status === "creative_approved" && onSchedule ? (
+          <ScheduleInline postId={post.id} onSchedule={onSchedule} />
+        ) : (
+          <div className="flex gap-1 pt-1" onClick={(e) => e.stopPropagation()}>
+            <button
+              onClick={() => onApprove(post.id)}
+              className="flex-1 flex items-center justify-center gap-1 text-[10px] py-1.5 rounded-lg bg-emerald-50 text-emerald-600 font-bold border border-emerald-200 hover:bg-emerald-100 active:scale-[0.98] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-[#4f46e5]"
+            >
+              <Check size={10} strokeWidth={3} /> Approve
+            </button>
+            <button
+              aria-label="Request changes"
+              onClick={() => onRequestChanges(post.id)}
+              className="flex items-center justify-center px-2.5 py-2 rounded-lg border border-[#e5e7eb] text-gray-400 hover:text-[#f59e0b] hover:border-[#fde68a] hover:bg-[#fffbeb] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-[#4f46e5]"
+              title="Request changes"
+            >
+              <RotateCcw size={10} />
+            </button>
+            <button
+              aria-label="Reject"
+              onClick={() => onReject(post.id)}
+              className="flex items-center justify-center px-2.5 py-2 rounded-lg border border-[#e5e7eb] text-gray-400 hover:text-[#dc2626] hover:border-[#fecaca] hover:bg-[#fef2f2] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-[#4f46e5]"
+              title="Reject"
+            >
+              <XCircle size={10} />
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -367,24 +417,14 @@ function ApprovalCard({
 
 // ── Page ──────────────────────────────────────────────────────────────────────
 export default function ApprovalsPage() {
-  const [localStatuses, setLocalStatuses] = useState<Record<string, DemoPostStatus>>({});
   const [reviewId, setReviewId] = useState<string | null>(null);
 
-  function resolvedStatus(post: DemoPost): DemoPostStatus {
-    return localStatuses[post.id] ?? post.status;
-  }
-  function approve(id: string) {
-    setLocalStatuses((prev) => ({ ...prev, [id]: "creative_approved" }));
-  }
-  function requestChanges(id: string) {
-    setLocalStatuses((prev) => ({ ...prev, [id]: "changes_requested" }));
-  }
-  function reject(id: string) {
-    setLocalStatuses((prev) => ({ ...prev, [id]: "rejected" }));
-  }
+  const { posts, approvePost, rejectPost, updatePost, schedulePost } = useDemoStore();
 
-  const { posts: storePosts } = useDemoStore();
-  const posts = storePosts.map((p) => ({ ...p, status: resolvedStatus(p) }));
+  function approve(id: string) { approvePost(id); }
+  function requestChanges(id: string) { updatePost(id, { status: "changes_requested" }); }
+  function reject(id: string) { rejectPost(id); }
+
   const reviewPost = reviewId ? posts.find((p) => p.id === reviewId) ?? null : null;
   const awaitingPosts = posts.filter((p) => COLUMNS[0].statuses.includes(p.status));
 
@@ -480,6 +520,7 @@ export default function ApprovalsPage() {
                         onApprove={approve}
                         onRequestChanges={requestChanges}
                         onReject={reject}
+                        onSchedule={col.id === "approved" ? schedulePost : undefined}
                       />
                     ))
                   )}
