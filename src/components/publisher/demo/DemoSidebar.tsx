@@ -11,12 +11,13 @@ import { cn } from "@/lib/utils";
 import { PlatformIcon } from "./PlatformIcon";
 
 const NAV_ITEMS = [
-  { label: "Content",       href: "/publisher/demo",             icon: LayoutGrid },
-  { label: "Campaigns",     href: "/publisher/demo/campaigns",   icon: Megaphone },
+  { label: "Content",       href: "/publisher/demo",             icon: LayoutGrid  },
+  // Feed ถูกซ่อนตามคำสั่งบอส 2026-06-12 — route ยังอยู่ที่ /publisher/demo/feed
+  { label: "Campaigns",     href: "/publisher/demo/campaigns",   icon: Megaphone   },
   { label: "My approvals",  href: "/publisher/demo/approvals",   icon: CheckSquare },
-  { label: "Agents",        href: "/publisher/demo/agents",      icon: Bot },
-  { label: "Analytics",     href: "/publisher/demo/analytics",   icon: BarChart2 },
-  { label: "Settings",      href: "/publisher/demo/settings",    icon: Settings  },
+  { label: "Agents",        href: "/publisher/demo/agents",      icon: Bot         },
+  { label: "Analytics",     href: "/publisher/demo/analytics",   icon: BarChart2   },
+  { label: "Settings",      href: "/publisher/demo/settings",    icon: Settings    },
 ];
 
 export default function DemoSidebar() {
@@ -24,11 +25,7 @@ export default function DemoSidebar() {
 
   function isActive(href: string) {
     if (href === "/publisher/demo") {
-      return (
-        pathname === "/publisher/demo" ||
-        pathname === "/publisher/demo/feed" ||
-        pathname === "/publisher/demo/create"
-      );
+      return pathname === "/publisher/demo" || pathname === "/publisher/demo/create";
     }
     return pathname.startsWith(href);
   }
