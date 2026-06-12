@@ -18,16 +18,25 @@ import type {
   BranchEmployeeWithAlerts,
 } from "@/features/branches/branch-hub-data"
 import { roleDisplayLabel } from "@/lib/auth/labels"
+import { branchAdminSubPath } from "@/lib/branches/branch-slug"
 
-const sectionLinks = (branchId: string) =>
+const sectionLinks = (branch: BranchDetail) =>
   [
-    { label: "Attendance", href: `/admin/branches/${branchId}/attendance`, icon: Clock },
+    {
+      label: "Attendance",
+      href: branchAdminSubPath(branch, "attendance"),
+      icon: Clock,
+    },
     {
       label: "Leave Management",
-      href: `/admin/branches/${branchId}/leaves`,
+      href: branchAdminSubPath(branch, "leaves"),
       icon: CalendarCheck,
     },
-    { label: "Approve OT", href: `/admin/branches/${branchId}/overtime`, icon: Timer },
+    {
+      label: "Approve OT",
+      href: branchAdminSubPath(branch, "overtime"),
+      icon: Timer,
+    },
   ] as const
 
 type OvertimeRow = {
@@ -70,7 +79,7 @@ export function HrBranchHub({
   overtimeQueue: Array<Record<string, unknown>>
   readOnly?: boolean
 }) {
-  const links = sectionLinks(branch.id)
+  const links = sectionLinks(branch)
   const overtimeRows = mapOvertimeRows(overtimeQueue)
   const pendingOtTotal = employees.reduce((s, e) => s + e.alerts.pendingOvertime, 0)
 
@@ -268,7 +277,7 @@ export function HrBranchHub({
             </ul>
           )}
           <Link
-            href={`/admin/branches/${branch.id}/overtime`}
+            href={branchAdminSubPath(branch, "overtime")}
             className="mt-3 inline-block text-xs font-medium text-brand-red hover:underline"
           >
             ดูทั้งหมด →

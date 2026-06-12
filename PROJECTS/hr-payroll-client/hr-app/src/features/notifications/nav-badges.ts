@@ -1,4 +1,4 @@
-import type { AdminNavItem } from "@/components/admin/admin-nav-types"
+import type { AdminNavGroup, AdminNavItem } from "@/components/admin/admin-nav-types"
 
 export type HrApprovalCounts = {
   registration: number
@@ -72,7 +72,7 @@ export function buildBranchNavBadges(counts: BranchNavAlertCounts): NavAlertBadg
   return badges
 }
 
-export function withNavAlertBadges(
+function applyBadgesToItems(
   items: AdminNavItem[],
   badges: NavAlertBadgeMap
 ): AdminNavItem[] {
@@ -83,4 +83,21 @@ export function withNavAlertBadges(
     }
     return item.badge ? { ...item, badge: undefined } : item
   })
+}
+
+export function withNavAlertBadges(
+  items: AdminNavItem[],
+  badges: NavAlertBadgeMap
+): AdminNavItem[] {
+  return applyBadgesToItems(items, badges)
+}
+
+export function withNavGroupAlertBadges(
+  groups: AdminNavGroup[],
+  badges: NavAlertBadgeMap
+): AdminNavGroup[] {
+  return groups.map((group) => ({
+    ...group,
+    items: applyBadgesToItems(group.items, badges),
+  }))
 }

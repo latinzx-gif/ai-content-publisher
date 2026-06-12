@@ -4,7 +4,7 @@ import { useState } from "react"
 import { Menu } from "lucide-react"
 
 import { ADMIN_SIDEBAR_WIDTH_CLASS } from "@/components/admin/admin-layout"
-import type { AdminNavItem } from "@/components/admin/admin-nav"
+import type { AdminNavGroup, AdminNavItem } from "@/components/admin/admin-nav"
 import { AdminNavLinks } from "@/components/admin/AdminSidebar"
 import { BrandMark } from "@/components/brand/BrandMark"
 import { Button } from "@/components/ui/button"
@@ -17,14 +17,14 @@ import {
 } from "@/components/ui/sheet"
 
 export function AdminMobileNav({
+  groups,
   items,
   branchMode = false,
-  ceoMode = false,
   devAllMode = false,
 }: {
-  items: AdminNavItem[]
+  groups?: AdminNavGroup[]
+  items?: AdminNavItem[]
   branchMode?: boolean
-  ceoMode?: boolean
   devAllMode?: boolean
 }) {
   const [open, setOpen] = useState(false)
@@ -45,9 +45,9 @@ export function AdminMobileNav({
         </SheetHeader>
         <div className="py-4">
           <AdminNavLinks
+            groups={groups}
             items={items}
             branchMode={branchMode}
-            ceoMode={ceoMode}
             devAllMode={devAllMode}
             onNavigate={() => setOpen(false)}
           />

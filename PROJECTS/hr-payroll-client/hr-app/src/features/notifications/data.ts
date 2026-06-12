@@ -19,6 +19,11 @@ import type { DevViewAs } from "@/lib/auth/dev-view"
 import { getManagedBranchId } from "@/lib/auth/branch"
 import { canManageHr } from "@/lib/auth/roles"
 import type { Employee } from "@/lib/auth/session"
+import {
+  EMPLOYEE_VIA_ATTENDANCE_SUBMISSION,
+  EMPLOYEE_VIA_LEAVE,
+  EMPLOYEE_VIA_OVERTIME,
+} from "@/lib/supabase/employee-embeds"
 import { createClient } from "@/lib/supabase/server"
 
 const DAY_MS = 86_400_000
@@ -386,40 +391,49 @@ async function branchApprovalNotifications(
       supabase
         .from("hr_leaves")
         .select(
-          "id, type, start_date, end_date, created_at, hr_employees!employee_id(name, branch_id)"
+          `id, type, start_date, end_date, created_at, ${EMPLOYEE_VIA_LEAVE}(name, branch_id)`
         )
         .eq("approval_status", "pending_manager")
         .order("created_at", { ascending: false })
         .limit(30),
       supabase
         .from("hr_leaves")
-        .select("id, hr_employees!inner(branch_id)", { count: "exact", head: true })
+        .select(`id, ${EMPLOYEE_VIA_LEAVE}!inner(branch_id)`, {
+          count: "exact",
+          head: true,
+        })
         .eq("approval_status", "pending_manager")
         .eq("hr_employees.branch_id", branchId),
       supabase
         .from("hr_attendance_submissions")
         .select(
-          "id, work_date, submitted_at, hr_employees!employee_id(name, branch_id)"
+          `id, work_date, submitted_at, ${EMPLOYEE_VIA_ATTENDANCE_SUBMISSION}(name, branch_id)`
         )
         .eq("approval_status", "pending_manager")
         .order("submitted_at", { ascending: false })
         .limit(30),
       supabase
         .from("hr_attendance_submissions")
-        .select("id, hr_employees!inner(branch_id)", { count: "exact", head: true })
+        .select(`id, ${EMPLOYEE_VIA_ATTENDANCE_SUBMISSION}!inner(branch_id)`, {
+          count: "exact",
+          head: true,
+        })
         .eq("approval_status", "pending_manager")
         .eq("hr_employees.branch_id", branchId),
       supabase
         .from("hr_overtime_requests")
         .select(
-          "id, work_date, start_time, end_time, submitted_at, hr_employees!employee_id(name, branch_id)"
+          `id, work_date, start_time, end_time, submitted_at, ${EMPLOYEE_VIA_OVERTIME}(name, branch_id)`
         )
         .eq("approval_status", "pending_manager")
         .order("submitted_at", { ascending: false })
         .limit(30),
       supabase
         .from("hr_overtime_requests")
-        .select("id, hr_employees!inner(branch_id)", { count: "exact", head: true })
+        .select(`id, ${EMPLOYEE_VIA_OVERTIME}!inner(branch_id)`, {
+          count: "exact",
+          head: true,
+        })
         .eq("approval_status", "pending_manager")
         .eq("hr_employees.branch_id", branchId),
     ])

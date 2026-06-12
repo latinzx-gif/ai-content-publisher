@@ -1,15 +1,15 @@
 import {
-  ADMIN_NAV_ITEMS,
+  ADMIN_NAV_GROUPS,
+  flattenAdminNavGroups,
+  isAdminNavActive,
+  type AdminNavGroup,
   type AdminNavItem,
 } from "@/components/admin/admin-nav"
 import {
   BRANCH_NAV_ITEMS,
   BRANCH_SECTION_ITEMS,
+  isBranchNavActive,
 } from "@/components/admin/branch-nav"
-import { CEO_NAV_ITEMS } from "@/components/admin/ceo-nav"
-import { isBranchNavActive } from "@/components/admin/branch-nav"
-import { isAdminNavActive } from "@/components/admin/admin-nav"
-import { isCeoNavActive } from "@/components/admin/ceo-nav"
 
 export const DEV_VIEW_COOKIE = "dev_view_as"
 
@@ -28,24 +28,29 @@ export const DEV_VIEW_OPTIONS: Array<{
 
 const DASHBOARD_LINKS: AdminNavItem[] = [
   { label: "↳ HR Dashboard", href: "/admin", icon: "layout-dashboard" },
-  { label: "↳ CEO Dashboard", href: "/admin/ceo", icon: "layout-dashboard" },
+  { label: "↳ Report & Analytics", href: "/admin/report", icon: "bar-chart" },
   { label: "↳ Branch Dashboard", href: "/admin/branch", icon: "layout-dashboard" },
 ]
 
-/** Merged nav — dashboards first, then HR, CEO extras, branch tools */
-export const DEV_ALL_NAV_ITEMS: AdminNavItem[] = [
-  ...DASHBOARD_LINKS,
-  ...ADMIN_NAV_ITEMS.filter((item) => item.href !== "/admin"),
-  ...CEO_NAV_ITEMS.filter(
-    (item) =>
-      item.href !== "/admin/ceo" &&
-      !ADMIN_NAV_ITEMS.some((h) => h.href === item.href)
-  ).map((item) => ({ ...item, label: `[CEO] ${item.label}` })),
-  ...BRANCH_SECTION_ITEMS.map((item) => ({
-    ...item,
-    label: `[BM] ${item.label}`,
-  })),
+const DEV_ALL_EXTRA_GROUP: AdminNavGroup = {
+  title: "Dev — All Routes",
+  items: [
+    ...DASHBOARD_LINKS,
+    ...BRANCH_SECTION_ITEMS.map((item) => ({
+      ...item,
+      label: `[BM] ${item.label}`,
+    })),
+  ],
+}
+
+/** Merged nav — dashboards first, then grouped HR nav */
+export const DEV_ALL_NAV_GROUPS: AdminNavGroup[] = [
+  DEV_ALL_EXTRA_GROUP,
+  ...ADMIN_NAV_GROUPS,
 ]
+
+/** @deprecated Use DEV_ALL_NAV_GROUPS */
+export const DEV_ALL_NAV_ITEMS: AdminNavItem[] = flattenAdminNavGroups(DEV_ALL_NAV_GROUPS)
 
 export function parseDevViewAs(value: string | undefined): DevViewAs {
   if (value === "hr" || value === "ceo" || value === "branch" || value === "all") {
@@ -54,30 +59,38 @@ export function parseDevViewAs(value: string | undefined): DevViewAs {
   return "all"
 }
 
-export function getDevNavItems(view: DevViewAs): AdminNavItem[] {
+export function getDevNavGroups(view: DevViewAs): AdminNavGroup[] {
   switch (view) {
     case "hr":
       return [
-        { label: "↳ Branch Dashboard", href: "/admin/branch", icon: "layout-dashboard" },
-        ...ADMIN_NAV_ITEMS,
+        {
+          title: "Quick Access",
+          items: [
+            { label: "↳ Branch Dashboard", href: "/admin/branch", icon: "layout-dashboard" },
+          ],
+        },
+        ...ADMIN_NAV_GROUPS,
       ]
     case "ceo":
-      return CEO_NAV_ITEMS
+      return ADMIN_NAV_GROUPS
     case "branch":
-      return BRANCH_NAV_ITEMS
+      return [{ title: "", items: BRANCH_NAV_ITEMS }]
     default:
-      return DEV_ALL_NAV_ITEMS
+      return DEV_ALL_NAV_GROUPS
   }
+}
+
+/** @deprecated Use getDevNavGroups */
+export function getDevNavItems(view: DevViewAs): AdminNavItem[] {
+  return flattenAdminNavGroups(getDevNavGroups(view))
 }
 
 export function getDevNavMode(view: DevViewAs): {
   branchMode: boolean
-  ceoMode: boolean
   devAllMode: boolean
 } {
   return {
     branchMode: view === "branch",
-    ceoMode: view === "ceo",
     devAllMode: view === "all",
   }
 }
@@ -85,8 +98,7 @@ export function getDevNavMode(view: DevViewAs): {
 export function isDevNavActive(pathname: string, href: string): boolean {
   return (
     isAdminNavActive(pathname, href) ||
-    isBranchNavActive(pathname, href) ||
-    isCeoNavActive(pathname, href)
+    isBranchNavActive(pathname, href)
   )
 }
 

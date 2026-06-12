@@ -1,44 +1,103 @@
-# CURRENT TASK: None — M38 Planned (not started)
+# CURRENT TASK: T109 — Grouped Admin Sitemap & Nav (P1-NAV)
 
 ## Phase
 
-**PLANNING** — next milestone **M38 / Phase 12** ready for kickoff
+EXECUTE
 
 ## Status
 
-| Field | Value |
-|-------|-------|
-| Last closed | Batch T77–T108 + tag `hr-payroll-v1.0` |
-| Post-v1.0 deployed | Register gate + OT 2-tier + **client UAT hotfixes** (`57eed46`) |
-| UAT hotfix scope | Notifications, permanent delete, BM nav, sidebar hide (Perf/Recruit/Training) |
-| Next milestone | **M38** — T109–T114 |
-| Plan doc | `orchestration/PHASE_12_PLAN.md` |
+Plan approved — ready for EXECUTE (2026-06-12)
 
-## To start M38
+## Primary Agent
 
-1. User confirms kickoff → Cursor runs `task [T109]` or `next task`
-2. First task: **T109 Docs reconciliation**
-3. Parallel: ลูกค้าเริ่ม UAT checklist `CLIENT_HANDOFF_P5.md` §10
+Claude Code (claude-fable-5)
 
-## M38 task queue
+## Recommended Model
 
-| ID | Task | Status |
-|----|------|--------|
-| T109 | Docs reconciliation | 📋 planned |
-| T110 | E2E registration + OT 2-tier | 📋 planned |
-| T111 | Security review P7 | 📋 planned |
-| T112 | Client UAT fix batch | 📋 planned |
-| T113 | Ops hardening | 📋 planned |
-| T114 | Sign-off + tag `hr-payroll-v1.1` | 📋 planned |
+claude-fable-5
 
-## After M38 (client chooses)
+## Goal
 
-- **M39** Payroll baht (T115–T120) — needs signed CR
-- **M40** Portal v2 — if web dashboard for employees wanted
-- **M42** Cleanup — if LINE-only permanent
+Implement grouped admin sidebar and route cleanup per **`hr-app/reports/SITEMAP_NAV_PLAN.md`** (locked decisions).
 
-## Read
+1. **3 nav groups** in sidebar (desktop + mobile):
+   - **Human Management** — Dashboard, Employee, Approval, Attendance, Leave, OT, Announcements, Complaints, Documents
+   - **Accounting** — Payroll
+   - **Management** — Organization, Branches, Report & Analytics, Inventory, Setting
 
-- `orchestration/PHASE_12_PLAN.md`
-- `MILESTONES.md`
-- `hr-app/reports/CLIENT_HANDOFF_P5.md` §4.0, §4.1, §10
+2. **Report route:** create `/admin/report` with `ReportsPanel` logic from `reports/page.tsx`; redirect `/admin/reports` and `/admin/ceo` → `/admin/report`
+
+3. **Auth:** `adminLoginPath(ceo)` → `/admin/report`; remove CEO path prison; remove Management `employee` redirect to `/admin` only; full grouped nav for Management employee + CEO
+
+4. **Inventory:** `/admin/inventory` placeholder (`DevelopmentEmptyState`)
+
+5. **BM portal:** unchanged — `/admin/branch` only; `isBranchPortalPath` must not treat `/admin/branch/[slug]` as BM
+
+## Allowed Files
+
+```
+PROJECTS/hr-payroll-client/hr-app/src/components/admin/admin-nav-types.ts
+PROJECTS/hr-payroll-client/hr-app/src/components/admin/admin-nav.ts
+PROJECTS/hr-payroll-client/hr-app/src/components/admin/admin-nav-icons.tsx
+PROJECTS/hr-payroll-client/hr-app/src/components/admin/AdminSidebar.tsx
+PROJECTS/hr-payroll-client/hr-app/src/components/admin/AdminHeader.tsx
+PROJECTS/hr-payroll-client/hr-app/src/components/admin/branch-nav.ts
+PROJECTS/hr-payroll-client/hr-app/src/components/admin/ceo-nav.ts
+PROJECTS/hr-payroll-client/hr-app/src/lib/auth/dev-view.ts
+PROJECTS/hr-payroll-client/hr-app/src/lib/auth/roles.ts
+PROJECTS/hr-payroll-client/hr-app/src/app/admin/layout.tsx
+PROJECTS/hr-payroll-client/hr-app/src/app/admin/report/page.tsx
+PROJECTS/hr-payroll-client/hr-app/src/app/admin/reports/page.tsx
+PROJECTS/hr-payroll-client/hr-app/src/app/admin/ceo/page.tsx
+PROJECTS/hr-payroll-client/hr-app/src/app/admin/inventory/page.tsx
+PROJECTS/hr-payroll-client/hr-app/src/features/dashboard/HrAdminDashboard.tsx
+PROJECTS/hr-payroll-client/hr-app/src/features/ceo-dashboard/CeoDashboard.tsx
+PROJECTS/hr-payroll-client/hr-app/_agent/TASK_PLAN.md
+PROJECTS/hr-payroll-client/hr-app/_agent/CURSOR_PLAN_REQUEST.md
+```
+
+## Forbidden
+
+- Department-based menu filtering (out of scope)
+- Inventory module / DB schema
+- Moving Human Management URLs (`/admin/employees`, etc.)
+- BM portal restructure (`/admin/branch` hub)
+- `CLIENT_HANDOFF_P5.html` unless explicitly in EXECUTE follow-up
+- New npm dependencies without approval
+
+## Acceptance Criteria
+
+- [ ] Sidebar shows 3 section headers with 14 items per sitemap
+- [ ] `/admin/report` renders Reports & Analytics (same behavior as old `/admin/reports`)
+- [ ] `/admin/reports` and `/admin/ceo` redirect to `/admin/report`
+- [ ] `/admin/inventory` shows placeholder (200)
+- [ ] Management `employee` can navigate all admin routes (no layout redirect to `/admin` only)
+- [ ] CEO uses grouped nav; login lands on `/admin/report`
+- [ ] `branch_manager` still only sees Branch Dashboard nav
+- [ ] `/admin/branches` → `/admin/branch/[slug]` drill still works
+- [ ] `npm run build && npm run typecheck && npm run lint` pass
+
+## Depends
+
+- T108 APPROVED ✅
+
+## Skills to Load
+
+- `/Users/jakarinosk/HEAD-OFFICE/orchestration/workflow-skills/03-claude-plan/SKILL.md`
+- `/Users/jakarinosk/HEAD-OFFICE/orchestration/workflow-skills/05-claude-execute/SKILL.md`
+- `/Users/jakarinosk/HEAD-OFFICE/orchestration/workflow-skills/10-security-review/SKILL.md` (auth/layout changes)
+
+## Reference
+
+- `hr-app/reports/SITEMAP_NAV_PLAN.md`
+- `PROJECTS/hr-payroll-client/GROUND_TRUTH.md`
+
+## Subtasks (execute order)
+
+1. P1-NAV-01 — types + `ADMIN_NAV_GROUPS`
+2. P1-NAV-02 — sidebar grouped UI + badges
+3. P1-NAV-03 — dev-view + `getNavItemsForRole`
+4. P1-RPT-01 — `/admin/report` + redirects + internal links
+5. P1-RPT-02 — auth paths (`roles.ts`, `layout.tsx`)
+6. P1-INV-01 — inventory placeholder
+7. P1-QA-01 — smoke (Cursor review gate; deploy after APPROVE)

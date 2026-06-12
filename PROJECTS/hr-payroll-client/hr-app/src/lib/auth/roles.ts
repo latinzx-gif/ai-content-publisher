@@ -34,7 +34,7 @@ export function canEmployeeAccessAdminPortal(employee: Employee): boolean {
   return isManagementDepartment(employee.department)
 }
 
-/** แผนก Management + role Employee — Dashboard เท่านั้น (ไม่มีสิทธิ์ HR) */
+/** แผนก Management + role Employee — full admin nav (no longer dashboard-only) */
 export function isManagementDashboardEmployee(employee: Employee): boolean {
   return (
     employee.role === "employee" &&
@@ -61,18 +61,9 @@ export function canEditEmployeeRecord(role: AppRole): boolean {
   return canManageHr(role) || isCeo(role)
 }
 
-export const CEO_ALLOWED_PREFIXES = [
-  "/admin/ceo",
-  "/admin/branches",
-  "/admin/employees",
-  "/admin/reports",
-  "/admin/organization",
-] as const
-
+/** CEO — open all admin routes (no path prison) */
 export function isCeoAllowedPath(pathname: string): boolean {
-  return CEO_ALLOWED_PREFIXES.some(
-    (p) => pathname === p || pathname.startsWith(`${p}/`)
-  )
+  return pathname.startsWith("/admin")
 }
 
 export function adminLoginPath(
@@ -83,7 +74,7 @@ export function adminLoginPath(
   if (status === "inactive") return PENDING_REGISTRATION_PATH
   if (role === "dev") return "/admin"
   if (role === "branch_manager") return "/admin/branch"
-  if (role === "ceo") return "/admin/ceo"
+  if (role === "ceo") return "/admin/report"
   if (isHrAdmin(role) || isManagementDepartment(department)) return "/admin"
   return EMPLOYEE_INFO_PATH
 }

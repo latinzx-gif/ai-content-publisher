@@ -1,3 +1,8 @@
+import {
+  EMPLOYEE_VIA_ATTENDANCE_SUBMISSION,
+  EMPLOYEE_VIA_LEAVE,
+  EMPLOYEE_VIA_OVERTIME,
+} from "@/lib/supabase/employee-embeds"
 import { createClient } from "@/lib/supabase/server"
 
 export async function getBranchAttendanceQueue(branchId: string) {
@@ -5,7 +10,7 @@ export async function getBranchAttendanceQueue(branchId: string) {
   const { data, error } = await supabase
     .from("hr_attendance_submissions")
     .select(
-      "id, work_date, submitted_at, approval_status, hr_employees!inner(name, branch_id)"
+      `id, work_date, submitted_at, approval_status, ${EMPLOYEE_VIA_ATTENDANCE_SUBMISSION}!inner(name, branch_id)`
     )
     .eq("hr_employees.branch_id", branchId)
     .in("approval_status", ["pending_manager", "pending_hr"])
@@ -21,7 +26,7 @@ export async function getBranchLeaveQueue(branchId: string) {
   const { data, error } = await supabase
     .from("hr_leaves")
     .select(
-      "id, type, start_date, end_date, leave_unit, leave_hours, approval_status, hr_employees!inner(name, branch_id)"
+      `id, type, start_date, end_date, leave_unit, leave_hours, approval_status, ${EMPLOYEE_VIA_LEAVE}!inner(name, branch_id)`
     )
     .eq("hr_employees.branch_id", branchId)
     .eq("status", "pending")
@@ -37,7 +42,7 @@ export async function getBranchOvertimeQueue(branchId: string) {
   const { data, error } = await supabase
     .from("hr_overtime_requests")
     .select(
-      "id, work_date, start_time, end_time, approval_status, hr_employees!inner(name, branch_id)"
+      `id, work_date, start_time, end_time, approval_status, ${EMPLOYEE_VIA_OVERTIME}!inner(name, branch_id)`
     )
     .eq("hr_employees.branch_id", branchId)
     .in("approval_status", ["pending_manager", "pending_hr"])

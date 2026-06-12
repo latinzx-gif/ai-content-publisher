@@ -7,6 +7,7 @@ import { useState } from "react"
 
 import { Button } from "@/components/ui/button"
 import type { BranchRow } from "@/features/branches/data"
+import { branchAdminPath } from "@/lib/branches/branch-slug"
 
 export function BranchesPanel({
   branches,
@@ -101,7 +102,7 @@ export function BranchesPanel({
                 >
                   <td className="px-3 py-2">
                     <Link
-                      href={`/admin/branches/${b.id}`}
+                      href={branchAdminPath(b)}
                       className="font-medium text-brand-red hover:underline"
                     >
                       {b.name}
@@ -117,7 +118,7 @@ export function BranchesPanel({
                   </td>
                   <td className="px-3 py-2 text-right">
                     <Link
-                      href={`/admin/branches/${b.id}`}
+                      href={branchAdminPath(b)}
                       className="inline-flex items-center gap-0.5 text-xs font-medium text-brand-red hover:underline"
                     >
                       เปิด

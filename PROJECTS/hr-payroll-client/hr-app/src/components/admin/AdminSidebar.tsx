@@ -4,10 +4,13 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { ChevronRight } from "lucide-react"
 
-import { isAdminNavActive, type AdminNavItem } from "@/components/admin/admin-nav"
+import {
+  isAdminNavActive,
+  type AdminNavGroup,
+  type AdminNavItem,
+} from "@/components/admin/admin-nav"
 import { AdminNavIcon } from "@/components/admin/admin-nav-icons"
 import { isBranchNavActive } from "@/components/admin/branch-nav"
-import { isCeoNavActive } from "@/components/admin/ceo-nav"
 import { isDevNavActive } from "@/lib/auth/dev-view"
 import { ADMIN_SIDEBAR_WIDTH_CLASS } from "@/components/admin/admin-layout"
 import { BrandMark } from "@/components/brand/BrandMark"
@@ -42,15 +45,15 @@ function SidebarPromo() {
 }
 
 export function AdminNavLinks({
+  groups,
   items,
   branchMode = false,
-  ceoMode = false,
   devAllMode = false,
   onNavigate,
 }: {
-  items: AdminNavItem[]
+  groups?: AdminNavGroup[]
+  items?: AdminNavItem[]
   branchMode?: boolean
-  ceoMode?: boolean
   devAllMode?: boolean
   onNavigate?: () => void
 }) {
@@ -59,13 +62,38 @@ export function AdminNavLinks({
     ? isDevNavActive
     : branchMode
       ? isBranchNavActive
-      : ceoMode
-        ? isCeoNavActive
-        : isAdminNavActive
+      : isAdminNavActive
+
+  if (groups && groups.length > 0) {
+    return (
+      <nav className="flex flex-col gap-4 px-2">
+        {groups.map((group) => (
+          <div key={group.title || "default"}>
+            {group.title ? (
+              <p className="mb-1 px-3 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70">
+                {group.title}
+              </p>
+            ) : null}
+            <div className="flex flex-col gap-0.5">
+              {group.items.map((item) => (
+                <AdminNavLink
+                  key={item.href}
+                  item={item}
+                  active={isActive(pathname, item.href)}
+                  indented={Boolean(group.title)}
+                  onNavigate={onNavigate}
+                />
+              ))}
+            </div>
+          </div>
+        ))}
+      </nav>
+    )
+  }
 
   return (
     <nav className="flex flex-col gap-0.5 px-2">
-      {items.map((item) => (
+      {(items ?? []).map((item) => (
         <AdminNavLink
           key={item.href}
           item={item}
@@ -80,10 +108,12 @@ export function AdminNavLinks({
 function AdminNavLink({
   item,
   active,
+  indented = false,
   onNavigate,
 }: {
   item: AdminNavItem
   active: boolean
+  indented?: boolean
   onNavigate?: () => void
 }) {
   const { label, href, icon, badge } = item
@@ -93,7 +123,8 @@ function AdminNavLink({
       href={href}
       onClick={onNavigate}
       className={cn(
-        "flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
+        "flex w-full items-center gap-3 rounded-lg py-2.5 text-sm font-medium transition-colors",
+        indented ? "pl-5 pr-3" : "px-3",
         active
           ? "bg-brand-red text-white shadow-sm"
           : "text-foreground/80 hover:bg-muted hover:text-foreground"
@@ -135,14 +166,14 @@ function AdminNavLink({
 }
 
 export function AdminSidebar({
+  groups,
   items,
   branchMode = false,
-  ceoMode = false,
   devAllMode = false,
 }: {
-  items: AdminNavItem[]
+  groups?: AdminNavGroup[]
+  items?: AdminNavItem[]
   branchMode?: boolean
-  ceoMode?: boolean
   devAllMode?: boolean
 }) {
   return (
@@ -157,9 +188,9 @@ export function AdminSidebar({
       </div>
       <div className="min-h-0 flex-1 overflow-y-auto py-3">
         <AdminNavLinks
+          groups={groups}
           items={items}
           branchMode={branchMode}
-          ceoMode={ceoMode}
           devAllMode={devAllMode}
         />
       </div>

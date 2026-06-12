@@ -2,6 +2,7 @@ import type { SupabaseClient } from "@supabase/supabase-js"
 
 import type { BranchDetail } from "@/features/branches/branch-hub-data"
 import type { BranchRow } from "@/features/branches/data"
+import { branchAdminPath, isBranchUuid } from "@/lib/branches/branch-slug"
 
 type BranchCore = {
   id: string
@@ -33,6 +34,37 @@ function mapBranchCore(row: BranchCore): BranchCore {
     address: row.address,
     manager_employee_id: row.manager_employee_id,
   }
+}
+
+export async function fetchBranchBySlug(
+  supabase: SupabaseClient,
+  slugParam: string
+): Promise<BranchDetail | null> {
+  const decoded = decodeURIComponent(slugParam)
+
+  if (isBranchUuid(decoded)) {
+    return fetchBranchById(supabase, decoded)
+  }
+
+  const { data, error } = await supabase
+    .from("hr_branches")
+    .select("id, name, code, address, manager_employee_id")
+    .order("name")
+
+  if (error) throw error
+
+  const normalized = decodeURIComponent(slugParam)
+  const match = (data ?? []).find((row) => {
+    const path = branchAdminPath(row as BranchCore)
+    return (
+      path === `/admin/branch/${slugParam}` ||
+      path === `/admin/branch/${normalized}` ||
+      path === `/admin/branch/${encodeURIComponent(normalized)}`
+    )
+  })
+
+  if (!match) return null
+  return fetchBranchById(supabase, match.id as string)
 }
 
 export async function fetchBranchById(

@@ -43,7 +43,7 @@ const QUICK_ACTIONS: Array<{
   { label: "Run Payroll", href: "/admin/payroll", icon: Wallet },
   { label: "Manage Documents", href: "/admin/documents", icon: FileText },
   { label: "Create Announcement", href: "/admin/announcements", icon: Megaphone },
-  { label: "Report Builder", href: "/admin/reports", icon: BarChart3 },
+  { label: "Report Builder", href: "/admin/report", icon: BarChart3 },
   { label: "View Org Chart", href: "/admin/organization", icon: Network },
   { label: "Attendance Report", href: "/admin/attendance", icon: Clock },
   { label: "HR Settings", href: "/admin/settings", icon: Settings },

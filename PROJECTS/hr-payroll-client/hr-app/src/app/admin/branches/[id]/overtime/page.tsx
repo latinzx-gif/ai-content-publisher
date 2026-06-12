@@ -1,44 +1,15 @@
-import Link from "next/link"
-import { notFound } from "next/navigation"
-import { Timer } from "lucide-react"
+import { notFound, redirect } from "next/navigation"
 
-import { AdminPageShell } from "@/components/brand/AdminPageShell"
-import {
-  getBranchById,
-  getBranchOvertimeQueue,
-} from "@/features/branches/branch-hub-data"
-import { ApprovalQueue } from "@/features/manager/ApprovalQueue"
-import { mapOvertimeQueueItems } from "@/features/manager/map-queue-items"
-import { requireRole } from "@/lib/auth/require-role"
+import { getBranchById } from "@/features/branches/branch-hub-data"
+import { branchAdminSubPath } from "@/lib/branches/branch-slug"
 
-export default async function BranchOvertimePage({
+export default async function LegacyBranchOvertimeRedirect({
   params,
 }: {
   params: Promise<{ id: string }>
 }) {
-  await requireRole("hr", "admin", "dev")
   const { id } = await params
-  const [branch, overtime] = await Promise.all([
-    getBranchById(id),
-    getBranchOvertimeQueue(id),
-  ])
+  const branch = await getBranchById(id)
   if (!branch) notFound()
-
-  return (
-    <div className="flex h-full min-h-0 flex-1 flex-col gap-2 overflow-hidden">
-      <p className="shrink-0 text-sm">
-        <Link href={`/admin/branches/${id}`} className="text-brand-red hover:underline">
-          ← กลับ {branch.name}
-        </Link>
-      </p>
-      <AdminPageShell fill title="Approve OT" description={`สาขา ${branch.name}`}>
-        <ApprovalQueue
-          title={`รออนุมัติ (${overtime.length})`}
-          emptyText="ไม่มีคำขอ OT รออนุมัติ"
-          emptyIcon={Timer}
-          items={mapOvertimeQueueItems(overtime)}
-        />
-      </AdminPageShell>
-    </div>
-  )
+  redirect(branchAdminSubPath(branch, "overtime"))
 }

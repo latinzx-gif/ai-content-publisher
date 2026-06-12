@@ -1,6 +1,6 @@
 import { AdminHeader } from "@/components/admin/AdminHeader"
 import { AdminSidebar } from "@/components/admin/AdminSidebar"
-import type { AdminNavItem } from "@/components/admin/admin-nav"
+import type { AdminNavGroup, AdminNavItem } from "@/components/admin/admin-nav"
 import type { DevViewAs } from "@/lib/auth/dev-view"
 import type { Employee } from "@/lib/auth/session"
 import type { NotificationItem } from "@/features/notifications/types"
@@ -12,9 +12,9 @@ export function AdminShell({
   notificationItems = [],
   showComplianceLink = true,
   user,
+  navGroups,
   navItems,
   branchMode = false,
-  ceoMode = false,
   devAllMode = false,
   devView = null,
 }: {
@@ -24,18 +24,18 @@ export function AdminShell({
   notificationItems?: NotificationItem[]
   showComplianceLink?: boolean
   user?: Pick<Employee, "name" | "role" | "position">
-  navItems: AdminNavItem[]
+  navGroups?: AdminNavGroup[]
+  navItems?: AdminNavItem[]
   branchMode?: boolean
-  ceoMode?: boolean
   devAllMode?: boolean
   devView?: DevViewAs | null
 }) {
   return (
     <div className="flex h-dvh max-h-dvh overflow-hidden bg-background">
       <AdminSidebar
+        groups={navGroups}
         items={navItems}
         branchMode={branchMode}
-        ceoMode={ceoMode}
         devAllMode={devAllMode}
       />
       <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
@@ -45,9 +45,9 @@ export function AdminShell({
           notificationItems={notificationItems}
           showComplianceLink={showComplianceLink}
           user={user}
+          navGroups={navGroups}
           navItems={navItems}
           branchMode={branchMode}
-          ceoMode={ceoMode}
           devAllMode={devAllMode}
           devView={devView}
         />

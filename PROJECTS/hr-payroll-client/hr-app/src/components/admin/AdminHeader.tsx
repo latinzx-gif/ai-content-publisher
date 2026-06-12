@@ -1,6 +1,6 @@
 import { CircleHelp, LogOut, Search } from "lucide-react"
 
-import type { AdminNavItem } from "@/components/admin/admin-nav"
+import type { AdminNavGroup, AdminNavItem } from "@/components/admin/admin-nav"
 import { AdminMobileNav } from "@/components/admin/AdminMobileNav"
 import { AdminNotificationBell } from "@/components/admin/AdminNotificationBell"
 import { DevRoleSwitcher } from "@/components/admin/DevRoleSwitcher"
@@ -16,9 +16,9 @@ export function AdminHeader({
   notificationItems = [],
   showComplianceLink = true,
   user,
+  navGroups,
   navItems,
   branchMode = false,
-  ceoMode = false,
   devAllMode = false,
   devView = null,
 }: {
@@ -27,9 +27,9 @@ export function AdminHeader({
   notificationItems?: NotificationItem[]
   showComplianceLink?: boolean
   user?: Pick<Employee, "name" | "role" | "position">
-  navItems: AdminNavItem[]
+  navGroups?: AdminNavGroup[]
+  navItems?: AdminNavItem[]
   branchMode?: boolean
-  ceoMode?: boolean
   devAllMode?: boolean
   devView?: DevViewAs | null
 }) {
@@ -39,9 +39,9 @@ export function AdminHeader({
     <header className="z-10 shrink-0 border-b border-border/80 bg-white px-3 py-2 md:px-4 md:py-2.5">
       <div className="flex items-center gap-3">
         <AdminMobileNav
+          groups={navGroups}
           items={navItems}
           branchMode={branchMode}
-          ceoMode={ceoMode}
           devAllMode={devAllMode}
         />
         <div className="relative mx-auto hidden w-full max-w-xl flex-1 md:block">

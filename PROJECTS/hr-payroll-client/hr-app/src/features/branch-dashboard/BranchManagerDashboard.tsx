@@ -40,9 +40,11 @@ const ACTIVITY_ICONS: Record<string, { icon: LucideIcon; className: string }> = 
 export function BranchManagerDashboard({
   userName,
   data,
+  unassigned = false,
 }: {
   userName: string
   data: BranchDashboardData
+  unassigned?: boolean
 }) {
   const branchLabel = data.branch?.name ?? "Your Branch"
   const leaveRate =
@@ -55,13 +57,23 @@ export function BranchManagerDashboard({
       : 0
 
   return (
-    <div className="flex h-full min-h-0 flex-col gap-2 overflow-hidden md:gap-2.5 [@media(max-height:800px)]:gap-1.5">
+    <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto pb-2 md:gap-2.5 [@media(max-height:800px)]:gap-1.5">
       <HeroBanner
         compact
         userName={userName}
         title="Branch Dashboard"
-        subtitle={`${branchLabel} — approve attendance and leave before HR final review.`}
+        subtitle={
+          unassigned
+            ? "ยังไม่ได้มอบหมายสาขา — ติดต่อ HR ให้ตั้ง Role Branch Manager และผูกสาขา"
+            : `${branchLabel} — สรุปภาพรวมสาขาและรายการรออนุมัติ`
+        }
       />
+
+      {unassigned ? (
+        <p className="shrink-0 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-950">
+          แสดง Dashboard ตัวอย่าง — ข้อมูลจริงจะปรากฏเมื่อ HR มอบหมายสาขาให้แล้ว
+        </p>
+      ) : null}
 
       <div className="grid shrink-0 gap-2 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-6 md:gap-2.5">
         <KpiCard
@@ -119,7 +131,7 @@ export function BranchManagerDashboard({
         />
       </div>
 
-      <div className="grid min-h-0 flex-1 gap-2 md:gap-2.5 lg:grid-cols-3">
+      <div className="grid shrink-0 gap-2 md:gap-2.5 lg:grid-cols-3">
         <WidgetCard compact title="Today's Attendance">
           {data.attendanceDonut.length === 0 ? (
             <DevelopmentEmptyState
@@ -203,7 +215,7 @@ export function BranchManagerDashboard({
         </WidgetCard>
       </div>
 
-      <div className="grid min-h-0 flex-1 gap-2 md:gap-2.5 lg:grid-cols-4">
+      <div className="grid shrink-0 gap-2 md:gap-2.5 lg:grid-cols-3 xl:grid-cols-4">
         <WidgetCard compact title="Department Attendance">
           {data.departmentRows.length === 0 ? (
             <DevelopmentEmptyState

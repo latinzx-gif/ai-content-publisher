@@ -1761,12 +1761,28 @@
         "testStrategy": "All tasks done or cancelled; tag pushed",
         "subtasks": [],
         "updatedAt": "2026-06-12T00:12:09.541Z"
+      },
+      {
+        "id": "109",
+        "title": "Grouped Admin Sitemap & Nav (P1-NAV)",
+        "description": "3-section sidebar + /admin/report + inventory placeholder + open nav for Management employee/CEO",
+        "status": "in-progress",
+        "priority": "high",
+        "milestone": "M38",
+        "agent": "Claude Code",
+        "dependencies": [
+          "108"
+        ],
+        "details": "See hr-app/reports/SITEMAP_NAV_PLAN.md — Human Management / Accounting / Management groups; /admin/ceo and /admin/reports redirect to /admin/report; BM portal unchanged.",
+        "testStrategy": "build+typecheck+lint pass; smoke all nav hrefs; vercel --prod",
+        "subtasks": [],
+        "updatedAt": "2026-06-12T12:00:00.000Z"
       }
     ],
     "metadata": {
       "version": "1.0.0",
-      "lastModified": "2026-06-12T00:12:09.541Z",
-      "taskCount": 108,
+      "lastModified": "2026-06-12T12:00:00.000Z",
+      "taskCount": 109,
       "completedCount": 102,
       "tags": [
         "master"

@@ -1,44 +1,15 @@
-import Link from "next/link"
-import { notFound } from "next/navigation"
-import { Clock } from "lucide-react"
+import { notFound, redirect } from "next/navigation"
 
-import { AdminPageShell } from "@/components/brand/AdminPageShell"
-import {
-  getBranchAttendanceQueue,
-  getBranchById,
-} from "@/features/branches/branch-hub-data"
-import { ApprovalQueue } from "@/features/manager/ApprovalQueue"
-import { mapAttendanceQueueItems } from "@/features/manager/map-queue-items"
-import { requireRole } from "@/lib/auth/require-role"
+import { getBranchById } from "@/features/branches/branch-hub-data"
+import { branchAdminSubPath } from "@/lib/branches/branch-slug"
 
-export default async function BranchAttendancePage({
+export default async function LegacyBranchAttendanceRedirect({
   params,
 }: {
   params: Promise<{ id: string }>
 }) {
-  await requireRole("hr", "admin", "dev")
   const { id } = await params
-  const [branch, attendance] = await Promise.all([
-    getBranchById(id),
-    getBranchAttendanceQueue(id),
-  ])
+  const branch = await getBranchById(id)
   if (!branch) notFound()
-
-  return (
-    <div className="flex h-full min-h-0 flex-1 flex-col gap-2 overflow-hidden">
-      <p className="shrink-0 text-sm">
-        <Link href={`/admin/branches/${id}`} className="text-brand-red hover:underline">
-          ← กลับ {branch.name}
-        </Link>
-      </p>
-      <AdminPageShell fill title="Attendance" description={`สาขา ${branch.name}`}>
-        <ApprovalQueue
-          title={`รออนุมัติ (${attendance.length})`}
-          emptyText="ไม่มีคิวรออนุมัติ"
-          emptyIcon={Clock}
-          items={mapAttendanceQueueItems(attendance)}
-        />
-      </AdminPageShell>
-    </div>
-  )
+  redirect(branchAdminSubPath(branch, "attendance"))
 }

@@ -6,7 +6,12 @@ import {
   getBranchLeaveQueue,
   getBranchOvertimeQueue,
 } from "@/features/branches/branch-queues"
-import { fetchBranchById } from "@/features/branches/branch-query"
+import { fetchBranchById, fetchBranchBySlug } from "@/features/branches/branch-query"
+import {
+  EMPLOYEE_VIA_ATTENDANCE_SUBMISSION,
+  EMPLOYEE_VIA_LEAVE,
+  EMPLOYEE_VIA_OVERTIME,
+} from "@/lib/supabase/employee-embeds"
 import { createClient } from "@/lib/supabase/server"
 
 export {
@@ -56,6 +61,11 @@ export type BranchEmployeeWithAlerts = {
 export async function getBranchById(branchId: string): Promise<BranchDetail | null> {
   const supabase = await createClient()
   return fetchBranchById(supabase, branchId)
+}
+
+export async function getBranchBySlug(slug: string): Promise<BranchDetail | null> {
+  const supabase = await createClient()
+  return fetchBranchBySlug(supabase, slug)
 }
 
 export async function getBranchHubDashboard(
@@ -110,17 +120,17 @@ export async function getBranchEmployeesWithAlerts(
       .order("name"),
     supabase
       .from("hr_leaves")
-      .select("employee_id, hr_employees!inner(branch_id)")
+      .select(`employee_id, ${EMPLOYEE_VIA_LEAVE}!inner(branch_id)`)
       .eq("hr_employees.branch_id", branchId)
       .eq("status", "pending"),
     supabase
       .from("hr_attendance_submissions")
-      .select("employee_id, hr_employees!inner(branch_id)")
+      .select(`employee_id, ${EMPLOYEE_VIA_ATTENDANCE_SUBMISSION}!inner(branch_id)`)
       .eq("hr_employees.branch_id", branchId)
       .in("approval_status", ["pending_manager", "pending_hr"]),
     supabase
       .from("hr_overtime_requests")
-      .select("employee_id, hr_employees!inner(branch_id)")
+      .select(`employee_id, ${EMPLOYEE_VIA_OVERTIME}!inner(branch_id)`)
       .eq("hr_employees.branch_id", branchId)
       .in("approval_status", ["pending_manager", "pending_hr"]),
     supabase
@@ -130,7 +140,9 @@ export async function getBranchEmployeesWithAlerts(
       .gte("check_in_at", `${monthStart}T00:00:00+07:00`),
     supabase
       .from("hr_leaves")
-      .select("employee_id, start_date, end_date, leave_unit, leave_hours, hr_employees!inner(branch_id)")
+      .select(
+        `employee_id, start_date, end_date, leave_unit, leave_hours, ${EMPLOYEE_VIA_LEAVE}!inner(branch_id)`
+      )
       .eq("hr_employees.branch_id", branchId)
       .eq("approval_status", "approved")
       .gte("end_date", monthStart)

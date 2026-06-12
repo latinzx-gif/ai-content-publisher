@@ -1,13 +1,16 @@
 import {
-  ADMIN_NAV_ITEMS,
+  ADMIN_NAV_GROUPS,
+  flattenAdminNavGroups,
+  type AdminNavGroup,
   type AdminNavItem,
 } from "@/components/admin/admin-nav"
-import { CEO_NAV_ITEMS } from "@/components/admin/ceo-nav"
-import { isManagementDepartment } from "@/lib/auth/department-access"
 
-/** BM portal — ไม่รวม /admin/branches (HR) */
+/** BM portal — /admin/branch เท่านั้น + legacy sub-routes (ไม่รวม /admin/branch/<slug> ของ HR) */
 export function isBranchPortalPath(pathname: string): boolean {
-  return pathname === "/admin/branch" || pathname.startsWith("/admin/branch/")
+  if (pathname === "/admin/branch") return true
+  return HIDDEN_BRANCH_PATHS.some(
+    (p) => pathname === p || pathname.startsWith(`${p}/`)
+  )
 }
 
 /** ซ่อนจาก nav — redirect ไป /admin/branch */
@@ -30,33 +33,38 @@ export const BRANCH_NAV_ITEMS: AdminNavItem[] = [
   },
 ]
 
-/** แผนก Management + role Employee — Dashboard เท่านั้น */
-export const MANAGEMENT_EMPLOYEE_NAV_ITEMS: AdminNavItem[] = [
-  { label: "Dashboard", href: "/admin", icon: "layout-dashboard" },
+const BRANCH_NAV_GROUPS: AdminNavGroup[] = [
+  { title: "", items: BRANCH_NAV_ITEMS },
 ]
 
+export function getNavGroupsForRole(
+  role: "employee" | "hr" | "admin" | "branch_manager" | "ceo" | "dev"
+): AdminNavGroup[] {
+  if (role === "branch_manager") return BRANCH_NAV_GROUPS
+  return ADMIN_NAV_GROUPS
+}
+
+/** @deprecated Use getNavGroupsForRole — flat list for legacy consumers */
 export function getNavItemsForRole(
   role: "employee" | "hr" | "admin" | "branch_manager" | "ceo" | "dev",
-  department: string | null = null
+  _department: string | null = null
 ): AdminNavItem[] {
-  if (role === "branch_manager") return BRANCH_NAV_ITEMS
-  if (role === "ceo") return CEO_NAV_ITEMS
-  if (role === "employee" && isManagementDepartment(department)) {
-    return MANAGEMENT_EMPLOYEE_NAV_ITEMS
-  }
-  return ADMIN_NAV_ITEMS
+  return flattenAdminNavGroups(getNavGroupsForRole(role))
 }
 
 export function withBranchPendingBadges(
-  items: AdminNavItem[],
+  groups: AdminNavGroup[],
   counts: { total: number }
-): AdminNavItem[] {
-  return items.map((item) => {
-    if (item.href === "/admin/branch") {
-      return counts.total > 0 ? { ...item, badge: counts.total } : item
-    }
-    return item
-  })
+): AdminNavGroup[] {
+  return groups.map((group) => ({
+    ...group,
+    items: group.items.map((item) => {
+      if (item.href === "/admin/branch") {
+        return counts.total > 0 ? { ...item, badge: counts.total } : item
+      }
+      return item
+    }),
+  }))
 }
 
 export function isBranchNavActive(pathname: string, href: string): boolean {

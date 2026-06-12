@@ -43,7 +43,7 @@ const QUICK_ACTIONS = [
   { label: "Leave Calendar", href: "/admin/leaves", icon: CalendarDays },
   { label: "Approve Queue", href: "/admin/manager", icon: CalendarCheck },
   { label: "Payroll Report", href: "/admin/payroll", icon: Wallet },
-  { label: "Reports", href: "/admin/reports", icon: BarChart3 },
+  { label: "Reports", href: "/admin/report", icon: BarChart3 },
   { label: "Org Chart", href: "/admin/organization", icon: Network },
 ] as const
 
@@ -74,7 +74,7 @@ export function CeoDashboard({
           title="Executive Dashboard"
           subtitle="Company-wide workforce health, payroll hours, branch performance, and HR risk signals."
         />
-        <Button render={<Link href="/admin/reports" />} size="sm" className="shrink-0 gap-1.5">
+        <Button render={<Link href="/admin/report" />} size="sm" className="shrink-0 gap-1.5">
           <Download className="size-3.5" />
           Export Report
         </Button>

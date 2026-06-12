@@ -3,28 +3,25 @@ import { redirect } from "next/navigation"
 
 import { AdminShell } from "@/components/admin/AdminShell"
 import {
-  getNavItemsForRole,
+  getNavGroupsForRole,
   isBranchPortalPath,
 } from "@/components/admin/branch-nav"
-import { withNavAlertBadges } from "@/features/notifications/nav-badges"
+import { withNavGroupAlertBadges } from "@/features/notifications/nav-badges"
 import {
   getNotificationInbox,
   resolveNotificationScope,
 } from "@/features/notifications/data"
 import {
   DEV_VIEW_COOKIE,
-  getDevNavItems,
+  getDevNavGroups,
   getDevNavMode,
   parseDevViewAs,
 } from "@/lib/auth/dev-view"
 import {
   canEmployeeAccessAdminPortal,
   isBranchManager,
-  isCeo,
-  isCeoAllowedPath,
   hasFullDataAccess,
   isDev,
-  isManagementDashboardEmployee,
 } from "@/lib/auth/roles"
 import { getCurrentEmployee } from "@/lib/auth/session"
 
@@ -42,7 +39,6 @@ export default async function AdminLayout({
   const pathname = (await headers()).get("x-pathname") ?? ""
   const dev = isDev(employee.role)
   const branchManager = !dev && isBranchManager(employee.role)
-  const ceo = !dev && isCeo(employee.role)
 
   if (!dev) {
     if (
@@ -51,22 +47,6 @@ export default async function AdminLayout({
       !isBranchPortalPath(pathname)
     ) {
       redirect("/admin/branch")
-    }
-
-    if (ceo && pathname.startsWith("/admin") && !isCeoAllowedPath(pathname)) {
-      redirect("/admin/ceo")
-    }
-
-    if (!ceo && !branchManager && pathname.startsWith("/admin/ceo")) {
-      redirect("/admin")
-    }
-
-    if (
-      isManagementDashboardEmployee(employee) &&
-      pathname.startsWith("/admin") &&
-      pathname !== "/admin"
-    ) {
-      redirect("/admin")
     }
   }
 
@@ -87,13 +67,13 @@ export default async function AdminLayout({
       }
   const alertBadge = notificationInbox.total
   const approvalBadge = notificationInbox.approvalTotal
-  let navItems =
+  let navGroups =
     dev && devView
-      ? getDevNavItems(devView)
-      : getNavItemsForRole(employee.role, employee.department)
+      ? getDevNavGroups(devView)
+      : getNavGroupsForRole(employee.role)
 
   if (Object.keys(notificationInbox.navBadges).length > 0) {
-    navItems = withNavAlertBadges(navItems, notificationInbox.navBadges)
+    navGroups = withNavGroupAlertBadges(navGroups, notificationInbox.navBadges)
   }
 
   return (
@@ -103,10 +83,9 @@ export default async function AdminLayout({
       notificationItems={notificationInbox.items}
       showComplianceLink={notificationScope === "hr" || hasFullDataAccess(employee.role)}
       branchMode={navMode?.branchMode ?? branchManager}
-      ceoMode={navMode?.ceoMode ?? ceo}
       devAllMode={navMode?.devAllMode ?? false}
       devView={devView}
-      navItems={navItems}
+      navGroups={navGroups}
       user={{
         name: employee.name,
         role: employee.role,

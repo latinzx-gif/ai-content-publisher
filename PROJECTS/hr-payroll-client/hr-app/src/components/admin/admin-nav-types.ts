@@ -16,6 +16,9 @@ export type AdminNavIconName =
   | "bar-chart"
   | "settings"
   | "list-checks"
+  | "organization"
+  | "branches"
+  | "inventory"
 
 export type AdminNavItem = {
   label: string
@@ -23,4 +26,9 @@ export type AdminNavItem = {
   icon: AdminNavIconName
   comingSoon?: boolean
   badge?: number
+}
+
+export type AdminNavGroup = {
+  title: string
+  items: AdminNavItem[]
 }

@@ -2,7 +2,8 @@
 
 **Batch:** T77–T108  
 **Status:** ✅ **APPROVED**  
-**Date:** 2026-06-11  
+**Active:** **T109** — Grouped Admin Sitemap & Nav — 🔄 IN PROGRESS  
+**Date:** 2026-06-12  
 **Reviewed:** 2026-06-10 (Cursor orchestrator)
 
 ## Taskmaster

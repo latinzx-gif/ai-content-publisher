@@ -6,11 +6,14 @@ import {
   CalendarDays,
   Clock,
   FileText,
+  GitBranch,
   GraduationCap,
   LayoutDashboard,
   ListChecks,
   Megaphone,
   MessageSquareWarning,
+  Network,
+  Package,
   Settings,
   Target,
   Timer,
@@ -39,6 +42,9 @@ export const ADMIN_NAV_ICONS: Record<AdminNavIconName, LucideIcon> = {
   "bar-chart": BarChart3,
   settings: Settings,
   "list-checks": ListChecks,
+  organization: Network,
+  branches: GitBranch,
+  inventory: Package,
 }
 
 export function resolveAdminNavIcon(name: AdminNavIconName): LucideIcon {
@@ -86,6 +92,12 @@ export function AdminNavIcon({
       return <Settings className={className} />
     case "list-checks":
       return <ListChecks className={className} />
+    case "organization":
+      return <Network className={className} />
+    case "branches":
+      return <GitBranch className={className} />
+    case "inventory":
+      return <Package className={className} />
     default:
       return <LayoutDashboard className={className} />
   }

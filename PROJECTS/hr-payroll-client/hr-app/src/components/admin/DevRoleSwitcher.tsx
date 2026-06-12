@@ -28,7 +28,7 @@ export function DevRoleSwitcher({ currentView }: { currentView: DevViewAs }) {
 
     startTransition(() => {
       router.refresh()
-      if (view === "ceo") router.push("/admin/ceo")
+      if (view === "ceo") router.push("/admin/report")
       else if (view === "branch") router.push("/admin/branch")
       else if (view === "hr") router.push("/admin")
       else if (view === "all") router.push("/admin")
