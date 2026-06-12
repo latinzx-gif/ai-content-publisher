@@ -228,6 +228,7 @@ export function InboundBarcodeScanner({
   const scannerRef = useRef<Html5Qrcode | null>(null)
   const fileScannerRef = useRef<Html5Qrcode | null>(null)
   const fileInputRef = useRef<HTMLInputElement | null>(null)
+  const lastScanRef = useRef<{ value: string; at: number } | null>(null)
   const [liffCtx, setLiffCtx] = useState<LiffContext | null>(null)
   const [cameraOpen, setCameraOpen] = useState(false)
   const [busy, setBusy] = useState(false)
@@ -239,6 +240,12 @@ export function InboundBarcodeScanner({
   useEffect(() => {
     void initInboundScanLiff().then(setLiffCtx)
   }, [])
+
+  useEffect(() => {
+    if (!scanError) return
+    const timeout = window.setTimeout(() => setScanError(null), 3000)
+    return () => window.clearTimeout(timeout)
+  }, [scanError])
 
   useEffect(() => {
     return () => {
@@ -297,10 +304,27 @@ export function InboundBarcodeScanner({
           cameraId,
           { fps: 10, qrbox: { width: 260, height: 160 } },
           (decoded) => {
-            onScanned(decoded.trim())
-            void stopCamera()
-            setCameraOpen(false)
+            const value = decoded.trim()
+            if (!value) return
+
+            const now = Date.now()
+            const lastScan = lastScanRef.current
+            if (
+              lastScan?.value === value &&
+              now - lastScan.at < 1500
+            ) {
+              return
+            }
+
+            lastScanRef.current = { value, at: now }
+            onScanned(value)
             setScanError(null)
+
+            window.setTimeout(() => {
+              if (lastScanRef.current?.value === value) {
+                lastScanRef.current = null
+              }
+            }, 1200)
           },
           () => {
             // scan attempt — no match yet
@@ -447,7 +471,9 @@ export function InboundBarcodeScanner({
       ) : null}
 
       {scanError ? (
-        <p className="text-sm text-destructive">{scanError}</p>
+        <div className="fixed inset-x-4 bottom-[calc(env(safe-area-inset-bottom)+5rem)] z-[60] mx-auto max-w-sm rounded-xl bg-red-600 px-4 py-3 text-sm font-medium text-white shadow-lg">
+          {scanError}
+        </div>
       ) : null}
 
       {cameraOpen ? (
@@ -460,7 +486,7 @@ export function InboundBarcodeScanner({
               variant="outline"
               onClick={closeCamera}
             >
-              ปิด
+              ปิดกล้อง
             </Button>
           </div>
           <div
