@@ -5,31 +5,32 @@ export type { AdminNavItem, AdminNavIconName, AdminNavGroup } from "@/components
 /** Grouped sidebar navigation — 3 sections per sitemap */
 export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
   {
-    title: "Human Management",
+    title: "บริหารบุคคล",
     items: [
-      { label: "Dashboard", href: "/admin", icon: "layout-dashboard" },
-      { label: "Employee", href: "/admin/employees", icon: "users" },
-      { label: "Approval", href: "/admin/manager", icon: "list-checks" },
-      { label: "Attendance", href: "/admin/attendance", icon: "clock" },
-      { label: "Leave Management", href: "/admin/leaves", icon: "calendar" },
-      { label: "Overtime", href: "/admin/overtime", icon: "timer" },
-      { label: "Announcements", href: "/admin/announcements", icon: "megaphone" },
-      { label: "Complaints", href: "/admin/complaints", icon: "message-warning" },
-      { label: "Documents", href: "/admin/documents", icon: "file-text" },
+      { label: "แดชบอร์ด", href: "/admin", icon: "layout-dashboard" },
+      { label: "พนักงาน", href: "/admin/employees", icon: "users" },
+      { label: "อนุมัติ", href: "/admin/manager", icon: "list-checks" },
+      { label: "การเข้างาน", href: "/admin/attendance", icon: "clock" },
+      { label: "จัดการลา", href: "/admin/leaves", icon: "calendar" },
+      { label: "OT", href: "/admin/overtime", icon: "timer" },
+      { label: "ประกาศ", href: "/admin/announcements", icon: "megaphone" },
+      { label: "ข้อร้องเรียน", href: "/admin/complaints", icon: "message-warning" },
+      { label: "เอกสาร", href: "/admin/documents", icon: "file-text" },
+      { label: "การแจ้งเตือน", href: "/admin/alerts", icon: "bell" },
     ],
   },
   {
-    title: "Accounting",
+    title: "บัญชี",
     items: [{ label: "Payroll", href: "/admin/payroll", icon: "wallet" }],
   },
   {
-    title: "Management",
+    title: "การจัดการ",
     items: [
-      { label: "Organization", href: "/admin/organization", icon: "organization" },
-      { label: "Branches", href: "/admin/branches", icon: "branches" },
-      { label: "Report & Analytics", href: "/admin/report", icon: "bar-chart" },
-      { label: "Inventory", href: "/admin/inventory", icon: "inventory" },
-      { label: "Setting", href: "/admin/settings", icon: "settings" },
+      { label: "โครงสร้างองค์กร", href: "/admin/organization", icon: "organization" },
+      { label: "สาขา", href: "/admin/branches", icon: "branches" },
+      { label: "รายงานและวิเคราะห์", href: "/admin/report", icon: "bar-chart" },
+      { label: "คลังสินค้า", href: "/admin/inventory", icon: "inventory" },
+      { label: "ตั้งค่า", href: "/admin/settings", icon: "settings" },
     ],
   },
 ]
@@ -45,6 +46,9 @@ export const ADMIN_NAV_ITEMS: AdminNavItem[] = flattenAdminNavGroups(ADMIN_NAV_G
 export function isAdminNavActive(pathname: string, href: string): boolean {
   if (href === "/admin/report") {
     return pathname === "/admin/report" || pathname.startsWith("/admin/report/")
+  }
+  if (href === "/admin/alerts") {
+    return pathname === "/admin/alerts" || pathname.startsWith("/admin/alerts/")
   }
   return href === "/admin" ? pathname === "/admin" : pathname.startsWith(href)
 }

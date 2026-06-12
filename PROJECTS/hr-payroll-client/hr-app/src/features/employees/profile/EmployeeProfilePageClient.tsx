@@ -94,7 +94,7 @@ export function EmployeeProfilePageClient({
         }
       />
       <section className="shrink-0 rounded-xl border border-border/80 bg-card p-4">
-        <h2 className="mb-3 text-sm font-semibold">Employee Lifecycle (F5)</h2>
+        <h2 className="mb-3 text-sm font-semibold">วงจรพนักงาน</h2>
         <LifecyclePanel profile={profile} notes={notes} />
       </section>
       {!readOnly ? <EmployeeDangerZone profile={profile} /> : null}

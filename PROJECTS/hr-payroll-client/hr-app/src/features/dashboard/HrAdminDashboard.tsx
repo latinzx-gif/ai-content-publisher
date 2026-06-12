@@ -39,15 +39,15 @@ const QUICK_ACTIONS: Array<{
   href: string
   icon: LucideIcon
 }> = [
-  { label: "Add Employee", href: "/admin/employees", icon: UserPlus },
-  { label: "Approve Leave", href: "/admin/leaves", icon: CalendarCheck },
-  { label: "Run Payroll", href: "/admin/payroll", icon: Wallet },
-  { label: "Manage Documents", href: "/admin/documents", icon: FileText },
-  { label: "Create Announcement", href: "/admin/announcements", icon: Megaphone },
-  { label: "Report Builder", href: "/admin/report", icon: BarChart3 },
-  { label: "View Org Chart", href: "/admin/organization", icon: Network },
-  { label: "Attendance Report", href: "/admin/attendance", icon: Clock },
-  { label: "HR Settings", href: "/admin/settings", icon: Settings },
+  { label: "เพิ่มพนักงาน", href: "/admin/employees/new", icon: UserPlus },
+  { label: "อนุมัติลา", href: "/admin/leaves", icon: CalendarCheck },
+  { label: "Payroll", href: "/admin/payroll", icon: Wallet },
+  { label: "จัดการเอกสาร", href: "/admin/documents", icon: FileText },
+  { label: "สร้างประกาศ", href: "/admin/announcements", icon: Megaphone },
+  { label: "รายงาน", href: "/admin/report", icon: BarChart3 },
+  { label: "โครงสร้างองค์กร", href: "/admin/organization", icon: Network },
+  { label: "รายงานเข้างาน", href: "/admin/attendance", icon: Clock },
+  { label: "ตั้งค่า", href: "/admin/settings", icon: Settings },
 ]
 
 const NEW_HIRE_STATUS: Record<
@@ -72,8 +72,8 @@ export async function HrAdminDashboard({ userName }: { userName: string }) {
       <HeroBanner
         compact
         userName={userName}
-        title="HR Admin Dashboard"
-        subtitle="Manage your people, operations, and workplace with ease."
+        title="แดชบอร์ด HR"
+        subtitle="จัดการพนักงาน การเข้างาน ลา OT และงาน HR ในที่เดียว"
       />
 
       <div className="grid shrink-0 gap-2 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-6 md:gap-3">

@@ -27,7 +27,7 @@ export const BRANCH_SECTION_ITEMS: AdminNavItem[] = []
 /** Sidebar สำหรับ Branch Manager — hub only; tools อยู่ใน /admin/branch */
 export const BRANCH_NAV_ITEMS: AdminNavItem[] = [
   {
-    label: "Branch Dashboard",
+    label: "แดชบอร์ดสาขา",
     href: "/admin/branch",
     icon: "layout-dashboard",
   },

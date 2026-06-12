@@ -61,7 +61,7 @@ export function BranchManagerDashboard({
       <HeroBanner
         compact
         userName={userName}
-        title="Branch Dashboard"
+        title="แดชบอร์ดสาขา"
         subtitle={
           unassigned
             ? "ยังไม่ได้มอบหมายสาขา — ติดต่อ HR ให้ตั้ง Role Branch Manager และผูกสาขา"

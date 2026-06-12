@@ -36,7 +36,7 @@ export default async function AdminReportPage({
         <CeoDashboard
           userName={employee?.name ?? "Admin"}
           data={dashboardData}
-          title="Report & Analytics"
+          title="รายงานและวิเคราะห์"
           subtitle="ภาพรวมองค์กร สุขภาพบุคลากร ชั่วโมงเงินเดือน ประสิทธิภาพสาขา และสัญญาณความเสี่ยง HR"
           exportHref="#report-export"
         />

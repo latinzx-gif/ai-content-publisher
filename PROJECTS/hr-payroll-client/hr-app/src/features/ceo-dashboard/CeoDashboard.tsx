@@ -58,8 +58,8 @@ const ACTIVITY_ICONS: Record<string, { icon: LucideIcon; className: string }> = 
 export function CeoDashboard({
   userName,
   data,
-  title = "Executive Dashboard",
-  subtitle = "Company-wide workforce health, payroll hours, branch performance, and HR risk signals.",
+  title = "แดชบอร์ดผู้บริหาร",
+  subtitle = "ภาพรวมองค์กร สุขภาพบุคลากร ชั่วโมงเงินเดือน ประสิทธิภาพสาขา และสัญญาณความเสี่ยง HR",
   exportHref = "#report-export",
 }: {
   userName: string

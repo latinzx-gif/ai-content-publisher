@@ -2,6 +2,7 @@
 
 import {
   BarChart3,
+  Bell,
   Building2,
   CalendarDays,
   Clock,
@@ -45,6 +46,7 @@ export const ADMIN_NAV_ICONS: Record<AdminNavIconName, LucideIcon> = {
   organization: Network,
   branches: GitBranch,
   inventory: Package,
+  bell: Bell,
 }
 
 export function resolveAdminNavIcon(name: AdminNavIconName): LucideIcon {
@@ -98,6 +100,8 @@ export function AdminNavIcon({
       return <GitBranch className={className} />
     case "inventory":
       return <Package className={className} />
+    case "bell":
+      return <Bell className={className} />
     default:
       return <LayoutDashboard className={className} />
   }

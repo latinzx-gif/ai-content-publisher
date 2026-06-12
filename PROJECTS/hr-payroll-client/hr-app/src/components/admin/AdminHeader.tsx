@@ -1,6 +1,7 @@
-import { CircleHelp, LogOut, Search } from "lucide-react"
+import { LogOut } from "lucide-react"
 
 import type { AdminNavGroup, AdminNavItem } from "@/components/admin/admin-nav"
+import { AdminEmployeeSearch } from "@/components/admin/AdminEmployeeSearch"
 import { AdminMobileNav } from "@/components/admin/AdminMobileNav"
 import { AdminNotificationBell } from "@/components/admin/AdminNotificationBell"
 import { DevRoleSwitcher } from "@/components/admin/DevRoleSwitcher"
@@ -45,15 +46,7 @@ export function AdminHeader({
           branchMode={branchMode}
           devAllMode={devAllMode}
         />
-        <div className="relative mx-auto hidden w-full max-w-xl flex-1 md:block">
-          <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-          <input
-            type="search"
-            placeholder="Search employees, modules, documents..."
-            className="h-9 w-full rounded-full border border-border/80 bg-muted/30 pl-10 pr-4 text-sm outline-none placeholder:text-muted-foreground focus-visible:border-brand-red/40 focus-visible:ring-2 focus-visible:ring-brand-red/20"
-            aria-label="Search"
-          />
-        </div>
+        <AdminEmployeeSearch />
         <div className="flex items-center gap-1 sm:gap-2">
           {isDev && devView ? <DevRoleSwitcher currentView={devView} /> : null}
           <AdminNotificationBell
@@ -62,13 +55,6 @@ export function AdminHeader({
             initialItems={notificationItems}
             showComplianceLink={showComplianceLink}
           />
-          <button
-            type="button"
-            className="hidden rounded-lg p-2 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground sm:block"
-            aria-label="Help"
-          >
-            <CircleHelp className="size-5" />
-          </button>
           {user ? (
             <div className="hidden items-center gap-2 rounded-lg border border-border/80 px-2 py-1 sm:flex">
               <EmployeeAvatar

@@ -19,6 +19,7 @@ export type AdminNavIconName =
   | "organization"
   | "branches"
   | "inventory"
+  | "bell"
 
 export type AdminNavItem = {
   label: string

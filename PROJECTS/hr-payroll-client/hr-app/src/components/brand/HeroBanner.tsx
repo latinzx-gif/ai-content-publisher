@@ -27,7 +27,7 @@ export function HeroBanner({
               : "text-sm text-muted-foreground"
           }
         >
-          Welcome back, {userName} 👋
+          ยินดีต้อนรับกลับ, {userName} 👋
         </p>
         <h1
           className={

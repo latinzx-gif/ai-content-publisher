@@ -25,11 +25,11 @@ function SidebarPromo() {
       />
       <div className="relative flex items-end justify-between gap-2">
         <p className="max-w-[11rem] text-left text-[17px] font-bold leading-[1.25] text-brand-red">
-          Together, We
+          ร่วมกันสร้าง
           <br />
-          Build a Stronger
+          ทีมที่แข็งแกร่ง
           <br />
-          Team!
+          ไปด้วยกัน!
         </p>
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
