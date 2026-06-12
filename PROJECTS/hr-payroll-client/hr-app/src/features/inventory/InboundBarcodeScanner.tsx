@@ -355,11 +355,6 @@ export function InboundBarcodeScanner({
     setCameraOpen(true)
   }
 
-  function openPhotoPicker() {
-    setScanError(null)
-    fileInputRef.current?.click()
-  }
-
   // Decode a still photo (native camera capture) — works inside the LINE
   // WebView where live getUserMedia / scanCodeV2 are unreliable.
   async function handlePhotoSelected(
@@ -427,18 +422,33 @@ export function InboundBarcodeScanner({
     }
   }
 
+  const photoPickerDisabled = disabled || busy || cameraOpen
+
   return (
     <>
       <div className="flex flex-col gap-2">
-        <Button
-          type="button"
-          className="w-full"
-          disabled={disabled || busy || cameraOpen}
-          onClick={openPhotoPicker}
-        >
-          <ImageUp className="size-4" />
-          {busy ? "กำลังอ่านรูป…" : "ถ่ายรูป barcode"}
-        </Button>
+        <div className="relative">
+          <Button
+            type="button"
+            className="w-full"
+            disabled={photoPickerDisabled}
+            tabIndex={-1}
+          >
+            <ImageUp className="size-4" />
+            {busy ? "กำลังอ่านรูป…" : "ถ่ายรูป barcode"}
+          </Button>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            capture="environment"
+            aria-label="ถ่ายรูป barcode"
+            className="absolute inset-0 h-full w-full cursor-pointer opacity-0 disabled:cursor-not-allowed"
+            disabled={photoPickerDisabled}
+            onClick={() => setScanError(null)}
+            onChange={(e) => void handlePhotoSelected(e)}
+          />
+        </div>
 
         {showCamera ? (
           <Button
@@ -453,15 +463,6 @@ export function InboundBarcodeScanner({
           </Button>
         ) : null}
       </div>
-
-      <input
-        ref={fileInputRef}
-        type="file"
-        accept="image/*"
-        capture="environment"
-        className="hidden"
-        onChange={(e) => void handlePhotoSelected(e)}
-      />
       <div id={`inbound-file-${readerId}`} className="hidden" />
 
       {inLine && liffCtx && !liffCtx.ready && liffCtx.error ? (
