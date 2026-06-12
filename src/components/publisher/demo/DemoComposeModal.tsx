@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import { PlatformIcon } from "./PlatformIcon";
 import { BrandIcon } from "./BrandIcon";
+import { useDemoStore } from "@/lib/publisher/demo/store";
 
 type Platform = "facebook" | "instagram" | "linkedin" | "tiktok";
 
@@ -145,6 +146,22 @@ export default function DemoComposeModal({ onClose }: Props) {
   const [activeHeaderTab, setActiveHeaderTab] = useState<"Template" | "Campaign" | "Labels" | null>(null);
   const abortRef = useRef<AbortController | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const { addPost } = useDemoStore();
+
+  function handleSaveDraft() {
+    const title = caption.trim().split("\n")[0].slice(0, 60) || "Untitled Post";
+    addPost({
+      title,
+      caption: caption.trim(),
+      platform,
+      status: "draft",
+      brand: "DataClaw",
+      tags: [],
+      createdAt: new Date().toISOString(),
+      comments: [],
+    });
+    onClose();
+  }
 
   useEffect(() => {
     setTimeout(() => textareaRef.current?.focus(), 100);
@@ -391,7 +408,7 @@ export default function DemoComposeModal({ onClose }: Props) {
 
               <div className="flex items-center rounded-lg overflow-hidden shadow-sm">
                 <button
-                  onClick={onClose}
+                  onClick={handleSaveDraft}
                   className="flex items-center gap-2 bg-[#6366f1] hover:bg-[#4f46e5] text-white text-[13px] font-semibold px-5 py-2.5 transition-colors"
                 >
                   Save draft
