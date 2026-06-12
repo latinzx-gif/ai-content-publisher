@@ -30,7 +30,12 @@ export type EmployeeRow = {
   contract_start: string | null
   probation_end: string | null
   visa_expiry: string | null
-  displayStatus: "active" | "inactive" | "probation" | "onboarding"
+  displayStatus:
+    | "active"
+    | "inactive"
+    | "probation"
+    | "onboarding"
+    | "pending_approval"
 }
 
 const ICT_OFFSET_MS = 7 * 60 * 60 * 1000
@@ -90,10 +95,9 @@ export async function getEmployees(params: Required<EmployeeListParams>) {
     query = query.eq("status", "active").gte("probation_end", today)
   }
   if (params.status === "onboarding") {
-    query = query
-      .eq("status", "active")
-      .eq("role", "employee")
-      .is("branch_id", null)
+    query = query.or(
+      "and(status.eq.inactive,role.eq.employee),and(status.eq.active,role.eq.employee,branch_id.is.null)"
+    )
   }
 
   query = query
@@ -106,12 +110,15 @@ export async function getEmployees(params: Required<EmployeeListParams>) {
   }
 
   const employees: EmployeeRow[] = (data ?? []).map((row) => {
-    const needsOnboarding =
+    const pendingApproval =
+      row.status === "inactive" && row.role === "employee"
+    const needsBranch =
       row.status === "active" &&
       row.role === "employee" &&
       row.branch_id === null
     let displayStatus: EmployeeRow["displayStatus"] = row.status
-    if (needsOnboarding) displayStatus = "onboarding"
+    if (pendingApproval) displayStatus = "pending_approval"
+    else if (needsBranch) displayStatus = "onboarding"
     else if (
       row.status === "active" &&
       row.probation_end !== null &&

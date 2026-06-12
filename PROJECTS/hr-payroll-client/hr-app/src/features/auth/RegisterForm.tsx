@@ -1,7 +1,7 @@
 "use client"
 
 import { useRouter } from "next/navigation"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 
 import { BrandMark } from "@/components/brand/BrandMark"
 import { Button } from "@/components/ui/button"
@@ -9,18 +9,50 @@ import { Button } from "@/components/ui/button"
 const inputClassName =
   "mt-1 h-10 w-full rounded-lg border border-input bg-transparent px-3 text-sm outline-none transition-colors focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/50"
 
+type BranchOption = { id: string; name: string; code: string | null }
+
 export function RegisterForm() {
   const router = useRouter()
   const [name, setName] = useState("")
+  const [phone, setPhone] = useState("")
+  const [branchId, setBranchId] = useState("")
   const [department, setDepartment] = useState("")
   const [position, setPosition] = useState("")
+  const [branches, setBranches] = useState<BranchOption[]>([])
+  const [branchesLoading, setBranchesLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    let cancelled = false
+    ;(async () => {
+      try {
+        const res = await fetch("/api/auth/register/branches")
+        const data = (await res.json()) as { branches?: BranchOption[] }
+        if (!cancelled && res.ok) {
+          setBranches(data.branches ?? [])
+        }
+      } finally {
+        if (!cancelled) setBranchesLoading(false)
+      }
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [])
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (!name.trim()) {
       setError("กรุณากรอกชื่อ-นามสกุล")
+      return
+    }
+    if (!phone.trim()) {
+      setError("กรุณากรอกเบอร์ติดต่อ")
+      return
+    }
+    if (!branchId) {
+      setError("กรุณาเลือกสาขา")
       return
     }
 
@@ -33,6 +65,8 @@ export function RegisterForm() {
         credentials: "include",
         body: JSON.stringify({
           name: name.trim(),
+          phone: phone.trim(),
+          branch_id: branchId,
           department: department.trim() || null,
           position: position.trim() || null,
         }),
@@ -49,7 +83,7 @@ export function RegisterForm() {
         router.refresh()
         return
       }
-      router.push("/liff/leave")
+      router.push("/register/pending")
     } catch (err) {
       setError(err instanceof Error ? err.message : "ลงทะเบียนไม่สำเร็จ")
     } finally {
@@ -60,8 +94,8 @@ export function RegisterForm() {
   return (
     <form onSubmit={onSubmit} className="flex flex-col gap-4">
       <p className="text-center text-sm text-muted-foreground">
-        ลงทะเบียนพนักงานครั้งแรก — เริ่มต้นเป็น <strong>Employee</strong>{" "}
-        HR จะกำหนดสิทธิ์ Dashboard ให้ภายหลัง
+        กรอกข้อมูลเพื่อขอเข้าใช้งาน — <strong>HR จะอนุมัติก่อน</strong>{" "}
+        จึงจะใช้เมนู HR ใน LINE ได้ (ไม่มี Web Dashboard)
       </p>
 
       <label className="block text-sm">
@@ -73,6 +107,40 @@ export function RegisterForm() {
           required
           autoComplete="name"
         />
+      </label>
+
+      <label className="block text-sm">
+        <span className="text-muted-foreground">เบอร์ติดต่อ *</span>
+        <input
+          type="tel"
+          className={inputClassName}
+          value={phone}
+          onChange={(e) => setPhone(e.target.value)}
+          placeholder="08x-xxx-xxxx"
+          required
+          autoComplete="tel"
+        />
+      </label>
+
+      <label className="block text-sm">
+        <span className="text-muted-foreground">สาขา *</span>
+        <select
+          className={inputClassName}
+          value={branchId}
+          onChange={(e) => setBranchId(e.target.value)}
+          required
+          disabled={branchesLoading}
+        >
+          <option value="">
+            {branchesLoading ? "กำลังโหลดสาขา…" : "— เลือกสาขา —"}
+          </option>
+          {branches.map((b) => (
+            <option key={b.id} value={b.id}>
+              {b.name}
+              {b.code ? ` (${b.code})` : ""}
+            </option>
+          ))}
+        </select>
       </label>
 
       <label className="block text-sm">
@@ -103,10 +171,10 @@ export function RegisterForm() {
 
       <Button
         type="submit"
-        disabled={saving}
+        disabled={saving || branchesLoading}
         className="w-full bg-brand-red text-white hover:bg-brand-red/90"
       >
-        {saving ? "กำลังลงทะเบียน…" : "ลงทะเบียนและเข้าใช้งาน"}
+        {saving ? "กำลังส่งคำขอ…" : "ส่งคำขอลงทะเบียน"}
       </Button>
     </form>
   )

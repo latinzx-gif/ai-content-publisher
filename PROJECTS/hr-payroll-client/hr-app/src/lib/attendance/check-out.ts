@@ -17,6 +17,7 @@ export type CheckOutResult =
     }
   | { status: "not_checked_in" }
   | { status: "already_checked_out"; checkOutAt: Date }
+  | { status: "pending_approval" }
   | { status: "not_registered" }
 
 export async function checkOut({
@@ -28,19 +29,22 @@ export async function checkOut({
 }): Promise<CheckOutResult> {
   const admin = getAdminClient()
 
-  const { data: employee, error: employeeError } = await admin
+  const { data: row, error: employeeError } = await admin
     .from("hr_employees")
-    .select("id, name")
+    .select("id, name, status")
     .eq("line_user_id", lineUserId)
-    .eq("status", "active")
     .maybeSingle()
 
   if (employeeError) {
     throw employeeError
   }
-  if (!employee) {
+  if (!row) {
     return { status: "not_registered" }
   }
+  if (row.status !== "active") {
+    return { status: "pending_approval" }
+  }
+  const employee = row
 
   const { start, end } = ictDayRangeUtc(now)
   const { data: record, error: recordError } = await admin

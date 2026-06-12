@@ -8,6 +8,7 @@ import {
   alreadyCheckedInFlex,
   menuHintFlex,
   notRegisteredFlex,
+  pendingApprovalFlex,
 } from "@/lib/line/flex/menu-guide"
 import { buildActionMessages } from "@/lib/line/handlers/actions"
 import { isOneOnOneUserSource } from "@/lib/line/handlers/source"
@@ -52,6 +53,8 @@ async function checkinMessages(
       ]
     case "already_checked_in":
       return [alreadyCheckedInFlex(formatIctTime(result.checkInAt))]
+    case "pending_approval":
+      return [pendingApprovalFlex()]
     case "not_registered":
       return [notRegisteredFlex()]
   }

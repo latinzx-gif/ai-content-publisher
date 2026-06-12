@@ -67,7 +67,7 @@ export function EmployeeFilters({ departments }: { departments: string[] }) {
         <option value="active">Active</option>
         <option value="probation">Probation</option>
         <option value="inactive">Inactive</option>
-        <option value="onboarding">รอกำหนดสิทธิ์ / สาขา</option>
+        <option value="onboarding">รออนุมัติ / กำหนดสาขา</option>
       </select>
       <select
         value={`${searchParams.get("sort") ?? "name"}:${searchParams.get("dir") ?? "asc"}`}

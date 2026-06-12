@@ -188,8 +188,51 @@ export function EmployeeProfileForm({
     }
   }
 
+  const isPendingRegistration =
+    profile.status === "inactive" && profile.role === "employee"
+
+  async function approveRegistration() {
+    setSaving(true)
+    setError(null)
+    setMessage(null)
+    try {
+      const res = await fetch(`/api/employees/${profile.id}`, {
+        method: "PATCH",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ status: "active" }),
+      })
+      if (!res.ok) {
+        const body = (await res.json().catch(() => null)) as { error?: string } | null
+        throw new Error(body?.error ?? "อนุมัติไม่สำเร็จ")
+      }
+      setField("status", "active")
+      setMessage("อนุมัติการลงทะเบียนแล้ว — พนักงานใช้เมนู HR ใน LINE ได้")
+      router.refresh()
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "อนุมัติไม่สำเร็จ")
+    } finally {
+      setSaving(false)
+    }
+  }
+
   return (
     <div className="flex flex-col gap-6">
+      {isPendingRegistration ? (
+        <WidgetCard title="รออนุมัติการลงทะเบียน">
+          <p className="text-sm text-muted-foreground">
+            พนักงานส่งคำขอผ่านฟอร์มลงทะเบียนแล้ว — ตรวจสอบชื่อ เบอร์ และสาขา
+            ก่อนกดอนุมัติ (ไม่มี Web Dashboard สำหรับพนักงาน)
+          </p>
+          <Button
+            type="button"
+            className="mt-4 bg-brand-red text-white hover:bg-brand-red/90"
+            disabled={saving}
+            onClick={() => void approveRegistration()}
+          >
+            อนุมัติเข้าใช้งาน
+          </Button>
+        </WidgetCard>
+      ) : null}
       <div className="grid gap-4 lg:grid-cols-2">
         <WidgetCard title="ข้อมูลส่วนตัว">
           <div className="flex flex-col gap-3">

@@ -68,14 +68,15 @@ CEO เข้าได้เฉพาะ prefix: `/admin/ceo`, `/admin/branches`
 
 ## 4. Onboarding พนักงานใหม่ (Self-register)
 
-### 4.0 พนักงานลงทะเบียนเอง (ครั้งแรก)
+### 4.0 พนักงานลงทะเบียนเอง (ครั้งแรก) — รอ HR อนุมัติ
 
-1. เปิด **Login LINE** → ถ้ายังไม่มีในระบบ ระบบพาไป `/register`
-2. กรอก **ชื่อ-นามสกุล**, แผนก, ตำแหน่ง → บันทึก
-3. เริ่มต้นเป็น role **`employee`** → landing `/liff/leave`
-4. **HR** เปิด `/admin/employees/[id]` → แก้ **Role** และ **สาขา** ตามต้องการ (รวม `branch_manager`, `hr`, `ceo`)
+1. แอดเพื่อน **LINE OA** หรือเปิด `/login` → Login LINE
+2. ถ้ายังไม่มีในระบบ → `/register` กรอก **ชื่อ, เบอร์, สาขา** (+ แผนก/ตำแหน่ง optional)
+3. สถานะ **`inactive` (รออนุมัติ)** → `/register/pending` — **ยังใช้เมนู HR ใน LINE ไม่ได้**
+4. **HR** เปิด `/admin/employees?status=onboarding` → โปรไฟล์ → กด **อนุมัติเข้าใช้งาน**
+5. หลังอนุมัติ (`active`) → พนักงานใช้ **LINE OA + LIFF เท่านั้น** (ไม่มี Web Dashboard — `/employee` เป็นหน้าข้อมูลสั้นๆ)
 
-> ไม่ต้อง copy LINE User ID หรือรัน `seed-admin.mjs` สำหรับพนักงานทั่วไป
+> ไม่ต้อง copy LINE User ID สำหรับพนักงานทั่วไป · HR/BM/CEO ยังใช้ Dashboard ตาม role
 
 ---
 

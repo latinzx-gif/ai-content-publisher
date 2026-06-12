@@ -7,6 +7,7 @@ export type SubmitDailyResult =
   | { status: "not_checked_in" }
   | { status: "not_checked_out" }
   | { status: "already_submitted" }
+  | { status: "pending_approval" }
   | { status: "not_registered" }
 
 export async function submitDailyAttendance({
@@ -18,14 +19,15 @@ export async function submitDailyAttendance({
 }): Promise<SubmitDailyResult> {
   const admin = getAdminClient()
 
-  const { data: employee } = await admin
+  const { data: row } = await admin
     .from("hr_employees")
-    .select("id, name")
+    .select("id, name, status")
     .eq("line_user_id", lineUserId)
-    .eq("status", "active")
     .maybeSingle()
 
-  if (!employee) return { status: "not_registered" }
+  if (!row) return { status: "not_registered" }
+  if (row.status !== "active") return { status: "pending_approval" }
+  const employee = row
 
   const { start, end } = ictDayRangeUtc(now)
   const { data: attendance } = await admin

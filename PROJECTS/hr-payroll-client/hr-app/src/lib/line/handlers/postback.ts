@@ -2,6 +2,7 @@ import type { messagingApi, webhook } from "@line/bot-sdk"
 
 import { getLineClient } from "@/lib/line/client"
 import { buildActionMessages } from "@/lib/line/handlers/actions"
+import { lineAccessGateMessages } from "@/lib/line/line-access-gate"
 import { parsePostbackAction } from "@/lib/line/types"
 
 function fallbackText(): messagingApi.Message {
@@ -21,9 +22,14 @@ export async function handlePostback(
   const action = parsePostbackAction(event.postback.data)
   const lineUserId =
     event.source?.type === "user" ? event.source.userId : undefined
-  const messages = action
-    ? await buildActionMessages(action, { lineUserId })
-    : [fallbackText()]
+
+  let messages: messagingApi.Message[]
+  if (!action) {
+    messages = [fallbackText()]
+  } else {
+    const blocked = await lineAccessGateMessages(lineUserId, action)
+    messages = blocked ?? (await buildActionMessages(action, { lineUserId }))
+  }
 
   try {
     await getLineClient().replyMessage({

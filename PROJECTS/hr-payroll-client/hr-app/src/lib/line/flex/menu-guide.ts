@@ -520,19 +520,38 @@ export function announcementGuideFlex(): messagingApi.FlexMessage {
 }
 
 export function notRegisteredFlex(): messagingApi.FlexMessage {
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL?.trim() ?? ""
+  const registerUrl = baseUrl ? `${baseUrl}/login` : "/login"
   return guide("ไม่พบข้อมูลพนักงานในระบบ", {
     emoji: "⚠️",
     title: "ไม่พบข้อมูล",
     subtitle: "ยังไม่ได้ลงทะเบียนในระบบ",
     accentColor: "#EF4444",
     description:
-      "บัญชี LINE ของคุณยังไม่ได้เชื่อมกับข้อมูลพนักงาน จึงไม่สามารถเช็คอินได้",
+      "บัญชี LINE ของคุณยังไม่ได้ลงทะเบียน จึงไม่สามารถใช้เมนู HR ได้",
     steps: [
-      "แจ้ง HR เพื่อลงทะเบียน LINE User ID ของคุณ",
-      "รอ HR ยืนยันการลงทะเบียนในระบบ",
-      "ลองเช็คอินอีกครั้งหลังลงทะเบียนเสร็จ",
+      `เปิดลิงก์ลงทะเบียน: ${registerUrl}`,
+      "Login ด้วย LINE แล้วกรอกชื่อ เบอร์ และสาขา",
+      "รอ HR อนุมัติก่อนใช้งานเมนู HR",
     ],
-    tip: "กดเมนู \"ติดต่อ HR\" เพื่อแจ้งทีม HR โดยตรง",
+    tip: "กดเมนู \"ติดต่อ HR\" หากต้องการความช่วยเหลือ",
+  })
+}
+
+export function pendingApprovalFlex(): messagingApi.FlexMessage {
+  return guide("รอ HR อนุมัติการลงทะเบียน", {
+    emoji: "⏳",
+    title: "รอการอนุมัติ",
+    subtitle: "ส่งคำขอลงทะเบียนแล้ว",
+    accentColor: "#F59E0B",
+    description:
+      "ทีม HR กำลังตรวจสอบข้อมูลของคุณ ยังไม่สามารถเช็คอิน ขอลา หรือยื่นเอกสารได้",
+    steps: [
+      "รอ HR อนุมัติในระบบ (โดยปกติภายใน 1–2 วันทำการ)",
+      "เมื่ออนุมัติแล้ว กลับมากดเมนู HR ในแชทนี้",
+      "ใช้งานผ่าน LINE OA — ไม่ต้องเข้า Web Dashboard",
+    ],
+    tip: "กดเมนู \"ติดต่อ HR\" เพื่อสอบถามสถานะ",
   })
 }
 

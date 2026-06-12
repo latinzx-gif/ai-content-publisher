@@ -8,6 +8,7 @@ import {
   checkoutGuideFlex,
   notCheckedInFlex,
   notRegisteredFlex,
+  pendingApprovalFlex,
 } from "@/lib/line/flex/menu-guide"
 import type { ActionContext } from "@/lib/line/handlers/actions"
 
@@ -44,6 +45,8 @@ export async function checkoutConfirmAction(
       return [notCheckedInFlex()]
     case "already_checked_out":
       return [alreadyCheckedOutFlex(formatIctTime(result.checkOutAt))]
+    case "pending_approval":
+      return [pendingApprovalFlex()]
     case "not_registered":
       return [notRegisteredFlex()]
   }

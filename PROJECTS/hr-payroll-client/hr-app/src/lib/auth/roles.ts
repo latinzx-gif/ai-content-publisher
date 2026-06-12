@@ -1,3 +1,7 @@
+import {
+  EMPLOYEE_INFO_PATH,
+  PENDING_REGISTRATION_PATH,
+} from "@/lib/auth/employee-access"
 import type { Employee } from "@/lib/auth/session"
 
 export type AppRole = Employee["role"]
@@ -22,8 +26,9 @@ export function canAccessAdminPortal(role: AppRole): boolean {
   return isHrAdmin(role) || isCeo(role) || isBranchManager(role) || isDev(role)
 }
 
+/** Worker web portal disabled — employees use LINE OA only. */
 export function canAccessEmployeePortal(role: AppRole): boolean {
-  return role === "employee" || isDev(role)
+  return isDev(role)
 }
 
 export function canManageHr(role: AppRole): boolean {
@@ -44,10 +49,14 @@ export function isCeoAllowedPath(pathname: string): boolean {
   )
 }
 
-export function adminLoginPath(role: AppRole): string {
+export function adminLoginPath(
+  role: AppRole,
+  status: Employee["status"] = "active"
+): string {
   if (role === "dev") return "/admin/ceo"
   if (role === "branch_manager") return "/admin/branch"
   if (role === "ceo") return "/admin/ceo"
   if (isHrAdmin(role)) return "/admin"
-  return "/portal"
+  if (status === "inactive") return PENDING_REGISTRATION_PATH
+  return EMPLOYEE_INFO_PATH
 }

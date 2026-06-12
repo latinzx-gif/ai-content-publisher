@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server"
 
 import { getAdminClient } from "@/lib/auth/admin-client"
+import { PENDING_REGISTRATION_PATH } from "@/lib/auth/employee-access"
 import { mintLineUserSession } from "@/lib/auth/line-session"
 import { adminLoginPath } from "@/lib/auth/roles"
 import {
@@ -50,14 +51,18 @@ export async function GET(request: NextRequest) {
     .eq("line_user_id", lineUserId)
     .maybeSingle()
 
-  if (!employee || employee.status !== "active") {
+  if (!employee) {
     const response = NextResponse.redirect(new URL("/register", origin))
     response.cookies.set(LINE_REGISTER_COOKIE, lineUserId, LINE_REGISTER_COOKIE_OPTS)
     response.cookies.delete(STATE_COOKIE)
     return response
   }
 
-  const destination = adminLoginPath(employee.role as Parameters<typeof adminLoginPath>[0])
+  const role = employee.role as Parameters<typeof adminLoginPath>[0]
+  const destination =
+    employee.status === "active"
+      ? adminLoginPath(role, "active")
+      : PENDING_REGISTRATION_PATH
 
   const response = NextResponse.redirect(new URL(destination, origin))
 

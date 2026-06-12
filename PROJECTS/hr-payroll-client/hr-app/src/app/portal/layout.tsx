@@ -2,6 +2,7 @@ import { redirect } from "next/navigation"
 
 import { PORTAL_NAV_ITEMS } from "@/components/portal/portal-nav"
 import { PortalShell } from "@/components/portal/PortalShell"
+import { EMPLOYEE_INFO_PATH } from "@/lib/auth/employee-access"
 import {
   adminLoginPath,
   canAccessEmployeePortal,
@@ -16,7 +17,11 @@ export default async function PortalLayout({
   const employee = await getCurrentEmployee()
   if (!employee) redirect("/login?error=session_failed")
   if (!canAccessEmployeePortal(employee.role)) {
-    redirect(adminLoginPath(employee.role))
+    redirect(
+      employee.role === "employee"
+        ? EMPLOYEE_INFO_PATH
+        : adminLoginPath(employee.role, employee.status)
+    )
   }
 
   return (

@@ -30,7 +30,9 @@ export default async function LoginPage({
     data: { user },
   } = await supabase.auth.getUser()
   const employee = user && !error ? await getCurrentEmployee() : null
-  const dashboardPath = employee ? adminLoginPath(employee.role) : null
+  const dashboardPath = employee
+    ? adminLoginPath(employee.role, employee.status)
+    : null
 
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL?.trim()
   const lineStartUrl = baseUrl
@@ -57,8 +59,8 @@ export default async function LoginPage({
         </div>
         <div className="flex flex-col gap-4 p-6">
           <p className="text-center text-sm text-muted-foreground">
-            เข้าสู่ระบบด้วย LINE — พนักงานใหม่จะลงทะเบียนอัตโนมัติ HR
-            กำหนดสิทธิ์ Dashboard ภายหลัง
+            เข้าสู่ระบบด้วย LINE — พนักงานใหม่กรอกข้อมูลแล้วรอ HR อนุมัติ
+            (ใช้งานผ่าน LINE OA ไม่มี Dashboard)
           </p>
           {errorMessage ? (
             <p className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">
