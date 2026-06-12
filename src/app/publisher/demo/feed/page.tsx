@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { MOCK_POSTS } from "@/lib/publisher/demo/mock-data";
 import type { DemoPlatform } from "@/lib/publisher/demo/types";
+import { useDemoStore } from "@/lib/publisher/demo/store";
 import FeedCard from "@/components/publisher/demo/FeedCard";
 import { useDemoShell } from "@/components/publisher/demo/DemoAppShell";
 import { cn } from "@/lib/utils";
@@ -82,11 +82,12 @@ const PLATFORM_TABS: PlatformTab[] = [
 export default function FeedPage() {
   const [activeTab, setActiveTab] = useState<TabValue>("all");
   const { openPost } = useDemoShell();
+  const { posts } = useDemoStore();
 
   const filtered =
     activeTab === "all"
-      ? MOCK_POSTS
-      : MOCK_POSTS.filter((p) => p.platform === activeTab);
+      ? posts
+      : posts.filter((p) => p.platform === activeTab);
 
   return (
     <div className="flex flex-col gap-6 p-6">

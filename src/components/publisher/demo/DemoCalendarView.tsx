@@ -6,7 +6,7 @@ import {
   Star, Filter, Share2, PenLine,
   CircleDot, SlidersHorizontal, Image, Plus,
 } from "lucide-react";
-import { MOCK_POSTS } from "@/lib/publisher/demo/mock-data";
+import { useDemoStore } from "@/lib/publisher/demo/store";
 import type { DemoPost, DemoPostStatus } from "@/lib/publisher/demo/types";
 import { PlatformIcon } from "./PlatformIcon";
 import { useDemoShell } from "./DemoAppShell";
@@ -125,16 +125,16 @@ const PILL_STATUS_DOT: Record<DemoPostStatus, string> = {
 };
 
 // ── Post queries ─────────────────────────────────────────────────────────────
-function getPostsForCell(day: number, month: "jun" | "jul"): DemoPost[] {
+function getPostsForCell(allPosts: DemoPost[], day: number, month: "jun" | "jul"): DemoPost[] {
   const monthNum = month === "jun" ? 6 : 7;
-  return MOCK_POSTS.filter((p) => {
+  return allPosts.filter((p) => {
     const d = new Date(p.scheduledAt ?? p.createdAt);
     return d.getUTCMonth() + 1 === monthNum && d.getUTCDate() === day;
   });
 }
 
-function getPostsForSlot(day: number, monthNum: number, hour: number): DemoPost[] {
-  return MOCK_POSTS.filter((p) => {
+function getPostsForSlot(allPosts: DemoPost[], day: number, monthNum: number, hour: number): DemoPost[] {
+  return allPosts.filter((p) => {
     const d = new Date(p.scheduledAt ?? p.createdAt);
     return (
       d.getUTCMonth() + 1 === monthNum &&
@@ -172,17 +172,18 @@ const MAX_VISIBLE = 3;
 const BEST_TIMES = ["09:15", "10:30", "08:45", "11:00", "09:00", "14:30", "16:00"];
 
 function CalCell({
-  day, month, isToday, onSelect, openCompose,
+  day, month, isToday, onSelect, openCompose, allPosts,
 }: {
   day: number;
   month: "jun" | "jul";
   isToday: boolean;
   onSelect: (id: string) => void;
   openCompose: () => void;
+  allPosts: DemoPost[];
 }) {
   const [hovered, setHovered] = useState(false);
   const [popupOpen, setPopupOpen] = useState(false);
-  const posts = getPostsForCell(day, month);
+  const posts = getPostsForCell(allPosts, day, month);
   const isOther = month !== "jun";
   const visible = posts.slice(0, MAX_VISIBLE);
   const overflow = posts.length - MAX_VISIBLE;
@@ -292,10 +293,12 @@ function WeekView({
   weekDays,
   weekNum,
   onSelect,
+  allPosts,
 }: {
   weekDays: WeekDay[];
   weekNum: number;
   onSelect: (id: string) => void;
+  allPosts: DemoPost[];
 }) {
   return (
     <div className="flex-1 overflow-hidden min-h-0 flex flex-col">
@@ -348,7 +351,7 @@ function WeekView({
 
             {/* One slot per day */}
             {weekDays.map((d) => {
-              const posts = getPostsForSlot(d.day, d.monthNum, hour);
+              const posts = getPostsForSlot(allPosts, d.day, d.monthNum, hour);
               return (
                 <div
                   key={`${d.monthNum}-${d.day}`}
@@ -375,6 +378,7 @@ export default function DemoCalendarView() {
   const [calView, setCalView] = useState<"Month" | "Week">("Month");
   const [weekOffset, setWeekOffset] = useState(0); // 0 = W24 (current demo week)
   const { openPost, openCompose } = useDemoShell();
+  const { posts } = useDemoStore();
 
   const weekDays = buildWeekDays(weekOffset);
   // W24 = offset 0; rough ISO approximation for demo purposes
@@ -507,7 +511,7 @@ export default function DemoCalendarView() {
 
       {/* ── Week view ──────────────────────────────────────────── */}
       {calView === "Week" && (
-        <WeekView weekDays={weekDays} weekNum={weekNum} onSelect={openPost} />
+        <WeekView weekDays={weekDays} weekNum={weekNum} onSelect={openPost} allPosts={posts} />
       )}
 
       {/* ── Month view ─────────────────────────────────────────── */}
@@ -554,6 +558,7 @@ export default function DemoCalendarView() {
                     isToday={cell.month === "jun" && cell.day === 11}
                     onSelect={openPost}
                     openCompose={openCompose}
+                    allPosts={posts}
                   />
                 ))}
               </div>

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { X, Send } from "lucide-react";
-import { getPostById } from "@/lib/publisher/demo/mock-data";
+import { useDemoStore } from "@/lib/publisher/demo/store";
 import { STATUS_LABELS, STATUS_COLORS } from "@/lib/publisher/demo/types";
 import { cn } from "@/lib/utils";
 import { PlatformIcon } from "./PlatformIcon";
@@ -29,10 +29,15 @@ interface Props {
 export default function DemoRightPanel({ postId, onClose }: Props) {
   const [expanded, setExpanded] = useState(false);
   const [commentText, setCommentText] = useState("");
+  const [schedulingForId, setSchedulingForId] = useState<string | null>(null);
+  const [scheduleValue, setScheduleValue] = useState("");
+  const { posts, updatePost, schedulePost } = useDemoStore();
 
   if (!postId) return null;
-  const post = getPostById(postId);
+  const post = posts.find((p) => p.id === postId);
   if (!post) return null;
+
+  const isScheduling = schedulingForId === postId;
 
   const selectedImage =
     post.imageOptions?.find((o) => o.id === post.selectedImageId) ??
@@ -123,26 +128,73 @@ export default function DemoRightPanel({ postId, onClose }: Props) {
         {/* ── Action buttons ─────────────────────────────────── */}
         <div className="mt-3 space-y-2">
           {post.status === "text_generated" && (
-            <button className="w-full py-2 rounded-lg text-[13px] font-semibold bg-[#6366f1] text-white hover:bg-[#4f46e5] transition-colors">
+            <button
+              onClick={() => updatePost(post.id, { status: "text_approved" })}
+              className="w-full py-2 rounded-lg text-[13px] font-semibold bg-[#6366f1] text-white hover:bg-[#4f46e5] transition-colors"
+            >
               ✅ Approve Text
             </button>
           )}
           {post.status === "text_approved" && (
-            <button className="w-full py-2 rounded-lg text-[13px] font-semibold bg-amber-500 text-white hover:bg-amber-600 transition-colors">
+            <button
+              onClick={() => updatePost(post.id, { status: "image_pending" })}
+              className="w-full py-2 rounded-lg text-[13px] font-semibold bg-amber-500 text-white hover:bg-amber-600 transition-colors"
+            >
               🎨 Generate Image
             </button>
           )}
           {post.status === "image_ready" && (
-            <button className="w-full py-2 rounded-lg text-[13px] font-semibold bg-violet-600 text-white hover:bg-violet-700 transition-colors">
+            <button
+              onClick={() => updatePost(post.id, { status: "creative_approved" })}
+              className="w-full py-2 rounded-lg text-[13px] font-semibold bg-violet-600 text-white hover:bg-violet-700 transition-colors"
+            >
               ✨ Approve Creative
             </button>
           )}
           {post.status === "creative_approved" && (
-            <button className="w-full py-2 rounded-lg text-[13px] font-semibold bg-emerald-600 text-white hover:bg-emerald-700 transition-colors">
-              🚀 Schedule Post
-            </button>
+            isScheduling ? (
+              <div className="flex flex-col gap-2">
+                <input
+                  type="datetime-local"
+                  value={scheduleValue}
+                  onChange={(e) => setScheduleValue(e.target.value)}
+                  className="w-full text-[12px] border border-[#e5e7eb] rounded-lg px-3 py-1.5 focus:outline-none focus:border-[#6366f1] transition-colors"
+                />
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => {
+                      if (scheduleValue) {
+                        schedulePost(post.id, new Date(scheduleValue).toISOString());
+                        setSchedulingForId(null);
+                        setScheduleValue("");
+                      }
+                    }}
+                    disabled={!scheduleValue}
+                    className="flex-1 py-1.5 rounded-lg text-[12px] font-semibold bg-emerald-600 text-white hover:bg-emerald-700 disabled:opacity-40 transition-colors"
+                  >
+                    Confirm
+                  </button>
+                  <button
+                    onClick={() => { setSchedulingForId(null); setScheduleValue(""); }}
+                    className="px-3 py-1.5 rounded-lg text-[12px] border border-[#e5e7eb] text-gray-500 hover:bg-gray-50 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <button
+                onClick={() => setSchedulingForId(post.id)}
+                className="w-full py-2 rounded-lg text-[13px] font-semibold bg-emerald-600 text-white hover:bg-emerald-700 transition-colors"
+              >
+                🚀 Schedule Post
+              </button>
+            )
           )}
-          <button className="w-full py-2 rounded-lg text-[13px] font-medium border border-gray-200 text-gray-600 hover:bg-gray-50 transition-colors">
+          <button
+            onClick={() => updatePost(post.id, { status: "changes_requested" })}
+            className="w-full py-2 rounded-lg text-[13px] font-medium border border-gray-200 text-gray-600 hover:bg-gray-50 transition-colors"
+          >
             Request changes
           </button>
         </div>

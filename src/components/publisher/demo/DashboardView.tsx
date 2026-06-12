@@ -1,13 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { MOCK_POSTS } from "@/lib/publisher/demo/mock-data";
+import { useDemoStore } from "@/lib/publisher/demo/store";
 import { MetricCard } from "./MetricCard";
 import { AttentionItems } from "./AttentionItems";
 import { DashboardKanban } from "./DashboardKanban";
 
 export function DashboardView() {
-  const posts = MOCK_POSTS;
+  const { posts } = useDemoStore();
 
   const metrics = [
     { label: "Total Posts", count: posts.length },

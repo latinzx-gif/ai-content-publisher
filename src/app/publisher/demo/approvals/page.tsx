@@ -6,7 +6,7 @@ import {
   RotateCcw, Clock,
   Tag, AlignLeft, Send, XCircle,
 } from "lucide-react";
-import { MOCK_POSTS } from "@/lib/publisher/demo/mock-data";
+import { useDemoStore } from "@/lib/publisher/demo/store";
 import { StatusBadge } from "@/components/publisher/demo/StatusBadge";
 import { PlatformIcon } from "@/components/publisher/demo/PlatformIcon";
 import type { DemoPost, DemoPostStatus } from "@/lib/publisher/demo/types";
@@ -383,7 +383,8 @@ export default function ApprovalsPage() {
     setLocalStatuses((prev) => ({ ...prev, [id]: "rejected" }));
   }
 
-  const posts = MOCK_POSTS.map((p) => ({ ...p, status: resolvedStatus(p) }));
+  const { posts: storePosts } = useDemoStore();
+  const posts = storePosts.map((p) => ({ ...p, status: resolvedStatus(p) }));
   const reviewPost = reviewId ? posts.find((p) => p.id === reviewId) ?? null : null;
   const awaitingPosts = posts.filter((p) => COLUMNS[0].statuses.includes(p.status));
 
