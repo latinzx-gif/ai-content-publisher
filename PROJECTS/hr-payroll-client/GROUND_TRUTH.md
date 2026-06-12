@@ -57,23 +57,25 @@ Cron Jobs: แจ้งเตือน Probation/Visa อัตโนมัต�
 | **M9: Announcements (F9)** | ✅ **CLOSED** | T39–T42 |
 | **M10: Phase 2 Delivery** | ✅ **CLOSED** | T43–T45; audit P2 🟢 |
 | **Phase 3 (M11–M15)** | ✅ **CLOSED** | T46–T60; audit P3 🟢 `DELIVERY_READINESS_AUDIT_P3.md` |
-| **Phase 4 (M16–M20)** | ⏳ **PENDING REVIEW** | T61–T75 complete — `DELIVERY_READINESS_AUDIT_P4.md` |
-| **Phase 5 (M21–M28)** | ⏳ **PENDING REVIEW** | T76–T95 MVP — `DELIVERY_READINESS_AUDIT_P5.md` |
+| **Phase 4 (M16–M20)** | ✅ **CLOSED** | T61–T75 |
+| **Phase 5 (M21–M28)** | ✅ **CLOSED** | T76–T80; MVP + self-register deployed |
+| **Phase 6–7 (M29–M33)** | ✅ **CLOSED** | T81–T87; onboarding, E2E, security P6 |
+| **Phase 8 (M32–M33)** | ✅ **CLOSED** | T88–T95; Employee `/portal` |
+| **Phase 9 Payroll** | ⏸ **DEFERRED** | T96–T101 cancelled — needs client CR |
+| **Phase 10 Workforce lite** | ✅ **CLOSED** | T102–T105 |
+| **Phase 11 Delivery** | ✅ **CLOSED** | T106–T108 batch approved |
 
 ---
 
 ## 4. Active Task
 
-**T77 — Phase 5 Delivery & Client Handoff**
+**None — project batch T77–T108 CLOSED**
 
 | Field | Value |
 |-------|-------|
-| Phase | **EXECUTE** |
 | Production | https://hr-app-two-iota.vercel.app |
-| Supabase | `oouswalwqhojpzqwwdvs` (hr-payroll) |
-| T76 | ✅ APPROVED — BM notify, badges, cron migration |
-| T77 progress | Vault + cron ✅; handoff doc + git ⏳ |
-| Locked | HR Admin Dashboard — ห้ามแก้ |
+| Taskmaster | 102 done, 6 cancelled |
+| Next | Optional client UAT + git tag (T108) |
 
 ดูรายละเอียดเต็ม: `orchestration/CURRENT_TASK.md`
 
@@ -114,7 +116,7 @@ Cron Jobs: แจ้งเตือน Probation/Visa อัตโนมัต�
 |----------------|---------|
 | งานปัจจุบัน | `orchestration/CURRENT_TASK.md` |
 | Approval history | `orchestration/REVIEW_STATUS.md` |
-| Milestones + tasks overview | `MILESTONES.md` |
+| Milestones + tasks overview | `MILESTONES.md` ← **roadmap จนจบ project (T78–T108)** |
 | PRD ฉบับเต็ม | `docs/PRD.md` |
 | All tasks (Taskmaster) | `.taskmaster/tasks/tasks.json` |
 | Demo readiness | `hr-app/reports/DELIVERY_READINESS_AUDIT.md` |
@@ -149,4 +151,4 @@ WORK_START_MINUTE=0
 
 ---
 
-*Last updated: 2026-06-10 — Phase 5 requirements locked; Phase 4 pending review*
+*Last updated: 2026-06-10 — Full project roadmap M29–M37 in MILESTONES.md*

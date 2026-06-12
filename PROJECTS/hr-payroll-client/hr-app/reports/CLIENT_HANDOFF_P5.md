@@ -1,5 +1,7 @@
 # Client Handoff — Phase 5 (MVP)
 
+> **HTML (Dashboard style):** [CLIENT_HANDOFF_P5.html](./CLIENT_HANDOFF_P5.html) — เปิดใน browser ได้เลย
+
 **Project:** LINE OA HR & Payroll Platform  
 **Date:** 2026-06-11  
 **Production:** https://hr-app-two-iota.vercel.app  
@@ -19,6 +21,7 @@
 | LINE แจ้ง BM เมื่อมีคิวรออนุมัติ | ✅ |
 | Badge จำนวนค้างบน sidebar BM | ✅ |
 | Payroll รายงานชั่วโมง (ไม่ใช่สลิปเงินเดือน) | ✅ |
+| **LINE self-registration** — พนักงานใหม่ลงทะเบียนเอง | ✅ (T78) |
 
 รายละเอียด audit: `reports/DELIVERY_READINESS_AUDIT_P5.md`  
 Security: `reports/SECURITY_REVIEW_P5_1.md`  
@@ -31,6 +34,7 @@ Smoke routes: `reports/E2E_P5_1_RESULTS.md`
 | จุดเข้าใช้ | URL |
 |------------|-----|
 | **Web login (LINE)** | https://hr-app-two-iota.vercel.app/login |
+| **ลงทะเบียนพนักงานใหม่** | https://hr-app-two-iota.vercel.app/register *(หลัง LINE login ครั้งแรก redirect อัตโนมัติ)* |
 | **HR / Admin home** | https://hr-app-two-iota.vercel.app/admin |
 | **CEO dashboard** | https://hr-app-two-iota.vercel.app/admin/ceo |
 | **Branch Manager home** | https://hr-app-two-iota.vercel.app/admin/branch |
@@ -62,9 +66,22 @@ CEO เข้าได้เฉพาะ prefix: `/admin/ceo`, `/admin/branches`
 
 ---
 
-## 4. ตั้ง Branch Manager (ขั้นตอนลูกค้า)
+## 4. Onboarding พนักงานใหม่ (Self-register)
 
-### 4.1 สร้าง/กำหนด role ให้พนักงาน
+### 4.0 พนักงานลงทะเบียนเอง (ครั้งแรก)
+
+1. เปิด **Login LINE** → ถ้ายังไม่มีในระบบ ระบบพาไป `/register`
+2. กรอก **ชื่อ-นามสกุล**, แผนก, ตำแหน่ง → บันทึก
+3. เริ่มต้นเป็น role **`employee`** → landing `/liff/leave`
+4. **HR** เปิด `/admin/employees/[id]` → แก้ **Role** และ **สาขา** ตามต้องการ (รวม `branch_manager`, `hr`, `ceo`)
+
+> ไม่ต้อง copy LINE User ID หรือรัน `seed-admin.mjs` สำหรับพนักงานทั่วไป
+
+---
+
+## 5. ตั้ง Branch Manager (ขั้นตอนลูกค้า)
+
+### 5.1 สร้าง/กำหนด role ให้พนักงาน
 
 1. Login เป็น **HR/Admin** → `/admin/employees`
 2. แก้พนักงานที่จะเป็นหัวหน้าสาขา → ตั้ง **role = `branch_manager`**
@@ -77,7 +94,7 @@ cd hr-app
 node scripts/seed-admin.mjs <LINE_USER_ID> "ชื่อ นามสกุล" branch_manager
 ```
 
-### 4.2 ผูก BM กับสาขา (1 BM : 1 สาขา)
+### 5.2 ผูก BM กับสาขา (1 BM : 1 สาขา)
 
 **ทาง UI:** `/admin/branches` → สร้างสาขา หรือแก้สาขา → เลือก **Manager**
 
@@ -98,7 +115,7 @@ Content-Type: application/json
 - Manager ต้องมี role `branch_manager` แล้ว
 - 1 manager ผูกได้ 1 สาขาเท่านั้น
 
-### 4.3 ทดสอบ
+### 5.3 ทดสอบ
 
 1. BM login ผ่าน LINE → ควรไป `/admin/branch`
 2. ส่งคำขอลา / ยื่นสรุปวันจากพนักงานในสาขา → BM เห็นคิว + badge sidebar
@@ -106,7 +123,7 @@ Content-Type: application/json
 
 ---
 
-## 5. LINE OA setup (สรุป)
+## 6. LINE OA setup (สรุป)
 
 ตั้งค่าใน **LINE Developers Console** (channel Messaging API + LIFF):
 
@@ -128,7 +145,7 @@ Content-Type: application/json
 
 ---
 
-## 6. Supabase & Cron
+## 7. Supabase & Cron
 
 | รายการ | ค่า |
 |--------|-----|
@@ -152,39 +169,41 @@ Cron อื่นที่ยังเรียก Edge Function (morning-push, 
 
 ---
 
-## 7. Known gaps / ข้อจำกัด MVP
+## 8. Known gaps / ข้อจำกัด MVP
 
 | หัวข้อ | หมายเหตุ |
 |--------|----------|
-| มอบหมาย BM จริง | ลูกค้าตั้ง role + ผูกสาขาเอง (ดู §4) |
-| สลิปเงินเดือน / baht | **นอก scope** Phase 5 — มีแค่รายงานชั่วโมง |
+| มอบหมาย BM จริง | ลูกค้าตั้ง role + ผูกสาขาเอง (ดู §5) |
+| สลิปเงินเดือน / baht | **นอก scope** Phase 5 — มีแค่รายงานชั่วโมง (Phase 9 ใน roadmap) |
 | HR Admin Dashboard หน้าแรก | **locked** — ห้าม refactor โดย vendor |
-| Employee profile pages | **locked** |
-| Phase 6 | ยังไม่เริ่ม |
-| Edge Function cron auth | บาง job อาจต้อง `sb_secret` ใน Vault (ดู §6) |
+| Employee profile pages | HR แก้ role/สาขาได้; layout หลัก locked |
+| งานถัดไป | **T79–T108** ใน Taskmaster — ดู `MILESTONES.md` |
+| Edge Function cron auth | บาง job อาจต้อง `sb_secret` ใน Vault (ดู §7) |
 | Rotate API keys | แนะนำหลัง handoff — อย่า commit keys ลง git |
 
 ---
 
-## 8. Support & repo
+## 9. Support & repo
 
 | รายการ | Path |
 |--------|------|
 | App root | `PROJECTS/hr-payroll-client/hr-app/` |
 | Migrations | `hr-app/supabase/migrations/` |
-| Orchestration task | T77 — `orchestration/CURRENT_TASK.md` |
+| Roadmap จนจบ project | `MILESTONES.md` (T78–T108) |
+| Orchestration task | `orchestration/CURRENT_TASK.md` |
 | รัน smoke local | `node scripts/e2e/smoke-role-routes.mjs` |
 | E2E Phase 5 remote | `npm run test:e2e:p5:remote` (ต้องมี `.env.e2e.local`) |
 
 ---
 
-## 9. Sign-off checklist (ลูกค้า)
+## 10. Sign-off checklist (ลูกค้า)
 
 - [ ] Login LINE → role ถูกต้อง
+- [ ] **พนักงานใหม่ลงทะเบียนผ่าน LINE ได้** (§4.0)
 - [ ] สร้างสาขา + ผูก BM อย่างน้อย 1 สาขา
 - [ ] Flow ลา 2 ขั้น (BM → HR) ทดสอบแล้ว
 - [ ] Flow สรุปวันเข้างาน + BM approve ทดสอบแล้ว
 - [ ] CEO dashboard เปิดได้
 - [ ] LINE webhook ตอบกลับใน production
 
-**Contact / vendor:** HEAD-OFFICE — งานถัดไปหลัง sign-off อยู่ใน Taskmaster Phase 6 (T78+)
+**Contact / vendor:** HEAD-OFFICE — งานถัดไป: **T81+** (Phase 6 Onboarding) ดู `MILESTONES.md`

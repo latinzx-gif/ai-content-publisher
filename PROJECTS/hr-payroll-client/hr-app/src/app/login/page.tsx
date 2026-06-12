@@ -8,8 +8,6 @@ import { getCurrentEmployee } from "@/lib/auth/session"
 import { createClient } from "@/lib/supabase/server"
 
 const ERROR_MESSAGES: Record<string, string> = {
-  not_registered:
-    "บัญชี LINE ของคุณยังไม่ได้ลงทะเบียนเป็นพนักงาน กรุณาติดต่อ HR",
   forbidden: "บัญชีของคุณไม่มีสิทธิ์เข้าถึงหน้านี้",
   invalid_state: "การเข้าสู่ระบบหมดอายุ กรุณาลองใหม่อีกครั้ง",
   line_login_failed: "เข้าสู่ระบบด้วย LINE ไม่สำเร็จ กรุณาลองใหม่อีกครั้ง",
@@ -20,9 +18,9 @@ const ERROR_MESSAGES: Record<string, string> = {
 export default async function LoginPage({
   searchParams,
 }: {
-  searchParams: Promise<{ error?: string; line_id?: string }>
+  searchParams: Promise<{ error?: string }>
 }) {
-  const { error, line_id: lineId } = await searchParams
+  const { error } = await searchParams
   const errorMessage = error
     ? (ERROR_MESSAGES[error] ?? ERROR_MESSAGES.line_login_failed)
     : null
@@ -59,7 +57,8 @@ export default async function LoginPage({
         </div>
         <div className="flex flex-col gap-4 p-6">
           <p className="text-center text-sm text-muted-foreground">
-            เข้าสู่ระบบสำหรับ Owner / Manager
+            เข้าสู่ระบบด้วย LINE — พนักงานใหม่จะลงทะเบียนอัตโนมัติ HR
+            กำหนดสิทธิ์ Dashboard ภายหลัง
           </p>
           {errorMessage ? (
             <p className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">
@@ -77,15 +76,10 @@ export default async function LoginPage({
               เข้าสู่ Dashboard
             </Link>
           ) : null}
-          {error === "not_registered" && lineId ? (
-            <div className="rounded-lg border border-border/80 bg-muted/40 p-3 text-xs text-muted-foreground">
-              <p className="font-medium text-foreground">LINE User ID (dev)</p>
-              <p className="mt-1 break-all font-mono text-brand-red">{lineId}</p>
-              <p className="mt-2">ลงทะเบียนใน local DB:</p>
-              <code className="mt-1 block break-all rounded bg-background p-2 text-[10px]">
-                node scripts/seed-admin.mjs {lineId} &quot;Your Name&quot; dev
-              </code>
-            </div>
+          {error === "not_registered" ? (
+            <p className="rounded-lg bg-muted/40 px-3 py-2 text-xs text-muted-foreground">
+              กรุณากด &quot;เข้าสู่ระบบด้วย LINE&quot; อีกครั้งเพื่อไปหน้าลงทะเบียน
+            </p>
           ) : null}
           {!employee || error ? (
             <Button

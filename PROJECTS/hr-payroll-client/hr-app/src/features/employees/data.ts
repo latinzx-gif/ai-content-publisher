@@ -8,7 +8,7 @@ export const PAGE_SIZE = 12
 const SORT_COLUMNS = ["name", "contract_start"] as const
 export type SortColumn = (typeof SORT_COLUMNS)[number]
 
-export type EmployeeStatusFilter = "all" | "active" | "inactive" | "probation"
+export type EmployeeStatusFilter = "all" | "active" | "inactive" | "probation" | "onboarding"
 
 export type EmployeeListParams = {
   q?: string
@@ -24,11 +24,13 @@ export type EmployeeRow = {
   name: string
   position: string | null
   department: string | null
+  role: string
+  branch_id: string | null
   status: "active" | "inactive"
   contract_start: string | null
   probation_end: string | null
   visa_expiry: string | null
-  displayStatus: "active" | "inactive" | "probation"
+  displayStatus: "active" | "inactive" | "probation" | "onboarding"
 }
 
 const ICT_OFFSET_MS = 7 * 60 * 60 * 1000
@@ -44,7 +46,7 @@ export function normalizeParams(raw: {
   const sort = SORT_COLUMNS.includes(get("sort") as SortColumn)
     ? (get("sort") as SortColumn)
     : "name"
-  const status = (["active", "inactive", "probation"] as const).includes(
+  const status = (["active", "inactive", "probation", "onboarding"] as const).includes(
     get("status") as "active"
   )
     ? (get("status") as EmployeeStatusFilter)
@@ -71,7 +73,7 @@ export async function getEmployees(params: Required<EmployeeListParams>) {
   let query = supabase
     .from("hr_employees")
     .select(
-      "id, name, position, department, status, contract_start, probation_end, visa_expiry",
+      "id, name, position, department, role, branch_id, status, contract_start, probation_end, visa_expiry",
       { count: "exact" }
     )
 
@@ -87,6 +89,12 @@ export async function getEmployees(params: Required<EmployeeListParams>) {
   if (params.status === "probation") {
     query = query.eq("status", "active").gte("probation_end", today)
   }
+  if (params.status === "onboarding") {
+    query = query
+      .eq("status", "active")
+      .eq("role", "employee")
+      .is("branch_id", null)
+  }
 
   query = query
     .order(params.sort, { ascending: params.dir === "asc" })
@@ -97,17 +105,37 @@ export async function getEmployees(params: Required<EmployeeListParams>) {
     throw error
   }
 
-  const employees: EmployeeRow[] = (data ?? []).map((row) => ({
-    ...row,
-    displayStatus:
+  const employees: EmployeeRow[] = (data ?? []).map((row) => {
+    const needsOnboarding =
+      row.status === "active" &&
+      row.role === "employee" &&
+      row.branch_id === null
+    let displayStatus: EmployeeRow["displayStatus"] = row.status
+    if (needsOnboarding) displayStatus = "onboarding"
+    else if (
       row.status === "active" &&
       row.probation_end !== null &&
       row.probation_end >= today
-        ? "probation"
-        : row.status,
-  }))
+    ) {
+      displayStatus = "probation"
+    }
+    return { ...row, displayStatus }
+  })
 
   return { employees, total: count ?? 0, today }
+}
+
+/** Active employees self-registered — awaiting HR branch/role setup */
+export async function getOnboardingPendingCount(): Promise<number> {
+  const supabase = await createClient()
+  const { count, error } = await supabase
+    .from("hr_employees")
+    .select("id", { count: "exact", head: true })
+    .eq("status", "active")
+    .eq("role", "employee")
+    .is("branch_id", null)
+  if (error) throw error
+  return count ?? 0
 }
 
 export async function getDepartments(): Promise<string[]> {

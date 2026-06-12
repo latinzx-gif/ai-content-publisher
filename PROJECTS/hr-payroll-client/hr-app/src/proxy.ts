@@ -15,7 +15,10 @@ export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl
   const origin = publicOrigin(request)
 
-  if (pathname.startsWith("/admin") && !user) {
+  if (
+    (pathname.startsWith("/admin") || pathname.startsWith("/portal")) &&
+    !user
+  ) {
     return NextResponse.redirect(new URL("/login", origin))
   }
 
@@ -28,5 +31,5 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/admin/:path*", "/liff/:path*", "/login"],
+  matcher: ["/admin/:path*", "/portal/:path*", "/liff/:path*", "/login"],
 }

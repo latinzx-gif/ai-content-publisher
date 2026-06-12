@@ -1,9 +1,11 @@
 #!/usr/bin/env node
 /**
- * Register an HR admin/manager for LINE login (local dev).
+ * Register an employee for LINE login (local dev / bootstrap).
  *
  * Usage:
- *   node scripts/seed-admin.mjs <LINE_USER_ID> [name] [admin|hr]
+ *   node scripts/seed-admin.mjs <LINE_USER_ID> [name] [role]
+ *
+ * Roles: employee | branch_manager | hr | admin | ceo | dev
  *
  * Example:
  *   node scripts/seed-admin.mjs U1234567890abcdef "Jakarin" admin
@@ -15,6 +17,15 @@ import { fileURLToPath } from "node:url"
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..")
 const envPath = resolve(root, ".env.local")
+
+const ALLOWED_ROLES = [
+  "employee",
+  "branch_manager",
+  "hr",
+  "admin",
+  "ceo",
+  "dev",
+]
 
 function loadEnv() {
   try {
@@ -42,13 +53,13 @@ const role = process.argv[4] ?? "admin"
 
 if (!lineUserId || !lineUserId.startsWith("U")) {
   console.error(
-    "Usage: node scripts/seed-admin.mjs <LINE_USER_ID> [name] [admin|hr]"
+    "Usage: node scripts/seed-admin.mjs <LINE_USER_ID> [name] [role]"
   )
   process.exit(1)
 }
 
-if (role !== "admin" && role !== "hr") {
-  console.error("Role must be admin or hr")
+if (!ALLOWED_ROLES.includes(role)) {
+  console.error(`Role must be one of: ${ALLOWED_ROLES.join(", ")}`)
   process.exit(1)
 }
 
@@ -60,13 +71,22 @@ if (!url || !key) {
   process.exit(1)
 }
 
+const positionByRole = {
+  employee: "Staff",
+  branch_manager: "Branch Manager",
+  hr: "Manager",
+  admin: "Owner",
+  ceo: "CEO",
+  dev: "Developer",
+}
+
 const body = {
   line_user_id: lineUserId,
   name,
   role,
   status: "active",
-  department: "Management",
-  position: role === "admin" ? "Owner" : "Manager",
+  department: role === "employee" ? null : "Management",
+  position: positionByRole[role] ?? role,
 }
 
 const res = await fetch(`${url}/rest/v1/hr_employees`, {
@@ -89,4 +109,4 @@ if (!res.ok) {
 
 console.log("Registered employee for LINE login:")
 console.log(JSON.stringify(Array.isArray(data) ? data[0] : data, null, 2))
-console.log("\nRetry login at your ngrok /login URL.")
+console.log("\nRetry login at your /login URL.")

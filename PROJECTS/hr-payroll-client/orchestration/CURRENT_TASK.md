@@ -1,34 +1,29 @@
-# CURRENT TASK: T77 — Phase 5 Delivery & Client Handoff
+# CURRENT TASK: None — Batch T77–T108 CLOSED
 
 ## Phase
 
-EXECUTE → **READY FOR REVIEW**
+**DONE** — awaiting optional client UAT sign-off
 
 ## Status
 
-Deliverables complete — รอ Cursor review / user sign-off
+✅ Batch review APPROVED 2026-06-10  
+Taskmaster: 102 done, 6 cancelled (T96–T101)  
+Linear: synced Done
 
-## Primary Agent
+## Completed close-out (2026-06-10)
 
-Cursor (executed directly per user approval)
+1. ✅ Production deploy (`vercel --prod`)
+2. ✅ Smoke 8/8 + flow-onboarding + 12 portal/lite routes
+3. ✅ Cron health SQL printed (run in Supabase dashboard if needed)
+4. ✅ Git commit + tag `hr-payroll-v1.0`
 
-## Completed (2026-06-11)
+## Optional later
 
-- [x] Remote migration on `oouswalwqhojpzqwwdvs`
-- [x] Vault `project_url` + `secret_key`
-- [x] Cron `approval-expiry` active (inline SQL)
-- [x] `CLIENT_HANDOFF_P5.md`
-- [x] Smoke 8 routes PASS
-- [x] Git commit (Phase 5 scope)
+- LINE OAuth UAT with real new account
+- Key rotation (Supabase / LINE / Vault)
 
-## Acceptance Criteria
+## Read
 
-- [x] Remote migration applied; cron documented
-- [x] `CLIENT_HANDOFF_P5.md` ครบ
-- [x] Git commit บน HEAD-OFFICE repo
-- [ ] Linear T77 → Done (after review approve)
-- [ ] User/client sign-off checklist §9 in handoff doc
-
-## Next
-
-User: review handoff → `review task` → approve T77 → plan T78
+- `orchestration/BATCH_REVIEW_T77-T108.md`
+- `hr-app/reports/CLIENT_HANDOFF_FINAL.md`
+- `hr-app/reports/DELIVERY_READINESS_FINAL.md`

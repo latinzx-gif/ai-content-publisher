@@ -1,157 +1,223 @@
 # MILESTONES — LINE OA HR & Payroll Platform
 
----
-
-## M1: Foundation & Setup (Week 1)
-**Goal:** ระบบ skeleton ทำงานได้ก่อน build features
-
-| Task | Description | Agent |
-|------|-------------|-------|
-| T01 | Next.js 16 + Supabase + Tailwind + shadcn/ui setup | Codex |
-| T02 | Database schema: employees, attendance, leaves, alerts, documents | Claude Code |
-| T03 | LINE OA setup: Webhook endpoint, Rich Menu, LIFF config | Claude Code |
-| T04 | Auth: LINE Login + Role-based (employee/hr/admin) | Claude Code |
-| T05 | Layout + routing: Web Dashboard shell | Codex |
+**อัปเดต:** 2026-06-10  
+**Production:** https://hr-app-two-iota.vercel.app  
+**Taskmaster ปัจจุบัน:** T01–T108 registered (**T78–T108** parsed 2026-06-10)
 
 ---
 
-## M2: LINE OA Core — Check-in/Check-out (Week 2)
-**Goal:** พนักงานเช็คอิน-เอาท์ผ่าน LINE ได้
+## สรุปภาพรวม
 
-| Task | Description | Agent |
-|------|-------------|-------|
-| T06 | Rich Menu: ปุ่ม 5 ตัว (เช็คอิน, ลา, เอกสาร, ร้องเรียน, ประกาศ) | Codex |
-| T07 | Check-in: บันทึก timestamp + Geo Location | Claude Code |
-| T08 | Check-out: สรุปชั่วโมงทำงาน, ตรวจสาย | Claude Code |
-| T09 | Flex Message: ยืนยันเช็คอิน, แจ้งสาย, สรุปรายวัน | Codex |
-| T10 | Push Notification: แจ้งเตือนเช้าถ้ายังไม่เช็คอิน | Claude Code |
-| T11 | QR Code check-in support | Codex |
+| ช่วง | Milestones | Tasks | สถานะ |
+|------|------------|-------|--------|
+| **Phase 1–4** | M1–M20 | T01–T75 | ✅ CLOSED |
+| **Phase 5 MVP** | M21–M28 (logic) | T76–T77 + ad-hoc build | ⏳ T77 review — ฟีเจอร์หลัก built แล้ว |
+| **Phase 5 Close-out** | M29 | T78–T80 | 🔜 ถัดไป |
+| **Phase 6 — Onboarding** | M30 | T81–T83 | 📋 planned |
+| **Phase 7 — Production Stable** | M31 | T84–T87 | 📋 planned |
+| **Phase 8 — Employee Portal** | M32–M33 | T88–T95 | 📋 planned (mockup) |
+| **Phase 9 — Payroll (Baht)** | M34–M35 | T96–T101 | 🔒 ต้อง approve scope |
+| **Phase 10 — Workforce (Optional)** | M36 | T102–T105 | 🔒 optional |
+| **Phase 11 — Project Close** | M37 | T106–T108 | 📋 planned |
 
----
-
-## M3: Web Dashboard — Overview & Employees (Week 3)
-**Goal:** HR เห็น dashboard + ข้อมูลพนักงานครบ
-
-| Task | Description | Agent |
-|------|-------------|-------|
-| T12 | System Dashboard: Overview cards (มา/ขาด/ลา/สาย/คำร้อง) | Codex |
-| T13 | System Dashboard: กราฟ attendance รายวัน/สัปดาห์/เดือน | Codex |
-| T14 | Employee List: ตาราง ค้นหา กรอง เรียงลำดับ | Codex |
-| T15 | Employee Profile: ข้อมูลส่วนตัว, สัญญา, เงินเดือน, วีซ่า | Claude Code |
-| T16 | Time & Attendance: ประวัติเช็คอิน-เอาท์ใน Web | Codex |
+**รวมงานที่เหลือ (ถึงจบ project แบบเต็ม):** **31 tasks** (T78–T108)  
+**รวมถึง MVP + stable อย่างเดียว (ไม่รวม Payroll baht / Portal / Optional):** **10 tasks** (T78–T87)
 
 ---
 
-## M4: Leave Management (Week 4)
-**Goal:** ขอลา-อนุมัติผ่าน LINE+Web ได้ครบ
+## ✅ สิ่งที่ปิดแล้ว (อ้างอิง)
 
-| Task | Description | Agent |
-|------|-------------|-------|
-| T17 | LIFF: แบบฟอร์มขอลา (ประเภท, วันที่, เหตุผล, แนบไฟล์) | Claude Code |
-| T18 | Leave request: แสดงยอดวันลาคงเหลือ, ส่ง LINE → DB | Claude Code |
-| T19 | Web: รายการคำขอลา อนุมัติ/ไม่อนุมัติ พร้อมเหตุผล | Codex |
-| T20 | หัก/คืนยอดวันลาอัตโนมัติ + Flex Message แจ้งผล | Claude Code |
-| T21 | ปฏิทินวันลา + รายงานสถิติ + ยอดวันลาคงเหลือ | Codex |
+| Phase | Milestones | Tasks | หมายเหตุ |
+|-------|------------|-------|----------|
+| Phase 1 | M1–M6 | T01–T30 | LINE core, dashboard, leave, alerts, delivery |
+| Phase 2 | M7–M10 | T31–T45 | เอกสาร, ร้องเรียน, ประกาศ |
+| Phase 3 | M11–M15 | T46–T60 | OT, reports, org, settings |
+| Phase 4 | M16–M20 | T61–T75 | pg_cron, lifecycle, audit P4 |
+| Phase 5 MVP | M21–M28* | T76 + ad-hoc | สาขา, BM, CEO, 2-tier approval, payroll **ชม.**, cron |
 
----
+\* แผนเดิม `PHASE_5_PLAN.md` ใช้ T76–T95 — ส่วนใหญ่ **implement แล้วใน code** แต่ยังไม่ register เป็น T78–T95 ใน Taskmaster; ปิด formal ที่ **M29**
 
-## M5: Alerts & Attendance Summary (Week 5)
-**Goal:** ระบบแจ้งเตือนอัตโนมัติทำงานได้
-
-| Task | Description | Agent |
-|------|-------------|-------|
-| T22 | Cron job: Probation alert (30/14/7/1 วัน) | Claude Code |
-| T23 | Cron job: Visa/Work Permit alert (60/30/14/7/1 วัน) | Claude Code |
-| T24 | Web: Dashboard แสดงรายชื่อ Visa ใกล้หมด + บันทึกผลทดลองงาน | Codex |
-| T25 | Cron job: สรุปเข้างานรายวัน → ส่ง LINE พนักงาน ตอนเย็น | Claude Code |
-| T26 | สรุปภาพรวมรายวัน → ส่ง LINE Group HR | Claude Code |
+**Delivered แล้ว (Phase 5 MVP):** ดู `hr-app/reports/CLIENT_HANDOFF_P5.md`
 
 ---
 
-## M6: Delivery (Week 6-7)
-**Goal:** พร้อม demo ลูกค้า
+## 🔜 Phase 5 Close-out — M29 (~1 สัปดาห์)
 
-| Task | Description | Agent |
-|------|-------------|-------|
-| T27 | Security review: RLS, LINE webhook verification, auth bypass | Claude Code (Opus) |
-| T28 | E2E test: check-in flow, leave flow, alert flow | Claude Code |
-| T29 | Deployment checklist + production deploy | Cursor |
-| T30 | Demo prep: script + known issues + fallback plan | Cursor |
+**Goal:** ปิด Phase 5 อย่างเป็นทางการ + sync docs/taskmaster
 
----
+| ID | Task | Agent | Deliverables |
+|----|------|-------|--------------|
+| **T78** | LINE self-registration — `/register`, HR กำหนด role ภายหลัง | Cursor / Claude | ✅ code แล้ว — review, deploy, E2E |
+| **T79** | Client sign-off Phase 5 + อัปเดต handoff (§ onboarding, Phase 6 link) | Cursor | `CLIENT_HANDOFF_P5.md` v2, checklist ลูกค้า |
+| **T80** | Reconcile Taskmaster + GROUND_TRUTH — ปิด Phase 5, เปิด Phase 6 | Cursor | `tasks.json`, `GROUND_TRUTH.md`, `MILESTONES.md` |
 
-## Phase 2 — Support Features ✅ CLOSED
-
-| Milestone | Tasks | Features |
-|-----------|-------|----------|
-| M7: Document Request | T31–T34 | F7 |
-| M8: Complaint | T35–T38 | F8 |
-| M9: Announcements | T39–T42 | F9 |
-| M10: P2 Hardening | T43–T45 | Security + E2E + audit |
-
-Detail: `orchestration/PHASE_2_PLAN.md`
+**Acceptance:** ลูกค้า sign-off §9 ครบ; T77/T78 APPROVED; เอกสารไม่ขัดกัน
 
 ---
 
-## Phase 3 — Operations & Reports ✅ CLOSED
+## 📋 Phase 6 — Onboarding & Identity — M30 (~1 สัปดาห์)
 
-| Milestone | Tasks | Features |
-|-----------|-------|----------|
-| M11: Overtime | T46–T49 | F10 OT request |
-| M12: Attendance Summary | T50–T52 | F6 weekly/monthly |
-| M13: Reports lite | T53–T54 | Admin reports + charts |
-| M14: Admin Ops | T55–T57 | Org, Settings, doc files |
-| M15: P3 Hardening | T58–T60 | Schedule + audit |
+**Goal:** พนักงานเข้าระบบเองได้ครบวงจร ไม่ต้อง seed manual
 
-Detail: `orchestration/PHASE_3_PLAN.md`
+| ID | Task | Agent | Deliverables |
+|----|------|-------|--------------|
+| **T81** | HR onboarding queue — พนักงานใหม่รอ assign role/สาขา (optional UI) | Codex | badge/list ใน `/admin/employees` |
+| **T82** | ปิด LIFF OT ฝั่ง employee (redirect ตาม Phase 5) + copy ภาษาไทย | Claude Code | `/liff/overtime` → ข้อความ "ติดต่อหัวหน้าสาขา" |
+| **T83** | E2E onboarding — LINE ใหม่ → register → LIFF → HR promote → BM dashboard | Claude Code | `scripts/e2e/flow-onboarding.mjs` |
 
----
-
-## Phase 4 — Production Excellence (2026-06-11) 🔄 IN PROGRESS
-
-| Milestone | Tasks | Features |
-|-----------|-------|----------|
-| M16: Production Infra | T61–T63 | pg_cron, editable settings, LINE checklist |
-| M17: Dashboard Polish | T64–T66 | F1 charts + real widgets |
-| M18: Reports & Payroll Hub | T67–T69 | CSV export, filters, payroll hub |
-| M19: Employee Lifecycle | T70–T72 | F5 probation/visa/contract |
-| M20: P4 Hardening | T73–T75 | E2E, security, audit |
-
-Detail: `orchestration/PHASE_4_PLAN.md`  
-Linear: JAK-116–JAK-130
+**Acceptance:** flow ไม่มี `not_registered` error; HR promote role แล้ว landing ถูก
 
 ---
 
-## Summary
+## 📋 Phase 7 — Production Stable — M31 (~1–2 สัปดาห์)
 
-| Milestone | Tasks | Weeks | Priority |
-|-----------|-------|-------|----------|
-| M1: Foundation | T01–T05 | Week 1 | P1 ✅ |
-| M2: Check-in/Check-out | T06–T11 | Week 2 | P1 ✅ |
-| M3: Web Dashboard | T12–T16 | Week 3 | P1 ✅ |
-| M4: Leave Management | T17–T21 | Week 4 | P1 ✅ |
-| M5: Alerts & Summary | T22–T26 | Week 5 | P1 ✅ |
-| M6: Delivery | T27–T30 | Week 6-7 | P1 ✅ |
-| Phase 2 | T31–T45 | ~6 weeks | P2 ✅ |
-| Phase 3 | T46–T60 | ~7 weeks | P3 ✅ |
-| Phase 4 | T61–T75 | ~6 weeks | P4 ⏳ review |
-| Phase 5 | T76–T95 | ~8–10 weeks | P5 📋 planned |
+**Goal:** production ทนของจริง — cron, security, UAT fixes
 
-**Total plan:** 95 tasks (T76–T95 ดู `orchestration/PHASE_5_PLAN.md`)
+| ID | Task | Agent | Deliverables |
+|----|------|-------|--------------|
+| **T84** | Vault `sb_secret` + health check cron ทุก job | Claude Code | script verify + migration/doc |
+| **T85** | Full regression — `run-all-p5.mjs` + smoke routes บน production | Claude Code | `E2E_P6_RESULTS.md` |
+| **T86** | Security review — self-register, role PATCH, RLS | Claude Opus | `SECURITY_REVIEW_P6.md` |
+| **T87** | Client UAT fix batch (จาก sign-off checklist) | Claude Code | fixes ตาม ticket |
+
+**Acceptance:** cron ไม่ 401; E2E pass; security ไม่มี critical; UAT checklist ผ่าน
 
 ---
 
-## Phase 5 — Multi-Branch & Payroll Hours (M21–M28)
+## 📋 Phase 8 — Employee Web Portal — M32–M33 (~3–4 สัปดาห์)
 
-**Goal:** สาขา>แผนก, Branch Manager 1:1, อนุมัติ 2 ขั้น (BM→HR), ชม. payroll, OT โดย BM
+**Goal:** พอร์ทal พนักงานตาม mockup (`DASHBOARD_UI_PLAN.md`) — นอก LINE
 
-| Milestone | Tasks | Focus |
-|-----------|-------|-------|
-| M21 | T76–T78 | Branch schema + roles |
-| M22 | T79–T80 | Approval engine + 48h SLA |
-| M23 | T81–T83 | Attendance daily approval |
-| M24 | T84–T86 | Leave rules (retro sick, hourly sick) |
-| M25 | T87–T88 | OT by Branch Manager |
-| M26 | T89–T90 | Payroll hours ledger + report |
-| M27 | T91–T92 | LINE notify + manager dashboard |
-| M28 | T93–T95 | E2E + audits |
+**อ้างอิง mockup:** Employee Home 12089, Profile 12090, Schedule 12085
+
+### M32: Portal Shell (~1.5 สัปดาห์)
+
+| ID | Task | Agent | Deliverables |
+|----|------|-------|--------------|
+| **T88** | Design tokens 中国名堂 — `#E80012`, fonts Prompt/Inter | Codex | `theme.css`, brand assets |
+| **T89** | `/portal` layout + auth (role=employee) | Codex | shell + middleware |
+| **T90** | Portal Home — check-in status, leave balance, announcements | Codex | widgets + LIFF deep links |
+| **T91** | Portal Profile — read-only จาก `hr_employees` | Codex | `/portal/profile` |
+
+### M33: Portal Modules (~2 สัปดาห์)
+
+| ID | Task | Agent | Deliverables |
+|----|------|-------|--------------|
+| **T92** | Portal Attendance — ประวัติตัวเอง | Codex | `/portal/attendance` |
+| **T93** | Portal Leave — embed หรือ link LIFF | Claude Code | `/portal/leave` |
+| **T94** | Portal Documents — สถานะคำขอเอกสาร | Codex | `/portal/documents` |
+| **T95** | Admin reskin (non-locked pages) — Employees, Attendance, Leaves | Codex | ไม่แตะ `/admin` home locked |
+
+**Acceptance:** employee login web → portal ใช้ได้; widget ข้อมูลจริง; mobile responsive
+
+**หมายเหตุ:** HR Admin Dashboard หน้าแรก (`/admin`) **locked** — reskin เฉพาะหน้าย่อย
+
+---
+
+## 🔒 Phase 9 — Payroll (Baht) & Payslip — M34–M35 (~4–6 สัปดาห์)
+
+**Goal:** จาก "รายงานชม." → **สลิปเงินเดือน / บาท** (ต้อง **ลูกค้า approve scope** ก่อน kickoff)
+
+**ปัจจุบัน:** Phase 5 ส่งมอบ payroll **ชม.** เท่านั้น — baht **นอก scope**
+
+### M34: Payroll Engine
+
+| ID | Task | Agent | Deliverables |
+|----|------|-------|--------------|
+| **T96** | Schema — `hr_payslips`, `hr_payroll_runs`, deduction rules | Claude Code | migration + RLS |
+| **T97** | คำนวณชม.อนุมัติ → เงิน (base salary, OT rate, หัก) | Claude Code | engine + unit tests |
+| **T98** | HR Payroll run UI — สร้าง/ปิดงวด, preview | Codex | `/admin/payroll/runs` |
+
+### M35: Payslip Delivery
+
+| ID | Task | Agent | Deliverables |
+|----|------|-------|--------------|
+| **T99** | Payslip PDF/HTML generation | Claude Code | template + storage |
+| **T100** | Employee ดูสลิป — Portal + LIFF + ขอผ่าน F7 | Codex | `/portal/payslip` |
+| **T101** | Payroll audit + security (salary data) | Claude Opus | `SECURITY_REVIEW_PAYROLL.md` |
+
+**Acceptance:** HR ปิดงวด → พนักงานเห็นสลิป; ไม่ leak salary cross-employee
+
+---
+
+## 🔒 Phase 10 — Workforce Modules (Optional) — M36 (~4 สัปดาห์)
+
+**Goal:** ปิด stub pages + mockup ที่ยังเป็น ComingSoon — **optional จนกว่าลูกค้าจะสั่ง**
+
+| ID | Task | Agent | Deliverables |
+|----|------|-------|--------------|
+| **T102** | Schedule / Shifts — `hr_shifts`, calendar | Claude Code | schema + `/portal/schedule` |
+| **T103** | Recruitment lite — requisition list (ไม่ full ATS) | Codex | `/admin/recruitment` |
+| **T104** | Training lite — course registry | Codex | `/admin/training` |
+| **T105** | Performance lite — review cycle stub | Codex | `/admin/performance` |
+
+**ทางเลือก:** ถ้าไม่ทำ → ลบ nav stub + ระบุ "out of scope v2" ใน handoff แทน (0 task)
+
+---
+
+## 📋 Phase 11 — Project Close — M37 (~1 สัปดาห์)
+
+**Goal:** จบ project อย่างเป็นทางการ
+
+| ID | Task | Agent | Deliverables |
+|----|------|-------|--------------|
+| **T106** | Final delivery audit (Opus) | Cursor | `DELIVERY_READINESS_FINAL.md` |
+| **T107** | Client handoff vFinal + runbook + key rotation guide | Cursor | `CLIENT_HANDOFF_FINAL.md` |
+| **T108** | Archive orchestration + Taskmaster 100% done + tag release | Cursor | git tag, GROUND_TRUTH CLOSED |
+
+**Acceptance:** verdict 🟢; ลูกค้า sign-off สุดท้าย; repo clean
+
+---
+
+## Dependency Order (งานที่เหลือ)
+
+```
+M29:  T78 → T79 → T80
+M30:  T81 → T82 → T83        (หลัง T78 deploy)
+M31:  T84 → T85 → T86 → T87  (หลัง M30 หรือ parallel UAT)
+M32:  T88 → T89 → T90 → T91
+M33:  T92 → T93 → T94 → T95  (T95 ไม่ block portal)
+M34:  T96 → T97 → T98        (ต้อง approve Phase 9)
+M35:  T99 → T100 → T101
+M36:  T102–T105               (optional)
+M37:  T106 → T107 → T108      (หลัง scope ที่ลูกค้าเลือกครบ)
+```
+
+---
+
+## นิยาม "จบ Project"
+
+| ระดับ | ครอบคลุม | Tasks | ประมาณเวลา |
+|-------|----------|-------|------------|
+| **A — MVP Stable** | M29 + M30 + M31 | T78–T87 (10) | ~3–4 สัปดาห์ |
+| **B — Product v1** | A + M32–M33 (Portal) | T78–T95 (18) | ~7–8 สัปดาห์ |
+| **C — Payroll Complete** | B + M34–M35 | T78–T101 (24) | ~11–14 สัปดาห์ |
+| **D — Full Vision** | C + M36 + M37 | T78–T108 (31) | ~15–18 สัปดาห์ |
+
+**แนะนำ:** ลูกค้า sign-off **Level A** หลัง T87 → ตัดสินใจ Phase 8–9 เป็น change request หรือ phase ใหม่
+
+---
+
+## สิ่งที่ยัง Out of Scope (ทุก Phase)
+
+- Multi-company (multi-branch ✅ มีแล้ว)
+- Native mobile app (iOS/Android)
+- Accounting integration (SAP, SAGE)
+- Advanced BI / data warehouse
+- Full ATS / LMS / Performance 360 (Phase 10 ทำแค่ lite ถ้าสั่ง)
+
+---
+
+## ไฟล์อ้างอิง
+
+| เนื้อหา | Path |
+|---------|------|
+| Phase 5 แผนเดิม | `orchestration/PHASE_5_PLAN.md` |
+| UI mockup roadmap | `orchestration/DASHBOARD_UI_PLAN.md` |
+| Handoff ปัจจุบัน | `hr-app/reports/CLIENT_HANDOFF_P5.md` |
+| Taskmaster | `.taskmaster/tasks/tasks.json` |
+| PRD | `docs/PRD.md` |
+
+---
+
+*สร้างโดย Cursor Orchestrator — reconcile Phase 5 delivered vs mockup gaps vs project close*

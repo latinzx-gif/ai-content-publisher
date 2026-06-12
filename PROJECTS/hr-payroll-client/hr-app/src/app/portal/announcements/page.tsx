@@ -1,0 +1,45 @@
+import { AdminPageShell } from "@/components/brand/AdminPageShell"
+import { getEmployeeAnnouncements } from "@/features/portal/data"
+import { getCurrentEmployee } from "@/lib/auth/session"
+
+function formatSentAt(iso: string | null): string {
+  if (!iso) return "—"
+  return new Date(iso).toLocaleDateString("th-TH", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  })
+}
+
+export default async function PortalAnnouncementsPage() {
+  const employee = await getCurrentEmployee()
+  if (!employee) return null
+
+  const announcements = await getEmployeeAnnouncements(employee.department)
+
+  return (
+    <AdminPageShell title="ประกาศ" description="ประกาศจาก HR ที่เกี่ยวข้องกับคุณ">
+      {announcements.length === 0 ? (
+        <p className="py-8 text-center text-sm text-muted-foreground">
+          ยังไม่มีประกาศ
+        </p>
+      ) : (
+        <ul className="divide-y divide-border/60">
+          {announcements.map((item) => (
+            <li key={item.id} className="py-4 first:pt-0 last:pb-0">
+              <div className="flex flex-wrap items-baseline justify-between gap-2">
+                <h3 className="font-semibold">{item.title}</h3>
+                <time className="text-xs text-muted-foreground">
+                  {formatSentAt(item.sentAt)}
+                </time>
+              </div>
+              <p className="mt-2 whitespace-pre-wrap text-sm text-muted-foreground">
+                {item.body}
+              </p>
+            </li>
+          ))}
+        </ul>
+      )}
+    </AdminPageShell>
+  )
+}

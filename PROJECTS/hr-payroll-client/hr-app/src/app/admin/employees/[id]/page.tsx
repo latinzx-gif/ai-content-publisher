@@ -3,6 +3,9 @@ import { notFound } from "next/navigation"
 
 import { EmployeeProfilePageClient } from "@/features/employees/profile/EmployeeProfilePageClient"
 import { getComplianceNotes, getEmployeeProfile } from "@/features/employees/profile/data"
+import { listBranches } from "@/features/branches/data"
+import { isCeo, isDev } from "@/lib/auth/roles"
+import { getCurrentEmployee } from "@/lib/auth/session"
 
 export default async function EmployeeProfilePage({
   params,
@@ -10,9 +13,13 @@ export default async function EmployeeProfilePage({
   params: Promise<{ id: string }>
 }) {
   const { id } = await params
-  const [profile, notes] = await Promise.all([
+  const caller = await getCurrentEmployee()
+  const readOnly = caller ? isCeo(caller.role) && !isDev(caller.role) : false
+
+  const [profile, notes, branches] = await Promise.all([
     getEmployeeProfile(id),
     getComplianceNotes(id),
+    listBranches(),
   ])
   if (!profile) notFound()
 
@@ -23,7 +30,12 @@ export default async function EmployeeProfilePage({
           ← กลับรายชื่อพนักงาน
         </Link>
       </p>
-      <EmployeeProfilePageClient profile={profile} notes={notes} />
+      <EmployeeProfilePageClient
+        profile={profile}
+        notes={notes}
+        branches={branches}
+        readOnly={readOnly}
+      />
     </div>
   )
 }

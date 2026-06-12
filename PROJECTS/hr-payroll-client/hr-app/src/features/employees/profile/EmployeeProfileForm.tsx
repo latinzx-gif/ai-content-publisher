@@ -6,7 +6,13 @@ import { useState } from "react"
 import { StatusPill } from "@/components/brand/StatusPill"
 import { WidgetCard } from "@/components/brand/WidgetCard"
 import { Button } from "@/components/ui/button"
+import type { BranchRow } from "@/features/branches/data"
 import type { ContractType, EmployeeProfile } from "@/features/employees/profile/data"
+import {
+  ASSIGNABLE_ROLES,
+  type AssignableRole,
+} from "@/lib/auth/employee-roles"
+import { roleDisplayLabel } from "@/lib/auth/labels"
 import { cn } from "@/lib/utils"
 
 const inputClassName =
@@ -48,6 +54,8 @@ type FormState = {
   visa_expiry: string
   work_permit_expiry: string
   status: "active" | "inactive"
+  role: AssignableRole
+  branch_id: string
 }
 
 function toFormState(profile: EmployeeProfile): FormState {
@@ -65,6 +73,10 @@ function toFormState(profile: EmployeeProfile): FormState {
     visa_expiry: profile.visa_expiry ?? "",
     work_permit_expiry: profile.work_permit_expiry ?? "",
     status: profile.status,
+    role: (ASSIGNABLE_ROLES as readonly string[]).includes(profile.role)
+      ? (profile.role as AssignableRole)
+      : "employee",
+    branch_id: profile.branch_id ?? "",
   }
 }
 
@@ -83,7 +95,13 @@ function Field({
   )
 }
 
-export function EmployeeProfileForm({ profile }: { profile: EmployeeProfile }) {
+export function EmployeeProfileForm({
+  profile,
+  branches,
+}: {
+  profile: EmployeeProfile
+  branches: BranchRow[]
+}) {
   const router = useRouter()
   const [form, setForm] = useState<FormState>(() => toFormState(profile))
   const [saving, setSaving] = useState(false)
@@ -117,6 +135,8 @@ export function EmployeeProfileForm({ profile }: { profile: EmployeeProfile }) {
           visa_expiry: form.visa_expiry || null,
           work_permit_expiry: form.work_permit_expiry || null,
           status: form.status,
+          role: form.role,
+          branch_id: form.branch_id || null,
         }),
       })
       if (!res.ok) {
@@ -218,12 +238,45 @@ export function EmployeeProfileForm({ profile }: { profile: EmployeeProfile }) {
                 onChange={(e) => setField("department", e.target.value)}
               />
             </Field>
+            <Field label="สิทธิ์เข้าใช้งาน (Role)">
+              <select
+                className={inputClassName}
+                value={form.role}
+                onChange={(e) =>
+                  setField("role", e.target.value as AssignableRole)
+                }
+              >
+                {ASSIGNABLE_ROLES.map((role) => (
+                  <option key={role} value={role}>
+                    {roleDisplayLabel(role)}
+                  </option>
+                ))}
+              </select>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Employee = LIFF เท่านั้น · Branch Manager / HR / Admin / CEO =
+                Dashboard
+              </p>
+            </Field>
+            <Field label="สาขา">
+              <select
+                className={inputClassName}
+                value={form.branch_id}
+                onChange={(e) => setField("branch_id", e.target.value)}
+              >
+                <option value="">— ไม่ระบุ —</option>
+                {branches.map((b) => (
+                  <option key={b.id} value={b.id}>
+                    {b.name}
+                    {b.code ? ` (${b.code})` : ""}
+                  </option>
+                ))}
+              </select>
+            </Field>
             <p className="rounded-lg bg-muted/40 px-3 py-2 text-xs text-muted-foreground">
               LINE ID:{" "}
               <span className="font-mono text-foreground">
                 {profile.line_user_id ?? "—"}
               </span>
-              {" · "}Role: {profile.role}
             </p>
           </div>
         </WidgetCard>

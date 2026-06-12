@@ -1,6 +1,9 @@
 import { NextResponse } from "next/server"
 
 import type { ContractType } from "@/features/employees/profile/data"
+import {
+  isAssignableRole,
+} from "@/lib/auth/employee-roles"
 import { getCurrentEmployee } from "@/lib/auth/session"
 import { createClient } from "@/lib/supabase/server"
 
@@ -14,6 +17,7 @@ type CreateBody = {
   email?: string | null
   position?: string | null
   department?: string | null
+  branch_id?: string | null
   salary?: number | null
   contract_start?: string | null
   contract_type?: ContractType
@@ -21,7 +25,7 @@ type CreateBody = {
   visa_expiry?: string | null
   work_permit_expiry?: string | null
   status?: "active" | "inactive"
-  role?: "employee" | "hr" | "admin"
+  role?: string
 }
 
 export async function POST(request: Request) {
@@ -54,11 +58,23 @@ export async function POST(request: Request) {
   }
 
   const role = body.role ?? "employee"
-  if (!["employee", "hr", "admin"].includes(role)) {
+  if (!isAssignableRole(role)) {
     return NextResponse.json({ error: "invalid role" }, { status: 400 })
   }
 
   const supabase = await createClient()
+
+  if (body.branch_id) {
+    const { data: branch } = await supabase
+      .from("hr_branches")
+      .select("id")
+      .eq("id", body.branch_id)
+      .maybeSingle()
+    if (!branch) {
+      return NextResponse.json({ error: "branch not found" }, { status: 400 })
+    }
+  }
+
   const { data, error } = await supabase
     .from("hr_employees")
     .insert({
@@ -69,6 +85,7 @@ export async function POST(request: Request) {
       email: body.email?.trim() || null,
       position: body.position?.trim() || null,
       department: body.department?.trim() || null,
+      branch_id: body.branch_id || null,
       salary: body.salary ?? null,
       contract_start: body.contract_start || null,
       contract_type: body.contract_type ?? null,

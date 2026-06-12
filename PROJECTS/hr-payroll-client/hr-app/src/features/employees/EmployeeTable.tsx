@@ -17,6 +17,7 @@ const STATUS_LABEL: Record<EmployeeRow["displayStatus"], string> = {
   active: "Active",
   probation: "Probation",
   inactive: "Inactive",
+  onboarding: "รอกำหนดสิทธิ์",
 }
 
 const STATUS_VARIANT: Record<
@@ -26,6 +27,7 @@ const STATUS_VARIANT: Record<
   active: "approved",
   probation: "pending",
   inactive: "neutral",
+  onboarding: "pending",
 }
 
 function formatDate(value: string | null): string {

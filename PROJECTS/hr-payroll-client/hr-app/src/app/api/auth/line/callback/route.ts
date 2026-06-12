@@ -1,8 +1,12 @@
-import { createServerClient } from "@supabase/ssr"
 import { NextResponse, type NextRequest } from "next/server"
 
 import { getAdminClient } from "@/lib/auth/admin-client"
+import { mintLineUserSession } from "@/lib/auth/line-session"
 import { adminLoginPath } from "@/lib/auth/roles"
+import {
+  LINE_REGISTER_COOKIE,
+  LINE_REGISTER_COOKIE_OPTS,
+} from "@/lib/auth/register-cookie"
 import { exchangeCode, verifyIdToken } from "@/lib/auth/line-login"
 
 const STATE_COOKIE = "line_login_state"
@@ -47,75 +51,18 @@ export async function GET(request: NextRequest) {
     .maybeSingle()
 
   if (!employee || employee.status !== "active") {
-    console.warn("LINE login not_registered", { lineUserId })
-    const loginUrl = new URL("/login", origin)
-    loginUrl.searchParams.set("error", "not_registered")
-    if (process.env.NODE_ENV === "development") {
-      loginUrl.searchParams.set("line_id", lineUserId)
-    }
-    return NextResponse.redirect(loginUrl)
+    const response = NextResponse.redirect(new URL("/register", origin))
+    response.cookies.set(LINE_REGISTER_COOKIE, lineUserId, LINE_REGISTER_COOKIE_OPTS)
+    response.cookies.delete(STATE_COOKIE)
+    return response
   }
 
-  const destination = adminLoginPath(employee.role)
+  const destination = adminLoginPath(employee.role as Parameters<typeof adminLoginPath>[0])
 
-  let response = NextResponse.redirect(new URL(destination, origin))
-
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll() {
-          return request.cookies.getAll()
-        },
-        setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value }) =>
-            request.cookies.set(name, value)
-          )
-          response = NextResponse.redirect(new URL(destination, origin))
-          cookiesToSet.forEach(({ name, value, options }) =>
-            response.cookies.set(name, value, options)
-          )
-        },
-      },
-    }
-  )
+  const response = NextResponse.redirect(new URL(destination, origin))
 
   try {
-    const email = `line_${lineUserId.toLowerCase()}@line.local`
-
-    const { data: linkData, error: linkError } =
-      await admin.auth.admin.generateLink({ type: "magiclink", email })
-    if (linkError || !linkData?.properties?.hashed_token) {
-      throw linkError ?? new Error("generateLink returned no token")
-    }
-
-    const { error: metaError } = await admin.auth.admin.updateUserById(
-      linkData.user.id,
-      { app_metadata: { provider: "line", line_user_id: lineUserId } }
-    )
-    if (metaError) {
-      throw metaError
-    }
-
-    const { data: otpData, error: otpError } = await supabase.auth.verifyOtp({
-      type: "email",
-      token_hash: linkData.properties.hashed_token,
-    })
-    if (otpError) {
-      throw otpError
-    }
-
-    // Belt-and-suspenders: ensure SSR client persists session cookies on response.
-    if (otpData.session) {
-      const { error: setError } = await supabase.auth.setSession({
-        access_token: otpData.session.access_token,
-        refresh_token: otpData.session.refresh_token,
-      })
-      if (setError) {
-        throw setError
-      }
-    }
+    await mintLineUserSession(request, response, lineUserId)
   } catch (error) {
     console.error("Supabase session mint failed", error)
     return loginRedirect(request, "session_failed")

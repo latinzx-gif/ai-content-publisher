@@ -17,6 +17,11 @@ import { StatusPill } from "@/components/brand/StatusPill"
 import { Button, buttonVariants } from "@/components/ui/button"
 import type { ContractType } from "@/features/employees/profile/data"
 import { ProfileSectionCard } from "@/features/employees/profile/ProfileSectionCard"
+import {
+  ASSIGNABLE_ROLES,
+  type AssignableRole,
+} from "@/lib/auth/employee-roles"
+import { roleDisplayLabel } from "@/lib/auth/labels"
 import { cn } from "@/lib/utils"
 
 const inputClassName =
@@ -83,6 +88,7 @@ export function AddEmployeeForm() {
     visa_expiry: "",
     work_permit_expiry: "",
     status: "active" as "active" | "inactive",
+    role: "employee" as AssignableRole,
   })
 
   function setField<K extends keyof typeof form>(key: K, value: (typeof form)[K]) {
@@ -118,6 +124,7 @@ export function AddEmployeeForm() {
           visa_expiry: form.visa_expiry || null,
           work_permit_expiry: form.work_permit_expiry || null,
           status: form.status,
+          role: form.role,
         }),
       })
       const body = (await res.json().catch(() => null)) as
@@ -306,10 +313,25 @@ export function AddEmployeeForm() {
           <FormField label="LINE User ID">
             <input
               className={inputClassName}
-              placeholder="Uxxxxxxxx…"
+              placeholder="Uxxxxxxxx… (optional — หรือให้พนักงาน login LINE เอง)"
               value={form.line_user_id}
               onChange={(e) => setField("line_user_id", e.target.value)}
             />
+          </FormField>
+          <FormField label="Role">
+            <select
+              className={inputClassName}
+              value={form.role}
+              onChange={(e) =>
+                setField("role", e.target.value as AssignableRole)
+              }
+            >
+              {ASSIGNABLE_ROLES.map((role) => (
+                <option key={role} value={role}>
+                  {roleDisplayLabel(role)}
+                </option>
+              ))}
+            </select>
           </FormField>
         </ProfileSectionCard>
 

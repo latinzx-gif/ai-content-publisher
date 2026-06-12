@@ -9,6 +9,8 @@ import { EmployeeProfileView } from "@/features/employees/profile/EmployeeProfil
 import { LifecyclePanel } from "@/features/employees/profile/LifecyclePanel"
 import type { EmployeeProfile } from "@/features/employees/profile/data"
 
+import type { BranchRow } from "@/features/branches/data"
+
 type ComplianceNote = {
   id: string
   category: string
@@ -19,9 +21,13 @@ type ComplianceNote = {
 export function EmployeeProfilePageClient({
   profile,
   notes,
+  branches,
+  readOnly = false,
 }: {
   profile: EmployeeProfile
   notes: ComplianceNote[]
+  branches: BranchRow[]
+  readOnly?: boolean
 }) {
   const [editing, setEditing] = useState(false)
 
@@ -40,7 +46,7 @@ export function EmployeeProfilePageClient({
           </Button>
         </div>
         <div className="min-h-0 flex-1 overflow-y-auto pr-1">
-          <EmployeeProfileForm profile={profile} />
+          <EmployeeProfileForm profile={profile} branches={branches} />
         </div>
       </div>
     )
@@ -51,16 +57,18 @@ export function EmployeeProfilePageClient({
       <EmployeeProfileView
         profile={profile}
         actions={
-          <Button
-            type="button"
-            size="sm"
-            variant="outline"
-            className="border-white/40 bg-white/10 text-white hover:bg-white/20 hover:text-white"
-            onClick={() => setEditing(true)}
-          >
-            <Pencil className="size-3.5" />
-            Edit Profile
-          </Button>
+          readOnly ? null : (
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              className="border-white/40 bg-white/10 text-white hover:bg-white/20 hover:text-white"
+              onClick={() => setEditing(true)}
+            >
+              <Pencil className="size-3.5" />
+              Edit Profile
+            </Button>
+          )
         }
       />
       <section className="shrink-0 rounded-xl border border-border/80 bg-card p-4">

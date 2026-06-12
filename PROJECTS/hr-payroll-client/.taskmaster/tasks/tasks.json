@@ -1258,20 +1258,516 @@
         "description": "Apply approval-expiry migration on remote Supabase, verify cron job, formal Phase 5 client handoff doc, git commit archive.",
         "details": "Run supabase db push for 20260615000000. Verify cron.job approval-expiry. Write CLIENT_HANDOFF_P5.md. Optional: assign BM UI polish.",
         "testStrategy": "",
-        "status": "in-progress",
+        "status": "done",
         "dependencies": [
           "76"
         ],
         "priority": "high",
         "subtasks": [],
-        "updatedAt": "2026-06-11T17:34:57.297Z"
+        "updatedAt": "2026-06-11T18:52:19.179Z"
+      },
+      {
+        "id": "78",
+        "title": "LINE self-registration — /register + HR role assign",
+        "description": "พนักงาน login LINE ครั้งแรก → ลงทะเบียน employee → HR กำหนด role/สาขาภายหลัง",
+        "status": "done",
+        "priority": "high",
+        "milestone": "M29",
+        "agent": "Claude Code",
+        "dependencies": [
+          "77"
+        ],
+        "details": "Deliverables: /register, RegisterForm, POST /api/auth/register, employee API role/branch PATCH, EmployeeProfileForm role dropdown. Code implemented — review, deploy production, E2E smoke.",
+        "testStrategy": "New LINE user → /register → /liff/leave; HR promotes to branch_manager → /admin/branch",
+        "subtasks": [],
+        "updatedAt": "2026-06-11T18:52:21.653Z"
+      },
+      {
+        "id": "79",
+        "title": "Client sign-off Phase 5 + handoff v2",
+        "description": "อัปเดต CLIENT_HANDOFF_P5.md — onboarding flow, Phase 6+ roadmap, ลูกค้า sign-off checklist",
+        "status": "done",
+        "priority": "high",
+        "milestone": "M29",
+        "agent": "Cursor",
+        "dependencies": [
+          "78"
+        ],
+        "details": "Update §4 onboarding (self-register), fix Phase 6 wording, HTML handoff sync. Collect client sign-off on §9 checklist.",
+        "testStrategy": "Handoff doc accurate vs production; checklist items verifiable",
+        "subtasks": [],
+        "updatedAt": "2026-06-11T18:54:15.661Z"
+      },
+      {
+        "id": "80",
+        "title": "Reconcile Taskmaster + GROUND_TRUTH — close Phase 5",
+        "description": "Sync tasks.json, GROUND_TRUTH phase status, MILESTONES after Phase 5 formal close",
+        "status": "done",
+        "priority": "medium",
+        "milestone": "M29",
+        "agent": "Cursor",
+        "dependencies": [
+          "79"
+        ],
+        "details": "Mark Phase 5 CLOSED in GROUND_TRUTH. Ensure T78-T108 registered. Update REVIEW_STATUS.",
+        "testStrategy": "Docs consistent; no conflicting phase labels",
+        "subtasks": [],
+        "updatedAt": "2026-06-11T18:54:18.061Z"
+      },
+      {
+        "id": "81",
+        "title": "HR onboarding queue — new employees pending role/branch",
+        "description": "UI แสดงพนักงานใหม่ที่ลงทะเบียนแล้วรอ HR assign role/สาขา",
+        "status": "done",
+        "priority": "medium",
+        "milestone": "M30",
+        "agent": "Codex",
+        "dependencies": [
+          "80"
+        ],
+        "details": "Badge or filter in /admin/employees for role=employee without branch or recently registered.",
+        "testStrategy": "New register appears in queue; HR can filter and edit profile",
+        "subtasks": [],
+        "updatedAt": "2026-06-12T00:11:00.998Z"
+      },
+      {
+        "id": "82",
+        "title": "Close employee LIFF OT — redirect to branch manager",
+        "description": "ปิดการยื่น OT ฝั่งพนักงาน ตาม Phase 5 — BM ยื่นแทน",
+        "status": "done",
+        "priority": "medium",
+        "milestone": "M30",
+        "agent": "Claude Code",
+        "dependencies": [
+          "81"
+        ],
+        "details": "/liff/overtime → message ติดต่อหัวหน้าสาขา or redirect. Thai copy.",
+        "testStrategy": "Employee cannot submit OT via LIFF; BM path still works",
+        "subtasks": [],
+        "updatedAt": "2026-06-12T00:11:05.711Z"
+      },
+      {
+        "id": "83",
+        "title": "E2E onboarding flow script",
+        "description": "LINE ใหม่ → register → LIFF → HR promote → BM dashboard",
+        "status": "done",
+        "priority": "high",
+        "milestone": "M30",
+        "agent": "Claude Code",
+        "dependencies": [
+          "82"
+        ],
+        "details": "scripts/e2e/flow-onboarding.mjs — document manual steps if LINE OAuth blocks automation.",
+        "testStrategy": "Script PASS or documented manual checklist",
+        "subtasks": [],
+        "updatedAt": "2026-06-12T00:11:09.767Z"
+      },
+      {
+        "id": "84",
+        "title": "Vault sb_secret + cron health check all jobs",
+        "description": "Rotate vault secret_key to sb_secret; verify all pg_cron jobs",
+        "status": "done",
+        "priority": "high",
+        "milestone": "M31",
+        "agent": "Claude Code",
+        "dependencies": [
+          "83"
+        ],
+        "details": "Script verify cron + edge fn auth. Doc in CLIENT_HANDOFF. Fix 401 on morning-push etc.",
+        "testStrategy": "All cron jobs active; no 401 in logs",
+        "subtasks": [],
+        "updatedAt": "2026-06-12T00:11:13.489Z"
+      },
+      {
+        "id": "85",
+        "title": "Full regression E2E + production smoke",
+        "description": "run-all-p5.mjs + smoke-role-routes on production",
+        "status": "done",
+        "priority": "high",
+        "milestone": "M31",
+        "agent": "Claude Code",
+        "dependencies": [
+          "84"
+        ],
+        "details": "Write E2E_P6_RESULTS.md with pass/fail per route and flow.",
+        "testStrategy": "8/8 smoke routes PASS; P5 E2E PASS",
+        "subtasks": [],
+        "updatedAt": "2026-06-12T00:11:18.603Z"
+      },
+      {
+        "id": "86",
+        "title": "Security review Phase 6 — register + role PATCH",
+        "description": "SECURITY_REVIEW_P6.md — self-register cookie, role escalation, RLS",
+        "status": "done",
+        "priority": "high",
+        "milestone": "M31",
+        "agent": "Claude Code (Opus)",
+        "dependencies": [
+          "85"
+        ],
+        "details": "skill 10-security-review. Focus: /api/auth/register, PATCH role/branch_id, register cookie TTL.",
+        "testStrategy": "No critical findings; doc published",
+        "subtasks": [],
+        "updatedAt": "2026-06-12T00:11:22.999Z"
+      },
+      {
+        "id": "87",
+        "title": "Client UAT fix batch",
+        "description": "Fix issues from Phase 5 sign-off checklist and UAT feedback",
+        "status": "done",
+        "priority": "high",
+        "milestone": "M31",
+        "agent": "Claude Code",
+        "dependencies": [
+          "86"
+        ],
+        "details": "Triage client tickets; minimal scoped fixes. Level A milestone gate.",
+        "testStrategy": "Client UAT checklist passes",
+        "subtasks": [],
+        "updatedAt": "2026-06-12T00:11:27.265Z"
+      },
+      {
+        "id": "88",
+        "title": "Design tokens 中国名堂 — brand #E80012 + fonts",
+        "description": "theme.css, Prompt/Inter/Noto Sans SC, brand assets in public/brand/",
+        "status": "done",
+        "priority": "medium",
+        "milestone": "M32",
+        "agent": "Codex",
+        "dependencies": [
+          "87"
+        ],
+        "details": "Per DASHBOARD_UI_PLAN.md Phase UI-0. Update BRAND_RED from #D32F2F if needed.",
+        "testStrategy": "Tokens applied; fonts load",
+        "subtasks": [],
+        "updatedAt": "2026-06-12T00:11:31.410Z"
+      },
+      {
+        "id": "89",
+        "title": "/portal layout + auth (employee role)",
+        "description": "Employee web portal shell with middleware protection",
+        "status": "done",
+        "priority": "high",
+        "milestone": "M32",
+        "agent": "Codex",
+        "dependencies": [
+          "88"
+        ],
+        "details": "/portal/* routes; employee role guard; redirect hr/admin to /admin.",
+        "testStrategy": "Employee accesses portal; HR redirected",
+        "subtasks": [],
+        "updatedAt": "2026-06-12T00:11:34.114Z"
+      },
+      {
+        "id": "90",
+        "title": "Portal Home — widgets + LIFF deep links",
+        "description": "Check-in status, leave balance, announcements per mockup 12089",
+        "status": "done",
+        "priority": "high",
+        "milestone": "M32",
+        "agent": "Codex",
+        "dependencies": [
+          "89"
+        ],
+        "details": "Real data from hr_attendance, hr_leave_balances, hr_announcements. LIFF links for actions.",
+        "testStrategy": "Widgets show real DB data",
+        "subtasks": [],
+        "updatedAt": "2026-06-12T00:11:36.811Z"
+      },
+      {
+        "id": "91",
+        "title": "Portal Profile — read-only hr_employees",
+        "description": "/portal/profile per mockup 12090",
+        "status": "done",
+        "priority": "medium",
+        "milestone": "M32",
+        "agent": "Codex",
+        "dependencies": [
+          "90"
+        ],
+        "details": "Read-only profile view; edit later optional.",
+        "testStrategy": "Profile loads own employee row only",
+        "subtasks": [],
+        "updatedAt": "2026-06-12T00:11:39.339Z"
+      },
+      {
+        "id": "92",
+        "title": "Portal Attendance — self history",
+        "description": "/portal/attendance — own check-in/out history",
+        "status": "done",
+        "priority": "medium",
+        "milestone": "M33",
+        "agent": "Codex",
+        "dependencies": [
+          "91"
+        ],
+        "details": "Table with date filter; RLS self-read.",
+        "testStrategy": "Shows only caller attendance",
+        "subtasks": [],
+        "updatedAt": "2026-06-12T00:11:41.989Z"
+      },
+      {
+        "id": "93",
+        "title": "Portal Leave — embed or LIFF link",
+        "description": "/portal/leave — leave form access",
+        "status": "done",
+        "priority": "medium",
+        "milestone": "M33",
+        "agent": "Claude Code",
+        "dependencies": [
+          "92"
+        ],
+        "details": "Embed LeaveForm or deep link to /liff/leave.",
+        "testStrategy": "Employee can submit leave from portal",
+        "subtasks": [],
+        "updatedAt": "2026-06-12T00:11:45.112Z"
+      },
+      {
+        "id": "94",
+        "title": "Portal Documents — request status",
+        "description": "/portal/documents — document request tracking",
+        "status": "done",
+        "priority": "medium",
+        "milestone": "M33",
+        "agent": "Codex",
+        "dependencies": [
+          "93"
+        ],
+        "details": "List hr_document_requests for self.",
+        "testStrategy": "Status matches admin queue",
+        "subtasks": [],
+        "updatedAt": "2026-06-12T00:11:47.713Z"
+      },
+      {
+        "id": "95",
+        "title": "Admin reskin non-locked pages",
+        "description": "Reskin Employees, Attendance, Leaves — NOT /admin home",
+        "status": "done",
+        "priority": "low",
+        "milestone": "M33",
+        "agent": "Codex",
+        "dependencies": [
+          "94"
+        ],
+        "details": "Apply WidgetCard/HeroBanner pattern. HR Admin Dashboard locked.",
+        "testStrategy": "Visual consistency; no logic regression",
+        "subtasks": [],
+        "updatedAt": "2026-06-12T00:11:50.403Z"
+      },
+      {
+        "id": "96",
+        "title": "Payroll schema — payslips, runs, deductions",
+        "description": "hr_payslips, hr_payroll_runs migration + RLS",
+        "status": "cancelled",
+        "priority": "high",
+        "milestone": "M34",
+        "agent": "Claude Code",
+        "dependencies": [
+          "95"
+        ],
+        "details": "REQUIRES client scope approval for Phase 9. Salary data RLS strict.",
+        "testStrategy": "Migration applies; RLS enabled",
+        "subtasks": [],
+        "updatedAt": "2026-06-11T19:02:40.434Z"
+      },
+      {
+        "id": "97",
+        "title": "Payroll calculation engine — hours to baht",
+        "description": "Approved hours + OT + deductions → net pay",
+        "status": "cancelled",
+        "priority": "high",
+        "milestone": "M34",
+        "agent": "Claude Code",
+        "dependencies": [
+          "96"
+        ],
+        "details": "Base salary from hr_employees.salary, OT rate config, unit tests.",
+        "testStrategy": "Known fixture calculates correctly",
+        "subtasks": [],
+        "updatedAt": "2026-06-11T19:02:40.434Z"
+      },
+      {
+        "id": "98",
+        "title": "HR Payroll run UI — create/close period",
+        "description": "/admin/payroll/runs — preview before close",
+        "status": "cancelled",
+        "priority": "high",
+        "milestone": "M34",
+        "agent": "Codex",
+        "dependencies": [
+          "97"
+        ],
+        "details": "Replace/enhance payroll hub with run workflow.",
+        "testStrategy": "HR creates run and previews lines",
+        "subtasks": [],
+        "updatedAt": "2026-06-11T19:02:40.434Z"
+      },
+      {
+        "id": "99",
+        "title": "Payslip PDF/HTML generation",
+        "description": "Template + Supabase storage for payslip files",
+        "status": "cancelled",
+        "priority": "high",
+        "milestone": "M35",
+        "agent": "Claude Code",
+        "dependencies": [
+          "98"
+        ],
+        "details": "HTML or PDF per employee per run.",
+        "testStrategy": "Generated file readable; no data leak",
+        "subtasks": [],
+        "updatedAt": "2026-06-11T19:02:40.434Z"
+      },
+      {
+        "id": "100",
+        "title": "Employee payslip view — portal + F7",
+        "description": "/portal/payslip + document request integration",
+        "status": "cancelled",
+        "priority": "high",
+        "milestone": "M35",
+        "agent": "Codex",
+        "dependencies": [
+          "99"
+        ],
+        "details": "Employee sees own payslips; optional LINE notify.",
+        "testStrategy": "Employee A cannot see B payslip",
+        "subtasks": [],
+        "updatedAt": "2026-06-11T19:02:40.434Z"
+      },
+      {
+        "id": "101",
+        "title": "Payroll security audit",
+        "description": "SECURITY_REVIEW_PAYROLL.md",
+        "status": "cancelled",
+        "priority": "high",
+        "milestone": "M35",
+        "agent": "Claude Code (Opus)",
+        "dependencies": [
+          "100"
+        ],
+        "details": "Opus audit on salary RLS, payslip access, admin-only runs.",
+        "testStrategy": "No critical; audit doc published",
+        "subtasks": [],
+        "updatedAt": "2026-06-11T19:02:40.434Z"
+      },
+      {
+        "id": "102",
+        "title": "Schedule/Shifts — hr_shifts + portal calendar",
+        "description": "Optional Phase 10 — shift schema + /portal/schedule",
+        "status": "done",
+        "priority": "low",
+        "milestone": "M36",
+        "agent": "Claude Code",
+        "dependencies": [
+          "101"
+        ],
+        "details": "Mockup 12085. OPTIONAL — cancel if client declines.",
+        "testStrategy": "Calendar shows assigned shifts",
+        "subtasks": [],
+        "updatedAt": "2026-06-12T00:11:53.231Z"
+      },
+      {
+        "id": "103",
+        "title": "Recruitment lite — requisition list",
+        "description": "Replace /admin/recruitment ComingSoon",
+        "status": "done",
+        "priority": "low",
+        "milestone": "M36",
+        "agent": "Codex",
+        "dependencies": [
+          "102"
+        ],
+        "details": "Lite requisition list — not full ATS. OPTIONAL.",
+        "testStrategy": "CRUD requisitions works",
+        "subtasks": [],
+        "updatedAt": "2026-06-12T00:11:56.503Z"
+      },
+      {
+        "id": "104",
+        "title": "Training lite — course registry",
+        "description": "Replace /admin/training ComingSoon",
+        "status": "done",
+        "priority": "low",
+        "milestone": "M36",
+        "agent": "Codex",
+        "dependencies": [
+          "103"
+        ],
+        "details": "OPTIONAL workforce module.",
+        "testStrategy": "Training records list/create",
+        "subtasks": [],
+        "updatedAt": "2026-06-12T00:11:59.245Z"
+      },
+      {
+        "id": "105",
+        "title": "Performance lite — review cycle stub",
+        "description": "Replace /admin/performance ComingSoon",
+        "status": "done",
+        "priority": "low",
+        "milestone": "M36",
+        "agent": "Codex",
+        "dependencies": [
+          "104"
+        ],
+        "details": "OPTIONAL — basic review cycle stub.",
+        "testStrategy": "Page functional not ComingSoon",
+        "subtasks": [],
+        "updatedAt": "2026-06-12T00:12:01.723Z"
+      },
+      {
+        "id": "106",
+        "title": "Final delivery audit (Opus)",
+        "description": "DELIVERY_READINESS_FINAL.md — full project verdict",
+        "status": "done",
+        "priority": "high",
+        "milestone": "M37",
+        "agent": "Cursor",
+        "dependencies": [
+          "105"
+        ],
+        "details": "skill 07-delivery-audit. After chosen scope complete (min Level A at T87; full at T105).",
+        "testStrategy": "Verdict 🟢 or 🟡 with caveats",
+        "subtasks": [],
+        "updatedAt": "2026-06-12T00:12:04.411Z"
+      },
+      {
+        "id": "107",
+        "title": "Client handoff vFinal + runbook",
+        "description": "CLIENT_HANDOFF_FINAL.md + key rotation guide",
+        "status": "done",
+        "priority": "high",
+        "milestone": "M37",
+        "agent": "Cursor",
+        "dependencies": [
+          "106"
+        ],
+        "details": "Production runbook, env vars, cron, support contacts.",
+        "testStrategy": "Client acknowledges handoff",
+        "subtasks": [],
+        "updatedAt": "2026-06-12T00:12:06.980Z"
+      },
+      {
+        "id": "108",
+        "title": "Archive + tag release — project CLOSED",
+        "description": "Taskmaster 100%, GROUND_TRUTH CLOSED, git tag",
+        "status": "done",
+        "priority": "high",
+        "milestone": "M37",
+        "agent": "Cursor",
+        "dependencies": [
+          "107"
+        ],
+        "details": "Archive _agent/, final commit, git tag v1.0.0 or client version.",
+        "testStrategy": "All tasks done or cancelled; tag pushed",
+        "subtasks": [],
+        "updatedAt": "2026-06-12T00:12:09.541Z"
       }
     ],
     "metadata": {
       "version": "1.0.0",
-      "lastModified": "2026-06-11T17:34:57.297Z",
-      "taskCount": 77,
-      "completedCount": 76,
+      "lastModified": "2026-06-12T00:12:09.541Z",
+      "taskCount": 108,
+      "completedCount": 102,
       "tags": [
         "master"
       ]

@@ -22,6 +22,10 @@ export function canAccessAdminPortal(role: AppRole): boolean {
   return isHrAdmin(role) || isCeo(role) || isBranchManager(role) || isDev(role)
 }
 
+export function canAccessEmployeePortal(role: AppRole): boolean {
+  return role === "employee" || isDev(role)
+}
+
 export function canManageHr(role: AppRole): boolean {
   return isHrAdmin(role) || isDev(role)
 }
@@ -45,5 +49,5 @@ export function adminLoginPath(role: AppRole): string {
   if (role === "branch_manager") return "/admin/branch"
   if (role === "ceo") return "/admin/ceo"
   if (isHrAdmin(role)) return "/admin"
-  return "/liff/leave"
+  return "/portal"
 }

@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from "next/server"
 
 import { ictToday } from "@/features/employees/data"
 import type { ContractType } from "@/features/employees/profile/data"
+import { isAssignableRole } from "@/lib/auth/employee-roles"
 import { getCurrentEmployee } from "@/lib/auth/session"
 import { createClient } from "@/lib/supabase/server"
 
@@ -28,6 +29,8 @@ type PatchBody = {
   work_permit_expiry?: string | null
   status?: "active" | "inactive"
   probationAction?: "pass" | "fail" | "extend"
+  role?: string
+  branch_id?: string | null
 }
 
 export async function PATCH(
@@ -113,6 +116,27 @@ export async function PATCH(
     }
     if (body.status === "active" || body.status === "inactive") {
       updates.status = body.status
+    }
+    if (body.role !== undefined) {
+      if (!isAssignableRole(body.role)) {
+        return NextResponse.json({ error: "invalid role" }, { status: 400 })
+      }
+      updates.role = body.role
+    }
+    if (body.branch_id !== undefined) {
+      if (body.branch_id === null || body.branch_id === "") {
+        updates.branch_id = null
+      } else {
+        const { data: branch } = await supabase
+          .from("hr_branches")
+          .select("id")
+          .eq("id", body.branch_id)
+          .maybeSingle()
+        if (!branch) {
+          return NextResponse.json({ error: "branch not found" }, { status: 400 })
+        }
+        updates.branch_id = body.branch_id
+      }
     }
   }
 

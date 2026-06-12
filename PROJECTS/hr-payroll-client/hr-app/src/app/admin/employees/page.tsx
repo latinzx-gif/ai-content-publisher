@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils"
 import {
   getDepartments,
   getEmployees,
+  getOnboardingPendingCount,
   normalizeParams,
   PAGE_SIZE,
 } from "@/features/employees/data"
@@ -27,10 +28,12 @@ export default async function AdminEmployeesPage({
     normalizeParams(await searchParams),
   ])
   const readOnly = employee ? isCeo(employee.role) && !isDev(employee.role) : false
-  const [{ employees, total, today }, departments] = await Promise.all([
-    getEmployees(params),
-    getDepartments(),
-  ])
+  const [{ employees, total, today }, departments, onboardingPending] =
+    await Promise.all([
+      getEmployees(params),
+      getDepartments(),
+      getOnboardingPendingCount(),
+    ])
 
   return (
     <div className="flex h-full min-h-0 flex-1 flex-col overflow-hidden">
@@ -38,7 +41,19 @@ export default async function AdminEmployeesPage({
         fill
         title="Employees"
         description="รายชื่อพนักงาน — ค้นหา กรอง และเปิดโปรไฟล์"
-        badge={<CountBadge count={total} label="คน" />}
+        badge={
+          <div className="flex flex-wrap items-center gap-2">
+            <CountBadge count={total} label="คน" />
+            {onboardingPending > 0 ? (
+              <Link
+                href="/admin/employees?status=onboarding"
+                className="rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-medium text-amber-900 hover:bg-amber-200"
+              >
+                รอกำหนดสิทธิ์ {onboardingPending}
+              </Link>
+            ) : null}
+          </div>
+        }
         action={
           readOnly ? null : (
             <Link
