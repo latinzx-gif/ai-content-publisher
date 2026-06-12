@@ -37,7 +37,7 @@ export default async function PortalInboundPage() {
           <Barcode className="mx-auto size-10 text-muted-foreground" />
           <p className="mt-3 text-sm font-medium">ไม่มีใบรับเข้ารอสแกน</p>
           <p className="mt-1 text-sm text-muted-foreground">
-            ติดต่อ HR เมื่อมีสินค้าเข้า — HR สร้างใบแล้วจะโผล่ที่นี่ทันที
+            ติดต่อ Inventory เมื่อมีสินค้าเข้า — สร้างใบแล้วจะโผล่ที่นี่ทันที
           </p>
         </div>
       ) : null}

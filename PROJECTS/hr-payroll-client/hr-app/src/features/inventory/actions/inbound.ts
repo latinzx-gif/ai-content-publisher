@@ -155,7 +155,7 @@ export async function approveInvInboundOrder(
     if (!count) {
       return {
         success: false,
-        error: "ยังไม่มีรายการจากสแกน — รอคลังสแกนก่อนอนุมัติ",
+        error: "ยังไม่มีรายการจากสแกน — รอคลังสแกนก่อน Inventory อนุมัติ",
       }
     }
 

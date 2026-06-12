@@ -77,7 +77,7 @@ export function InventoryPendingInboundWidget({
         <Truck className="mt-0.5 size-4 shrink-0 text-orange-600" aria-hidden />
         <div className="min-w-0 flex-1">
           <MetricHero value={summary.pendingInboundCount} accent="warning" />
-          <p className="mt-1 text-[10px] text-muted-foreground">รอคลังสแกน / HR ตรวจอนุมัติ</p>
+          <p className="mt-1 text-[10px] text-muted-foreground">รอคลังสแกน / Inventory ตรวจอนุมัติ</p>
         </div>
       </div>
       {summary.pendingInboundRows.length === 0 ? (

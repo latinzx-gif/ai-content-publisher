@@ -127,7 +127,7 @@ export default async function InboundOrderDetailPage({ params }: PageProps) {
                   colSpan={editable ? 6 : 5}
                   className="py-8 text-center text-muted-foreground"
                 >
-                  ยังไม่มีรายการ — ให้คลังสแกน LIFF หรือ HR เพิ่มด้านล่าง
+                  ยังไม่มีรายการ — ให้คลังสแกน LIFF หรือ Inventory เพิ่มด้านล่าง
                 </TableCell>
               </TableRow>
             )}
@@ -152,7 +152,7 @@ export default async function InboundOrderDetailPage({ params }: PageProps) {
           >
             LIFF รับเข้า
           </a>
-          {" "}หรือ Portal → คลังสินค้า · HR อนุมัติหลังตรวจรายการครบ
+          {" "}หรือ Portal → คลังสินค้า · Inventory อนุมัติหลังตรวจรายการครบ
         </p>
       ) : null}
     </AdminPageShell>

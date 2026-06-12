@@ -39,7 +39,7 @@ export default async function NewInboundOrderPage() {
   return (
     <AdminPageShell
       title="สร้างใบรับเข้า"
-      description="สร้างใบรับเข้า — คลังสแกนได้ทันที → HR ตรวจแล้วอนุมัติเพิ่มสต็อก"
+      description="สร้างใบรับเข้า — คลังสแกนได้ทันที → Inventory ตรวจแล้วอนุมัติเพิ่มสต็อก"
       action={
         <Link
           href="/admin/inventory/inbound"
