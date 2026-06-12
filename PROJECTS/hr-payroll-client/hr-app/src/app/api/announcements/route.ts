@@ -1,20 +1,13 @@
 import { NextResponse, type NextRequest } from "next/server"
-import type { messagingApi } from "@line/bot-sdk"
 
 import { ANNOUNCEMENT_TARGET_TYPES } from "@/features/announcements/types"
-import {
-  announcementImagePublicUrl,
-  isAllowedAnnouncementImage,
-} from "@/lib/announcements/image"
+import { broadcastAnnouncement } from "@/lib/announcements/broadcast"
+import { isAllowedAnnouncementImage } from "@/lib/announcements/image"
 import { uploadAnnouncementImage } from "@/lib/announcements/upload-image"
 import { getAdminClient } from "@/lib/auth/admin-client"
 import { canManageHr } from "@/lib/auth/roles"
 import { getCurrentEmployee } from "@/lib/auth/session"
-import { announcementBroadcastFlex } from "@/lib/line/flex/announcement-list"
-import { getLineClient } from "@/lib/line/client"
 import { createClient } from "@/lib/supabase/server"
-
-const MULTICAST_LIMIT = 500
 
 type CreatePayload = {
   title: string
@@ -193,75 +186,33 @@ export async function POST(request: NextRequest) {
     }
   }
 
+  let broadcastNote: string | null = null
+
   if (shouldSend) {
     try {
-      await broadcastAnnouncement({
+      const result = await broadcastAnnouncement(getAdminClient(), {
         title,
         body: text,
         targetType,
         targetValue,
         imagePath,
       })
+      if (imagePath && !result.imageSentOnLine) {
+        broadcastNote =
+          "ส่งข้อความ LINE แล้ว — รูปแนบดูได้ที่ Portal (LINE ไม่รองรับไฟล์รูปนี้)"
+      }
     } catch (broadcastError) {
       console.error("announcement broadcast failed:", broadcastError)
-      return NextResponse.json(
-        { error: "broadcast failed", id: row.id },
-        { status: 500 }
-      )
+      await supabase
+        .from("hr_announcements")
+        .update({ status: "draft", sent_at: null })
+        .eq("id", row.id)
+
+      const message =
+        broadcastError instanceof Error ? broadcastError.message : "broadcast failed"
+      return NextResponse.json({ error: message, id: row.id }, { status: 500 })
     }
   }
 
-  return NextResponse.json({ id: row.id, status, imagePath })
-}
-
-export { broadcastAnnouncement }
-
-async function broadcastAnnouncement(options: {
-  title: string
-  body: string
-  targetType: string
-  targetValue: string | null
-  imagePath?: string | null
-}) {
-  const admin = getAdminClient()
-  let query = admin
-    .from("hr_employees")
-    .select("line_user_id")
-    .eq("status", "active")
-    .not("line_user_id", "is", null)
-
-  if (options.targetType === "department" && options.targetValue) {
-    query = query.eq("department", options.targetValue)
-  }
-
-  const { data: rows, error } = await query
-  if (error) throw error
-
-  const targets = (rows ?? []).map((r) => r.line_user_id as string)
-  if (targets.length === 0) return
-
-  const imageUrl = announcementImagePublicUrl(options.imagePath)
-  const messages: messagingApi.Message[] = []
-
-  if (imageUrl) {
-    messages.push({
-      type: "image",
-      originalContentUrl: imageUrl,
-      previewImageUrl: imageUrl,
-    })
-  }
-
-  messages.push(
-    announcementBroadcastFlex({
-      title: options.title,
-      body: options.body,
-      hasImage: Boolean(imageUrl),
-    })
-  )
-
-  const line = getLineClient()
-  for (let i = 0; i < targets.length; i += MULTICAST_LIMIT) {
-    const chunk = targets.slice(i, i + MULTICAST_LIMIT)
-    await line.multicast({ to: chunk, messages })
-  }
+  return NextResponse.json({ id: row.id, status, imagePath, note: broadcastNote })
 }

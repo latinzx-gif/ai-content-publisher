@@ -10,6 +10,7 @@ import {
   ANNOUNCEMENT_IMAGE_MAX_BYTES,
   ANNOUNCEMENT_IMAGE_TYPES,
 } from "@/lib/announcements/image"
+import { prepareAnnouncementImageForLine } from "@/lib/announcements/prepare-line-image"
 
 export function AnnouncementComposeForm({
   departments,
@@ -27,6 +28,7 @@ export function AnnouncementComposeForm({
   const [imagePreview, setImagePreview] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [message, setMessage] = useState<string | null>(null)
 
   useEffect(() => {
     if (!imageFile) {
@@ -43,8 +45,9 @@ export function AnnouncementComposeForm({
     if (fileInputRef.current) fileInputRef.current.value = ""
   }
 
-  function onImageSelected(file: File | null) {
+  async function onImageSelected(file: File | null) {
     setError(null)
+    setMessage(null)
     if (!file) {
       clearImage()
       return
@@ -63,12 +66,21 @@ export function AnnouncementComposeForm({
       clearImage()
       return
     }
-    setImageFile(file)
+    try {
+      const prepared = await prepareAnnouncementImageForLine(file)
+      setImageFile(prepared)
+      if (prepared !== file) {
+        setMessage("ปรับขนาดรูปให้เหมาะกับ LINE แล้ว (สูงสุด 1024px)")
+      }
+    } catch {
+      setImageFile(file)
+    }
   }
 
   async function submit(mode: "send" | "draft" | "schedule") {
     setBusy(true)
     setError(null)
+    setMessage(null)
     try {
       const formData = new FormData()
       formData.append("title", title)
@@ -86,13 +98,17 @@ export function AnnouncementComposeForm({
         method: "POST",
         body: formData,
       })
+      const data = (await res.json().catch(() => null)) as {
+        error?: string
+        note?: string
+      } | null
       if (!res.ok) {
-        const data = (await res.json().catch(() => null)) as { error?: string } | null
         throw new Error(data?.error ?? "บันทึกไม่สำเร็จ")
       }
       setTitle("")
       setBody("")
       clearImage()
+      if (data?.note) setMessage(data.note)
       router.refresh()
     } catch (e) {
       setError(e instanceof Error ? e.message : "บันทึกไม่สำเร็จ")
@@ -205,6 +221,7 @@ export function AnnouncementComposeForm({
           onChange={(e) => setScheduleAt(e.target.value)}
         />
       </div>
+      {message ? <p className="text-sm text-green-600">{message}</p> : null}
       {error ? <p className="text-sm text-destructive">{error}</p> : null}
       <div className="flex flex-wrap gap-2">
         <Button size="sm" disabled={busy} onClick={() => submit("send")}>
