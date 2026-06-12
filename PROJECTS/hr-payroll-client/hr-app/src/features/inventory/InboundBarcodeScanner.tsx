@@ -57,6 +57,55 @@ const BARCODE_DETECTOR_FORMATS = [
   "itf",
 ]
 
+const IMAGE_ROTATIONS = [0, 90, 180, 270] as const
+
+function makeCanvasFromBitmap(
+  bitmap: ImageBitmap,
+  rotation: (typeof IMAGE_ROTATIONS)[number],
+  maxSide = 1800
+): HTMLCanvasElement {
+  const rotated = rotation === 90 || rotation === 270
+  const sourceWidth = rotated ? bitmap.height : bitmap.width
+  const sourceHeight = rotated ? bitmap.width : bitmap.height
+  const scale = Math.min(1, maxSide / Math.max(sourceWidth, sourceHeight))
+  const width = Math.max(1, Math.round(sourceWidth * scale))
+  const height = Math.max(1, Math.round(sourceHeight * scale))
+  const canvas = document.createElement("canvas")
+  canvas.width = width
+  canvas.height = height
+
+  const ctx = canvas.getContext("2d", { willReadFrequently: true })
+  if (!ctx) return canvas
+
+  ctx.fillStyle = "#fff"
+  ctx.fillRect(0, 0, width, height)
+  ctx.save()
+  ctx.translate(width / 2, height / 2)
+  ctx.rotate((rotation * Math.PI) / 180)
+  ctx.drawImage(
+    bitmap,
+    (-bitmap.width * scale) / 2,
+    (-bitmap.height * scale) / 2,
+    bitmap.width * scale,
+    bitmap.height * scale
+  )
+  ctx.restore()
+  return canvas
+}
+
+async function makeImageCandidates(file: File): Promise<HTMLCanvasElement[]> {
+  const bitmap = await createImageBitmap(file, {
+    imageOrientation: "from-image",
+  })
+  try {
+    return IMAGE_ROTATIONS.map((rotation) =>
+      makeCanvasFromBitmap(bitmap, rotation)
+    )
+  } finally {
+    bitmap.close?.()
+  }
+}
+
 /** Native Android/Chrome decoder — far more reliable on still photos than JS */
 async function decodeWithBarcodeDetector(
   file: File
@@ -75,12 +124,73 @@ async function decodeWithBarcodeDetector(
     detector = new Ctor()
   }
 
-  const bitmap = await createImageBitmap(file)
+  const candidates = await makeImageCandidates(file)
+  for (const candidate of candidates) {
+    const results = await detector.detect(candidate)
+    const value = results[0]?.rawValue?.trim()
+    if (value) return value
+  }
+
+  return null
+}
+
+async function decodeWithZxingCanvas(file: File): Promise<string | null> {
+  const [{ BrowserMultiFormatReader }, { BarcodeFormat, DecodeHintType }] =
+    await Promise.all([import("@zxing/browser"), import("@zxing/library")])
+
+  const hints = new Map()
+  hints.set(DecodeHintType.POSSIBLE_FORMATS, [
+    BarcodeFormat.EAN_13,
+    BarcodeFormat.EAN_8,
+    BarcodeFormat.CODE_128,
+    BarcodeFormat.CODE_39,
+    BarcodeFormat.UPC_A,
+    BarcodeFormat.UPC_E,
+    BarcodeFormat.QR_CODE,
+    BarcodeFormat.ITF,
+  ])
+  hints.set(DecodeHintType.TRY_HARDER, true)
+
+  const reader = new BrowserMultiFormatReader(hints)
+  const candidates = await makeImageCandidates(file)
+  for (const candidate of candidates) {
+    try {
+      const result = reader.decodeFromCanvas(candidate)
+      const value = result.getText().trim()
+      if (value) return value
+    } catch {
+      // try next candidate
+    }
+  }
+
+  return null
+}
+
+/** ZXing fallback — strong for 1D barcodes from still photos */
+async function decodeWithZxing(file: File): Promise<string | null> {
+  const [{ BrowserMultiFormatReader }, { BarcodeFormat, DecodeHintType }] =
+    await Promise.all([import("@zxing/browser"), import("@zxing/library")])
+
+  const hints = new Map()
+  hints.set(DecodeHintType.POSSIBLE_FORMATS, [
+    BarcodeFormat.EAN_13,
+    BarcodeFormat.EAN_8,
+    BarcodeFormat.CODE_128,
+    BarcodeFormat.CODE_39,
+    BarcodeFormat.UPC_A,
+    BarcodeFormat.UPC_E,
+    BarcodeFormat.QR_CODE,
+    BarcodeFormat.ITF,
+  ])
+  hints.set(DecodeHintType.TRY_HARDER, true)
+
+  const reader = new BrowserMultiFormatReader(hints)
+  const url = URL.createObjectURL(file)
   try {
-    const results = await detector.detect(bitmap)
-    return results[0]?.rawValue?.trim() || null
+    const result = await reader.decodeFromImageUrl(url)
+    return result.getText().trim() || null
   } finally {
-    bitmap.close?.()
+    URL.revokeObjectURL(url)
   }
 }
 
@@ -266,7 +376,25 @@ export function InboundBarcodeScanner({
         value = null
       }
 
-      // 2) Fallback to html5-qrcode scanFile
+      // 2) ZXing canvas fallback — retries EXIF orientation + rotations
+      if (!value) {
+        try {
+          value = await decodeWithZxingCanvas(file)
+        } catch {
+          value = null
+        }
+      }
+
+      // 3) ZXing image-url fallback
+      if (!value) {
+        try {
+          value = await decodeWithZxing(file)
+        } catch {
+          value = null
+        }
+      }
+
+      // 4) Final fallback to html5-qrcode scanFile
       if (!value) {
         const scanner =
           fileScannerRef.current ??
