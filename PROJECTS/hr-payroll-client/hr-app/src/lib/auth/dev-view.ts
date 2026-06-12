@@ -2,7 +2,10 @@ import {
   ADMIN_NAV_ITEMS,
   type AdminNavItem,
 } from "@/components/admin/admin-nav"
-import { BRANCH_NAV_ITEMS } from "@/components/admin/branch-nav"
+import {
+  BRANCH_NAV_ITEMS,
+  BRANCH_SECTION_ITEMS,
+} from "@/components/admin/branch-nav"
 import { CEO_NAV_ITEMS } from "@/components/admin/ceo-nav"
 import { isBranchNavActive } from "@/components/admin/branch-nav"
 import { isAdminNavActive } from "@/components/admin/admin-nav"
@@ -38,9 +41,10 @@ export const DEV_ALL_NAV_ITEMS: AdminNavItem[] = [
       item.href !== "/admin/ceo" &&
       !ADMIN_NAV_ITEMS.some((h) => h.href === item.href)
   ).map((item) => ({ ...item, label: `[CEO] ${item.label}` })),
-  ...BRANCH_NAV_ITEMS.filter((item) => item.href !== "/admin/branch").map(
-    (item) => ({ ...item, label: `[BM] ${item.label}` })
-  ),
+  ...BRANCH_SECTION_ITEMS.map((item) => ({
+    ...item,
+    label: `[BM] ${item.label}`,
+  })),
 ]
 
 export function parseDevViewAs(value: string | undefined): DevViewAs {

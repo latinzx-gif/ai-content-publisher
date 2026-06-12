@@ -69,9 +69,6 @@ export type BranchNavAlertCounts = {
 export function buildBranchNavBadges(counts: BranchNavAlertCounts): NavAlertBadgeMap {
   const badges: NavAlertBadgeMap = {}
   if (counts.total > 0) badges["/admin/branch"] = counts.total
-  if (counts.attendance > 0) badges["/admin/branch/attendance"] = counts.attendance
-  if (counts.leaves > 0) badges["/admin/branch/leaves"] = counts.leaves
-  if (counts.overtime > 0) badges["/admin/branch/overtime"] = counts.overtime
   return badges
 }
 

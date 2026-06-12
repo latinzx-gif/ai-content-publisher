@@ -4,13 +4,17 @@ import {
 } from "@/components/admin/admin-nav"
 import { CEO_NAV_ITEMS } from "@/components/admin/ceo-nav"
 
-/** Sidebar สำหรับ Branch Manager — อนุมัติผ่านเว็บเท่านั้น */
-export const BRANCH_NAV_ITEMS: AdminNavItem[] = [
-  { label: "Dashboard", href: "/admin/branch", icon: "layout-dashboard" },
+/** Branch section routes — hub links only, not in BM left sidebar */
+export const BRANCH_SECTION_ITEMS: AdminNavItem[] = [
   { label: "Employees", href: "/admin/branch/team", icon: "users" },
   { label: "Attendance", href: "/admin/branch/attendance", icon: "clock" },
   { label: "Leave Management", href: "/admin/branch/leaves", icon: "calendar" },
   { label: "Approve OT", href: "/admin/branch/overtime", icon: "timer" },
+]
+
+/** Sidebar สำหรับ Branch Manager — hub only; tools อยู่ใน /admin/branch */
+export const BRANCH_NAV_ITEMS: AdminNavItem[] = [
+  { label: "Dashboard", href: "/admin/branch", icon: "layout-dashboard" },
 ]
 
 export function getNavItemsForRole(
@@ -23,17 +27,11 @@ export function getNavItemsForRole(
 
 export function withBranchPendingBadges(
   items: AdminNavItem[],
-  counts: { attendance: number; leaves: number; total: number }
+  counts: { total: number }
 ): AdminNavItem[] {
   return items.map((item) => {
     if (item.href === "/admin/branch") {
       return counts.total > 0 ? { ...item, badge: counts.total } : item
-    }
-    if (item.href === "/admin/branch/attendance") {
-      return counts.attendance > 0 ? { ...item, badge: counts.attendance } : item
-    }
-    if (item.href === "/admin/branch/leaves") {
-      return counts.leaves > 0 ? { ...item, badge: counts.leaves } : item
     }
     return item
   })
