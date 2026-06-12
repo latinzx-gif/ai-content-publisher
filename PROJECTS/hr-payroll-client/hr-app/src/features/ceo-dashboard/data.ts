@@ -1,6 +1,8 @@
+import { ictLocalToUtc } from "@/lib/attendance/ict-datetime"
 import { ictDayRangeUtc } from "@/lib/attendance/late"
 import { ictToday } from "@/features/employees/data"
 import { LEAVE_TYPE_LABELS, type LeaveType } from "@/features/leave/types"
+import { formatThaiDate, formatThaiMonthYear } from "@/lib/datetime/thailand"
 import { createClient } from "@/lib/supabase/server"
 
 const DAY_MS = 86_400_000
@@ -103,9 +105,8 @@ export async function getCeoDashboardData(): Promise<CeoDashboardData> {
   const prevMonth = month === 1 ? 12 : month - 1
   const prevYear = month === 1 ? year - 1 : year
 
-  const payrollPeriodLabel = new Date(year, month - 1, 1).toLocaleDateString(
-    "en-US",
-    { month: "long", year: "numeric" }
+  const payrollPeriodLabel = formatThaiMonthYear(
+    ictLocalToUtc(`${year}-${String(month).padStart(2, "0")}-01`, "12:00")
   )
 
   const [
@@ -409,7 +410,7 @@ export async function getCeoDashboardData(): Promise<CeoDashboardData> {
   for (const c of recentComplaintsRes.data ?? []) {
     recentActivity.push({
       text: `New complaint: ${(c.subject as string) ?? "—"}`,
-      time: new Date(c.created_at as string).toLocaleDateString("th-TH"),
+      time: formatThaiDate(c.created_at as string),
       kind: "complaint",
     })
   }
@@ -417,7 +418,7 @@ export async function getCeoDashboardData(): Promise<CeoDashboardData> {
     recentActivity.push({
       text: `Announcement: ${a.title as string}`,
       time: a.sent_at
-        ? new Date(a.sent_at as string).toLocaleDateString("th-TH")
+        ? formatThaiDate(a.sent_at as string)
         : "—",
       kind: "announcement",
     })
@@ -468,7 +469,7 @@ export async function getCeoDashboardData(): Promise<CeoDashboardData> {
     recentAnnouncements: (annRes.data ?? []).map((a) => ({
       title: a.title as string,
       date: a.sent_at
-        ? new Date(a.sent_at as string).toLocaleDateString("th-TH")
+        ? formatThaiDate(a.sent_at as string)
         : "—",
     })),
     recentActivity: recentActivity.slice(0, 6),

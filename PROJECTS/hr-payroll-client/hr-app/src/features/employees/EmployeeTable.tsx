@@ -1,4 +1,5 @@
 import Link from "next/link"
+import { FileText, MoreVertical } from "lucide-react"
 
 import { EmployeeAvatar } from "@/components/brand/EmployeeAvatar"
 import { StatusPill } from "@/components/brand/StatusPill"
@@ -11,50 +12,39 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import type { EmployeeRow } from "@/features/employees/data"
+import { formatThaiSlashDate } from "@/lib/datetime/thailand"
 import { cn } from "@/lib/utils"
 
-const STATUS_LABEL: Record<EmployeeRow["displayStatus"], string> = {
-  active: "Active",
-  probation: "Probation",
-  inactive: "Inactive",
-  onboarding: "รอกำหนดสาขา",
-  pending_approval: "รออนุมัติ",
+const BRANCH_PILL_VARIANTS = [
+  "bg-emerald-100 text-emerald-800",
+  "bg-sky-100 text-sky-800",
+  "bg-violet-100 text-violet-800",
+  "bg-amber-100 text-amber-800",
+  "bg-rose-100 text-rose-800",
+] as const
+
+function displayEmployeeCode(e: EmployeeRow): string {
+  return e.employee_code?.trim() || e.id.slice(0, 8).toUpperCase()
 }
 
-const STATUS_VARIANT: Record<
-  EmployeeRow["displayStatus"],
-  "approved" | "pending" | "neutral"
-> = {
-  active: "approved",
-  probation: "pending",
-  inactive: "neutral",
-  onboarding: "pending",
-  pending_approval: "pending",
+function branchPillClass(name: string): string {
+  let hash = 0
+  for (let i = 0; i < name.length; i += 1) {
+    hash = (hash + name.charCodeAt(i)) % BRANCH_PILL_VARIANTS.length
+  }
+  return BRANCH_PILL_VARIANTS[hash] ?? BRANCH_PILL_VARIANTS[0]
 }
 
-function formatDate(value: string | null): string {
-  if (!value) return "—"
-  return new Date(`${value}T00:00:00`).toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  })
-}
-
-function visaClass(visaExpiry: string | null, today: string): string {
-  if (!visaExpiry) return ""
-  const days =
-    (new Date(visaExpiry).getTime() - new Date(today).getTime()) / 86_400_000
-  return days < 30 ? "text-brand-red font-medium" : ""
+function formatSalary(value: number | null): string {
+  if (value == null || Number.isNaN(value)) return "—"
+  return value.toLocaleString("th-TH")
 }
 
 export function EmployeeTable({
   employees,
-  today,
   scrollable = false,
 }: {
   employees: EmployeeRow[]
-  today: string
   scrollable?: boolean
 }) {
   if (employees.length === 0) {
@@ -75,49 +65,93 @@ export function EmployeeTable({
       <Table>
         <TableHeader className="sticky top-0 z-10 bg-card">
           <TableRow>
+            <TableHead className="w-[100px]">รหัสพนักงาน</TableHead>
+            <TableHead>ชื่อ-นามสกุล</TableHead>
+            <TableHead>ตำแหน่ง</TableHead>
+            <TableHead>สาขา</TableHead>
+            <TableHead className="text-right">เงินเดือน</TableHead>
+            <TableHead>วันเริ่มงาน</TableHead>
+            <TableHead>สัญญาจ้าง</TableHead>
             <TableHead className="w-12" />
-            <TableHead>Employee</TableHead>
-            <TableHead>Department</TableHead>
-            <TableHead>Position</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead>Joined</TableHead>
-            <TableHead>Visa Expiry</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {employees.map((e) => (
             <TableRow key={e.id} className="hover:bg-muted/30">
-              <TableCell>
-                <EmployeeAvatar name={e.name} size="sm" />
+              <TableCell className="text-sm font-medium tabular-nums text-muted-foreground">
+                {displayEmployeeCode(e)}
               </TableCell>
               <TableCell>
-                <div className="min-w-0">
+                <div className="flex min-w-0 items-center gap-3">
+                  <EmployeeAvatar name={e.name} imageUrl={e.avatarUrl} size="sm" />
                   <Link
                     href={`/admin/employees/${e.id}`}
-                    className="font-medium text-brand-red underline-offset-4 hover:underline"
+                    className="min-w-0 font-medium text-foreground underline-offset-4 hover:text-brand-red hover:underline"
                   >
                     {e.name}
                   </Link>
-                  <p className="text-[11px] text-muted-foreground">
-                    ID {e.id.slice(0, 8).toUpperCase()}
-                  </p>
                 </div>
               </TableCell>
-              <TableCell className="text-sm">{e.department ?? "—"}</TableCell>
               <TableCell className="text-sm">{e.position ?? "—"}</TableCell>
               <TableCell>
-                <StatusPill
-                  label={STATUS_LABEL[e.displayStatus]}
-                  variant={STATUS_VARIANT[e.displayStatus]}
-                />
+                {e.branch_name ? (
+                  <span
+                    className={cn(
+                      "inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium",
+                      branchPillClass(e.branch_name)
+                    )}
+                  >
+                    {e.branch_name}
+                  </span>
+                ) : e.displayStatus === "onboarding" ||
+                  e.displayStatus === "pending_approval" ? (
+                  <StatusPill label="รอกำหนดสาขา" variant="pending" />
+                ) : (
+                  "—"
+                )}
+              </TableCell>
+              <TableCell className="text-right text-sm tabular-nums">
+                {formatSalary(e.salary)}
               </TableCell>
               <TableCell className="text-sm tabular-nums">
-                {formatDate(e.contract_start)}
+                {formatThaiSlashDate(e.contract_start)}
               </TableCell>
-              <TableCell
-                className={cn("text-sm tabular-nums", visaClass(e.visa_expiry, today))}
-              >
-                {formatDate(e.visa_expiry)}
+              <TableCell>
+                {e.contract_file_path ? (
+                  <a
+                    href={`/api/employees/${e.id}/contract`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 text-sm text-brand-red hover:underline"
+                  >
+                    <FileText className="size-4 shrink-0" aria-hidden />
+                    <span>
+                      สัญญาจ้าง
+                      {e.contract_start
+                        ? ` (${formatThaiSlashDate(e.contract_start)})`
+                        : ""}
+                    </span>
+                  </a>
+                ) : e.contract_start ? (
+                  <Link
+                    href={`/admin/employees/${e.id}`}
+                    className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground hover:underline"
+                  >
+                    <FileText className="size-4 shrink-0" aria-hidden />
+                    <span>แนบสัญญา ({formatThaiSlashDate(e.contract_start)})</span>
+                  </Link>
+                ) : (
+                  <span className="text-sm text-muted-foreground">—</span>
+                )}
+              </TableCell>
+              <TableCell>
+                <Link
+                  href={`/admin/employees/${e.id}`}
+                  className="inline-flex size-8 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground"
+                  aria-label={`เปิดโปรไฟล์ ${e.name}`}
+                >
+                  <MoreVertical className="size-4" />
+                </Link>
               </TableCell>
             </TableRow>
           ))}

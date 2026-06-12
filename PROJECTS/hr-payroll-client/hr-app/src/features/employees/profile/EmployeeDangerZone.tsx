@@ -6,6 +6,7 @@ import { useState } from "react"
 
 import { StatusPill } from "@/components/brand/StatusPill"
 import { Button } from "@/components/ui/button"
+import { formatThaiDateTime } from "@/lib/datetime/thailand"
 import type { EmployeeProfile } from "@/features/employees/profile/data"
 
 export function EmployeeDangerZone({ profile }: { profile: EmployeeProfile }) {
@@ -107,7 +108,7 @@ export function EmployeeDangerZone({ profile }: { profile: EmployeeProfile }) {
             <StatusPill label="Leave Blacklist" variant="rejected" />
             {profile.leave_blacklisted_at ? (
               <span className="text-xs text-muted-foreground">
-                {new Date(profile.leave_blacklisted_at).toLocaleString("th-TH")}
+                {formatThaiDateTime(profile.leave_blacklisted_at)}
               </span>
             ) : null}
           </div>

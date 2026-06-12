@@ -31,6 +31,7 @@ export default async function PortalLayout({
         name: employee.name,
         role: employee.role,
         position: employee.position,
+        avatarUrl: employee.avatarUrl,
       }}
     >
       {children}

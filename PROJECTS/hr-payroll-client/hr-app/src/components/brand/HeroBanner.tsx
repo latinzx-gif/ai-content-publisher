@@ -1,14 +1,4 @@
-function formatIctDate(now = new Date()): string {
-  const ICT_OFFSET_MS = 7 * 60 * 60 * 1000
-  const ict = new Date(now.getTime() + ICT_OFFSET_MS)
-  return ict.toLocaleDateString("en-US", {
-    weekday: "long",
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-    timeZone: "UTC",
-  })
-}
+import { formatThaiLongDate } from "@/lib/datetime/thailand"
 
 export function HeroBanner({
   title,
@@ -65,7 +55,7 @@ export function HeroBanner({
             : "shrink-0 text-sm text-muted-foreground sm:text-right"
         }
       >
-        Today is {formatIctDate()}
+        วันนี้ {formatThaiLongDate()}
       </p>
     </div>
   )

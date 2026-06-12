@@ -1,7 +1,7 @@
 import type { AdminNavItem } from "@/components/admin/admin-nav-types"
 import { PortalHeader } from "@/components/portal/PortalHeader"
 import { PortalSidebar } from "@/components/portal/PortalSidebar"
-import type { Employee } from "@/lib/auth/session"
+import type { EmployeeUserChip } from "@/lib/auth/session"
 
 export function PortalShell({
   children,
@@ -9,7 +9,7 @@ export function PortalShell({
   navItems,
 }: {
   children: React.ReactNode
-  user: Pick<Employee, "name" | "role" | "position">
+  user: EmployeeUserChip
   navItems: AdminNavItem[]
 }) {
   return (

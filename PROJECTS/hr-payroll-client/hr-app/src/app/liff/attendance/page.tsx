@@ -3,6 +3,7 @@
 import { useState } from "react"
 
 import { Button } from "@/components/ui/button"
+import { formatThaiDateTime } from "@/lib/datetime/thailand"
 import {
   Card,
   CardContent,
@@ -29,7 +30,7 @@ export default function AttendanceSubmitLiffPage() {
       if (!res.ok) throw new Error(data?.error ?? "ยื่นไม่สำเร็จ")
       setMessage(
         data?.expiresAt
-          ? `ยื่นสรุปวันแล้ว — หมดเขตอนุมัติ ${new Date(data.expiresAt).toLocaleString("th-TH")}`
+          ? `ยื่นสรุปวันแล้ว — หมดเขตอนุมัติ ${formatThaiDateTime(data.expiresAt)}`
           : "ยื่นสรุปวันแล้ว"
       )
     } catch (e) {

@@ -4,6 +4,7 @@ import { CalendarDays, Clock, Timer, Users } from "lucide-react"
 import { KpiCard } from "@/components/brand/KpiCard"
 import { LEAVE_TYPE_LABELS, type LeaveType } from "@/features/leave/types"
 import { ApprovalQueue } from "@/features/manager/ApprovalQueue"
+import { formatThaiDateTime } from "@/lib/datetime/thailand"
 
 export function BranchDashboard({
   branchName,
@@ -71,7 +72,7 @@ export function BranchDashboard({
             return {
               id: r.id as string,
               label: (emp as { name: string })?.name ?? "—",
-              meta: `${r.work_date} · ยื่น ${new Date(r.submitted_at as string).toLocaleString("th-TH")}`,
+              meta: `${r.work_date} · ยื่น ${formatThaiDateTime(r.submitted_at as string)}`,
               decidePath: `/api/attendance/submissions/${r.id}/decide`,
             }
           })}

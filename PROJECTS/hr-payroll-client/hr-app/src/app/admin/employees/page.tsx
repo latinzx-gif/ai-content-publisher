@@ -28,7 +28,7 @@ export default async function AdminEmployeesPage({
     normalizeParams(await searchParams),
   ])
   const readOnly = employee ? isCeo(employee.role) && !isDev(employee.role) : false
-  const [{ employees, total, today }, departments, onboardingPending] =
+  const [{ employees, total }, departments, onboardingPending] =
     await Promise.all([
       getEmployees(params),
       getDepartments(),
@@ -39,8 +39,8 @@ export default async function AdminEmployeesPage({
     <div className="flex h-full min-h-0 flex-1 flex-col overflow-hidden">
       <AdminPageShell
         fill
-        title="Employees"
-        description="รายชื่อพนักงาน — ค้นหา กรอง และเปิดโปรไฟล์"
+        title="รายชื่อพนักงาน"
+        description="ค้นหา กรอง และเปิดโปรไฟล์พนักงาน"
         badge={
           <div className="flex flex-wrap items-center gap-2">
             <CountBadge count={total} label="คน" />
@@ -72,7 +72,7 @@ export default async function AdminEmployeesPage({
         <div className="flex h-full min-h-0 flex-col gap-3 overflow-hidden">
           <EmployeeFilters departments={departments} />
           <div className="min-h-0 flex-1 overflow-hidden">
-            <EmployeeTable employees={employees} today={today} scrollable />
+            <EmployeeTable employees={employees} scrollable />
           </div>
           <EmployeePagination
             page={params.page}

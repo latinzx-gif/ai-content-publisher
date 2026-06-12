@@ -18,6 +18,7 @@ import {
   type NotificationItem,
   type NotificationKind,
 } from "@/features/notifications/types"
+import { formatThaiDate } from "@/lib/datetime/thailand"
 import { cn } from "@/lib/utils"
 
 const KIND_META: Record<
@@ -38,13 +39,13 @@ const KIND_META: Record<
 
 function formatWhen(iso: string | null): string {
   if (!iso) return ""
-  const d = new Date(iso)
-  if (Number.isNaN(d.getTime())) return iso.slice(0, 10)
-  return d.toLocaleDateString("th-TH", {
+  if (Number.isNaN(new Date(iso).getTime())) return iso.slice(0, 10)
+  return formatThaiDate(iso, {
     day: "numeric",
     month: "short",
-    hour: iso.includes("T") ? "2-digit" : undefined,
-    minute: iso.includes("T") ? "2-digit" : undefined,
+    ...(iso.includes("T")
+      ? { hour: "2-digit" as const, minute: "2-digit" as const }
+      : {}),
   })
 }
 

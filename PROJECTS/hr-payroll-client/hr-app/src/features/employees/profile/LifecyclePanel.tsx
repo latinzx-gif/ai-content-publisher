@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation"
 import { useState } from "react"
 
 import { Button } from "@/components/ui/button"
+import { formatThaiDateTime } from "@/lib/datetime/thailand"
 import type { EmployeeProfile } from "@/features/employees/profile/data"
 
 type Note = {
@@ -165,7 +166,7 @@ export function LifecyclePanel({
                 <span className="font-medium">{n.category}</span>
                 <span className="text-muted-foreground">
                   {" "}
-                  · {new Date(n.created_at).toLocaleString("th-TH")}
+                  · {formatThaiDateTime(n.created_at)}
                 </span>
                 <p className="mt-1">{n.note}</p>
               </li>

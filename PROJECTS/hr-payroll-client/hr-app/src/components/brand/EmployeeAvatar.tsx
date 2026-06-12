@@ -12,10 +12,12 @@ function initialsFromName(name: string): string {
 
 export function EmployeeAvatar({
   name,
+  imageUrl,
   size = "md",
   className,
 }: {
   name: string
+  imageUrl?: string | null
   size?: "sm" | "md" | "lg"
   className?: string
 }) {
@@ -28,18 +30,22 @@ export function EmployeeAvatar({
   return (
     <span
       className={cn(
-        "relative inline-flex shrink-0 items-center justify-center overflow-hidden rounded-full border-2 border-white/30 bg-muted font-semibold text-muted-foreground",
+        "relative inline-flex shrink-0 items-center justify-center overflow-hidden rounded-full border-2 border-white/30 bg-brand-red/10 font-semibold text-brand-red",
         sizes[size],
         className
       )}
     >
-      <Image
-        src="/brand/mascot-hd.png"
-        alt=""
-        fill
-        className="object-contain p-0.5"
-      />
-      <span className="sr-only">{initialsFromName(name)}</span>
+      {imageUrl ? (
+        <Image
+          src={imageUrl}
+          alt={name}
+          fill
+          unoptimized
+          className="object-cover"
+        />
+      ) : (
+        <span aria-hidden>{initialsFromName(name)}</span>
+      )}
     </span>
   )
 }

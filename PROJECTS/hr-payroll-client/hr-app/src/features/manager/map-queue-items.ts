@@ -1,4 +1,5 @@
 import { LEAVE_TYPE_LABELS, type LeaveType } from "@/features/leave/types"
+import { formatThaiDateTime } from "@/lib/datetime/thailand"
 
 export function mapAttendanceQueueItems(
   rows: Array<Record<string, unknown>>
@@ -8,7 +9,7 @@ export function mapAttendanceQueueItems(
     return {
       id: r.id as string,
       label: (emp as { name: string })?.name ?? "—",
-      meta: `${r.work_date} · ยื่น ${new Date(r.submitted_at as string).toLocaleString("th-TH")}`,
+      meta: `${r.work_date} · ยื่น ${formatThaiDateTime(r.submitted_at as string)}`,
       decidePath: `/api/attendance/submissions/${r.id}/decide`,
     }
   })

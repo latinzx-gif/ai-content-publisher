@@ -10,6 +10,7 @@ import type {
   NotificationKind,
 } from "@/features/notifications/types"
 import { NOTIFICATION_LIST_LIMIT } from "@/features/notifications/types"
+import { BRANCH_VIA_EMPLOYEE } from "@/lib/supabase/branch-embeds"
 import {
   buildBranchNavBadges,
   buildHrNavBadges,
@@ -169,7 +170,7 @@ async function hrApprovalNotifications(): Promise<{
     supabase
       .from("hr_employees")
       .select(
-        "id, employee_code, name, phone, status, branch_id, created_at, hr_branches(name)"
+        `id, employee_code, name, phone, status, branch_id, created_at, ${BRANCH_VIA_EMPLOYEE}(name)`
       )
       .or(ONBOARDING_PENDING_OR_FILTER)
       .order("created_at", { ascending: false })

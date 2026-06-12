@@ -1,8 +1,11 @@
 import Link from "next/link"
 
 import { AddEmployeeForm } from "@/features/employees/AddEmployeeForm"
+import { getOrganizationMasterData } from "@/features/organization/master-data"
 
-export default function NewEmployeePage() {
+export default async function NewEmployeePage() {
+  const organization = await getOrganizationMasterData()
+
   return (
     <div className="flex h-full min-h-0 flex-1 flex-col gap-2 overflow-hidden">
       <p className="shrink-0 text-sm">
@@ -11,7 +14,10 @@ export default function NewEmployeePage() {
         </Link>
       </p>
       <div className="min-h-0 flex-1 overflow-y-auto pr-1">
-        <AddEmployeeForm />
+        <AddEmployeeForm
+          departments={organization.departments}
+          positions={organization.positions}
+        />
       </div>
     </div>
   )

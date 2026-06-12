@@ -53,14 +53,6 @@ function buildMessages(options: AnnouncementBroadcastOptions, includeImage: bool
   const imageUrl = includeImage ? announcementImagePublicUrl(options.imagePath) : null
   const messages: messagingApi.Message[] = []
 
-  if (imageUrl) {
-    messages.push({
-      type: "image",
-      originalContentUrl: imageUrl,
-      previewImageUrl: imageUrl,
-    })
-  }
-
   messages.push(
     announcementBroadcastFlex({
       title: options.title,
@@ -68,6 +60,14 @@ function buildMessages(options: AnnouncementBroadcastOptions, includeImage: bool
       hasImage: Boolean(imageUrl),
     })
   )
+
+  if (imageUrl) {
+    messages.push({
+      type: "image",
+      originalContentUrl: imageUrl,
+      previewImageUrl: imageUrl,
+    })
+  }
 
   return messages
 }

@@ -3,14 +3,10 @@ import Image from "next/image"
 import { AdminPageShell } from "@/components/brand/AdminPageShell"
 import { getEmployeeAnnouncements } from "@/features/portal/data"
 import { getCurrentEmployee } from "@/lib/auth/session"
+import { formatThaiDate } from "@/lib/datetime/thailand"
 
 function formatSentAt(iso: string | null): string {
-  if (!iso) return "—"
-  return new Date(iso).toLocaleDateString("th-TH", {
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-  })
+  return formatThaiDate(iso, { day: "numeric", month: "long", year: "numeric" })
 }
 
 export default async function PortalAnnouncementsPage() {

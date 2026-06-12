@@ -133,10 +133,22 @@ type SimpleBubbleOptions = {
   footerNote?: string
   button?: { label: string; uri: string }
   postbackButton?: { label: string; data: string }
+  /** Wider bubble + roomier body text (announcements). */
+  wide?: boolean
 }
 
-function textLine(text: string): messagingApi.FlexComponent {
-  return { type: "text", text, wrap: true, size: "sm", color: "#333333" }
+function textLine(
+  text: string,
+  size: messagingApi.FlexText["size"] = "sm"
+): messagingApi.FlexComponent {
+  return {
+    type: "text",
+    text,
+    wrap: true,
+    size,
+    color: "#333333",
+    align: "start",
+  }
 }
 
 function kvRow({ label, value, valueColor }: BubbleRow): messagingApi.FlexComponent {
@@ -168,9 +180,11 @@ export function simpleBubble({
   footerNote,
   button,
   postbackButton,
+  wide = false,
 }: SimpleBubbleOptions): messagingApi.FlexBubble {
+  const lineSize: messagingApi.FlexText["size"] = wide ? "md" : "sm"
   const bodyContents: messagingApi.FlexComponent[] = [
-    ...(lines ?? []).map(textLine),
+    ...(lines ?? []).map((line) => textLine(line, lineSize)),
     ...(rows ?? []).map(kvRow),
   ]
 
@@ -190,22 +204,24 @@ export function simpleBubble({
 
   const bubble: messagingApi.FlexBubble = {
     type: "bubble",
+    ...(wide ? { size: "giga" as const } : {}),
     header: {
       type: "box",
       layout: "vertical",
       backgroundColor: accentColor,
-      paddingAll: "16px",
+      paddingAll: wide ? "14px" : "16px",
       contents: [
         {
           type: "text",
           text: title,
           weight: "bold",
-          size: "lg",
+          size: wide ? "xl" : "lg",
           color: "#FFFFFF",
+          wrap: true,
         },
       ],
     },
-    body: cardBody(bodyContents),
+    body: cardBody(bodyContents, wide ? "12px" : "16px"),
   }
 
   if (button || postbackButton) {

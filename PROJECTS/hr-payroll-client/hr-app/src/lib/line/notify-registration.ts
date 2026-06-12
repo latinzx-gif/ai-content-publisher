@@ -1,4 +1,5 @@
 import { getAdminClient } from "@/lib/auth/admin-client"
+import { BRANCH_VIA_EMPLOYEE } from "@/lib/supabase/branch-embeds"
 import { registrationPendingFlex } from "@/lib/line/flex/registration-pending"
 import { notifyHr, pushToLineUser } from "@/lib/line/notify-hr"
 
@@ -15,7 +16,7 @@ export async function notifyRegistrationPending(
     const { data: employee, error } = await admin
       .from("hr_employees")
       .select(
-        "id, employee_code, name, phone, department, position, branch_id, hr_branches(name)"
+        `id, employee_code, name, phone, department, position, branch_id, ${BRANCH_VIA_EMPLOYEE}(name)`
       )
       .eq("id", employeeId)
       .maybeSingle()

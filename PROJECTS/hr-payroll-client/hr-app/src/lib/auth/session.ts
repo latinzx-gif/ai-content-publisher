@@ -1,3 +1,4 @@
+import { employeeAvatarPublicUrl } from "@/lib/employees/avatar"
 import { createClient } from "@/lib/supabase/server"
 
 export type Employee = {
@@ -8,7 +9,14 @@ export type Employee = {
   department: string | null
   role: "employee" | "hr" | "admin" | "branch_manager" | "ceo" | "dev"
   status: "active" | "inactive"
+  avatar_path: string | null
+  avatarUrl: string | null
 }
+
+export type EmployeeUserChip = Pick<
+  Employee,
+  "name" | "role" | "position" | "avatarUrl"
+>
 
 // Reads the caller's own hr_employees row through their session client —
 // RLS self-select via the line_user_id JWT claim. Returns null when not
@@ -30,9 +38,24 @@ export async function getCurrentEmployee(): Promise<Employee | null> {
 
   const { data } = await supabase
     .from("hr_employees")
-    .select("id, line_user_id, name, position, department, role, status")
+    .select(
+      "id, line_user_id, name, position, department, role, status, avatar_path"
+    )
     .eq("line_user_id", lineUserId)
     .maybeSingle()
 
-  return (data as Employee | null) ?? null
+  if (!data) return null
+
+  const avatar_path = (data.avatar_path as string | null) ?? null
+  return {
+    id: data.id as string,
+    line_user_id: data.line_user_id as string | null,
+    name: data.name as string,
+    position: (data.position as string | null) ?? null,
+    department: (data.department as string | null) ?? null,
+    role: data.role as Employee["role"],
+    status: data.status as Employee["status"],
+    avatar_path,
+    avatarUrl: employeeAvatarPublicUrl(avatar_path),
+  }
 }

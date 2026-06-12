@@ -15,6 +15,8 @@ import type {
   OrgPosition,
 } from "@/features/organization/master-data"
 import type { ContractType, EmployeeProfile } from "@/features/employees/profile/data"
+import { EmployeeAvatarUpload } from "@/features/employees/profile/EmployeeAvatarUpload"
+import { EmployeeContractUpload } from "@/features/employees/profile/EmployeeContractUpload"
 import { PendingRegistrationApproval } from "@/features/employees/profile/PendingRegistrationApproval"
 import {
   PAYMENT_METHOD_OPTIONS,
@@ -275,6 +277,11 @@ export function EmployeeProfileForm({
       <div className="grid gap-4 lg:grid-cols-2">
         <WidgetCard title="ข้อมูลส่วนตัว">
           <div className="flex flex-col gap-3">
+            <EmployeeAvatarUpload
+              employeeId={profile.id}
+              name={form.name.trim() || profile.name}
+              avatarPath={profile.avatar_path}
+            />
             <Field label="ชื่อ-นามสกุล">
               <input
                 className={inputClassName}
@@ -492,6 +499,11 @@ export function EmployeeProfileForm({
                 <option value="inactive">Inactive</option>
               </select>
             </Field>
+            <EmployeeContractUpload
+              employeeId={profile.id}
+              contractFileName={profile.contract_file_name}
+              contractUploadedAt={profile.contract_uploaded_at}
+            />
           </div>
         </WidgetCard>
 

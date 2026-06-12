@@ -32,6 +32,7 @@ import { AttendanceTrendBars } from "@/features/dashboard/AttendanceTrendBars"
 import { OnboardingDonut } from "@/features/dashboard/OnboardingDonut"
 import { RecruitmentDonut } from "@/features/dashboard/RecruitmentDonut"
 import { getDashboardWidgets } from "@/features/dashboard/widgets-data"
+import { formatThaiMonthYear } from "@/lib/datetime/thailand"
 
 const QUICK_ACTIONS: Array<{
   label: string
@@ -64,10 +65,7 @@ export async function HrAdminDashboard({ userName }: { userName: string }) {
     getDashboardWidgets(),
   ])
 
-  const payrollMonthLabel = new Date().toLocaleDateString("en-US", {
-    month: "long",
-    year: "numeric",
-  })
+  const payrollMonthLabel = formatThaiMonthYear()
 
   return (
     <div className="flex h-full min-h-0 flex-col gap-2 overflow-hidden md:gap-3 [@media(max-height:800px)]:gap-1.5">

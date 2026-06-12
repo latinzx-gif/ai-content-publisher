@@ -3,6 +3,7 @@ import { ictToday } from "@/features/employees/data"
 import { LEAVE_TYPE_LABELS, type LeaveType } from "@/features/leave/types"
 import { getManagedBranchId } from "@/lib/auth/branch"
 import type { Employee } from "@/lib/auth/session"
+import { formatThaiDate } from "@/lib/datetime/thailand"
 import { createClient } from "@/lib/supabase/server"
 
 import {
@@ -303,7 +304,7 @@ async function buildBranchDashboardPayload({
     announcements: announcements.map((a) => ({
       title: a.title as string,
       date: a.sent_at
-        ? new Date(a.sent_at as string).toLocaleDateString("th-TH")
+        ? formatThaiDate(a.sent_at as string)
         : "—",
     })),
     presentRate,

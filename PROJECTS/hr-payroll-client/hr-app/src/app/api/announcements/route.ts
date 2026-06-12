@@ -4,6 +4,7 @@ import { ANNOUNCEMENT_TARGET_TYPES } from "@/features/announcements/types"
 import { broadcastAnnouncement } from "@/lib/announcements/broadcast"
 import { isAllowedAnnouncementImage } from "@/lib/announcements/image"
 import { uploadAnnouncementImage } from "@/lib/announcements/upload-image"
+import { parseDatetimeLocalIct } from "@/lib/datetime/thailand"
 import { getAdminClient } from "@/lib/auth/admin-client"
 import { canManageHr } from "@/lib/auth/roles"
 import { getCurrentEmployee } from "@/lib/auth/session"
@@ -32,7 +33,7 @@ async function parseCreatePayload(request: NextRequest): Promise<CreatePayload |
     const send = form.get("send") === "true"
     const schedule = form.get("schedule") === "true"
     const scheduledRaw = String(form.get("scheduledAt") ?? "").trim()
-    const scheduledAt = scheduledRaw ? new Date(scheduledRaw) : null
+    const scheduledAt = scheduledRaw ? parseDatetimeLocalIct(scheduledRaw) : null
     const imageField = form.get("image")
     const imageFile =
       imageField instanceof File && imageField.size > 0 ? imageField : null
@@ -65,7 +66,7 @@ async function parseCreatePayload(request: NextRequest): Promise<CreatePayload |
     schedule: body.schedule === true,
     scheduledAt:
       typeof body.scheduledAt === "string" && body.scheduledAt
-        ? new Date(body.scheduledAt)
+        ? parseDatetimeLocalIct(body.scheduledAt)
         : null,
     imageFile: null,
   }

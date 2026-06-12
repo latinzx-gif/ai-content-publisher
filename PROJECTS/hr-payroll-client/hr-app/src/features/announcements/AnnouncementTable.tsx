@@ -11,6 +11,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import type { AnnouncementRow } from "@/features/announcements/data"
+import { formatThaiDateTime } from "@/lib/datetime/thailand"
 
 export function AnnouncementTable({ rows }: { rows: AnnouncementRow[] }) {
   if (rows.length === 0) {
@@ -76,7 +77,7 @@ export function AnnouncementTable({ rows }: { rows: AnnouncementRow[] }) {
                 />
               </TableCell>
               <TableCell className="text-xs text-muted-foreground">
-                {new Date(row.sentAt ?? row.createdAt).toLocaleString("th-TH")}
+                {formatThaiDateTime(row.sentAt ?? row.createdAt)}
               </TableCell>
             </TableRow>
           ))}

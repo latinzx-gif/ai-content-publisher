@@ -16,6 +16,7 @@ import {
   ProfileField,
   ProfileSectionCard,
 } from "@/features/employees/profile/ProfileSectionCard"
+import { formatThaiDateOnly } from "@/lib/datetime/thailand"
 
 const CONTRACT_LABEL: Record<string, string> = {
   full_time: "Full-time",
@@ -24,12 +25,7 @@ const CONTRACT_LABEL: Record<string, string> = {
 }
 
 function formatDate(value: string | null): string {
-  if (!value) return "—"
-  return new Date(`${value}T00:00:00`).toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  })
+  return formatThaiDateOnly(value)
 }
 
 export function EmployeeProfileView({
@@ -55,7 +51,11 @@ export function EmployeeProfileView({
           />
           <div className="relative flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center gap-3">
-              <EmployeeAvatar name={profile.name} size="lg" />
+              <EmployeeAvatar
+                name={profile.name}
+                imageUrl={profile.avatarUrl}
+                size="lg"
+              />
               <div className="min-w-0">
                 <div className="flex flex-wrap items-center gap-2">
                   <h1 className="truncate text-xl font-bold">{profile.name}</h1>
@@ -138,6 +138,24 @@ export function EmployeeProfileView({
           <ProfileField label="Role" value={profile.role} />
           <ProfileField label="Salary (THB)" value={profile.salary?.toLocaleString() ?? "—"} />
           <ProfileField label="Status" value={profile.status} />
+          <ProfileField
+            label="สัญญาจ้าง (ไฟล์)"
+            value={
+              profile.contract_file_name ? (
+                <a
+                  href={`/api/employees/${profile.id}/contract`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 text-brand-red hover:underline"
+                >
+                  <FileText className="size-4 shrink-0" aria-hidden />
+                  {profile.contract_file_name}
+                </a>
+              ) : (
+                "—"
+              )
+            }
+          />
         </ProfileSectionCard>
 
         <ProfileSectionCard title="Bank Account" icon={CreditCard}>

@@ -1,5 +1,6 @@
 import type { messagingApi } from "@line/bot-sdk"
 
+import { formatThaiDate } from "@/lib/datetime/thailand"
 import { flexMessage, simpleBubble } from "@/lib/line/flex/base"
 
 const LINE_BODY_MAX = 1200
@@ -22,7 +23,8 @@ export function announcementBroadcastFlex(options: {
       title: options.title,
       accentColor: "#00897B",
       lines: announcementBodyLines(options.body),
-      footerNote: options.hasImage ? "ประกาศจาก HR (มีรูปแนบ)" : "ประกาศจาก HR",
+      footerNote: options.hasImage ? "ประกาศจาก HR (มีรูปแนบด้านล่าง)" : "ประกาศจาก HR",
+      wide: true,
     })
   )
 }
@@ -43,7 +45,7 @@ export function announcementListFlex(
   }
 
   const latest = items[0]
-  const date = new Date(latest.sentAt).toLocaleDateString("th-TH", {
+  const date = formatThaiDate(latest.sentAt, {
     day: "numeric",
     month: "short",
     year: "numeric",

@@ -4,10 +4,11 @@ import type { AdminNavGroup, AdminNavItem } from "@/components/admin/admin-nav"
 import { AdminMobileNav } from "@/components/admin/AdminMobileNav"
 import { AdminNotificationBell } from "@/components/admin/AdminNotificationBell"
 import { DevRoleSwitcher } from "@/components/admin/DevRoleSwitcher"
+import { EmployeeAvatar } from "@/components/brand/EmployeeAvatar"
 import { Button } from "@/components/ui/button"
 import type { DevViewAs } from "@/lib/auth/dev-view"
 import { roleDisplayLabel } from "@/lib/auth/labels"
-import type { Employee } from "@/lib/auth/session"
+import type { EmployeeUserChip } from "@/lib/auth/session"
 import type { NotificationItem } from "@/features/notifications/types"
 
 export function AdminHeader({
@@ -26,7 +27,7 @@ export function AdminHeader({
   approvalBadge?: number
   notificationItems?: NotificationItem[]
   showComplianceLink?: boolean
-  user?: Pick<Employee, "name" | "role" | "position">
+  user?: EmployeeUserChip
   navGroups?: AdminNavGroup[]
   navItems?: AdminNavItem[]
   branchMode?: boolean
@@ -70,13 +71,11 @@ export function AdminHeader({
           </button>
           {user ? (
             <div className="hidden items-center gap-2 rounded-lg border border-border/80 px-2 py-1 sm:flex">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src="/brand/mascot-hd.png"
-                alt=""
-                width={32}
-                height={32}
-                className="size-8 rounded-full object-contain"
+              <EmployeeAvatar
+                name={user.name}
+                imageUrl={user.avatarUrl}
+                size="sm"
+                className="border-border"
               />
               <div className="hidden min-w-0 lg:block">
                 <p className="truncate text-sm font-medium leading-tight">{user.name}</p>

@@ -213,7 +213,7 @@ export function AnnouncementComposeForm({
         ) : null}
       </div>
       <div className="flex flex-wrap items-center gap-2 text-sm">
-        <label className="text-muted-foreground">กำหนดส่ง:</label>
+        <label className="text-muted-foreground">กำหนดส่ง (เวลาไทย ICT):</label>
         <input
           type="datetime-local"
           className="rounded-lg border border-input px-2 py-1 text-sm"

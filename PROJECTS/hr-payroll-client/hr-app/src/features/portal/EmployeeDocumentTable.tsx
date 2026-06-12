@@ -15,6 +15,7 @@ import {
   DOC_TYPE_LABELS,
   type EmployeeDocumentRow,
 } from "@/features/portal/data"
+import { formatThaiDate } from "@/lib/datetime/thailand"
 
 const STATUS_VARIANT = {
   pending: "pending",
@@ -26,11 +27,7 @@ const STATUS_VARIANT = {
 } as const
 
 function formatDate(iso: string): string {
-  return new Date(iso).toLocaleDateString("th-TH", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-  })
+  return formatThaiDate(iso, { day: "numeric", month: "short", year: "numeric" })
 }
 
 export function EmployeeDocumentTable({ rows }: { rows: EmployeeDocumentRow[] }) {

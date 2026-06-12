@@ -2,15 +2,16 @@ import { LogOut } from "lucide-react"
 
 import type { AdminNavItem } from "@/components/admin/admin-nav-types"
 import { PortalMobileNav } from "@/components/portal/PortalMobileNav"
+import { EmployeeAvatar } from "@/components/brand/EmployeeAvatar"
 import { Button } from "@/components/ui/button"
 import { roleDisplayLabel } from "@/lib/auth/labels"
-import type { Employee } from "@/lib/auth/session"
+import type { EmployeeUserChip } from "@/lib/auth/session"
 
 export function PortalHeader({
   user,
   navItems,
 }: {
-  user: Pick<Employee, "name" | "role" | "position">
+  user: EmployeeUserChip
   navItems: AdminNavItem[]
 }) {
   return (
@@ -25,13 +26,11 @@ export function PortalHeader({
         </div>
         <div className="flex items-center gap-1 sm:gap-2">
           <div className="hidden items-center gap-2 rounded-lg border border-border/80 px-2 py-1 sm:flex">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src="/brand/mascot-hd.png"
-              alt=""
-              width={32}
-              height={32}
-              className="size-8 rounded-full object-contain"
+            <EmployeeAvatar
+              name={user.name}
+              imageUrl={user.avatarUrl}
+              size="sm"
+              className="border-border"
             />
             <div className="hidden min-w-0 lg:block">
               <p className="truncate text-sm font-medium leading-tight">{user.name}</p>

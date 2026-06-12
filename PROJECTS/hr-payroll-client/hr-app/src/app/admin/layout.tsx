@@ -90,6 +90,7 @@ export default async function AdminLayout({
         name: employee.name,
         role: employee.role,
         position: employee.position,
+        avatarUrl: employee.avatarUrl,
       }}
     >
       {children}

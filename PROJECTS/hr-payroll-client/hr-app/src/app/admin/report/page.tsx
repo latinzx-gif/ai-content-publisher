@@ -9,6 +9,7 @@ import {
   getReportDepartments,
 } from "@/features/reports/data"
 import { getCurrentEmployee } from "@/lib/auth/session"
+import { formatThaiDateTime } from "@/lib/datetime/thailand"
 
 export default async function AdminReportPage({
   searchParams,
@@ -57,7 +58,7 @@ export default async function AdminReportPage({
                     : r.hr_employees
                   return [
                     (emp as { name: string })?.name ?? "—",
-                    new Date(r.check_in_at as string).toLocaleString("th-TH"),
+                    formatThaiDateTime(r.check_in_at as string),
                     r.is_late ? "ใช่" : "—",
                     r.work_hours != null ? String(r.work_hours) : "—",
                   ]

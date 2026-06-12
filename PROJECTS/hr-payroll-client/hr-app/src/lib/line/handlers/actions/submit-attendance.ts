@@ -6,6 +6,7 @@ import {
   notRegisteredFlex,
   pendingApprovalFlex,
 } from "@/lib/line/flex/menu-guide"
+import { formatThaiDateTime } from "@/lib/datetime/thailand"
 import { notifyBranchManager } from "@/lib/line/notify-branch-manager"
 
 export async function submitAttendanceAction(
@@ -27,7 +28,7 @@ export async function submitAttendanceAction(
       return [
         {
           type: "text",
-          text: `ยื่นสรุปวันแล้ว — รอ Branch Manager อนุมัติภายใน 48 ชม.\nหมดเขต: ${new Date(result.expiresAt).toLocaleString("th-TH")}`,
+          text: `ยื่นสรุปวันแล้ว — รอ Branch Manager อนุมัติภายใน 48 ชม.\nหมดเขต: ${formatThaiDateTime(result.expiresAt)}`,
         },
       ]
     }

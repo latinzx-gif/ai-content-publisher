@@ -18,6 +18,10 @@ import { Button, buttonVariants } from "@/components/ui/button"
 import { AutoSaveIndicator } from "@/features/employees/AutoSaveIndicator"
 import { buildAddEmployeeBody } from "@/features/employees/employee-form-payload"
 import { useDebouncedAutoSave } from "@/features/employees/use-debounced-auto-save"
+import type {
+  OrgDepartment,
+  OrgPosition,
+} from "@/features/organization/master-data"
 import type { ContractType } from "@/features/employees/profile/data"
 import { PAYMENT_METHOD_OPTIONS, type SalaryPaymentMethod } from "@/features/employees/profile/payment-method"
 import { ProfileSectionCard } from "@/features/employees/profile/ProfileSectionCard"
@@ -60,7 +64,13 @@ function FormField({
   )
 }
 
-export function AddEmployeeForm() {
+export function AddEmployeeForm({
+  departments,
+  positions,
+}: {
+  departments: OrgDepartment[]
+  positions: OrgPosition[]
+}) {
   const router = useRouter()
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -111,6 +121,15 @@ export function AddEmployeeForm() {
     const allowed = allowedRolesForDepartment(form.department)
     return ASSIGNABLE_ROLES.filter((role) => allowed.includes(role))
   }, [form.department])
+
+  const selectedDepartmentId = useMemo(() => {
+    return departments.find((d) => d.name === form.department)?.id ?? null
+  }, [departments, form.department])
+
+  const departmentPositions = useMemo(() => {
+    if (!selectedDepartmentId) return []
+    return positions.filter((p) => p.department_id === selectedDepartmentId)
+  }, [positions, selectedDepartmentId])
 
   const formSnapshot = useMemo(() => JSON.stringify(form), [form])
 
@@ -403,26 +422,60 @@ export function AddEmployeeForm() {
 
         <ProfileSectionCard title="Work Information" icon={Building2}>
           <FormField label="Department">
-            <input
+            <select
               className={inputClassName}
               value={form.department}
               onChange={(e) => {
                 const nextDept = e.target.value
                 setForm((prev) => {
+                  const stillValid = positions.some(
+                    (p) =>
+                      p.name === prev.position &&
+                      departments.find((d) => d.name === nextDept)?.id ===
+                        p.department_id
+                  )
                   const nextRole = defaultRoleForDepartment(nextDept)
                   const allowed = allowedRolesForDepartment(nextDept)
                   const role = allowed.includes(prev.role) ? prev.role : nextRole
-                  return { ...prev, department: nextDept, role }
+                  return {
+                    ...prev,
+                    department: nextDept,
+                    position: stillValid ? prev.position : "",
+                    role,
+                  }
                 })
               }}
-            />
+            >
+              <option value="">— เลือกแผนก —</option>
+              {departments.map((d) => (
+                <option key={d.id} value={d.name}>
+                  {d.name}
+                </option>
+              ))}
+            </select>
+            <p className="mt-1 text-[10px] text-muted-foreground">
+              จาก Organization — เพิ่มแผนกที่{" "}
+              <Link href="/admin/organization" className="text-brand-red hover:underline">
+                /admin/organization
+              </Link>
+            </p>
           </FormField>
           <FormField label="Position">
-            <input
+            <select
               className={inputClassName}
               value={form.position}
               onChange={(e) => setField("position", e.target.value)}
-            />
+              disabled={!form.department}
+            >
+              <option value="">
+                {form.department ? "— เลือกตำแหน่ง —" : "— เลือกแผนกก่อน —"}
+              </option>
+              {departmentPositions.map((p) => (
+                <option key={p.id} value={p.name}>
+                  {p.name}
+                </option>
+              ))}
+            </select>
           </FormField>
           <FormField label="Employment Type">
             <select

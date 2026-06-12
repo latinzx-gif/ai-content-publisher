@@ -1,6 +1,9 @@
 // Employee list queries — server-only, runs through the caller's session
 // (RLS: hr_is_hr_admin allows full read). No service role here.
+import { ictToday } from "@/lib/datetime/thailand"
+import { employeeAvatarPublicUrl } from "@/lib/employees/avatar"
 import { createClient } from "@/lib/supabase/server"
+import { BRANCH_VIA_EMPLOYEE } from "@/lib/supabase/branch-embeds"
 
 export const PAGE_SIZE = 12
 
@@ -25,15 +28,21 @@ export type EmployeeListParams = {
 
 export type EmployeeRow = {
   id: string
+  employee_code: string | null
   name: string
   position: string | null
   department: string | null
   role: string
   branch_id: string | null
+  branch_name: string | null
+  salary: number | null
   status: "active" | "inactive"
   contract_start: string | null
+  contract_file_path: string | null
   probation_end: string | null
   visa_expiry: string | null
+  avatar_path: string | null
+  avatarUrl: string | null
   displayStatus:
     | "active"
     | "inactive"
@@ -42,11 +51,7 @@ export type EmployeeRow = {
     | "pending_approval"
 }
 
-const ICT_OFFSET_MS = 7 * 60 * 60 * 1000
-
-export function ictToday(): string {
-  return new Date(Date.now() + ICT_OFFSET_MS).toISOString().slice(0, 10)
-}
+export { ictToday } from "@/lib/datetime/thailand"
 
 export function normalizeParams(raw: {
   [key: string]: string | string[] | undefined
@@ -82,7 +87,7 @@ export async function getEmployees(params: Required<EmployeeListParams>) {
   let query = supabase
     .from("hr_employees")
     .select(
-      "id, name, position, department, role, branch_id, status, contract_start, probation_end, visa_expiry",
+      `id, employee_code, name, position, department, role, branch_id, salary, status, contract_start, contract_file_path, probation_end, visa_expiry, avatar_path, ${BRANCH_VIA_EMPLOYEE}(name)`,
       { count: "exact" }
     )
 
@@ -112,6 +117,14 @@ export async function getEmployees(params: Required<EmployeeListParams>) {
   }
 
   const employees: EmployeeRow[] = (data ?? []).map((row) => {
+    const branchJoin = row.hr_branches as
+      | { name: string }
+      | Array<{ name: string }>
+      | null
+    const branch_name = Array.isArray(branchJoin)
+      ? (branchJoin[0]?.name ?? null)
+      : (branchJoin?.name ?? null)
+
     const pendingApproval =
       row.status === "inactive" && row.role === "employee"
     const needsBranch =
@@ -128,7 +141,25 @@ export async function getEmployees(params: Required<EmployeeListParams>) {
     ) {
       displayStatus = "probation"
     }
-    return { ...row, displayStatus }
+    return {
+      id: row.id as string,
+      employee_code: (row.employee_code as string | null) ?? null,
+      name: row.name as string,
+      position: (row.position as string | null) ?? null,
+      department: (row.department as string | null) ?? null,
+      role: row.role as string,
+      branch_id: (row.branch_id as string | null) ?? null,
+      branch_name,
+      salary: row.salary != null ? Number(row.salary) : null,
+      status: row.status as "active" | "inactive",
+      contract_start: (row.contract_start as string | null) ?? null,
+      contract_file_path: (row.contract_file_path as string | null) ?? null,
+      probation_end: (row.probation_end as string | null) ?? null,
+      visa_expiry: (row.visa_expiry as string | null) ?? null,
+      avatar_path: (row.avatar_path as string | null) ?? null,
+      avatarUrl: employeeAvatarPublicUrl((row.avatar_path as string | null) ?? null),
+      displayStatus,
+    }
   })
 
   return { employees, total: count ?? 0, today }

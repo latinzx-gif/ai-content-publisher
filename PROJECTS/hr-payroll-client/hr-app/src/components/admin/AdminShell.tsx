@@ -2,7 +2,7 @@ import { AdminHeader } from "@/components/admin/AdminHeader"
 import { AdminSidebar } from "@/components/admin/AdminSidebar"
 import type { AdminNavGroup, AdminNavItem } from "@/components/admin/admin-nav"
 import type { DevViewAs } from "@/lib/auth/dev-view"
-import type { Employee } from "@/lib/auth/session"
+import type { EmployeeUserChip } from "@/lib/auth/session"
 import type { NotificationItem } from "@/features/notifications/types"
 
 export function AdminShell({
@@ -23,7 +23,7 @@ export function AdminShell({
   approvalBadge?: number
   notificationItems?: NotificationItem[]
   showComplianceLink?: boolean
-  user?: Pick<Employee, "name" | "role" | "position">
+  user?: EmployeeUserChip
   navGroups?: AdminNavGroup[]
   navItems?: AdminNavItem[]
   branchMode?: boolean
