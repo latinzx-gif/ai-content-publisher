@@ -1,22 +1,31 @@
 import { NextResponse, type NextRequest } from "next/server"
 
-import { DOC_STATUSES, type DocStatus } from "@/features/documents/types"
+import {
+  DOC_STATUSES,
+  resolveDocumentDecisionStatus,
+  type DocDecisionAction,
+  type DocStatus,
+} from "@/features/documents/types"
+import { canManageHr } from "@/lib/auth/roles"
 import { getCurrentEmployee } from "@/lib/auth/session"
 import { documentStatusFlex } from "@/lib/line/flex/document-request"
 import { pushToLineUser } from "@/lib/line/notify-hr"
 import { createClient } from "@/lib/supabase/server"
 
 type DecideBody = {
+  action?: DocDecisionAction
   status?: DocStatus
   note?: string
 }
+
+const ACTIONS: DocDecisionAction[] = ["hold", "approve", "reject"]
 
 export async function POST(
   request: NextRequest,
   context: { params: Promise<{ id: string }> }
 ) {
   const caller = await getCurrentEmployee()
-  if (!caller || (caller.role !== "hr" && caller.role !== "admin")) {
+  if (!caller || !canManageHr(caller.role)) {
     return NextResponse.json({ error: "forbidden" }, { status: 403 })
   }
 
@@ -28,11 +37,33 @@ export async function POST(
     return NextResponse.json({ error: "invalid body" }, { status: 400 })
   }
 
-  if (!body.status || !DOC_STATUSES.includes(body.status)) {
-    return NextResponse.json({ error: "invalid status" }, { status: 400 })
+  let nextStatus: DocStatus | undefined
+  if (body.action && ACTIONS.includes(body.action)) {
+    const supabase = await createClient()
+    const { data: current } = await supabase
+      .from("hr_document_requests")
+      .select("status")
+      .eq("id", id)
+      .maybeSingle()
+    if (!current) {
+      return NextResponse.json({ error: "not found" }, { status: 404 })
+    }
+    nextStatus = resolveDocumentDecisionStatus(
+      current.status as DocStatus,
+      body.action
+    )
+  } else if (body.status && DOC_STATUSES.includes(body.status)) {
+    nextStatus = body.status
+  }
+
+  if (!nextStatus) {
+    return NextResponse.json({ error: "invalid action or status" }, { status: 400 })
   }
 
   const note = typeof body.note === "string" ? body.note.trim() : ""
+  if (body.action === "reject" && note.length < 3) {
+    return NextResponse.json({ error: "reject reason required" }, { status: 400 })
+  }
 
   const supabase = await createClient()
   const { data: doc, error: fetchError } = await supabase
@@ -52,7 +83,7 @@ export async function POST(
 
   const { error: updateError } = await supabase
     .from("hr_document_requests")
-    .update({ status: body.status, hr_note: note || null })
+    .update({ status: nextStatus, hr_note: note || null })
     .eq("id", id)
 
   if (updateError) {
@@ -68,7 +99,7 @@ export async function POST(
       await pushToLineUser(emp.line_user_id, [
         documentStatusFlex({
           docType: doc.doc_type,
-          status: body.status,
+          status: nextStatus,
           note: note || undefined,
         }),
       ])
@@ -77,5 +108,5 @@ export async function POST(
     console.error("document decide LINE notify failed:", lineError)
   }
 
-  return NextResponse.json({ id, status: body.status })
+  return NextResponse.json({ id, status: nextStatus })
 }

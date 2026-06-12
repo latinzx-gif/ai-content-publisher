@@ -12,18 +12,15 @@ import { DOC_TYPE_LABELS } from "@/features/documents/types"
 import { DocumentDecisionActions } from "@/features/documents/DocumentDecisionActions"
 import type { DocumentRequestRow } from "@/features/documents/data"
 
+import { DOC_STATUS_LABELS } from "@/features/documents/types"
+
 const STATUS_VARIANT = {
   pending: "pending",
+  on_hold: "warning",
   processing: "pending",
   ready: "approved",
   completed: "approved",
-} as const
-
-const STATUS_LABEL = {
-  pending: "รอดำเนินการ",
-  processing: "กำลังจัดทำ",
-  ready: "พร้อมรับ",
-  completed: "เสร็จสิ้น",
+  rejected: "rejected",
 } as const
 
 export function DocumentTable({ rows }: { rows: DocumentRequestRow[] }) {
@@ -62,7 +59,7 @@ export function DocumentTable({ rows }: { rows: DocumentRequestRow[] }) {
               <TableCell className="max-w-[200px] truncate">{row.purpose}</TableCell>
               <TableCell>
                 <StatusPill
-                  label={STATUS_LABEL[row.status]}
+                  label={DOC_STATUS_LABELS[row.status]}
                   variant={STATUS_VARIANT[row.status]}
                 />
               </TableCell>

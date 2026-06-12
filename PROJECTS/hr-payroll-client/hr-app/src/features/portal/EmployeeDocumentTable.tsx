@@ -10,6 +10,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import { DOC_STATUS_LABELS } from "@/features/documents/types"
 import {
   DOC_TYPE_LABELS,
   type EmployeeDocumentRow,
@@ -17,16 +18,11 @@ import {
 
 const STATUS_VARIANT = {
   pending: "pending",
+  on_hold: "warning",
   processing: "pending",
   ready: "approved",
   completed: "approved",
-} as const
-
-const STATUS_LABEL = {
-  pending: "รอดำเนินการ",
-  processing: "กำลังจัดทำ",
-  ready: "พร้อมรับ",
-  completed: "เสร็จสิ้น",
+  rejected: "rejected",
 } as const
 
 function formatDate(iso: string): string {
@@ -70,7 +66,7 @@ export function EmployeeDocumentTable({ rows }: { rows: EmployeeDocumentRow[] })
               <TableCell className="max-w-[200px] truncate">{row.purpose}</TableCell>
               <TableCell>
                 <StatusPill
-                  label={STATUS_LABEL[row.status]}
+                  label={DOC_STATUS_LABELS[row.status]}
                   variant={STATUS_VARIANT[row.status]}
                 />
               </TableCell>

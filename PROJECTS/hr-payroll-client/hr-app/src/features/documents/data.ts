@@ -32,7 +32,14 @@ export function normalizeDocParams(raw: {
   const get = (k: string) => (typeof raw[k] === "string" ? (raw[k] as string) : "")
   const statusRaw = get("status")
   const status = (
-    ["pending", "processing", "ready", "completed"] as const
+    [
+      "pending",
+      "on_hold",
+      "processing",
+      "ready",
+      "completed",
+      "rejected",
+    ] as const
   ).includes(statusRaw as DocStatus)
     ? (statusRaw as DocStatus)
     : "all"
