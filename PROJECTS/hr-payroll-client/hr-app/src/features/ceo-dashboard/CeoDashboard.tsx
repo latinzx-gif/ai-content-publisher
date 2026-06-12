@@ -1,21 +1,12 @@
 import Link from "next/link"
 import {
-  AlertTriangle,
-  BarChart3,
   Building2,
-  CalendarCheck,
   CalendarDays,
   Download,
   ListChecks,
-  Megaphone,
-  MessageSquareWarning,
-  Network,
-  ShieldAlert,
   UserCheck,
-  UserPlus,
   Users,
   Wallet,
-  type LucideIcon,
 } from "lucide-react"
 
 import { HeroBanner } from "@/components/brand/HeroBanner"
@@ -30,6 +21,13 @@ import {
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 
+import {
+  InventoryLowStockWidget,
+  InventoryPendingInboundWidget,
+  InventoryZeroStockWidget,
+} from "@/features/inventory/InventoryDashboardWidgets"
+import type { InventoryDashboardSummary } from "@/features/inventory/report-data"
+
 import type { CeoDashboardData } from "./data"
 
 const LEAVE_STATUS_VARIANT = {
@@ -38,32 +36,17 @@ const LEAVE_STATUS_VARIANT = {
   rejected: "rejected",
 } as const
 
-const QUICK_ACTIONS = [
-  { label: "Add Employee", href: "/admin/employees", icon: UserPlus },
-  { label: "Leave Calendar", href: "/admin/leaves", icon: CalendarDays },
-  { label: "Approve Queue", href: "/admin/manager", icon: CalendarCheck },
-  { label: "Payroll Report", href: "/admin/payroll", icon: Wallet },
-  { label: "Reports", href: "/admin/report", icon: BarChart3 },
-  { label: "Org Chart", href: "/admin/organization", icon: Network },
-] as const
-
-const ACTIVITY_ICONS: Record<string, { icon: LucideIcon; className: string }> = {
-  hire: { icon: UserPlus, className: "text-emerald-600 bg-emerald-100" },
-  leave: { icon: CalendarDays, className: "text-sky-600 bg-sky-100" },
-  complaint: { icon: MessageSquareWarning, className: "text-amber-600 bg-amber-100" },
-  announcement: { icon: Megaphone, className: "text-brand-red bg-brand-red/10" },
-  payroll: { icon: Wallet, className: "text-violet-600 bg-violet-100" },
-}
-
 export function CeoDashboard({
   userName,
   data,
+  inventorySummary,
   title = "แดชบอร์ดผู้บริหาร",
-  subtitle = "ภาพรวมองค์กร สุขภาพบุคลากร ชั่วโมงเงินเดือน ประสิทธิภาพสาขา และสัญญาณความเสี่ยง HR",
+  subtitle = "ภาพรวมองค์กร สุขภาพบุคลากร ชั่วโมงเงินเดือน ประสิทธิภาพสาขา และสัญญาณคลังสินค้า",
   exportHref = "#report-export",
 }: {
   userName: string
   data: CeoDashboardData
+  inventorySummary: InventoryDashboardSummary
   title?: string
   subtitle?: string
   exportHref?: string
@@ -273,106 +256,9 @@ export function CeoDashboard({
           )}
         </WidgetCard>
 
-        <WidgetCard compact title="Announcements & Alerts" href="/admin/announcements">
-          {data.riskAlerts.length > 0 ? (
-            <ul className="mb-2 space-y-1.5 border-b border-border/60 pb-2">
-              {data.riskAlerts.map((alert, i) => (
-                <li
-                  key={i}
-                  className="flex gap-1.5 rounded-md bg-amber-50 px-2 py-1 text-[10px] dark:bg-amber-950/30"
-                >
-                  <AlertTriangle className="mt-0.5 size-3 shrink-0 text-amber-600" />
-                  <div>
-                    <p className="font-medium">{alert.title}</p>
-                    <p className="text-muted-foreground">{alert.detail}</p>
-                  </div>
-                </li>
-              ))}
-            </ul>
-          ) : null}
-          {data.recentAnnouncements.length === 0 ? (
-            <p className="text-xs text-muted-foreground">No announcements</p>
-          ) : (
-            <ul className="divide-y divide-border/60">
-              {data.recentAnnouncements.map((a, i) => (
-                <li key={i} className="py-1.5">
-                  <div className="flex items-start gap-1.5">
-                    <Megaphone className="mt-0.5 size-3 shrink-0 text-brand-red" />
-                    <div className="min-w-0">
-                      <p className="truncate text-xs font-medium">{a.title}</p>
-                      <p className="text-[10px] text-muted-foreground">{a.date}</p>
-                    </div>
-                  </div>
-                </li>
-              ))}
-            </ul>
-          )}
-          {data.openComplaints > 0 || data.complianceRiskCount > 0 ? (
-            <div className="mt-1.5 border-t border-border/60 pt-1.5 text-[10px] text-muted-foreground">
-              {data.openComplaints > 0 ? (
-                <p className="flex items-center gap-1">
-                  <MessageSquareWarning className="size-3 text-amber-600" />
-                  {data.openComplaints} open complaints
-                </p>
-              ) : null}
-              {data.complianceRiskCount > 0 ? (
-                <p className="flex items-center gap-1">
-                  <ShieldAlert className="size-3 text-red-600" />
-                  {data.complianceRiskCount} compliance items expiring (30d)
-                </p>
-              ) : null}
-            </div>
-          ) : null}
-        </WidgetCard>
-
-        <WidgetCard compact title="Employee Activity">
-          {data.recentActivity.length === 0 ? (
-            <p className="py-4 text-xs text-muted-foreground">No recent activity</p>
-          ) : (
-            <ul className="space-y-2">
-              {data.recentActivity.map((item, i) => {
-                const meta = ACTIVITY_ICONS[item.kind] ?? {
-                  icon: Users,
-                  className: "text-muted-foreground bg-muted",
-                }
-                const Icon = meta.icon
-                return (
-                  <li key={i} className="flex gap-2 text-[11px]">
-                    <span
-                      className={cn(
-                        "mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-md",
-                        meta.className
-                      )}
-                    >
-                      <Icon className="size-3.5" strokeWidth={2} />
-                    </span>
-                    <div className="min-w-0">
-                      <p className="leading-snug">{item.text}</p>
-                      <p className="text-[10px] text-muted-foreground">{item.time}</p>
-                    </div>
-                  </li>
-                )
-              })}
-            </ul>
-          )}
-        </WidgetCard>
-
-        <WidgetCard compact title="Quick Actions">
-          <div className="grid grid-cols-3 gap-1.5">
-            {QUICK_ACTIONS.map((action) => (
-              <Link
-                key={action.label}
-                href={action.href}
-                className="flex flex-col items-center gap-1 rounded-lg border border-border/80 bg-muted/20 px-1 py-1.5 text-center transition-colors hover:border-brand-red/40 hover:bg-brand-red/5"
-              >
-                <action.icon className="size-7 text-brand-red" strokeWidth={1.6} />
-                <span className="text-[9px] font-medium leading-tight">
-                  {action.label}
-                </span>
-              </Link>
-            ))}
-          </div>
-        </WidgetCard>
+        <InventoryLowStockWidget summary={inventorySummary} />
+        <InventoryPendingInboundWidget summary={inventorySummary} />
+        <InventoryZeroStockWidget summary={inventorySummary} />
       </div>
     </div>
   )

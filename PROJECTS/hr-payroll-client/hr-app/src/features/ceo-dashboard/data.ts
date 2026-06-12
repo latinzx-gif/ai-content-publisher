@@ -2,34 +2,17 @@ import { ictLocalToUtc } from "@/lib/attendance/ict-datetime"
 import { ictDayRangeUtc } from "@/lib/attendance/late"
 import { ictToday } from "@/features/employees/data"
 import { LEAVE_TYPE_LABELS, type LeaveType } from "@/features/leave/types"
-import { formatThaiDate, formatThaiMonthYear } from "@/lib/datetime/thailand"
+import { formatThaiMonthYear } from "@/lib/datetime/thailand"
 import { createClient } from "@/lib/supabase/server"
 
 const DAY_MS = 86_400_000
 const ICT_OFFSET_MS = 7 * 60 * 60 * 1000
-const EXPIRY_WINDOW_DAYS = 30
 
 function ictDayLabel(dayStartUtc: Date): string {
   const ict = new Date(dayStartUtc.getTime() + ICT_OFFSET_MS)
   const dd = String(ict.getUTCDate()).padStart(2, "0")
   const mm = String(ict.getUTCMonth() + 1).padStart(2, "0")
   return `${dd}/${mm}`
-}
-
-function ictDateString(instant: Date): string {
-  return new Date(instant.getTime() + ICT_OFFSET_MS).toISOString().slice(0, 10)
-}
-
-function daysBetween(from: string, to: string): number {
-  const a = new Date(`${from}T00:00:00Z`).getTime()
-  const b = new Date(`${to}T00:00:00Z`).getTime()
-  return Math.round((b - a) / DAY_MS)
-}
-
-export type CeoActivityItem = {
-  text: string
-  time: string
-  kind: "leave" | "hire" | "complaint" | "announcement" | "payroll"
 }
 
 export type CeoDashboardData = {
@@ -43,8 +26,6 @@ export type CeoDashboardData = {
   absentToday: number
   pendingHrApprovals: number
   pendingOnboarding: number
-  openComplaints: number
-  complianceRiskCount: number
   otHoursMonth: number
   regularHoursMonth: number
   sickHoursMonth: number
@@ -74,9 +55,6 @@ export type CeoDashboardData = {
     rate: number
     otHours: number
   }>
-  recentAnnouncements: Array<{ title: string; date: string }>
-  recentActivity: CeoActivityItem[]
-  riskAlerts: Array<{ title: string; detail: string }>
 }
 
 function sumHours(
@@ -96,9 +74,6 @@ export async function getCeoDashboardData(): Promise<CeoDashboardData> {
   const today = ictToday()
   const { start: todayStart, end: todayEnd } = ictDayRangeUtc(now)
   const weekStart = new Date(todayStart.getTime() - 6 * DAY_MS)
-  const expiryLimit = ictDateString(
-    new Date(now.getTime() + EXPIRY_WINDOW_DAYS * DAY_MS)
-  )
 
   const year = new Date(now.getTime() + ICT_OFFSET_MS).getUTCFullYear()
   const month = new Date(now.getTime() + ICT_OFFSET_MS).getUTCMonth() + 1
@@ -117,14 +92,9 @@ export async function getCeoDashboardData(): Promise<CeoDashboardData> {
     leavesRes,
     weekAttRes,
     periodsRes,
-    annRes,
-    complaintRes,
     pendingLeaveHrRes,
     pendingOtHrRes,
     pendingAttHrRes,
-    recentHiresRes,
-    recentComplaintsRes,
-    expiryRes,
   ] = await Promise.all([
     supabase.from("hr_branches").select("id, name, code").order("name"),
     supabase
@@ -163,16 +133,6 @@ export async function getCeoDashboardData(): Promise<CeoDashboardData> {
         `and(year.eq.${year},month.eq.${month}),and(year.eq.${prevYear},month.eq.${prevMonth})`
       ),
     supabase
-      .from("hr_announcements")
-      .select("title, sent_at")
-      .eq("status", "sent")
-      .order("sent_at", { ascending: false })
-      .limit(4),
-    supabase
-      .from("hr_complaints")
-      .select("id", { count: "exact", head: true })
-      .eq("status", "open"),
-    supabase
       .from("hr_leaves")
       .select("id", { count: "exact", head: true })
       .eq("approval_status", "pending_hr"),
@@ -184,23 +144,6 @@ export async function getCeoDashboardData(): Promise<CeoDashboardData> {
       .from("hr_attendance_submissions")
       .select("id", { count: "exact", head: true })
       .eq("approval_status", "pending_hr"),
-    supabase
-      .from("hr_employees")
-      .select("name, contract_start")
-      .eq("status", "active")
-      .not("contract_start", "is", null)
-      .gte("contract_start", ictDateString(new Date(now.getTime() - 30 * DAY_MS)))
-      .order("contract_start", { ascending: false })
-      .limit(5),
-    supabase
-      .from("hr_complaints")
-      .select("subject, created_at")
-      .order("created_at", { ascending: false })
-      .limit(3),
-    supabase
-      .from("hr_employees")
-      .select("probation_end, visa_expiry, work_permit_expiry")
-      .eq("status", "active"),
   ])
 
   const employees = employeesRes.data ?? []
@@ -364,80 +307,10 @@ export async function getCeoDashboardData(): Promise<CeoDashboardData> {
     }
   })
 
-  let complianceRiskCount = 0
-  const riskAlerts: CeoDashboardData["riskAlerts"] = []
-  for (const row of expiryRes.data ?? []) {
-    for (const [kind, field] of [
-      ["Probation", "probation_end"],
-      ["Visa", "visa_expiry"],
-      ["Work permit", "work_permit_expiry"],
-    ] as const) {
-      const due = row[field] as string | null
-      if (due && due >= today && due <= expiryLimit) {
-        complianceRiskCount += 1
-        if (riskAlerts.length < 3) {
-          riskAlerts.push({
-            title: `${kind} expiring soon`,
-            detail: `Due ${due} (${daysBetween(today, due)} days)`,
-          })
-        }
-      }
-    }
-  }
-
   const pendingHrApprovals =
     (pendingLeaveHrRes.count ?? 0) +
     (pendingOtHrRes.count ?? 0) +
     (pendingAttHrRes.count ?? 0)
-
-  const recentActivity: CeoActivityItem[] = []
-
-  for (const hire of recentHiresRes.data ?? []) {
-    recentActivity.push({
-      text: `${hire.name as string} joined the company`,
-      time: hire.contract_start as string,
-      kind: "hire",
-    })
-  }
-  for (const l of leaves.slice(0, 4)) {
-    const emp = Array.isArray(l.hr_employees) ? l.hr_employees[0] : l.hr_employees
-    recentActivity.push({
-      text: `${(emp as { name: string })?.name ?? "—"} submitted leave request`,
-      time: (l.created_at as string)?.slice(0, 10) ?? "—",
-      kind: "leave",
-    })
-  }
-  for (const c of recentComplaintsRes.data ?? []) {
-    recentActivity.push({
-      text: `New complaint: ${(c.subject as string) ?? "—"}`,
-      time: formatThaiDate(c.created_at as string),
-      kind: "complaint",
-    })
-  }
-  for (const a of annRes.data ?? []) {
-    recentActivity.push({
-      text: `Announcement: ${a.title as string}`,
-      time: a.sent_at
-        ? formatThaiDate(a.sent_at as string)
-        : "—",
-      kind: "announcement",
-    })
-  }
-
-  recentActivity.sort((a, b) => b.time.localeCompare(a.time))
-
-  if (pendingHrApprovals > 0) {
-    riskAlerts.unshift({
-      title: `${pendingHrApprovals} items awaiting HR approval`,
-      detail: "Leave, overtime, or attendance submissions",
-    })
-  }
-  if ((complaintRes.count ?? 0) > 0) {
-    riskAlerts.push({
-      title: `${complaintRes.count} open employee complaints`,
-      detail: "Review F8 tickets for workplace issues",
-    })
-  }
 
   return {
     branchCount: branchesRes.data?.length ?? 0,
@@ -450,8 +323,6 @@ export async function getCeoDashboardData(): Promise<CeoDashboardData> {
     absentToday,
     pendingHrApprovals,
     pendingOnboarding,
-    openComplaints: complaintRes.count ?? 0,
-    complianceRiskCount,
     otHoursMonth,
     regularHoursMonth,
     sickHoursMonth,
@@ -466,13 +337,5 @@ export async function getCeoDashboardData(): Promise<CeoDashboardData> {
     payrollBreakdown,
     recentLeaveRows,
     branchRows,
-    recentAnnouncements: (annRes.data ?? []).map((a) => ({
-      title: a.title as string,
-      date: a.sent_at
-        ? formatThaiDate(a.sent_at as string)
-        : "—",
-    })),
-    recentActivity: recentActivity.slice(0, 6),
-    riskAlerts: riskAlerts.slice(0, 4),
   }
 }

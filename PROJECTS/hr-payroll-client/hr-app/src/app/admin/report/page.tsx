@@ -1,6 +1,7 @@
 import { AdminPageShell } from "@/components/brand/AdminPageShell"
 import { CeoDashboard } from "@/features/ceo-dashboard/CeoDashboard"
 import { getCeoDashboardData } from "@/features/ceo-dashboard/data"
+import { getInventoryDashboardSummary } from "@/features/inventory/report-data"
 import { ReportsPanel } from "@/features/reports/ReportsPanel"
 import {
   getAttendanceReport,
@@ -21,9 +22,10 @@ export default async function AdminReportPage({
   const days = Number(params.days ?? "30")
   const department = params.department?.trim() ?? ""
 
-  const [dashboardData, departments, attendance, leaves, overtime] =
+  const [dashboardData, inventorySummary, departments, attendance, leaves, overtime] =
     await Promise.all([
       getCeoDashboardData(),
+      getInventoryDashboardSummary(),
       getReportDepartments(),
       getAttendanceReport(days, department || undefined),
       getLeaveReportSummary(days, department || undefined),
@@ -36,8 +38,9 @@ export default async function AdminReportPage({
         <CeoDashboard
           userName={employee?.name ?? "Admin"}
           data={dashboardData}
+          inventorySummary={inventorySummary}
           title="รายงานและวิเคราะห์"
-          subtitle="ภาพรวมองค์กร สุขภาพบุคลากร ชั่วโมงเงินเดือน ประสิทธิภาพสาขา และสัญญาณความเสี่ยง HR"
+          subtitle="ภาพรวมองค์กร สุขภาพบุคลากร ชั่วโมงเงินเดือน ประสิทธิภาพสาขา และสัญญาณคลังสินค้า"
           exportHref="#report-export"
         />
       </div>
