@@ -58,9 +58,15 @@ const ACTIVITY_ICONS: Record<string, { icon: LucideIcon; className: string }> = 
 export function CeoDashboard({
   userName,
   data,
+  title = "Executive Dashboard",
+  subtitle = "Company-wide workforce health, payroll hours, branch performance, and HR risk signals.",
+  exportHref = "#report-export",
 }: {
   userName: string
   data: CeoDashboardData
+  title?: string
+  subtitle?: string
+  exportHref?: string
 }) {
   const totalPayrollHours =
     data.regularHoursMonth + data.otHoursMonth + data.sickHoursMonth
@@ -68,13 +74,8 @@ export function CeoDashboard({
   return (
     <div className="flex h-full min-h-0 flex-col gap-2 overflow-hidden md:gap-2.5 [@media(max-height:800px)]:gap-1.5">
       <div className="flex shrink-0 items-start justify-between gap-2">
-        <HeroBanner
-          compact
-          userName={userName}
-          title="Executive Dashboard"
-          subtitle="Company-wide workforce health, payroll hours, branch performance, and HR risk signals."
-        />
-        <Button render={<Link href="/admin/report" />} size="sm" className="shrink-0 gap-1.5">
+        <HeroBanner compact userName={userName} title={title} subtitle={subtitle} />
+        <Button render={<Link href={exportHref} />} size="sm" className="shrink-0 gap-1.5">
           <Download className="size-3.5" />
           Export Report
         </Button>
