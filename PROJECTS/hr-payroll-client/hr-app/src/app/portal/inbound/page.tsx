@@ -1,4 +1,3 @@
-import Link from "next/link"
 import { Barcode, ExternalLink } from "lucide-react"
 
 import { AdminPageShell } from "@/components/brand/AdminPageShell"
@@ -64,7 +63,7 @@ export default async function PortalInboundPage() {
                   <p className="text-xs text-muted-foreground">{order.notes}</p>
                 ) : null}
               </div>
-              <Link
+              <a
                 href={inboundScanHref(order.id)}
                 className={cn(
                   buttonVariants({ size: "sm" }),
@@ -73,7 +72,7 @@ export default async function PortalInboundPage() {
               >
                 สแกน
                 <ExternalLink className="size-3.5" />
-              </Link>
+              </a>
             </li>
           ))}
         </ul>

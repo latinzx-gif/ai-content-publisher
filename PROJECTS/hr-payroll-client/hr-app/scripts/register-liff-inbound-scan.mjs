@@ -106,7 +106,7 @@ async function main() {
   console.log(`Created LIFF app: ${liffId}`)
   console.log(`Set env: NEXT_PUBLIC_LINE_LIFF_INBOUND_SCAN_ID=${liffId}`)
   console.log(
-    `Scan URL example: https://liff.line.me/${liffId}?order=<uuid>`
+    `Scan URL example: https://liff.line.me/${liffId}/<order-uuid>`
   )
 }
 

@@ -10,12 +10,10 @@ export type LiffContext = {
 
 const initCache = new Map<string, Promise<LiffContext>>()
 
+import { INBOUND_SCAN_LIFF_ID } from "@/lib/line/inbound-order-id"
+
 export function getInboundScanLiffId(): string | undefined {
-  return (
-    process.env.NEXT_PUBLIC_LINE_LIFF_INBOUND_SCAN_ID?.trim() ||
-    process.env.NEXT_PUBLIC_LINE_LIFF_ID?.trim() ||
-    undefined
-  )
+  return INBOUND_SCAN_LIFF_ID || undefined
 }
 
 /** Heuristic when LIFF init fails but user is inside LINE WebView */

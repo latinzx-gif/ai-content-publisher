@@ -1,6 +1,6 @@
 "use client"
 
-import { Suspense } from "react"
+import { Suspense, use } from "react"
 
 import {
   Card,
@@ -8,7 +8,20 @@ import {
 } from "@/components/ui/card"
 import { InboundScanPageContent } from "@/features/inventory/InboundScanPageContent"
 
-export default function InboundScanPage() {
+function InboundScanByOrder({
+  params,
+}: {
+  params: Promise<{ orderId: string }>
+}) {
+  const { orderId } = use(params)
+  return <InboundScanPageContent pathOrderId={orderId} />
+}
+
+export default function InboundScanOrderPage({
+  params,
+}: {
+  params: Promise<{ orderId: string }>
+}) {
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-md flex-col gap-4 bg-background p-4">
       <Suspense
@@ -20,7 +33,7 @@ export default function InboundScanPage() {
           </Card>
         }
       >
-        <InboundScanPageContent />
+        <InboundScanByOrder params={params} />
       </Suspense>
     </main>
   )
