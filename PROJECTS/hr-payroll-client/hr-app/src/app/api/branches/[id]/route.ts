@@ -92,3 +92,66 @@ export async function PATCH(
 
   return NextResponse.json(data)
 }
+
+export async function DELETE(
+  _request: NextRequest,
+  context: { params: Promise<{ id: string }> }
+) {
+  const caller = await getCurrentEmployee()
+  if (!caller || !canManageHr(caller.role)) {
+    return NextResponse.json({ error: "forbidden" }, { status: 403 })
+  }
+
+  const { id } = await context.params
+  const supabase = await createClient()
+
+  const { data: branch, error: branchError } = await supabase
+    .from("hr_branches")
+    .select("id, name")
+    .eq("id", id)
+    .maybeSingle()
+
+  if (branchError) {
+    return NextResponse.json({ error: branchError.message }, { status: 500 })
+  }
+  if (!branch) {
+    return NextResponse.json({ error: "not found" }, { status: 404 })
+  }
+
+  const { count: employeeCount, error: empError } = await supabase
+    .from("hr_employees")
+    .select("id", { count: "exact", head: true })
+    .eq("branch_id", id)
+
+  if (empError) {
+    return NextResponse.json({ error: empError.message }, { status: 500 })
+  }
+  if ((employeeCount ?? 0) > 0) {
+    return NextResponse.json(
+      { error: `ไม่สามารถลบได้ — มีพนักงาน ${employeeCount} คนในสาขานี้` },
+      { status: 400 }
+    )
+  }
+
+  const { count: deptCount, error: deptError } = await supabase
+    .from("hr_departments")
+    .select("id", { count: "exact", head: true })
+    .eq("branch_id", id)
+
+  if (deptError) {
+    return NextResponse.json({ error: deptError.message }, { status: 500 })
+  }
+  if ((deptCount ?? 0) > 0) {
+    return NextResponse.json(
+      { error: `ไม่สามารถลบได้ — มีแผนก ${deptCount} แผนกในสาขานี้` },
+      { status: 400 }
+    )
+  }
+
+  const { error } = await supabase.from("hr_branches").delete().eq("id", id)
+  if (error) {
+    return NextResponse.json({ error: error.message }, { status: 500 })
+  }
+
+  return NextResponse.json({ ok: true })
+}

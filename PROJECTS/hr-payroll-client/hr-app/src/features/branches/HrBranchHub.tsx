@@ -12,6 +12,7 @@ import { KpiCard } from "@/components/brand/KpiCard"
 import { WidgetCard } from "@/components/brand/WidgetCard"
 import type { BranchDashboardData } from "@/features/branch-dashboard/data"
 import { BranchEmployeeAlertIcons } from "@/features/branches/BranchEmployeeAlertIcons"
+import { BranchDeleteButton } from "@/features/branches/BranchDeleteButton"
 import { BranchInfoEditor } from "@/features/branches/BranchInfoEditor"
 import { BranchManagerSelect } from "@/features/branches/BranchManagerSelect"
 import type { BranchManagerCandidate } from "@/features/branches/manager-candidates"
@@ -120,7 +121,11 @@ export function HrBranchHub({
             </div>
             {!readOnly ? <BranchInfoEditor branch={branch} /> : null}
           </div>
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-col items-end gap-2">
+            {!readOnly ? (
+              <BranchDeleteButton branchId={branch.id} branchName={branch.name} />
+            ) : null}
+            <div className="flex flex-wrap justify-end gap-2">
             {links.map((item) => {
               const Icon = item.icon
               return (
@@ -134,6 +139,7 @@ export function HrBranchHub({
                 </Link>
               )
             })}
+            </div>
           </div>
         </div>
       </div>
