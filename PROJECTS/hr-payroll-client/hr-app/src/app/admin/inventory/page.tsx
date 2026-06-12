@@ -1,15 +1,13 @@
-import { Package } from "lucide-react"
-
 import { AdminPageShell } from "@/components/brand/AdminPageShell"
-import { DevelopmentEmptyState } from "@/components/brand/DevelopmentEmptyState"
+import { InventoryHub } from "@/features/inventory/InventoryHub"
 
 export default function AdminInventoryPage() {
   return (
     <AdminPageShell
-      title="Inventory"
-      description="จัดการสต็อกและทรัพย์สินขององค์กร"
+      title="คลังสินค้า"
+      description="ข้อมูลหลัก — SKU Supplier สาขาและคลัง (Phase 1)"
     >
-      <DevelopmentEmptyState icon={Package} title="Inventory" />
+      <InventoryHub />
     </AdminPageShell>
   )
 }
