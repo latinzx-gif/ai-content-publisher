@@ -1,3 +1,4 @@
+import { DOC_TYPE_LABELS, type DocType } from "@/features/documents/types"
 import { ictDayRangeUtc, formatIctTime } from "@/lib/attendance/late"
 import { createClient } from "@/lib/supabase/server"
 
@@ -50,6 +51,12 @@ export type PendingRegistrationItem = {
   createdAt: string | null
 }
 
+export type PendingDocumentGroup = {
+  docType: DocType
+  label: string
+  count: number
+}
+
 const DAY_MS = 86_400_000
 const ICT_OFFSET_MS = 7 * 60 * 60 * 1000
 
@@ -77,8 +84,15 @@ export async function getDashboardWidgets() {
     .toISOString()
     .slice(0, 10)
 
-  const [pendingLeavesRes, attendanceRes, employeesRes, alertsRes, pendingRegRes, pendingRegCountRes] =
-    await Promise.all([
+  const [
+    pendingLeavesRes,
+    attendanceRes,
+    employeesRes,
+    alertsRes,
+    pendingRegRes,
+    pendingRegCountRes,
+    pendingDocsRes,
+  ] = await Promise.all([
     supabase
       .from("hr_leaves")
       .select(
@@ -122,6 +136,10 @@ export async function getDashboardWidgets() {
       .select("id", { count: "exact", head: true })
       .eq("status", "inactive")
       .eq("role", "employee"),
+    supabase
+      .from("hr_document_requests")
+      .select("doc_type")
+      .in("status", ["pending", "processing"]),
   ])
 
   const pendingLeaves: PendingLeaveItem[] = ((pendingLeavesRes.data ?? []) as Array<{
@@ -286,6 +304,22 @@ export async function getDashboardWidgets() {
 
   const pendingOnboarding = onboardingInProgress + onboardingPending
 
+  const docTypeCounts = new Map<DocType, number>()
+  for (const row of pendingDocsRes.data ?? []) {
+    const t = row.doc_type as DocType
+    if (t in DOC_TYPE_LABELS) {
+      docTypeCounts.set(t, (docTypeCounts.get(t) ?? 0) + 1)
+    }
+  }
+  const pendingDocuments: PendingDocumentGroup[] = [...docTypeCounts.entries()]
+    .map(([docType, count]) => ({
+      docType,
+      label: DOC_TYPE_LABELS[docType],
+      count,
+    }))
+    .sort((a, b) => b.count - a.count)
+  const pendingDocumentCount = pendingDocuments.reduce((s, d) => s + d.count, 0)
+
   return {
     pendingLeaves,
     exceptions: exceptions.slice(0, 6),
@@ -296,6 +330,8 @@ export async function getDashboardWidgets() {
     pendingOnboarding,
     pendingRegistrations,
     pendingRegistrationCount: pendingRegCountRes.count ?? pendingRegistrations.length,
+    pendingDocuments,
+    pendingDocumentCount,
     recentAlerts,
     unresolvedAlerts: recentAlerts.length,
   }

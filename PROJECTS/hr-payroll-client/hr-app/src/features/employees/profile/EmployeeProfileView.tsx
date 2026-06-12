@@ -11,6 +11,7 @@ import Link from "next/link"
 import { EmployeeAvatar } from "@/components/brand/EmployeeAvatar"
 import { StatusPill } from "@/components/brand/StatusPill"
 import type { EmployeeProfile } from "@/features/employees/profile/data"
+import { paymentMethodLabel } from "@/features/employees/profile/payment-method"
 import {
   ProfileField,
   ProfileSectionCard,
@@ -137,10 +138,27 @@ export function EmployeeProfileView({
         </ProfileSectionCard>
 
         <ProfileSectionCard title="Bank Account" icon={CreditCard}>
-          <ProfileField label="Bank Name" value="—" />
-          <ProfileField label="Account Name" value="—" />
-          <ProfileField label="Account Number" value="—" />
-          <ProfileField label="Branch" value="—" />
+          <ProfileField
+            label="Payment Method"
+            value={
+              profile.salary_payment_method
+                ? paymentMethodLabel(profile.salary_payment_method)
+                : profile.bank_account_number
+                  ? paymentMethodLabel("bank")
+                  : "—"
+            }
+          />
+          {profile.salary_payment_method === "cash" ? (
+            <ProfileField label="Note" value="รับเงินเดือนเป็นเงินสด" />
+          ) : profile.salary_payment_method === "bank" ||
+            profile.bank_account_number ? (
+            <>
+              <ProfileField label="Bank Name" value={profile.bank_name} />
+              <ProfileField label="Account Name" value={profile.bank_account_name} />
+              <ProfileField label="Account Number" value={profile.bank_account_number} />
+              <ProfileField label="Branch" value={profile.bank_branch} />
+            </>
+          ) : null}
         </ProfileSectionCard>
 
         <ProfileSectionCard title="Tax & Social Security" icon={FileText}>

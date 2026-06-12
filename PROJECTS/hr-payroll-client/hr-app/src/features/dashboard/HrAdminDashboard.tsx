@@ -58,15 +58,6 @@ const NEW_HIRE_STATUS: Record<
   pending: { label: "Pending", variant: "pending" },
 }
 
-/** Demo pipeline counts — matches mockup until recruitment module ships. */
-const RECRUITMENT_DONUT = [
-  { name: "New", value: 14 },
-  { name: "In Review", value: 11 },
-  { name: "Interview", value: 9 },
-  { name: "Offered", value: 5 },
-  { name: "On Hold", value: 3 },
-] as const
-
 export async function HrAdminDashboard({ userName }: { userName: string }) {
   const [stats, widgets] = await Promise.all([
     getDashboardStats(),
@@ -126,8 +117,16 @@ export async function HrAdminDashboard({ userName }: { userName: string }) {
           compact
           iconSize="lg"
           label="Payroll Processing"
-          value="0%"
-          detail={`${payrollMonthLabel} Payroll`}
+          value={
+            stats.payrollEmployeeCount > 0
+              ? stats.payrollEmployeeCount.toLocaleString()
+              : "—"
+          }
+          detail={
+            stats.payrollEmployeeCount > 0
+              ? `${stats.payrollTotalHours.toLocaleString()}h บันทึกแล้ว · ${payrollMonthLabel}`
+              : `ยังไม่มีชม.บันทึก · ${payrollMonthLabel}`
+          }
           icon={Loader2}
           accent="info"
         />
@@ -195,7 +194,7 @@ export async function HrAdminDashboard({ userName }: { userName: string }) {
           footerHref="/admin/documents"
           footerLabel="Go to Documents"
         >
-          <DocumentApprovalsList />
+          <DocumentApprovalsList items={widgets.pendingDocuments} />
         </WidgetCard>
 
         <WidgetCard
@@ -221,7 +220,7 @@ export async function HrAdminDashboard({ userName }: { userName: string }) {
 
       <div className="grid min-h-0 flex-1 gap-2 md:gap-3 min-[1024px]:grid-cols-4">
         <WidgetCard compact title="Recruitment Snapshot" href="/admin/recruitment">
-          <RecruitmentDonut compact data={[...RECRUITMENT_DONUT]} />
+          <RecruitmentDonut compact data={[]} />
         </WidgetCard>
 
         <WidgetCard

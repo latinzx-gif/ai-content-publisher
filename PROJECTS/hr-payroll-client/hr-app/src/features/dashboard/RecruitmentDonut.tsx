@@ -22,7 +22,7 @@ export function RecruitmentDonut({
       data={data}
       colors={RECRUITMENT_COLORS}
       centerLabel="Open Positions"
-      emptyMessage="No open positions"
+      emptyMessage="ไม่มีตำแหน่งว่าง"
       compact={compact}
       denseLegend
     />

@@ -1,6 +1,7 @@
 // Dashboard aggregation — read-only through the caller's session client so
 // RLS (hr_is_hr_admin) is the authorization layer. No service role here.
 import { ictDayRangeUtc } from "@/lib/attendance/late"
+import { getPayrollHourReport } from "@/features/payroll/data"
 import { createClient } from "@/lib/supabase/server"
 
 const DAY_MS = 86_400_000
@@ -20,6 +21,8 @@ export type DashboardStats = {
   }
   attendanceByDay: Array<{ day: string; count: number }>
   leavesByStatus: Array<{ status: string; count: number }>
+  payrollEmployeeCount: number
+  payrollTotalHours: number
 }
 
 // "YYYY-MM-DD" of the ICT day containing `instant`, for date-column compares.
@@ -47,7 +50,10 @@ export async function getDashboardStats(
     new Date(now.getTime() + EXPIRY_WINDOW_DAYS * DAY_MS)
   )
 
-  const [activeRes, weekRes, pendingRes, leavesRes, expiryRes] =
+  const payrollYear = now.getFullYear()
+  const payrollMonth = now.getMonth() + 1
+
+  const [activeRes, weekRes, pendingRes, leavesRes, expiryRes, payrollReport] =
     await Promise.all([
       supabase
         .from("hr_employees")
@@ -67,6 +73,7 @@ export async function getDashboardStats(
         .from("hr_employees")
         .select("probation_end, visa_expiry, work_permit_expiry")
         .eq("status", "active"),
+      getPayrollHourReport(payrollYear, payrollMonth),
     ])
 
   const totalActiveEmployees = activeRes.count ?? 0
@@ -121,6 +128,11 @@ export async function getDashboardStats(
     if (withinWindow(row.work_permit_expiry)) expiring.workPermit += 1
   }
 
+  let payrollTotalHours = 0
+  for (const row of payrollReport) {
+    payrollTotalHours += row.regular + row.overtime + row.sick
+  }
+
   return {
     totalActiveEmployees,
     checkedInToday,
@@ -130,5 +142,7 @@ export async function getDashboardStats(
     expiring,
     attendanceByDay: buckets,
     leavesByStatus,
+    payrollEmployeeCount: payrollReport.length,
+    payrollTotalHours: Math.round(payrollTotalHours * 10) / 10,
   }
 }

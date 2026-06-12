@@ -16,6 +16,7 @@ import { EmployeeAvatar } from "@/components/brand/EmployeeAvatar"
 import { StatusPill } from "@/components/brand/StatusPill"
 import { Button, buttonVariants } from "@/components/ui/button"
 import type { ContractType } from "@/features/employees/profile/data"
+import { PAYMENT_METHOD_OPTIONS, type SalaryPaymentMethod } from "@/features/employees/profile/payment-method"
 import { ProfileSectionCard } from "@/features/employees/profile/ProfileSectionCard"
 import {
   ASSIGNABLE_ROLES,
@@ -78,6 +79,7 @@ export function AddEmployeeForm() {
     contract_start: "",
     probation_end: "",
     salary: "",
+    salary_payment_method: "" as "" | Exclude<SalaryPaymentMethod, null>,
     bank_name: "",
     bank_account_name: "",
     bank_account_number: "",
@@ -127,6 +129,11 @@ export function AddEmployeeForm() {
           status: form.status,
           role: form.role,
           employee_code: form.employee_code.trim() || null,
+          salary_payment_method: form.salary_payment_method || null,
+          bank_name: form.bank_name.trim() || null,
+          bank_account_name: form.bank_account_name.trim() || null,
+          bank_account_number: form.bank_account_number.trim() || null,
+          bank_branch: form.bank_branch.trim() || null,
         }),
       })
       const body = (await res.json().catch(() => null)) as
@@ -418,34 +425,70 @@ export function AddEmployeeForm() {
         </ProfileSectionCard>
 
         <ProfileSectionCard title="Bank Account" icon={CreditCard}>
-          <FormField label="Bank Name">
-            <input
+          <FormField label="วิธีรับเงินเดือน" className="sm:col-span-2">
+            <select
               className={inputClassName}
-              value={form.bank_name}
-              onChange={(e) => setField("bank_name", e.target.value)}
-            />
+              value={form.salary_payment_method}
+              onChange={(e) => {
+                const value = e.target.value as typeof form.salary_payment_method
+                setForm((prev) => ({
+                  ...prev,
+                  salary_payment_method: value,
+                  ...(value === "cash"
+                    ? {
+                        bank_name: "",
+                        bank_account_name: "",
+                        bank_account_number: "",
+                        bank_branch: "",
+                      }
+                    : {}),
+                }))
+              }}
+            >
+              <option value="">— เลือกวิธีรับเงิน —</option>
+              {PAYMENT_METHOD_OPTIONS.map((opt) => (
+                <option key={opt.value} value={opt.value}>
+                  {opt.label}
+                </option>
+              ))}
+            </select>
           </FormField>
-          <FormField label="Account Name">
-            <input
-              className={inputClassName}
-              value={form.bank_account_name}
-              onChange={(e) => setField("bank_account_name", e.target.value)}
-            />
-          </FormField>
-          <FormField label="Account Number">
-            <input
-              className={inputClassName}
-              value={form.bank_account_number}
-              onChange={(e) => setField("bank_account_number", e.target.value)}
-            />
-          </FormField>
-          <FormField label="Branch">
-            <input
-              className={inputClassName}
-              value={form.bank_branch}
-              onChange={(e) => setField("bank_branch", e.target.value)}
-            />
-          </FormField>
+          {form.salary_payment_method === "bank" ? (
+            <>
+              <FormField label="Bank Name">
+                <input
+                  className={inputClassName}
+                  value={form.bank_name}
+                  onChange={(e) => setField("bank_name", e.target.value)}
+                />
+              </FormField>
+              <FormField label="Account Name">
+                <input
+                  className={inputClassName}
+                  value={form.bank_account_name}
+                  onChange={(e) => setField("bank_account_name", e.target.value)}
+                />
+              </FormField>
+              <FormField label="Account Number">
+                <input
+                  className={inputClassName}
+                  value={form.bank_account_number}
+                  onChange={(e) => setField("bank_account_number", e.target.value)}
+                />
+              </FormField>
+              <FormField label="Branch">
+                <input
+                  className={inputClassName}
+                  value={form.bank_branch}
+                  onChange={(e) => setField("bank_branch", e.target.value)}
+                />
+              </FormField>
+            </>
+          ) : form.salary_payment_method === "cash" ? (
+            <p className="sm:col-span-2 text-xs text-muted-foreground">
+              รับเงินเดือนเป็นเงินสด
+            </p>
+          ) : null}
         </ProfileSectionCard>
 
         <ProfileSectionCard title="Tax & Social Security" icon={FileText}>

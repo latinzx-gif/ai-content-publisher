@@ -8,6 +8,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import { AttendanceEditButton } from "@/features/attendance/AttendanceHrActions"
 import type { AttendanceRow } from "@/features/attendance/types"
 
 const STATUS_VARIANT: Record<
@@ -19,7 +20,13 @@ const STATUS_VARIANT: Record<
   in_progress: "info",
 }
 
-export function AttendanceTable({ rows }: { rows: AttendanceRow[] }) {
+export function AttendanceTable({
+  rows,
+  canManage = false,
+}: {
+  rows: AttendanceRow[]
+  canManage?: boolean
+}) {
   if (rows.length === 0) {
     return (
       <p className="py-8 text-center text-sm text-muted-foreground">
@@ -40,6 +47,7 @@ export function AttendanceTable({ rows }: { rows: AttendanceRow[] }) {
             <TableHead>ออก</TableHead>
             <TableHead>ชม.</TableHead>
             <TableHead>สถานะ</TableHead>
+            {canManage ? <TableHead className="w-[88px]" /> : null}
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -59,6 +67,11 @@ export function AttendanceTable({ rows }: { rows: AttendanceRow[] }) {
                   variant={STATUS_VARIANT[row.status]}
                 />
               </TableCell>
+              {canManage ? (
+                <TableCell>
+                  <AttendanceEditButton row={row} />
+                </TableCell>
+              ) : null}
             </TableRow>
           ))}
         </TableBody>

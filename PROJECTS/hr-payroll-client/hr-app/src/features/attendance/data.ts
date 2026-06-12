@@ -163,6 +163,8 @@ export async function getAttendanceRecords(params: Required<AttendanceListParams
       employeeName: emp.name,
       department: emp.department,
       date: ictDateFromIso(row.check_in_at),
+      checkInAt: row.check_in_at,
+      checkOutAt: row.check_out_at,
       checkInText: formatIctTime(new Date(row.check_in_at)),
       checkOutText: row.check_out_at ? formatIctTime(new Date(row.check_out_at)) : "—",
       workHours: row.work_hours,

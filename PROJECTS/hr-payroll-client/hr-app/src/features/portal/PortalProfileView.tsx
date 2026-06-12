@@ -11,6 +11,7 @@ import {
 import { EmployeeAvatar } from "@/components/brand/EmployeeAvatar"
 import { StatusPill } from "@/components/brand/StatusPill"
 import type { EmployeeProfile } from "@/features/employees/profile/data"
+import { paymentMethodLabel } from "@/features/employees/profile/payment-method"
 import {
   ProfileField,
   ProfileSectionCard,
@@ -113,8 +114,18 @@ export function PortalProfileView({ profile }: { profile: EmployeeProfile }) {
         </ProfileSectionCard>
 
         <ProfileSectionCard title="Bank Account" icon={CreditCard}>
-          <ProfileField label="Bank Name" value="—" />
-          <ProfileField label="Account Number" value="—" />
+          <ProfileField
+            label="Payment Method"
+            value={paymentMethodLabel(profile.salary_payment_method)}
+          />
+          {profile.salary_payment_method === "bank" ? (
+            <>
+              <ProfileField label="Bank Name" value={profile.bank_name} />
+              <ProfileField label="Account Number" value={profile.bank_account_number} />
+            </>
+          ) : profile.salary_payment_method === "cash" ? (
+            <ProfileField label="Note" value="รับเงินเดือนเป็นเงินสด" />
+          ) : null}
         </ProfileSectionCard>
 
         <ProfileSectionCard title="Tax & Social Security" icon={FileText}>

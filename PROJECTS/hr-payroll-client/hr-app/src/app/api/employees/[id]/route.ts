@@ -2,9 +2,11 @@ import { NextResponse, type NextRequest } from "next/server"
 
 import { ictToday } from "@/features/employees/data"
 import type { ContractType } from "@/features/employees/profile/data"
+import type { SalaryPaymentMethod } from "@/features/employees/profile/payment-method"
 import { isAssignableRole } from "@/lib/auth/employee-roles"
 import { canManageHr } from "@/lib/auth/roles"
 import { getCurrentEmployee } from "@/lib/auth/session"
+import { normalizeBankFields } from "@/lib/employees/bank-fields"
 import { createClient } from "@/lib/supabase/server"
 
 const DAY_MS = 86_400_000
@@ -33,6 +35,11 @@ type PatchBody = {
   role?: string
   branch_id?: string | null
   employee_code?: string | null
+  salary_payment_method?: SalaryPaymentMethod
+  bank_name?: string | null
+  bank_account_name?: string | null
+  bank_account_number?: string | null
+  bank_branch?: string | null
 }
 
 export async function PATCH(
@@ -146,6 +153,12 @@ export async function PATCH(
         updates.branch_id = body.branch_id
       }
     }
+
+    const bank = normalizeBankFields(body)
+    if (bank.error) {
+      return NextResponse.json({ error: bank.error }, { status: 400 })
+    }
+    Object.assign(updates, bank.updates)
   }
 
   if (Object.keys(updates).length === 0) {

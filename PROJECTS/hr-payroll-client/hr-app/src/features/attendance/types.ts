@@ -8,6 +8,8 @@ export type AttendanceRow = {
   employeeName: string
   department: string | null
   date: string
+  checkInAt: string
+  checkOutAt: string | null
   checkInText: string
   checkOutText: string
   workHours: number | null

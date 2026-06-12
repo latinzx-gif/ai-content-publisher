@@ -10,6 +10,10 @@ import type { BranchRow } from "@/features/branches/data"
 import type { ContractType, EmployeeProfile } from "@/features/employees/profile/data"
 import { PendingRegistrationApproval } from "@/features/employees/profile/PendingRegistrationApproval"
 import {
+  PAYMENT_METHOD_OPTIONS,
+  type SalaryPaymentMethod,
+} from "@/features/employees/profile/payment-method"
+import {
   ASSIGNABLE_ROLES,
   type AssignableRole,
 } from "@/lib/auth/employee-roles"
@@ -58,6 +62,11 @@ type FormState = {
   role: AssignableRole
   employee_code: string
   branch_id: string
+  salary_payment_method: SalaryPaymentMethod
+  bank_name: string
+  bank_account_name: string
+  bank_account_number: string
+  bank_branch: string
 }
 
 function toFormState(profile: EmployeeProfile): FormState {
@@ -80,6 +89,13 @@ function toFormState(profile: EmployeeProfile): FormState {
       : "employee",
     employee_code: profile.employee_code ?? "",
     branch_id: profile.branch_id ?? "",
+    salary_payment_method:
+      profile.salary_payment_method ??
+      (profile.bank_account_number ? "bank" : null),
+    bank_name: profile.bank_name ?? "",
+    bank_account_name: profile.bank_account_name ?? "",
+    bank_account_number: profile.bank_account_number ?? "",
+    bank_branch: profile.bank_branch ?? "",
   }
 }
 
@@ -141,6 +157,23 @@ export function EmployeeProfileForm({
           role: form.role,
           employee_code: form.employee_code.trim() || null,
           branch_id: form.branch_id || null,
+          salary_payment_method: form.salary_payment_method,
+          bank_name:
+            form.salary_payment_method === "bank"
+              ? form.bank_name.trim() || null
+              : null,
+          bank_account_name:
+            form.salary_payment_method === "bank"
+              ? form.bank_account_name.trim() || null
+              : null,
+          bank_account_number:
+            form.salary_payment_method === "bank"
+              ? form.bank_account_number.trim() || null
+              : null,
+          bank_branch:
+            form.salary_payment_method === "bank"
+              ? form.bank_branch.trim() || null
+              : null,
         }),
       })
       if (!res.ok) {
@@ -351,6 +384,82 @@ export function EmployeeProfileForm({
                 <option value="inactive">Inactive</option>
               </select>
             </Field>
+          </div>
+        </WidgetCard>
+
+        <WidgetCard title="บัญชีธนาคาร / การรับเงินเดือน">
+          <div className="flex flex-col gap-3">
+            <Field label="วิธีรับเงินเดือน">
+              <select
+                className={inputClassName}
+                value={form.salary_payment_method ?? ""}
+                onChange={(e) => {
+                  const value = (e.target.value || null) as SalaryPaymentMethod
+                  setForm((prev) => ({
+                    ...prev,
+                    salary_payment_method: value,
+                    ...(value === "cash"
+                      ? {
+                          bank_name: "",
+                          bank_account_name: "",
+                          bank_account_number: "",
+                          bank_branch: "",
+                        }
+                      : {}),
+                  }))
+                }}
+              >
+                <option value="">— เลือกวิธีรับเงิน —</option>
+                {PAYMENT_METHOD_OPTIONS.map((opt) => (
+                  <option key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </option>
+                ))}
+              </select>
+            </Field>
+
+            {form.salary_payment_method === "cash" ? (
+              <p className="rounded-lg bg-muted/40 px-3 py-2 text-xs text-muted-foreground">
+                พนักงานรับเงินเดือนเป็นเงินสด — ไม่ต้องกรอกข้อมูลบัญชีธนาคาร
+              </p>
+            ) : null}
+
+            {form.salary_payment_method === "bank" ? (
+              <>
+                <Field label="ชื่อธนาคาร">
+                  <input
+                    className={inputClassName}
+                    placeholder="เช่น กสิกรไทย, กรุงเทพ"
+                    value={form.bank_name}
+                    onChange={(e) => setField("bank_name", e.target.value)}
+                  />
+                </Field>
+                <Field label="ชื่อบัญชี">
+                  <input
+                    className={inputClassName}
+                    value={form.bank_account_name}
+                    onChange={(e) => setField("bank_account_name", e.target.value)}
+                  />
+                </Field>
+                <Field label="เลขที่บัญชี">
+                  <input
+                    className={inputClassName}
+                    inputMode="numeric"
+                    value={form.bank_account_number}
+                    onChange={(e) =>
+                      setField("bank_account_number", e.target.value)
+                    }
+                  />
+                </Field>
+                <Field label="สาขา">
+                  <input
+                    className={inputClassName}
+                    value={form.bank_branch}
+                    onChange={(e) => setField("bank_branch", e.target.value)}
+                  />
+                </Field>
+              </>
+            ) : null}
           </div>
         </WidgetCard>
 

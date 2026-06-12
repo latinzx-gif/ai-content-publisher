@@ -1,11 +1,13 @@
 import { NextResponse } from "next/server"
 
 import type { ContractType } from "@/features/employees/profile/data"
+import type { SalaryPaymentMethod } from "@/features/employees/profile/payment-method"
 import {
   isAssignableRole,
 } from "@/lib/auth/employee-roles"
 import { canManageHr } from "@/lib/auth/roles"
 import { getCurrentEmployee } from "@/lib/auth/session"
+import { normalizeBankFields } from "@/lib/employees/bank-fields"
 import { createClient } from "@/lib/supabase/server"
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
@@ -28,6 +30,11 @@ type CreateBody = {
   status?: "active" | "inactive"
   role?: string
   employee_code?: string | null
+  salary_payment_method?: SalaryPaymentMethod
+  bank_name?: string | null
+  bank_account_name?: string | null
+  bank_account_number?: string | null
+  bank_branch?: string | null
 }
 
 export async function POST(request: Request) {
@@ -82,6 +89,11 @@ export async function POST(request: Request) {
       ? body.employee_code.trim()
       : null
 
+  const bank = normalizeBankFields(body)
+  if (bank.error) {
+    return NextResponse.json({ error: bank.error }, { status: 400 })
+  }
+
   const { data, error } = await supabase
     .from("hr_employees")
     .insert({
@@ -102,6 +114,7 @@ export async function POST(request: Request) {
       work_permit_expiry: body.work_permit_expiry || null,
       status: body.status === "inactive" ? "inactive" : "active",
       role,
+      ...bank.updates,
     })
     .select("id")
     .single()
