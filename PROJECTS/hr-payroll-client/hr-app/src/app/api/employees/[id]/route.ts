@@ -3,6 +3,7 @@ import { NextResponse, type NextRequest } from "next/server"
 import { ictToday } from "@/features/employees/data"
 import type { ContractType } from "@/features/employees/profile/data"
 import { isAssignableRole } from "@/lib/auth/employee-roles"
+import { canManageHr } from "@/lib/auth/roles"
 import { getCurrentEmployee } from "@/lib/auth/session"
 import { createClient } from "@/lib/supabase/server"
 
@@ -38,7 +39,7 @@ export async function PATCH(
   context: { params: Promise<{ id: string }> }
 ) {
   const caller = await getCurrentEmployee()
-  if (!caller || (caller.role !== "hr" && caller.role !== "admin")) {
+  if (!caller || !canManageHr(caller.role)) {
     return NextResponse.json({ error: "forbidden" }, { status: 403 })
   }
 

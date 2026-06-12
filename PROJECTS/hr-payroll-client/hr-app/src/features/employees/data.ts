@@ -132,15 +132,15 @@ export async function getEmployees(params: Required<EmployeeListParams>) {
   return { employees, total: count ?? 0, today }
 }
 
-/** Active employees self-registered — awaiting HR branch/role setup */
+/** Self-registrations awaiting HR approval + active employees missing branch */
 export async function getOnboardingPendingCount(): Promise<number> {
   const supabase = await createClient()
   const { count, error } = await supabase
     .from("hr_employees")
     .select("id", { count: "exact", head: true })
-    .eq("status", "active")
-    .eq("role", "employee")
-    .is("branch_id", null)
+    .or(
+      "and(status.eq.inactive,role.eq.employee),and(status.eq.active,role.eq.employee,branch_id.is.null)"
+    )
   if (error) throw error
   return count ?? 0
 }

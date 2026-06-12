@@ -4,6 +4,7 @@ import type { ContractType } from "@/features/employees/profile/data"
 import {
   isAssignableRole,
 } from "@/lib/auth/employee-roles"
+import { canManageHr } from "@/lib/auth/roles"
 import { getCurrentEmployee } from "@/lib/auth/session"
 import { createClient } from "@/lib/supabase/server"
 
@@ -30,7 +31,7 @@ type CreateBody = {
 
 export async function POST(request: Request) {
   const caller = await getCurrentEmployee()
-  if (!caller || (caller.role !== "hr" && caller.role !== "admin")) {
+  if (!caller || !canManageHr(caller.role)) {
     return NextResponse.json({ error: "forbidden" }, { status: 403 })
   }
 

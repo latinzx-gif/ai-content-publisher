@@ -7,6 +7,7 @@ import {
   LINE_REGISTER_COOKIE,
   LINE_REGISTER_COOKIE_OPTS,
 } from "@/lib/auth/register-cookie"
+import { notifyRegistrationPending } from "@/lib/line/notify-registration"
 
 type RegisterBody = {
   name?: string
@@ -87,6 +88,8 @@ export async function POST(request: NextRequest) {
     status: "inactive" as const,
   }
 
+  let employeeId: string
+
   if (existing) {
     const { error: updateError } = await admin
       .from("hr_employees")
@@ -96,16 +99,22 @@ export async function POST(request: NextRequest) {
     if (updateError) {
       return NextResponse.json({ error: updateError.message }, { status: 500 })
     }
+    employeeId = existing.id
   } else {
-    const { error: insertError } = await admin.from("hr_employees").insert(row)
+    const { data: inserted, error: insertError } = await admin
+      .from("hr_employees")
+      .insert(row)
+      .select("id")
+      .single()
 
-    if (insertError) {
+    if (insertError || !inserted) {
       const msg =
-        insertError.code === "23505"
+        insertError?.code === "23505"
           ? "บัญชี LINE นี้ลงทะเบียนแล้ว"
-          : insertError.message
+          : (insertError?.message ?? "insert failed")
       return NextResponse.json({ error: msg }, { status: 500 })
     }
+    employeeId = inserted.id as string
   }
 
   const response = NextResponse.json({ redirect: PENDING_REGISTRATION_PATH })
@@ -124,5 +133,10 @@ export async function POST(request: NextRequest) {
     ...LINE_REGISTER_COOKIE_OPTS,
     maxAge: 0,
   })
+
+  void notifyRegistrationPending(employeeId).catch((err) => {
+    console.error("register notify HR failed:", err)
+  })
+
   return response
 }

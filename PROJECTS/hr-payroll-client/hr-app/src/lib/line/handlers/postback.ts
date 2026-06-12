@@ -2,6 +2,10 @@ import type { messagingApi, webhook } from "@line/bot-sdk"
 
 import { getLineClient } from "@/lib/line/client"
 import { buildActionMessages } from "@/lib/line/handlers/actions"
+import {
+  handleRegistrationPostback,
+  tryParseRegistrationPostback,
+} from "@/lib/line/handlers/registration-postback"
 import { lineAccessGateMessages } from "@/lib/line/line-access-gate"
 import { parsePostbackAction } from "@/lib/line/types"
 
@@ -19,12 +23,20 @@ export async function handlePostback(
     return
   }
 
-  const action = parsePostbackAction(event.postback.data)
   const lineUserId =
     event.source?.type === "user" ? event.source.userId : undefined
 
+  const registration = tryParseRegistrationPostback(event.postback.data)
+  const action = parsePostbackAction(event.postback.data)
+
   let messages: messagingApi.Message[]
-  if (!action) {
+  if (registration) {
+    messages = await handleRegistrationPostback(
+      registration.action,
+      registration.employeeId,
+      lineUserId
+    )
+  } else if (!action) {
     messages = [fallbackText()]
   } else {
     const blocked = await lineAccessGateMessages(lineUserId, action)

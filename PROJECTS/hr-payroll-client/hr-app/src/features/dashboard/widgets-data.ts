@@ -41,6 +41,15 @@ export type RecentAlertItem = {
   status: string
 }
 
+export type PendingRegistrationItem = {
+  id: string
+  name: string
+  phone: string | null
+  branchName: string | null
+  department: string | null
+  createdAt: string | null
+}
+
 const DAY_MS = 86_400_000
 const ICT_OFFSET_MS = 7 * 60 * 60 * 1000
 
@@ -68,7 +77,7 @@ export async function getDashboardWidgets() {
     .toISOString()
     .slice(0, 10)
 
-  const [pendingLeavesRes, attendanceRes, employeesRes, alertsRes] =
+  const [pendingLeavesRes, attendanceRes, employeesRes, alertsRes, pendingRegRes, pendingRegCountRes] =
     await Promise.all([
     supabase
       .from("hr_leaves")
@@ -99,6 +108,20 @@ export async function getDashboardWidgets() {
       .in("status", ["pending", "failed"])
       .order("trigger_date", { ascending: false })
       .limit(5),
+    supabase
+      .from("hr_employees")
+      .select(
+        "id, name, phone, department, created_at, hr_branches(name)"
+      )
+      .eq("status", "inactive")
+      .eq("role", "employee")
+      .order("created_at", { ascending: false })
+      .limit(8),
+    supabase
+      .from("hr_employees")
+      .select("id", { count: "exact", head: true })
+      .eq("status", "inactive")
+      .eq("role", "employee"),
   ])
 
   const pendingLeaves: PendingLeaveItem[] = ((pendingLeavesRes.data ?? []) as Array<{
@@ -238,6 +261,29 @@ export async function getDashboardWidgets() {
     status: row.status,
   }))
 
+  const pendingRegistrations: PendingRegistrationItem[] = (
+    (pendingRegRes.data ?? []) as Array<{
+      id: string
+      name: string
+      phone: string | null
+      department: string | null
+      created_at: string | null
+      hr_branches: { name: string } | Array<{ name: string }> | null
+    }>
+  ).map((row) => {
+    const branch = Array.isArray(row.hr_branches)
+      ? row.hr_branches[0]
+      : row.hr_branches
+    return {
+      id: row.id,
+      name: row.name,
+      phone: row.phone,
+      branchName: branch?.name ?? null,
+      department: row.department,
+      createdAt: row.created_at,
+    }
+  })
+
   const pendingOnboarding = onboardingInProgress + onboardingPending
 
   return {
@@ -248,6 +294,8 @@ export async function getDashboardWidgets() {
     onboardingDonut,
     newHires: newHires.slice(0, 5),
     pendingOnboarding,
+    pendingRegistrations,
+    pendingRegistrationCount: pendingRegCountRes.count ?? pendingRegistrations.length,
     recentAlerts,
     unresolvedAlerts: recentAlerts.length,
   }

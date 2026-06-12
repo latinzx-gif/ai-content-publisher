@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import { EmployeeProfileForm } from "@/features/employees/profile/EmployeeProfileForm"
 import { EmployeeProfileView } from "@/features/employees/profile/EmployeeProfileView"
 import { LifecyclePanel } from "@/features/employees/profile/LifecyclePanel"
+import { PendingRegistrationApproval } from "@/features/employees/profile/PendingRegistrationApproval"
 import type { EmployeeProfile } from "@/features/employees/profile/data"
 
 import type { BranchRow } from "@/features/branches/data"
@@ -30,6 +31,8 @@ export function EmployeeProfilePageClient({
   readOnly?: boolean
 }) {
   const [editing, setEditing] = useState(false)
+  const isPendingRegistration =
+    profile.status === "inactive" && profile.role === "employee"
 
   if (editing) {
     return (
@@ -54,6 +57,9 @@ export function EmployeeProfilePageClient({
 
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto pr-1">
+      {!readOnly && isPendingRegistration ? (
+        <PendingRegistrationApproval employeeId={profile.id} />
+      ) : null}
       <EmployeeProfileView
         profile={profile}
         actions={

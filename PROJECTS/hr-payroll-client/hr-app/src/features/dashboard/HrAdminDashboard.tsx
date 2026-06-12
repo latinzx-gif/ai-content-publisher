@@ -25,6 +25,7 @@ import {
   AttendanceExceptionsList,
   ComplianceRemindersList,
   DocumentApprovalsList,
+  PendingRegistrationsList,
   RecentHrTicketsList,
 } from "@/features/dashboard/DashboardWidgetLists"
 import { AttendanceTrendBars } from "@/features/dashboard/AttendanceTrendBars"
@@ -98,11 +99,11 @@ export async function HrAdminDashboard({ userName }: { userName: string }) {
         <KpiCard
           compact
           iconSize="lg"
-          label="Pending Onboarding"
-          value={widgets.pendingOnboarding}
-          detail="New hires to onboard"
+          label="Pending Registration"
+          value={widgets.pendingRegistrationCount}
+          detail="Self-registrations awaiting approval"
           icon={UserPlus}
-          accent="success"
+          accent={widgets.pendingRegistrationCount > 0 ? "warning" : "success"}
         />
         <KpiCard
           compact
@@ -142,7 +143,19 @@ export async function HrAdminDashboard({ userName }: { userName: string }) {
       </div>
 
       <div className="grid min-h-0 flex-1 gap-2 md:gap-3 min-[1024px]:grid-cols-4">
-        <WidgetCard compact title="Employee Onboarding Status" href="/admin/employees">
+        <WidgetCard
+          compact
+          title="Employee Onboarding Status"
+          href="/admin/employees?status=onboarding"
+        >
+          {widgets.pendingRegistrationCount > 0 ? (
+            <div className="mb-3 rounded-lg border border-amber-200/80 bg-amber-50/80 px-2.5 py-2 dark:border-amber-900/50 dark:bg-amber-950/30">
+              <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-wide text-amber-800 dark:text-amber-200">
+                รออนุมัติลงทะเบียน ({widgets.pendingRegistrationCount})
+              </p>
+              <PendingRegistrationsList items={widgets.pendingRegistrations} />
+            </div>
+          ) : null}
           <OnboardingDonut compact data={widgets.onboardingDonut} />
           <div className="mt-2 border-t border-border/60 pt-2">
             <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">

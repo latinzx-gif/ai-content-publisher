@@ -15,11 +15,13 @@ import {
   Wallet,
   type LucideIcon,
 } from "lucide-react"
+import Link from "next/link"
 
 import { StatusPill } from "@/components/brand/StatusPill"
 import type {
   AttendanceException,
   ComplianceItem,
+  PendingRegistrationItem,
   RecentAlertItem,
 } from "@/features/dashboard/widgets-data"
 import { cn } from "@/lib/utils"
@@ -406,6 +408,41 @@ export function AttendanceExceptionsList({
           </li>
         )
       })}
+    </ul>
+  )
+}
+
+export function PendingRegistrationsList({
+  items,
+}: {
+  items: PendingRegistrationItem[]
+}) {
+  if (items.length === 0) {
+    return (
+      <p className="text-sm text-muted-foreground">ไม่มีคำขอลงทะเบียนรออนุมัติ</p>
+    )
+  }
+
+  return (
+    <ul className="space-y-2">
+      {items.map((item) => (
+        <li key={item.id}>
+          <Link
+            href={`/admin/employees/${item.id}`}
+            className="flex items-start justify-between gap-2 rounded-lg border border-border/60 bg-muted/20 px-2.5 py-2 transition-colors hover:border-brand-red/40 hover:bg-brand-red/5"
+          >
+            <div className="min-w-0">
+              <p className="truncate text-sm font-medium">{item.name}</p>
+              <p className="truncate text-xs text-muted-foreground">
+                {[item.branchName, item.phone, item.department]
+                  .filter(Boolean)
+                  .join(" · ") || "—"}
+              </p>
+            </div>
+            <StatusPill label="รออนุมัติ" variant="pending" />
+          </Link>
+        </li>
+      ))}
     </ul>
   )
 }
