@@ -1,7 +1,9 @@
 "use client";
 
 import { useState, useRef } from "react";
+import { useRouter } from "next/navigation";
 import { Sparkles, ImageIcon, Loader2 } from "lucide-react";
+import { useDemoStore } from "@/lib/publisher/demo/store";
 
 type Platform = "facebook" | "instagram" | "linkedin" | "tiktok";
 
@@ -235,6 +237,9 @@ export default function CreatePage() {
   const [aiDegraded, setAiDegraded] = useState(false);
   const abortRef = useRef<AbortController | null>(null);
 
+  const router = useRouter();
+  const { addPost } = useDemoStore();
+
   const platform = PLATFORMS.find((p) => p.id === activePlatform)!;
   const charCount = caption.length;
   const isOverLimit = charCount > CHAR_LIMIT;
@@ -314,6 +319,21 @@ export default function CreatePage() {
     }
 
     if (!ctrl.signal.aborted) setGeneratingText(false);
+  }
+
+  function handlePublish() {
+    if (!caption.trim()) return;
+    addPost({
+      title: `${platform.label} Post — ${new Date().toLocaleDateString("th-TH")}`,
+      caption,
+      platform: activePlatform,
+      status: "text_generated",
+      brand: "DataClaw",
+      tags: hashtags.split(/\s+/).filter((t) => t.startsWith("#")).map((t) => t.slice(1)),
+      createdAt: new Date().toISOString(),
+      comments: [],
+    });
+    router.push("/publisher/demo/approvals");
   }
 
   async function handleGenerateImage() {
@@ -449,7 +469,7 @@ export default function CreatePage() {
               <button
                 className="text-sm px-5 py-2 rounded-lg text-white font-semibold hover:opacity-90 transition-opacity"
                 style={{ backgroundColor: platform.color }}
-                onClick={() => alert("Post added to queue!")}
+                onClick={handlePublish}
               >
                 Publish
               </button>
