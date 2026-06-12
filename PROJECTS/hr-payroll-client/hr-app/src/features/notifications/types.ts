@@ -3,6 +3,7 @@ export const NOTIFICATION_LIST_LIMIT = 10
 
 export type NotificationKind =
   | "registration"
+  | "onboarding"
   | "leave"
   | "attendance"
   | "overtime"

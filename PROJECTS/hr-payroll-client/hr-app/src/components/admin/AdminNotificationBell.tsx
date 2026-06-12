@@ -25,6 +25,7 @@ const KIND_META: Record<
   { icon: LucideIcon; tone: string }
 > = {
   registration: { icon: UserPlus, tone: "text-brand-red" },
+  onboarding: { icon: UserPlus, tone: "text-amber-700" },
   leave: { icon: CalendarDays, tone: "text-sky-600" },
   attendance: { icon: Clock, tone: "text-amber-600" },
   overtime: { icon: Timer, tone: "text-violet-600" },

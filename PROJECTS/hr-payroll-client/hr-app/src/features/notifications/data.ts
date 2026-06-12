@@ -1,4 +1,7 @@
-import { ictToday } from "@/features/employees/data"
+import {
+  ictToday,
+  ONBOARDING_PENDING_OR_FILTER,
+} from "@/features/employees/data"
 import { DOC_TYPE_LABELS } from "@/features/documents/types"
 import { LEAVE_TYPE_LABELS, type LeaveType } from "@/features/leave/types"
 import type {
@@ -25,6 +28,7 @@ const LIST_LIMIT = NOTIFICATION_LIST_LIMIT
 
 const KIND_ORDER: Record<NotificationKind, number> = {
   registration: 0,
+  onboarding: 0,
   leave: 1,
   attendance: 2,
   overtime: 3,
@@ -142,8 +146,9 @@ async function hrApprovalNotifications(): Promise<{
 }> {
   const supabase = await createClient()
   const [
-    regRes,
-    regCountRes,
+    onboardingRes,
+    registrationCountRes,
+    onboardingCountRes,
     leaveRes,
     leaveCountRes,
     attRes,
@@ -157,9 +162,10 @@ async function hrApprovalNotifications(): Promise<{
   ] = await Promise.all([
     supabase
       .from("hr_employees")
-      .select("id, employee_code, name, phone, created_at, hr_branches(name)")
-      .eq("status", "inactive")
-      .eq("role", "employee")
+      .select(
+        "id, employee_code, name, phone, status, branch_id, created_at, hr_branches(name)"
+      )
+      .or(ONBOARDING_PENDING_OR_FILTER)
       .order("created_at", { ascending: false })
       .limit(LIST_LIMIT),
     supabase
@@ -167,6 +173,12 @@ async function hrApprovalNotifications(): Promise<{
       .select("id", { count: "exact", head: true })
       .eq("status", "inactive")
       .eq("role", "employee"),
+    supabase
+      .from("hr_employees")
+      .select("id", { count: "exact", head: true })
+      .eq("status", "active")
+      .eq("role", "employee")
+      .is("branch_id", null),
     supabase
       .from("hr_leaves")
       .select(
@@ -213,7 +225,7 @@ async function hrApprovalNotifications(): Promise<{
       .limit(LIST_LIMIT),
     supabase
       .from("hr_document_requests")
-      .select("id", { count: "exact", head: true })
+      .select("id, hr_employees!inner(id)", { count: "exact", head: true })
       .eq("status", "pending"),
     supabase
       .from("hr_complaints")
@@ -229,25 +241,28 @@ async function hrApprovalNotifications(): Promise<{
 
   const items: NotificationItem[] = []
 
-  for (const row of regRes.data ?? []) {
+  for (const row of onboardingRes.data ?? []) {
     const branch = Array.isArray(row.hr_branches)
       ? row.hr_branches[0]
       : row.hr_branches
+    const pendingRegistration = row.status === "inactive"
+    const needsBranch = row.status === "active" && row.branch_id === null
     items.push({
-      id: `registration-${row.id}`,
-      kind: "registration",
-      title: "ลงทะเบียนใหม่",
+      id: `${pendingRegistration ? "registration" : "onboarding"}-${row.id}`,
+      kind: pendingRegistration ? "registration" : "onboarding",
+      title: pendingRegistration ? "ลงทะเบียนใหม่" : "รอกำหนดสาขา",
       summary: [
         row.employee_code as string | null,
         row.name,
         branch?.name,
         row.phone,
+        needsBranch ? "ยังไม่กำหนดสาขา" : null,
       ]
         .filter(Boolean)
         .join(" · "),
       href: `/admin/employees/${row.id}`,
       createdAt: row.created_at as string | null,
-      urgency: "urgent",
+      urgency: pendingRegistration ? "urgent" : "normal",
     })
   }
 
@@ -316,7 +331,8 @@ async function hrApprovalNotifications(): Promise<{
   }
 
   const total =
-    (regCountRes.count ?? 0) +
+    (registrationCountRes.count ?? 0) +
+    (onboardingCountRes.count ?? 0) +
     (leaveCountRes.count ?? 0) +
     (attCountRes.count ?? 0) +
     (otCountRes.count ?? 0) +
@@ -327,7 +343,8 @@ async function hrApprovalNotifications(): Promise<{
     items: sortItemsByRecency(items),
     total,
     counts: {
-      registration: regCountRes.count ?? 0,
+      registration: registrationCountRes.count ?? 0,
+      onboarding: onboardingCountRes.count ?? 0,
       leave: leaveCountRes.count ?? 0,
       attendance: attCountRes.count ?? 0,
       overtime: otCountRes.count ?? 0,

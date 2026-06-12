@@ -2,6 +2,7 @@ import type { AdminNavItem } from "@/components/admin/admin-nav-types"
 
 export type HrApprovalCounts = {
   registration: number
+  onboarding: number
   leave: number
   attendance: number
   overtime: number
@@ -14,6 +15,7 @@ export type NavAlertBadgeMap = Record<string, number>
 export function hrApprovalCountsTotal(counts: HrApprovalCounts): number {
   return (
     counts.registration +
+    counts.onboarding +
     counts.leave +
     counts.attendance +
     counts.overtime +
@@ -40,7 +42,7 @@ export function buildHrNavBadges(
     badges["/admin/manager"] = managerQueueTotal
   }
 
-  const employees = counts.registration + complianceTotal
+  const employees = counts.registration + counts.onboarding + complianceTotal
   if (employees > 0) {
     badges["/admin/employees"] = employees
   }

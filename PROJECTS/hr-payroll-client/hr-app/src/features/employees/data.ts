@@ -4,6 +4,10 @@ import { createClient } from "@/lib/supabase/server"
 
 export const PAGE_SIZE = 12
 
+/** Self-registrations awaiting HR approval + active employees missing branch */
+export const ONBOARDING_PENDING_OR_FILTER =
+  "and(status.eq.inactive,role.eq.employee),and(status.eq.active,role.eq.employee,branch_id.is.null)"
+
 // Whitelist: sort column comes from the URL — never pass it through raw.
 const SORT_COLUMNS = ["name", "contract_start"] as const
 export type SortColumn = (typeof SORT_COLUMNS)[number]
@@ -95,9 +99,7 @@ export async function getEmployees(params: Required<EmployeeListParams>) {
     query = query.eq("status", "active").gte("probation_end", today)
   }
   if (params.status === "onboarding") {
-    query = query.or(
-      "and(status.eq.inactive,role.eq.employee),and(status.eq.active,role.eq.employee,branch_id.is.null)"
-    )
+    query = query.or(ONBOARDING_PENDING_OR_FILTER)
   }
 
   query = query
@@ -138,9 +140,7 @@ export async function getOnboardingPendingCount(): Promise<number> {
   const { count, error } = await supabase
     .from("hr_employees")
     .select("id", { count: "exact", head: true })
-    .or(
-      "and(status.eq.inactive,role.eq.employee),and(status.eq.active,role.eq.employee,branch_id.is.null)"
-    )
+    .or(ONBOARDING_PENDING_OR_FILTER)
   if (error) throw error
   return count ?? 0
 }
