@@ -72,16 +72,16 @@ export function InventoryPendingInboundWidget({
   summary: InventoryDashboardSummary
 }) {
   return (
-    <WidgetCard compact title="รับเข้ารออนุมัติ" href="/admin/inventory" actionLabel="คลังสินค้า">
+    <WidgetCard compact title="ใบรับเข้าเปิดสแกน" href="/admin/inventory/inbound" actionLabel="ดูทั้งหมด">
       <div className="flex items-start gap-2">
         <Truck className="mt-0.5 size-4 shrink-0 text-orange-600" aria-hidden />
         <div className="min-w-0 flex-1">
           <MetricHero value={summary.pendingInboundCount} accent="warning" />
-          <p className="mt-1 text-[10px] text-muted-foreground">ใบรับเข้าสถานะ pending</p>
+          <p className="mt-1 text-[10px] text-muted-foreground">รอคลังสแกน / HR ตรวจอนุมัติ</p>
         </div>
       </div>
       {summary.pendingInboundRows.length === 0 ? (
-        <EmptyHint>ยังไม่มีใบรับเข้ารออนุมัติ</EmptyHint>
+        <EmptyHint>ยังไม่มีใบเปิดรับสแกน</EmptyHint>
       ) : (
         <ul className="mt-2 divide-y divide-border/60 border-t border-border/60 pt-2">
           {summary.pendingInboundRows.map((row) => (

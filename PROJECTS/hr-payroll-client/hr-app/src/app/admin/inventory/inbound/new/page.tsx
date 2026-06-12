@@ -39,7 +39,7 @@ export default async function NewInboundOrderPage() {
   return (
     <AdminPageShell
       title="สร้างใบรับเข้า"
-      description="แบบร่าง — เพิ่มรายการแล้วส่งรออนุมัติ"
+      description="สร้างใบรับเข้า — คลังสแกนได้ทันที → HR ตรวจแล้วอนุมัติเพิ่มสต็อก"
       action={
         <Link
           href="/admin/inventory/inbound"
@@ -83,7 +83,7 @@ export default async function NewInboundOrderPage() {
           />
         </InventoryFormField>
         <button type="submit" className={cn(buttonVariants({ size: "sm" }))}>
-          สร้างแบบร่าง
+          สร้างและเปิดรับสแกน
         </button>
       </form>
     </AdminPageShell>

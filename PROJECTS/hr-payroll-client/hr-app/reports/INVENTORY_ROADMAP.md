@@ -122,7 +122,7 @@ Link `hr_branches` ↔ `inv_branches` (nullable FK or mapping table) so CEO/repo
 | Item | Detail |
 |------|--------|
 | `/admin/inventory/inbound` | List + create inbound order |
-| Flow | draft → pending → HR approve → update `inv_stock_balances` |
+| Flow | HR สร้างใบ (pending) → คลังสแกน → HR ตรวจอนุมัติ → `inv_stock_balances` |
 | Items | SKU, qty, cost, lot, expiry on `inv_inbound_items` |
 
 ### Mobile / LIFF

@@ -6,7 +6,7 @@ import { WidgetCard } from "@/components/brand/WidgetCard"
 const SECTIONS = [
   {
     title: "รับเข้าสินค้า",
-    description: "Inbound — สร้างใบรับเข้า สแกน LIFF อนุมัติเพิ่มสต็อก",
+    description: "Inbound — สร้างใบ → คลังสแกน → HR อนุมัติเพิ่มสต็อก",
     href: "/admin/inventory/inbound",
     icon: PackagePlus,
   },

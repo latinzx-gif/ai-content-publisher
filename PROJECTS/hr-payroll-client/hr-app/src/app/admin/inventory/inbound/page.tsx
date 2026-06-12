@@ -49,7 +49,7 @@ export default async function InventoryInboundPage() {
       description={
         readOnly
           ? "ดูใบรับเข้า (read-only)"
-          : "สร้างใบรับเข้า → สแกน barcode (LIFF) → HR อนุมัติ → เพิ่มสต็อก"
+          : "สร้างใบรับเข้า → คลังสแกน barcode → HR ตรวจอนุมัติ → เพิ่มสต็อก"
       }
       action={
         canManage ? (

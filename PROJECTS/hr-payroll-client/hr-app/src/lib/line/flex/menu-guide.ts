@@ -536,16 +536,16 @@ export function inventoryGuideFlex(portalUrl?: string): messagingApi.FlexMessage
       subtitle: "สแกน barcode รับเข้าสินค้า",
       accentColor: "#1565C0",
       description: hasPortal
-        ? "เลือกใบรับเข้าที่ HR ส่งรอสแกน แล้วสแกน barcode เพิ่มรายการ"
+        ? "เลือกใบรับเข้าที่ HR สร้างแล้ว สแกน barcode เพิ่มรายการ"
         : "ระบบคลังสินค้ากำลังเตรียมเปิดใช้งาน",
       steps: hasPortal
         ? [
             "กดปุ่ม \"เปิดรายการรับเข้า\" ด้านล่าง",
-            "เลือกใบที่สถานะรอสแกน",
-            "สแกนหรือพิมพ์ barcode แล้วบันทึก",
+            "เลือกใบที่เปิดรับสแกน",
+            "สแกนหรือพิมพ์ barcode แล้วบันทึก — HR ตรวจอนุมัติทีหลัง",
           ]
         : ["ติดต่อ HR ผ่านเมนู \"ติดต่อ HR\""],
-      tip: "HR จะสร้างใบรับเข้าก่อน — สแกนได้เมื่อสถานะรออนุมัติ",
+      tip: "HR สร้างใบแล้วสแกนได้ทันที — สต็อกเพิ่มเมื่อ HR อนุมัติ",
       ...(hasPortal && portalUrl
         ? { button: { label: "เปิดรายการรับเข้า", uri: portalUrl } }
         : { statusLabel: "⏳ เร็วๆ นี้" }),

@@ -24,7 +24,7 @@ export default async function PortalInboundPage() {
   return (
     <AdminPageShell
       title="คลังสินค้า"
-      description="เลือกใบรับเข้าที่รอสแกน barcode แล้วเปิดหน้าสแกน"
+      description="เลือกใบที่เปิดรับสแกน แล้วสแกน barcode เพิ่มรายการ"
     >
       {loadError ? (
         <p className="rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive">
@@ -37,7 +37,7 @@ export default async function PortalInboundPage() {
           <Barcode className="mx-auto size-10 text-muted-foreground" />
           <p className="mt-3 text-sm font-medium">ไม่มีใบรับเข้ารอสแกน</p>
           <p className="mt-1 text-sm text-muted-foreground">
-            ติดต่อ HR เมื่อมีสินค้าเข้า — HR จะส่งใบรับเข้าให้สแกน
+            ติดต่อ HR เมื่อมีสินค้าเข้า — HR สร้างใบแล้วจะโผล่ที่นี่ทันที
           </p>
         </div>
       ) : null}

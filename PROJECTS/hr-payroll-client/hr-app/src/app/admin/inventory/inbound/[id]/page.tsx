@@ -51,9 +51,7 @@ export default async function InboundOrderDetailPage({ params }: PageProps) {
   const editable = canManage && (order.status === "draft" || order.status === "pending")
 
   const skus =
-    editable && order.status === "draft"
-      ? (await getInvSkus()).filter((s) => s.is_active)
-      : []
+    editable ? (await getInvSkus()).filter((s) => s.is_active) : []
 
   return (
     <AdminPageShell
@@ -129,7 +127,7 @@ export default async function InboundOrderDetailPage({ params }: PageProps) {
                   colSpan={editable ? 6 : 5}
                   className="py-8 text-center text-muted-foreground"
                 >
-                  ยังไม่มีรายการ — เพิ่มจากฟอร์มด้านล่างหรือสแกน LIFF
+                  ยังไม่มีรายการ — ให้คลังสแกน LIFF หรือ HR เพิ่มด้านล่าง
                 </TableCell>
               </TableRow>
             )}
@@ -137,7 +135,7 @@ export default async function InboundOrderDetailPage({ params }: PageProps) {
         </Table>
       </DataTableShell>
 
-      {order.status === "draft" ? (
+      {editable ? (
         <div className="mt-4">
           <InboundAddItemForm orderId={order.id} skus={skus} />
         </div>
@@ -145,7 +143,7 @@ export default async function InboundOrderDetailPage({ params }: PageProps) {
 
       {order.status === "pending" ? (
         <p className="mt-4 text-sm text-muted-foreground">
-          สถานะรออนุมัติ — พนักงานสแกน barcode ได้ที่{" "}
+          เปิดรับสแกน — คลังสแกน barcode ได้ที่{" "}
           <a
             href={`/liff/inbound-scan?order=${order.id}`}
             className="font-medium text-brand-red underline"
@@ -154,6 +152,7 @@ export default async function InboundOrderDetailPage({ params }: PageProps) {
           >
             LIFF รับเข้า
           </a>
+          {" "}หรือ Portal → คลังสินค้า · HR อนุมัติหลังตรวจรายการครบ
         </p>
       ) : null}
     </AdminPageShell>

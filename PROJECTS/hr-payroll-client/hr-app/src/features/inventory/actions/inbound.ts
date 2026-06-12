@@ -42,7 +42,7 @@ export async function createInvInboundOrder(
       .from("inv_inbound_orders")
       .insert({
         ...payload,
-        status: "draft",
+        status: "pending",
         created_by: employee.id,
       })
       .select("id")
@@ -123,17 +123,7 @@ export async function submitInvInboundOrder(
     if (fetchError) return { success: false, error: fetchError.message }
     if (!order) return { success: false, error: "ไม่พบใบรับเข้า" }
     if (order.status !== "draft") {
-      return { success: false, error: "ใบรับเข้านี้ส่งอนุมัติแล้ว" }
-    }
-
-    const { count, error: countError } = await supabase
-      .from("inv_inbound_items")
-      .select("id", { count: "exact", head: true })
-      .eq("inbound_order_id", orderId)
-
-    if (countError) return { success: false, error: countError.message }
-    if (!count) {
-      return { success: false, error: "เพิ่มรายการสินค้าก่อนส่งอนุมัติ" }
+      return { success: false, error: "ใบรับเข้านี้เปิดรับสแกนแล้ว" }
     }
 
     const { error } = await supabase
@@ -155,6 +145,20 @@ export async function approveInvInboundOrder(
   try {
     await assertInventoryManage()
     const supabase = await createClient()
+
+    const { count, error: countError } = await supabase
+      .from("inv_inbound_items")
+      .select("id", { count: "exact", head: true })
+      .eq("inbound_order_id", orderId)
+
+    if (countError) return { success: false, error: countError.message }
+    if (!count) {
+      return {
+        success: false,
+        error: "ยังไม่มีรายการจากสแกน — รอคลังสแกนก่อนอนุมัติ",
+      }
+    }
+
     const { error } = await supabase.rpc("inv_approve_inbound_order", {
       p_order_id: orderId,
     })
@@ -254,7 +258,7 @@ export async function scanInvInboundItem(input: {
     if (order.status !== "pending") {
       return {
         success: false,
-        error: "สแกนได้เฉพาะใบรับเข้าที่สถานะรออนุมัติ",
+        error: "สแกนได้เฉพาะใบที่เปิดรับสแกนอยู่",
       }
     }
 

@@ -49,7 +49,7 @@ export function InboundOrderActions({
           disabled={pending}
           onClick={() => run(() => submitInvInboundOrder(orderId))}
         >
-          ส่งรออนุมัติ
+          เปิดรับสแกน
         </Button>
       ) : null}
       {status === "pending" ? (
@@ -58,7 +58,7 @@ export function InboundOrderActions({
           disabled={pending}
           onClick={() => run(() => approveInvInboundOrder(orderId))}
         >
-          อนุมัติรับเข้า (+สต็อก)
+          ตรวจแล้ว — อนุมัติ (+สต็อก)
         </Button>
       ) : null}
       {status === "draft" || status === "pending" ? (

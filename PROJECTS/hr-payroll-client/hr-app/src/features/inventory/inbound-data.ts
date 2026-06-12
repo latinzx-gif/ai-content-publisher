@@ -17,7 +17,7 @@ function relationName(value: unknown): string {
 
 export const INBOUND_STATUS_LABELS: Record<InvInboundStatus, string> = {
   draft: "แบบร่าง",
-  pending: "รออนุมัติ",
+  pending: "เปิดรับสแกน",
   approved: "อนุมัติแล้ว",
   cancelled: "ยกเลิก",
 }
