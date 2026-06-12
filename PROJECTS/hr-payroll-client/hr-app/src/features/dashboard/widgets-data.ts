@@ -92,6 +92,8 @@ export async function getDashboardWidgets() {
     pendingRegRes,
     pendingRegCountRes,
     pendingDocsRes,
+    onboardingQueueRes,
+    onboardingCompletedRes,
   ] = await Promise.all([
     supabase
       .from("hr_leaves")
@@ -140,6 +142,19 @@ export async function getDashboardWidgets() {
       .from("hr_document_requests")
       .select("doc_type")
       .in("status", ["pending", "processing"]),
+    supabase
+      .from("hr_employees")
+      .select("id, name, position, status, branch_id, created_at")
+      .or(
+        "and(status.eq.inactive,role.eq.employee),and(status.eq.active,role.eq.employee,branch_id.is.null)"
+      )
+      .order("created_at", { ascending: false })
+      .limit(20),
+    supabase
+      .from("hr_employees")
+      .select("id", { count: "exact", head: true })
+      .eq("status", "active")
+      .not("branch_id", "is", null),
   ])
 
   const pendingLeaves: PendingLeaveItem[] = ((pendingLeavesRes.data ?? []) as Array<{
@@ -211,54 +226,39 @@ export async function getDashboardWidgets() {
   }
   compliance.sort((a, b) => a.daysLeft - b.daysLeft)
 
-  let onboardingCompleted = 0
   let onboardingInProgress = 0
   let onboardingPending = 0
   const newHires: NewHireItem[] = []
 
-  for (const row of employeesRes.data ?? []) {
-    const onProbation =
-      row.probation_end !== null && row.probation_end >= today
-    const daysSinceStart =
-      row.contract_start !== null
-        ? daysBetween(row.contract_start, today)
-        : null
-
-    if (onProbation) {
-      if (daysSinceStart !== null && daysSinceStart <= 14) {
-        onboardingPending += 1
-        newHires.push({
-          id: row.id,
-          name: row.name,
-          position: row.position,
-          contractStart: row.contract_start,
-          status: "pending",
-        })
-      } else {
-        onboardingInProgress += 1
-        newHires.push({
-          id: row.id,
-          name: row.name,
-          position: row.position,
-          contractStart: row.contract_start,
-          status: "in_progress",
-        })
-      }
+  for (const row of onboardingQueueRes.data ?? []) {
+    const createdAt = row.created_at as string | null
+    if (row.status === "inactive") {
+      onboardingPending += 1
+      newHires.push({
+        id: row.id as string,
+        name: row.name as string,
+        position: row.position as string | null,
+        contractStart: createdAt?.slice(0, 10) ?? null,
+        status: "pending",
+      })
     } else {
-      onboardingCompleted += 1
+      onboardingInProgress += 1
+      newHires.push({
+        id: row.id as string,
+        name: row.name as string,
+        position: row.position as string | null,
+        contractStart: createdAt?.slice(0, 10) ?? null,
+        status: "in_progress",
+      })
     }
   }
 
-  newHires.sort((a, b) => {
-    const ad = a.contractStart ?? ""
-    const bd = b.contractStart ?? ""
-    return bd.localeCompare(ad)
-  })
+  const onboardingCompleted = onboardingCompletedRes.count ?? 0
 
   const onboardingDonut = [
-    { name: "Completed", value: onboardingCompleted },
-    { name: "In Progress", value: onboardingInProgress },
-    { name: "Pending", value: onboardingPending },
+    { name: "เสร็จสิ้น", value: onboardingCompleted },
+    { name: "กำลังดำเนินการ", value: onboardingInProgress },
+    { name: "รอดำเนินการ", value: onboardingPending },
   ]
 
   const recentAlerts: RecentAlertItem[] = (

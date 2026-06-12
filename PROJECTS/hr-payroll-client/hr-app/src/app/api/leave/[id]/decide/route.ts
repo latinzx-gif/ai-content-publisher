@@ -8,11 +8,12 @@ import {
   isBranchManager,
   isHrOrAdmin,
 } from "@/lib/auth/branch"
+import { leaveSubmitHrNotifyFlex } from "@/lib/line/flex/leave-request"
 import {
   leaveApprovedFlex,
   leaveRejectedFlex,
 } from "@/lib/line/flex/leave-result"
-import { pushToLineUser } from "@/lib/line/notify-hr"
+import { notifyHr, pushToLineUser } from "@/lib/line/notify-hr"
 import { createClient } from "@/lib/supabase/server"
 
 type DecideBody = {
@@ -48,7 +49,7 @@ export async function POST(
   const { data: leave, error: fetchError } = await supabase
     .from("hr_leaves")
     .select(
-      "id, employee_id, type, start_date, end_date, status, approval_status, leave_unit, leave_hours, hr_employees!employee_id(line_user_id, name, branch_id)"
+      "id, employee_id, type, start_date, end_date, reason, status, approval_status, leave_unit, leave_hours, hr_employees!employee_id(line_user_id, name, department, branch_id)"
     )
     .eq("id", id)
     .maybeSingle()
@@ -201,6 +202,22 @@ export async function POST(
       })
       .eq("id", id)
     if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+
+    try {
+      await notifyHr([
+        leaveSubmitHrNotifyFlex({
+          employeeName: employeeJoin?.name ?? "—",
+          department: (employeeJoin as { department?: string | null })?.department ?? null,
+          type: leaveType,
+          startDate: leave.start_date as string,
+          endDate: leave.end_date as string,
+          reason: (leave.reason as string) ?? "—",
+        }),
+      ])
+    } catch (lineError) {
+      console.error("leave BM→HR notify failed:", lineError)
+    }
+
     return NextResponse.json({ id, approval_status: "pending_hr" })
   }
 

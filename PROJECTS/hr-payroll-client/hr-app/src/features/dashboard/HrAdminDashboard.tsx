@@ -53,9 +53,9 @@ const NEW_HIRE_STATUS: Record<
   "completed" | "in_progress" | "pending",
   { label: string; variant: "approved" | "pending" | "info" }
 > = {
-  completed: { label: "Completed", variant: "approved" },
-  in_progress: { label: "In Progress", variant: "info" },
-  pending: { label: "Pending", variant: "pending" },
+  completed: { label: "เสร็จสิ้น", variant: "approved" },
+  in_progress: { label: "รอกำหนดสาขา", variant: "info" },
+  pending: { label: "รออนุมัติ", variant: "pending" },
 }
 
 export async function HrAdminDashboard({ userName }: { userName: string }) {

@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from "next/server"
 
 import { recordPayrollHours } from "@/lib/approval/payroll-ledger"
 import { getCurrentEmployeeWithBranch, getManagedBranchId, isBranchManager, isHrOrAdmin } from "@/lib/auth/branch"
+import { notifyHr } from "@/lib/line/notify-hr"
 import { createClient } from "@/lib/supabase/server"
 
 export async function POST(
@@ -26,7 +27,7 @@ export async function POST(
   const supabase = await createClient()
   const { data: row, error: fetchErr } = await supabase
     .from("hr_attendance_submissions")
-    .select("*, hr_attendance(work_hours), hr_employees!employee_id(branch_id)")
+    .select("*, hr_attendance(work_hours), hr_employees!employee_id(name, branch_id)")
     .eq("id", id)
     .maybeSingle()
 
@@ -74,6 +75,26 @@ export async function POST(
       })
       .eq("id", id)
     if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+
+    const employeeName = (emp as { name?: string })?.name ?? "—"
+    const workDate = row.work_date as string
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL ?? "https://hr-app-two-iota.vercel.app"
+    try {
+      await notifyHr([
+        {
+          type: "text",
+          text: [
+            "📋 สรุปเข้างานรอ HR อนุมัติ",
+            `พนักงาน: ${employeeName}`,
+            `วันที่: ${workDate}`,
+            `อนุมัติ: ${baseUrl}/admin/attendance`,
+          ].join("\n"),
+        },
+      ])
+    } catch (lineError) {
+      console.error("attendance BM→HR notify failed:", lineError)
+    }
+
     return NextResponse.json({ ok: true })
   }
 
