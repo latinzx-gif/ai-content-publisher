@@ -1,6 +1,6 @@
 "use client"
 
-import { Camera, ScanLine } from "lucide-react"
+import { Camera, ImageUp, ScanLine } from "lucide-react"
 import { useCallback, useEffect, useId, useRef, useState } from "react"
 import {
   Html5Qrcode,
@@ -75,6 +75,8 @@ export function InboundBarcodeScanner({
 }) {
   const readerId = useId().replace(/:/g, "")
   const scannerRef = useRef<Html5Qrcode | null>(null)
+  const fileScannerRef = useRef<Html5Qrcode | null>(null)
+  const fileInputRef = useRef<HTMLInputElement | null>(null)
   const [liffCtx, setLiffCtx] = useState<LiffContext | null>(null)
   const [cameraOpen, setCameraOpen] = useState(false)
   const [busy, setBusy] = useState(false)
@@ -86,6 +88,17 @@ export function InboundBarcodeScanner({
 
   useEffect(() => {
     void initInboundScanLiff().then(setLiffCtx)
+  }, [])
+
+  useEffect(() => {
+    return () => {
+      try {
+        fileScannerRef.current?.clear()
+      } catch {
+        // ignore teardown errors
+      }
+      fileScannerRef.current = null
+    }
   }, [])
 
   const stopCamera = useCallback(async () => {
@@ -178,12 +191,53 @@ export function InboundBarcodeScanner({
   function handleOpenCamera() {
     if (inLine) {
       setScanError(
-        "ใน LINE ใช้ปุ่ม「สแกนด้วย LINE」หรือพิมพ์ barcode ด้านล่าง — กล้องเว็บใช้ไม่ได้ในแอป LINE"
+        "ใน LINE ใช้ปุ่ม「สแกนด้วย LINE」หรือ「ถ่ายรูป barcode」— กล้องสดใช้ไม่ได้ในแอป LINE"
       )
       return
     }
     setScanError(null)
     setCameraOpen(true)
+  }
+
+  function openPhotoPicker() {
+    setScanError(null)
+    fileInputRef.current?.click()
+  }
+
+  // Decode a still photo (native camera capture) — works inside the LINE
+  // WebView where live getUserMedia / scanCodeV2 are unreliable.
+  async function handlePhotoSelected(
+    event: React.ChangeEvent<HTMLInputElement>
+  ) {
+    const file = event.target.files?.[0]
+    event.target.value = ""
+    if (!file) return
+
+    setScanError(null)
+    setBusy(true)
+    try {
+      const scanner =
+        fileScannerRef.current ??
+        new Html5Qrcode(`inbound-file-${readerId}`, {
+          formatsToSupport: CAMERA_FORMATS,
+          verbose: false,
+        })
+      fileScannerRef.current = scanner
+
+      const result = await scanner.scanFile(file, false)
+      const value = result?.trim()
+      if (!value) {
+        setScanError("อ่าน barcode จากรูปไม่ได้ — ถ่ายใหม่ให้ชัดและเต็มกรอบ")
+        return
+      }
+      onScanned(value)
+    } catch {
+      setScanError(
+        "อ่าน barcode จากรูปไม่ได้ — ถ่ายให้ชัด เลขอยู่กลางภาพ หรือพิมพ์ barcode ด้านล่าง"
+      )
+    } finally {
+      setBusy(false)
+    }
   }
 
   return (
@@ -212,7 +266,28 @@ export function InboundBarcodeScanner({
             สแกนด้วยกล้อง
           </Button>
         ) : null}
+
+        <Button
+          type="button"
+          variant="outline"
+          className="w-full"
+          disabled={disabled || busy || cameraOpen}
+          onClick={openPhotoPicker}
+        >
+          <ImageUp className="size-4" />
+          {busy ? "กำลังอ่านรูป…" : "ถ่ายรูป barcode"}
+        </Button>
       </div>
+
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        capture="environment"
+        className="hidden"
+        onChange={(e) => void handlePhotoSelected(e)}
+      />
+      <div id={`inbound-file-${readerId}`} className="hidden" />
 
       {inLine && liffCtx && !liffCtx.ready && liffCtx.error ? (
         <p className="text-xs text-muted-foreground">
