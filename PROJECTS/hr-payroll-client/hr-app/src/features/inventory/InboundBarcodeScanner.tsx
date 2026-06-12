@@ -1,6 +1,6 @@
 "use client"
 
-import { Camera, ImageUp, ScanLine } from "lucide-react"
+import { Camera, ImageUp } from "lucide-react"
 import { useCallback, useEffect, useId, useRef, useState } from "react"
 import {
   Html5Qrcode,
@@ -11,7 +11,6 @@ import { Button } from "@/components/ui/button"
 import {
   initInboundScanLiff,
   isLikelyLineBrowser,
-  scanBarcodeWithLiff,
   type LiffContext,
 } from "@/lib/line/liff-client"
 
@@ -235,7 +234,6 @@ export function InboundBarcodeScanner({
   const [scanError, setScanError] = useState<string | null>(null)
 
   const inLine = liffCtx?.inClient ?? isLikelyLineBrowser()
-  const showLineScan = inLine
   const showCamera = !inLine
 
   useEffect(() => {
@@ -322,28 +320,10 @@ export function InboundBarcodeScanner({
     }
   }, [cameraOpen, onScanned, readerId, stopCamera])
 
-  async function handleLiffScan() {
-    setScanError(null)
-    setBusy(true)
-    try {
-      // Re-init first — failed inits are not cached, so this retries after
-      // a transient network error and clears the stale error hint
-      const ctx = await initInboundScanLiff()
-      setLiffCtx(ctx)
-
-      const value = await scanBarcodeWithLiff()
-      onScanned(value)
-    } catch (err) {
-      setScanError(err instanceof Error ? err.message : "สแกนไม่สำเร็จ")
-    } finally {
-      setBusy(false)
-    }
-  }
-
   function handleOpenCamera() {
     if (inLine) {
       setScanError(
-        "ใน LINE ใช้ปุ่ม「สแกนด้วย LINE」หรือ「ถ่ายรูป barcode」— กล้องสดใช้ไม่ได้ในแอป LINE"
+        "ใน LINE ใช้ปุ่ม「ถ่ายรูป barcode」— กล้องสดใช้ไม่ได้ในแอป LINE"
       )
       return
     }
@@ -426,21 +406,20 @@ export function InboundBarcodeScanner({
   return (
     <>
       <div className="flex flex-col gap-2">
-        {showLineScan ? (
-          <Button
-            type="button"
-            className="w-full"
-            disabled={disabled || busy || cameraOpen}
-            onClick={() => void handleLiffScan()}
-          >
-            <ScanLine className="size-4" />
-            {busy ? "กำลังเปิดสแกน LINE…" : "สแกนด้วย LINE"}
-          </Button>
-        ) : null}
+        <Button
+          type="button"
+          className="w-full"
+          disabled={disabled || busy || cameraOpen}
+          onClick={openPhotoPicker}
+        >
+          <ImageUp className="size-4" />
+          {busy ? "กำลังอ่านรูป…" : "ถ่ายรูป barcode"}
+        </Button>
+
         {showCamera ? (
           <Button
             type="button"
-            variant={showLineScan ? "outline" : "default"}
+            variant="outline"
             className="w-full"
             disabled={disabled || busy || cameraOpen}
             onClick={handleOpenCamera}
@@ -449,17 +428,6 @@ export function InboundBarcodeScanner({
             สแกนด้วยกล้อง
           </Button>
         ) : null}
-
-        <Button
-          type="button"
-          variant="outline"
-          className="w-full"
-          disabled={disabled || busy || cameraOpen}
-          onClick={openPhotoPicker}
-        >
-          <ImageUp className="size-4" />
-          {busy ? "กำลังอ่านรูป…" : "ถ่ายรูป barcode"}
-        </Button>
       </div>
 
       <input
@@ -474,13 +442,7 @@ export function InboundBarcodeScanner({
 
       {inLine && liffCtx && !liffCtx.ready && liffCtx.error ? (
         <p className="text-xs text-muted-foreground">
-          {liffCtx.error} — กดสแกนเพื่อลองใหม่ หรือพิมพ์ barcode ด้านล่าง
-        </p>
-      ) : null}
-
-      {inLine && !liffCtx?.scanCodeAvailable && liffCtx?.ready ? (
-        <p className="text-xs text-amber-700">
-          เปิด Scan QR ใน LINE Console สำหรับ LIFF app นี้
+          ถ้าอ่านรูปไม่ได้ ให้พิมพ์เลข barcode ด้านล่าง
         </p>
       ) : null}
 

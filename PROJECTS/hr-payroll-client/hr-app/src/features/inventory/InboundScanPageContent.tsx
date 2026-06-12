@@ -2,8 +2,14 @@
 
 import Link from "next/link"
 import { usePathname, useSearchParams } from "next/navigation"
-import { Barcode, CheckCircle2 } from "lucide-react"
-import { useCallback, useEffect, useState, useTransition } from "react"
+import { Barcode, CheckCircle2, Trash2 } from "lucide-react"
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  useTransition,
+} from "react"
 
 import { Button, buttonVariants } from "@/components/ui/button"
 import {
@@ -13,8 +19,13 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
-import { scanInvInboundItem } from "@/features/inventory/actions/inbound"
+import {
+  deleteMobileInvInboundItem,
+  listMobileInvInboundItems,
+  scanInvInboundItem,
+} from "@/features/inventory/actions/inbound"
 import { InboundBarcodeScanner } from "@/features/inventory/InboundBarcodeScanner"
+import type { InvInboundItemRow } from "@/features/inventory/types"
 import {
   initInboundScanLiff,
   isLikelyLineBrowser,
@@ -77,7 +88,9 @@ export function InboundScanPageContent({
 }: {
   pathOrderId?: string
 }) {
+  const searchParams = useSearchParams()
   const { orderId, resolving } = useInboundOrderId(pathOrderId)
+  const quantityRef = useRef<HTMLInputElement | null>(null)
   const [barcode, setBarcode] = useState("")
   const [quantity, setQuantity] = useState("1")
   const [lot, setLot] = useState("")
@@ -87,7 +100,29 @@ export function InboundScanPageContent({
   )
   const [message, setMessage] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [items, setItems] = useState<InvInboundItemRow[]>([])
+  const [itemsError, setItemsError] = useState<string | null>(null)
+  const [loadingItems, setLoadingItems] = useState(false)
+  const [deletingId, setDeletingId] = useState<string | null>(null)
   const [pending, startTransition] = useTransition()
+
+  const loadItems = useCallback(async () => {
+    if (!orderId) return
+    setLoadingItems(true)
+    setItemsError(null)
+    try {
+      const result = await listMobileInvInboundItems(orderId)
+      if (result.success) {
+        setItems(result.items ?? [])
+      } else {
+        setItemsError(result.error ?? "โหลดรายการไม่สำเร็จ")
+      }
+    } catch {
+      setItemsError("เชื่อมต่อไม่สำเร็จ — โหลดรายการไม่สำเร็จ")
+    } finally {
+      setLoadingItems(false)
+    }
+  }, [orderId])
 
   const lookupBarcodeValue = useCallback(async (value: string) => {
     setError(null)
@@ -125,9 +160,20 @@ export function InboundScanPageContent({
     (value: string) => {
       setBarcode(value)
       void lookupBarcodeValue(value)
+      window.requestAnimationFrame(() => quantityRef.current?.focus())
     },
     [lookupBarcodeValue]
   )
+
+  useEffect(() => {
+    void loadItems()
+  }, [loadItems])
+
+  useEffect(() => {
+    const value = searchParams.get("barcode")?.trim()
+    if (!value) return
+    handleScanned(value)
+  }, [handleScanned, searchParams])
 
   async function lookupBarcode() {
     await lookupBarcodeValue(barcode)
@@ -170,10 +216,34 @@ export function InboundScanPageContent({
         setLot("")
         setExpiry("")
         setLookup(null)
+        await loadItems()
       } else {
         setError(result.error ?? "บันทึกไม่สำเร็จ")
       }
     })
+  }
+
+  async function deleteItem(item: InvInboundItemRow) {
+    if (!window.confirm(`ลบรายการ ${item.sku_code} จำนวน ${item.quantity}?`)) {
+      return
+    }
+
+    setDeletingId(item.id)
+    setError(null)
+    setMessage(null)
+    try {
+      const result = await deleteMobileInvInboundItem(item.id, orderId)
+      if (result.success) {
+        setMessage(`ลบ ${item.sku_code} แล้ว`)
+        await loadItems()
+      } else {
+        setError(result.error ?? "ลบรายการไม่สำเร็จ")
+      }
+    } catch {
+      setError("เชื่อมต่อไม่สำเร็จ — ลบรายการไม่สำเร็จ")
+    } finally {
+      setDeletingId(null)
+    }
   }
 
   if (resolving) {
@@ -255,6 +325,7 @@ export function InboundScanPageContent({
             </label>
             <input
               id="qty"
+              ref={quantityRef}
               type="number"
               min={0.001}
               step="any"
@@ -300,6 +371,71 @@ export function InboundScanPageContent({
           </p>
         ) : null}
         {error ? <p className="text-sm text-destructive">{error}</p> : null}
+
+        <div className="rounded-xl border border-border/80 bg-muted/20 p-3">
+          <div className="mb-3 flex items-center justify-between gap-3">
+            <div>
+              <p className="text-sm font-medium">รายการที่บันทึกแล้ว</p>
+              <p className="text-xs text-muted-foreground">
+                ลบได้ก่อน Inventory อนุมัติ
+              </p>
+            </div>
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              disabled={loadingItems}
+              onClick={() => void loadItems()}
+            >
+              รีเฟรช
+            </Button>
+          </div>
+
+          {itemsError ? (
+            <p className="text-sm text-destructive">{itemsError}</p>
+          ) : null}
+          {loadingItems && items.length === 0 ? (
+            <p className="text-sm text-muted-foreground">กำลังโหลดรายการ…</p>
+          ) : null}
+          {!loadingItems && items.length === 0 && !itemsError ? (
+            <p className="text-sm text-muted-foreground">
+              ยังไม่มีรายการ — ถ่ายรูป barcode แล้วบันทึกได้เลย
+            </p>
+          ) : null}
+
+          {items.length > 0 ? (
+            <ul className="space-y-2">
+              {items.map((item) => (
+                <li
+                  key={item.id}
+                  className="flex items-start justify-between gap-3 rounded-lg border border-border bg-background p-3"
+                >
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-medium">
+                      {item.sku_code} — {item.sku_name}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      จำนวน {item.quantity}
+                      {item.lot_number ? ` · Lot ${item.lot_number}` : ""}
+                      {item.expiry_date ? ` · Exp ${item.expiry_date}` : ""}
+                    </p>
+                  </div>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    className="shrink-0 text-destructive"
+                    disabled={deletingId === item.id}
+                    onClick={() => void deleteItem(item)}
+                  >
+                    <Trash2 className="size-4" />
+                    ลบ
+                  </Button>
+                </li>
+              ))}
+            </ul>
+          ) : null}
+        </div>
       </CardContent>
     </Card>
   )

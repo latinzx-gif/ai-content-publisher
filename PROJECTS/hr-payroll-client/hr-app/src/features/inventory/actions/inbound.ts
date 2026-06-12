@@ -9,6 +9,7 @@ import {
   mapSupabaseInventoryError,
 } from "@/features/inventory/actions/auth"
 import type { InventoryActionState } from "@/features/inventory/types"
+import type { InvInboundItemRow } from "@/features/inventory/types"
 import {
   invInboundItemSchema,
   invInboundOrderSchema,
@@ -214,6 +215,101 @@ export async function deleteInvInboundItem(
       .from("inv_inbound_items")
       .delete()
       .eq("id", itemId)
+
+    if (error) return { success: false, error: mapSupabaseInventoryError(error) }
+    revalidateInbound(orderId)
+    return { success: true }
+  } catch (error) {
+    return { success: false, error: formatInventoryError(error) }
+  }
+}
+
+async function assertActiveInventoryScanner() {
+  const employee = await getCurrentEmployee()
+  if (!employee || employee.status !== "active") {
+    throw new Error("กรุณาเข้าสู่ระบบ")
+  }
+  return employee
+}
+
+export async function listMobileInvInboundItems(
+  orderId: string
+): Promise<{
+  success: boolean
+  error?: string
+  items?: InvInboundItemRow[]
+}> {
+  try {
+    await assertActiveInventoryScanner()
+    const supabase = await createClient()
+
+    const { data: order, error: orderError } = await supabase
+      .from("inv_inbound_orders")
+      .select("status")
+      .eq("id", orderId)
+      .maybeSingle()
+
+    if (orderError) return { success: false, error: orderError.message }
+    if (!order) return { success: false, error: "ไม่พบใบรับเข้า" }
+
+    const { data: items, error: itemsError } = await supabase
+      .from("inv_inbound_items")
+      .select("*, inv_skus(code, name)")
+      .eq("inbound_order_id", orderId)
+      .order("created_at", { ascending: false })
+
+    if (itemsError) return { success: false, error: itemsError.message }
+
+    const rows: InvInboundItemRow[] = (items ?? []).map((row) => {
+      const skuRaw = row.inv_skus as unknown
+      const skuJoined = Array.isArray(skuRaw) ? skuRaw[0] : skuRaw
+      const sku = skuJoined as { code?: string; name?: string } | null
+
+      return {
+        id: row.id as string,
+        inbound_order_id: row.inbound_order_id as string,
+        sku_id: row.sku_id as string | null,
+        quantity: Number(row.quantity),
+        cost_per_unit:
+          row.cost_per_unit != null ? Number(row.cost_per_unit) : null,
+        lot_number: row.lot_number as string | null,
+        expiry_date: row.expiry_date as string | null,
+        created_at: row.created_at as string,
+        sku_code: sku?.code ?? "—",
+        sku_name: sku?.name ?? "—",
+      }
+    })
+
+    return { success: true, items: rows }
+  } catch (error) {
+    return { success: false, error: formatInventoryError(error) }
+  }
+}
+
+export async function deleteMobileInvInboundItem(
+  itemId: string,
+  orderId: string
+): Promise<InventoryActionState> {
+  try {
+    await assertActiveInventoryScanner()
+    const supabase = await createClient()
+
+    const { data: order, error: orderError } = await supabase
+      .from("inv_inbound_orders")
+      .select("status")
+      .eq("id", orderId)
+      .maybeSingle()
+
+    if (orderError) return { success: false, error: orderError.message }
+    if (!order || order.status !== "pending") {
+      return { success: false, error: "ลบได้เฉพาะใบที่เปิดรับสแกนอยู่" }
+    }
+
+    const { error } = await getAdminClient()
+      .from("inv_inbound_items")
+      .delete()
+      .eq("id", itemId)
+      .eq("inbound_order_id", orderId)
 
     if (error) return { success: false, error: mapSupabaseInventoryError(error) }
     revalidateInbound(orderId)
