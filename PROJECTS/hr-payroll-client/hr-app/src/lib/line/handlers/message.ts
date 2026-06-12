@@ -90,6 +90,9 @@ export async function handleMessage(
 
   const text = event.message.text.trim()
   const textActions: Record<string, RichMenuPostbackAction> = {
+    คลังสินค้า: "inventory",
+    สแกนรับเข้า: "inventory",
+    รับเข้า: "inventory",
     ประกาศ: "announcement",
     ขอเอกสาร: "document",
     เอกสาร: "document",

@@ -26,7 +26,8 @@ Inventory (M43) และ M38 sign-off ทำคู่ขนานได้ — 
 |------|--------|
 | `canAccessEmployeePortal()` | **`dev` only** — `roles.ts` |
 | `/employee` | ข้อความ "ใช้ LINE OA เท่านั้น" |
-| `/portal/*` | Built (T88–T95) — dashboard, leave, attendance, docs, schedule, announcements |
+| `/portal/*` | dashboard, leave, attendance, docs, schedule, **inbound (คลังสินค้า)**; ประกาศ via home widget + `/portal/announcements` (ไม่มี nav) |
+| LINE Rich Menu | ปุ่ม「คลังสินค้า」แทน「ประกาศ」 — ประกาศ HR push จาก `/admin/announcements` |
 | Login redirect | `employee` → `/employee` ไม่ใช่ `/portal` |
 
 ---

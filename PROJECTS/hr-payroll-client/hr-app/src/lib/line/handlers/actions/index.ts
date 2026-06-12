@@ -12,6 +12,7 @@ import { complaintAction } from "@/lib/line/handlers/actions/complaint"
 import { documentAction } from "@/lib/line/handlers/actions/document"
 import { contactHrAction } from "@/lib/line/handlers/actions/contact-hr"
 import { contactHrNotifyAction } from "@/lib/line/handlers/actions/contact-hr-notify"
+import { inventoryAction } from "@/lib/line/handlers/actions/inventory"
 import { leaveAction } from "@/lib/line/handlers/actions/leave"
 import { overtimeAction } from "@/lib/line/handlers/actions/overtime"
 import { submitAttendanceAction } from "@/lib/line/handlers/actions/submit-attendance"
@@ -33,6 +34,7 @@ const ACTION_HANDLERS: Record<
   overtime: overtimeAction,
   document: documentAction,
   complaint: complaintAction,
+  inventory: inventoryAction,
   announcement: announcementAction,
   contact_hr: contactHrAction,
   contact_hr_notify: contactHrNotifyAction,

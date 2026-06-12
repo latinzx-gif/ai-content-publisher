@@ -10,6 +10,8 @@
 2. **HR onboarding queue** — `/admin/employees?status=onboarding`
 3. **Employee Web Portal** — `/portal` (profile, attendance, leave, documents)
 4. **OT** — พนักงานยื่นเองผ่าน LIFF → BM อนุมัติ → HR อนุมัติ
+5. **คลังสินค้า** — HR สร้างใบรับเข้า → พนักงานสแกนผ่าน `/portal/inbound` หรือ LINE Rich Menu「คลังสินค้า」
+6. **ประกาศ** — HR ส่งจาก `/admin/announcements` (LINE push) — ไม่มีปุ่มประกาศใน Rich Menu
 
 ## Key URLs
 
@@ -18,6 +20,8 @@
 | Login | `/login` |
 | Register | `/register` |
 | Employee portal | `/portal` |
+| Portal inbound scan | `/portal/inbound` |
+| LIFF inbound scan | `/liff/inbound-scan?order=<uuid>` |
 | HR admin | `/admin` |
 | CEO | `/admin/ceo` |
 | Branch Manager | `/admin/branch` |

@@ -7,7 +7,7 @@ export const PORTAL_NAV_ITEMS: AdminNavItem[] = [
   { label: "ตารางงาน", href: "/portal/schedule", icon: "timer" },
   { label: "ขอลา", href: "/portal/leave", icon: "calendar" },
   { label: "เอกสาร", href: "/portal/documents", icon: "file-text" },
-  { label: "ประกาศ", href: "/portal/announcements", icon: "megaphone" },
+  { label: "คลังสินค้า", href: "/portal/inbound", icon: "inventory" },
 ]
 
 export function isPortalNavActive(pathname: string, href: string): boolean {

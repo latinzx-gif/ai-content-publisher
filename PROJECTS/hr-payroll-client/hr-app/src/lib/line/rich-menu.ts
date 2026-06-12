@@ -1,5 +1,5 @@
 // Rich menu image spec: 1200x810 PNG or JPEG, max 1MB (LINE compact size).
-// Layout: 2 rows × 3 columns — เช็คอิน | OT | เอกสาร / ประกาศ | ร้องเรียน | ติดต่อ HR
+// Layout: 2 rows × 3 columns — เช็คอิน | OT | เอกสาร / คลังสินค้า | ร้องเรียน | ติดต่อ HR
 import { readFile } from "node:fs/promises"
 
 import type { messagingApi } from "@line/bot-sdk"
@@ -45,8 +45,8 @@ export const HR_RICH_MENU: messagingApi.RichMenuRequest = {
       bounds: { x: 0, y: ROW, width: COL, height: ROW },
       action: {
         type: "postback",
-        data: "action=announcement",
-        label: "ประกาศ",
+        data: "action=inventory",
+        label: "คลังสินค้า",
       },
     },
     {

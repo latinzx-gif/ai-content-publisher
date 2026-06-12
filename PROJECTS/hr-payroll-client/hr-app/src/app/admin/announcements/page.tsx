@@ -23,8 +23,8 @@ export default async function AdminAnnouncementsPage() {
 
   return (
     <AdminPageShell
-      title="Announcements"
-      description="สร้างและส่งประกาศให้พนักงานทาง LINE"
+      title="ประกาศ"
+      description="สร้างและส่งประกาศให้พนักงานทาง LINE — พนักงานรับ push ในแชท (ไม่มีปุ่มประกาศใน Rich Menu)"
     >
       <div className="flex flex-col gap-6">
         <AnnouncementComposeForm departments={departments} />

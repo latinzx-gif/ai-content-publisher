@@ -8,6 +8,7 @@ export const RICH_MENU_ACTIONS = [
   "overtime",
   "document",
   "complaint",
+  "inventory",
   "announcement",
   "contact_hr",
   "contact_hr_notify",

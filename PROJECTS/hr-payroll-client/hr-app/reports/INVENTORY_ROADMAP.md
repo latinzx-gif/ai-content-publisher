@@ -14,7 +14,9 @@
 | Web Admin — master data | `/admin/inventory/*` | ✅ Phase 1 |
 | Web Admin — stock | `/admin/inventory/stock` | 🔜 Phase 2 |
 | Web Admin — inbound | `/admin/inventory/inbound` | 🔜 Phase 4 |
-| Mobile / LIFF scan | `/m/inbound` (or LIFF) | 🔜 Phase 4 |
+| Mobile / LIFF scan | `/liff/inbound-scan?order=...` | ✅ Phase 4 |
+| Portal inbound hub | `/portal/inbound` | ✅ Phase 4.1 (T135) |
+| LINE Rich Menu | ปุ่ม「คลังสินค้า」→ `/portal/inbound` | ✅ Phase 4.1 |
 | CEO KPIs | `/admin/report` widgets | ✅ Phase 1b |
 
 **DB prefix:** `inv_*` (separate from `hr_branches`)
@@ -30,8 +32,9 @@
 | **2** | T132 | Stock visibility (`inv_stock_balances`) | ✅ DONE |
 | **3** | T133 | HR ↔ inv branch mapping (optional) | 📋 Backlog (optional) |
 | **4** | T134 | Inbound orders + LIFF barcode scan | ✅ DONE |
+| **4.1** | T135 | Portal inbound hub + LINE menu swap | ✅ DONE |
 
-**Linear:** `[HRP] T130`–`T134` under project **LINE OA HR & Payroll**, milestone **M43 Inventory**
+**Linear:** `[HRP] T130`–`T135` under project **LINE OA HR & Payroll**, milestone **M43 Inventory**
 
 ---
 

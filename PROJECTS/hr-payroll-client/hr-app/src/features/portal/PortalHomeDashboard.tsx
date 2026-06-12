@@ -1,5 +1,13 @@
 import Link from "next/link"
-import { CalendarDays, Clock, ExternalLink, Megaphone, QrCode, Timer } from "lucide-react"
+import {
+  Barcode,
+  CalendarDays,
+  Clock,
+  ExternalLink,
+  Megaphone,
+  QrCode,
+  Timer,
+} from "lucide-react"
 
 import { WidgetCard } from "@/components/brand/WidgetCard"
 import type { AnnouncementRow } from "@/features/announcements/data"
@@ -150,9 +158,13 @@ export function PortalHomeDashboard({
             <Timer className="size-4 text-brand-red" />
             ขอ OT
           </LiffLink>
+          <LiffLink href="/portal/inbound">
+            <Barcode className="size-4 text-brand-red" />
+            สแกนรับเข้า
+          </LiffLink>
         </div>
         <p className="mt-3 text-xs text-muted-foreground">
-          เช็คอินด้วย QR ประจำวัน — ดาวน์โหลดจากหน้าโปรไฟล์ · ใช้ LINE OA ได้เหมือนเดิม
+          เช็คอินด้วย QR ประจำวัน — ดาวน์โหลดจากหน้าโปรไฟล์ · ประกาศจาก HR ส่งทาง LINE
         </p>
       </WidgetCard>
     </div>

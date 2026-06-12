@@ -35,7 +35,7 @@ export function welcomeFlex(): messagingApi.FlexMessage {
           ...menuItemRow("📍", "เช็คอินเข้างาน", "บันทึกเวลาเข้างานและเลิกงาน"),
           ...menuItemRow("⏱️", "ขอ OT", "ยื่นคำขอทำงานล่วงเวลา"),
           ...menuItemRow("📄", "ยื่นเอกสาร", "ขอหนังสือรับรอง / เอกสาร HR"),
-          ...menuItemRow("📣", "ประกาศ", "ดูข่าวสารและประกาศบริษัท"),
+          ...menuItemRow("📦", "คลังสินค้า", "สแกน barcode รับเข้าสินค้า"),
           ...menuItemRow("💬", "ข้อเสนอแนะ", "แจ้งปัญหาหรือร้องเรียน"),
           ...menuItemRow("🎧", "ติดต่อ HR", "สอบถามหรือติดต่อทีม HR"),
           { type: "separator", margin: "lg" },
@@ -503,20 +503,54 @@ export function complaintGuideFlex(formUrl?: string): messagingApi.FlexMessage {
 }
 
 export function announcementGuideFlex(): messagingApi.FlexMessage {
-  return guide("ประกาศ — ดูข่าวสารบริษัท", {
+  const base = process.env.NEXT_PUBLIC_BASE_URL?.trim()
+  const portalUrl = base ? `${base}/portal` : undefined
+
+  return guide("ประกาศ — จาก HR", {
     emoji: "📣",
     title: "ประกาศ",
-    subtitle: "ข่าวสารและประกาศบริษัท",
+    subtitle: "ข่าวสารจาก HR",
     accentColor: "#00897B",
     description:
-      "ดูประกาศล่าสุดจากบริษัท เช่น วันหยุด นโยบายใหม่ หรือกิจกรรมต่างๆ",
+      "ประกาศสำคัญจะถูกส่งมาทางแชท LINE โดยตรงเมื่อ HR กดส่ง — ดูย้อนหลังได้ที่ Portal หน้าหลัก",
     steps: [
-      "กดเมนู \"ประกาศ\" ในเมนู HR",
-      "อ่านรายละเอียดในการ์ดที่ระบบส่งให้",
-      "HR จะ push ประกาศสำคัญมาทาง LINE โดยตรง",
+      "รอการแจ้งจาก HR ในแชท LINE",
+      "เปิด Portal หน้าหลักเพื่อดูประกาศล่าสุด",
+      "ติดต่อ HR หากมีคำถาม",
     ],
-    tip: "ยังไม่มีประกาศในระบบ — รอการแจ้งจาก HR",
+    tip: "ไม่มีปุ่มประกาศในเมนู OA — HR เป็นผู้ส่งประกาศ",
+    ...(portalUrl
+      ? { button: { label: "เปิด Portal", uri: portalUrl } }
+      : { statusLabel: "Portal" }),
   })
+}
+
+export function inventoryGuideFlex(portalUrl?: string): messagingApi.FlexMessage {
+  const hasPortal = Boolean(portalUrl)
+
+  return guide(
+    hasPortal ? "คลังสินค้า — สแกนรับเข้า" : "คลังสินค้า — เตรียมเปิดใช้งาน",
+    {
+      emoji: "📦",
+      title: "คลังสินค้า",
+      subtitle: "สแกน barcode รับเข้าสินค้า",
+      accentColor: "#1565C0",
+      description: hasPortal
+        ? "เลือกใบรับเข้าที่ HR ส่งรอสแกน แล้วสแกน barcode เพิ่มรายการ"
+        : "ระบบคลังสินค้ากำลังเตรียมเปิดใช้งาน",
+      steps: hasPortal
+        ? [
+            "กดปุ่ม \"เปิดรายการรับเข้า\" ด้านล่าง",
+            "เลือกใบที่สถานะรอสแกน",
+            "สแกนหรือพิมพ์ barcode แล้วบันทึก",
+          ]
+        : ["ติดต่อ HR ผ่านเมนู \"ติดต่อ HR\""],
+      tip: "HR จะสร้างใบรับเข้าก่อน — สแกนได้เมื่อสถานะรออนุมัติ",
+      ...(hasPortal && portalUrl
+        ? { button: { label: "เปิดรายการรับเข้า", uri: portalUrl } }
+        : { statusLabel: "⏳ เร็วๆ นี้" }),
+    }
+  )
 }
 
 function lineRegisterUrl(): string {
