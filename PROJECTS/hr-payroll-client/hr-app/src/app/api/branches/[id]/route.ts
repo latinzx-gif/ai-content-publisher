@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server"
 
+import { applyBranchManagerAssignment } from "@/lib/branches/assign-manager"
 import { canManageHr } from "@/lib/auth/roles"
 import { getCurrentEmployee } from "@/lib/auth/session"
 import { createClient } from "@/lib/supabase/server"
@@ -28,6 +29,18 @@ export async function PATCH(
     return NextResponse.json({ error: "invalid body" }, { status: 400 })
   }
 
+  const supabase = await createClient()
+
+  const { data: currentBranch } = await supabase
+    .from("hr_branches")
+    .select("manager_employee_id")
+    .eq("id", id)
+    .maybeSingle()
+
+  if (!currentBranch) {
+    return NextResponse.json({ error: "not found" }, { status: 404 })
+  }
+
   const updates: Record<string, unknown> = {}
   if (body.name !== undefined) {
     const name = body.name.trim()
@@ -52,33 +65,17 @@ export async function PATCH(
     return NextResponse.json({ error: "no changes" }, { status: 400 })
   }
 
-  const supabase = await createClient()
-
-  if (body.managerEmployeeId) {
-    const { data: mgr } = await supabase
-      .from("hr_employees")
-      .select("id, role")
-      .eq("id", body.managerEmployeeId)
-      .maybeSingle()
-
-    if (!mgr || mgr.role !== "branch_manager") {
+  if (body.managerEmployeeId !== undefined) {
+    const assignment = await applyBranchManagerAssignment(
+      supabase,
+      id,
+      body.managerEmployeeId || null,
+      (currentBranch.manager_employee_id as string | null) ?? null
+    )
+    if (!assignment.ok) {
       return NextResponse.json(
-        { error: "manager must be branch_manager role" },
-        { status: 400 }
-      )
-    }
-
-    const { data: existing } = await supabase
-      .from("hr_branches")
-      .select("id")
-      .eq("manager_employee_id", body.managerEmployeeId)
-      .neq("id", id)
-      .maybeSingle()
-
-    if (existing) {
-      return NextResponse.json(
-        { error: "manager already assigned to another branch" },
-        { status: 409 }
+        { error: assignment.error },
+        { status: assignment.status }
       )
     }
   }
@@ -92,13 +89,6 @@ export async function PATCH(
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
   if (!data) return NextResponse.json({ error: "not found" }, { status: 404 })
-
-  if (body.managerEmployeeId) {
-    await supabase
-      .from("hr_employees")
-      .update({ branch_id: id })
-      .eq("id", body.managerEmployeeId)
-  }
 
   return NextResponse.json(data)
 }

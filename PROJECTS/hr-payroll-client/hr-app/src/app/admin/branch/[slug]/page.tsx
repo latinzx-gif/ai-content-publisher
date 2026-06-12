@@ -9,6 +9,7 @@ import {
   getBranchHubDashboard,
   getBranchOvertimeQueue,
 } from "@/features/branches/branch-hub-data"
+import { listBranchManagerCandidates } from "@/features/branches/manager-candidates"
 import { isCeo, isDev } from "@/lib/auth/roles"
 import { requireRole } from "@/lib/auth/require-role"
 
@@ -24,10 +25,11 @@ export default async function HrBranchDetailPage({
   const branch = await getBranchBySlug(slug)
   if (!branch) notFound()
 
-  const [dashboard, employees, overtimeQueue] = await Promise.all([
+  const [dashboard, employees, overtimeQueue, managerCandidates] = await Promise.all([
     getBranchHubDashboard(branch.id),
     getBranchEmployeesWithAlerts(branch.id),
     getBranchOvertimeQueue(branch.id),
+    listBranchManagerCandidates(),
   ])
 
   return (
@@ -47,6 +49,7 @@ export default async function HrBranchDetailPage({
           dashboard={dashboard}
           employees={employees}
           overtimeQueue={overtimeQueue}
+          managerCandidates={managerCandidates}
           readOnly={readOnly}
         />
       </AdminPageShell>

@@ -1,3 +1,5 @@
+import Image from "next/image"
+
 import { AdminPageShell } from "@/components/brand/AdminPageShell"
 import { getEmployeeAnnouncements } from "@/features/portal/data"
 import { getCurrentEmployee } from "@/lib/auth/session"
@@ -33,6 +35,16 @@ export default async function PortalAnnouncementsPage() {
                   {formatSentAt(item.sentAt)}
                 </time>
               </div>
+              {item.imageUrl ? (
+                <Image
+                  src={item.imageUrl}
+                  alt={item.title}
+                  width={640}
+                  height={360}
+                  unoptimized
+                  className="mt-3 max-h-80 w-full rounded-lg border object-contain"
+                />
+              ) : null}
               <p className="mt-2 whitespace-pre-wrap text-sm text-muted-foreground">
                 {item.body}
               </p>

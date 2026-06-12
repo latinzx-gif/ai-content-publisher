@@ -17,7 +17,7 @@ const handler = {
 
     const { data: due, error } = await admin
       .from("hr_announcements")
-      .select("id, title, body, target_type, target_value")
+      .select("id, title, body, image_path, target_type, target_value")
       .eq("status", "scheduled")
       .lte("scheduled_at", nowIso);
     if (error) throw error;
@@ -57,6 +57,22 @@ const handler = {
           ? `${(ann.body as string).slice(0, 197)}...`
           : (ann.body as string);
       const text = `ประกาศ: ${ann.title}\n${preview}`;
+      const supabaseUrl = Deno.env.get("SUPABASE_URL")?.replace(/\/$/, "");
+      const imagePath = ann.image_path as string | null;
+      const imageUrl =
+        supabaseUrl && imagePath
+          ? `${supabaseUrl}/storage/v1/object/public/hr-announcements/${imagePath}`
+          : null;
+
+      const messages: Array<Record<string, string>> = [];
+      if (imageUrl) {
+        messages.push({
+          type: "image",
+          originalContentUrl: imageUrl,
+          previewImageUrl: imageUrl,
+        });
+      }
+      messages.push({ type: "text", text });
 
       for (let i = 0; i < targets.length; i += MULTICAST_LIMIT) {
         const chunk = targets.slice(i, i + MULTICAST_LIMIT);
@@ -65,7 +81,7 @@ const handler = {
           headers: lineHeaders,
           body: JSON.stringify({
             to: chunk,
-            messages: [{ type: "text", text }],
+            messages,
           }),
         });
       }

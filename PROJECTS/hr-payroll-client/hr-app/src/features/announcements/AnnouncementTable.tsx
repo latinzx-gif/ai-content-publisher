@@ -1,3 +1,5 @@
+import Image from "next/image"
+
 import { DataTableShell } from "@/components/brand/DataTableShell"
 import { StatusPill } from "@/components/brand/StatusPill"
 import {
@@ -34,9 +36,26 @@ export function AnnouncementTable({ rows }: { rows: AnnouncementRow[] }) {
           {rows.map((row) => (
             <TableRow key={row.id}>
               <TableCell>
-                <div className="font-medium">{row.title}</div>
-                <div className="max-w-[320px] truncate text-xs text-muted-foreground">
-                  {row.body}
+                <div className="flex items-start gap-3">
+                  {row.imageUrl ? (
+                    <Image
+                      src={row.imageUrl}
+                      alt=""
+                      width={56}
+                      height={56}
+                      unoptimized
+                      className="size-14 shrink-0 rounded-md border object-cover"
+                    />
+                  ) : null}
+                  <div className="min-w-0">
+                    <div className="font-medium">{row.title}</div>
+                    <div className="max-w-[320px] truncate text-xs text-muted-foreground">
+                      {row.body}
+                    </div>
+                    {row.imageUrl ? (
+                      <p className="mt-1 text-[10px] text-muted-foreground">มีรูปแนบ</p>
+                    ) : null}
+                  </div>
                 </div>
               </TableCell>
               <TableCell>
@@ -46,7 +65,13 @@ export function AnnouncementTable({ rows }: { rows: AnnouncementRow[] }) {
               </TableCell>
               <TableCell>
                 <StatusPill
-                  label={row.status === "sent" ? "ส่งแล้ว" : "แบบร่าง"}
+                  label={
+                    row.status === "sent"
+                      ? "ส่งแล้ว"
+                      : row.status === "scheduled"
+                        ? "ตั้งเวลา"
+                        : "แบบร่าง"
+                  }
                   variant={row.status === "sent" ? "approved" : "pending"}
                 />
               </TableCell>

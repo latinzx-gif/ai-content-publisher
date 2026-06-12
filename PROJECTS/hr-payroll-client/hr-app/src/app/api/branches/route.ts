@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server"
 
+import { applyBranchManagerAssignment } from "@/lib/branches/assign-manager"
 import { canManageHr, isCeo, isDev } from "@/lib/auth/roles"
 import { getCurrentEmployee } from "@/lib/auth/session"
 import { createClient } from "@/lib/supabase/server"
@@ -39,34 +40,12 @@ export async function POST(request: NextRequest) {
 
   const supabase = await createClient()
 
-  if (body.managerEmployeeId) {
-    const { data: mgr } = await supabase
-      .from("hr_employees")
-      .select("id, role")
-      .eq("id", body.managerEmployeeId)
-      .maybeSingle()
-
-    if (!mgr || mgr.role !== "branch_manager") {
-      return NextResponse.json({ error: "manager must be branch_manager role" }, { status: 400 })
-    }
-
-    const { data: existing } = await supabase
-      .from("hr_branches")
-      .select("id")
-      .eq("manager_employee_id", body.managerEmployeeId)
-      .maybeSingle()
-
-    if (existing) {
-      return NextResponse.json({ error: "manager already assigned to a branch" }, { status: 409 })
-    }
-  }
-
   const { data, error } = await supabase
     .from("hr_branches")
     .insert({
       name: body.name.trim(),
       code: body.code?.trim() || null,
-      manager_employee_id: body.managerEmployeeId || null,
+      manager_employee_id: null,
     })
     .select("id")
     .single()
@@ -74,10 +53,27 @@ export async function POST(request: NextRequest) {
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
   if (body.managerEmployeeId) {
-    await supabase
-      .from("hr_employees")
-      .update({ branch_id: data.id })
-      .eq("id", body.managerEmployeeId)
+    const assignment = await applyBranchManagerAssignment(
+      supabase,
+      data.id as string,
+      body.managerEmployeeId
+    )
+    if (!assignment.ok) {
+      await supabase.from("hr_branches").delete().eq("id", data.id)
+      return NextResponse.json(
+        { error: assignment.error },
+        { status: assignment.status }
+      )
+    }
+
+    const { error: managerLinkError } = await supabase
+      .from("hr_branches")
+      .update({ manager_employee_id: body.managerEmployeeId })
+      .eq("id", data.id)
+
+    if (managerLinkError) {
+      return NextResponse.json({ error: managerLinkError.message }, { status: 500 })
+    }
   }
 
   return NextResponse.json({ id: data.id })

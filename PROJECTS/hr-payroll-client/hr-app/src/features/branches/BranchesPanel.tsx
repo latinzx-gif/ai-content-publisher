@@ -6,14 +6,18 @@ import { ChevronRight } from "lucide-react"
 import { useState } from "react"
 
 import { Button } from "@/components/ui/button"
+import { BranchManagerSelect } from "@/features/branches/BranchManagerSelect"
 import type { BranchRow } from "@/features/branches/data"
+import type { BranchManagerCandidate } from "@/features/branches/manager-candidates"
 import { branchAdminPath } from "@/lib/branches/branch-slug"
 
 export function BranchesPanel({
   branches,
+  managerCandidates,
   readOnly = false,
 }: {
   branches: BranchRow[]
+  managerCandidates: BranchManagerCandidate[]
   readOnly?: boolean
 }) {
   const router = useRouter()
@@ -112,9 +116,13 @@ export function BranchesPanel({
                   <td className="max-w-[200px] truncate px-3 py-2 text-muted-foreground">
                     {b.address?.trim() || "—"}
                   </td>
-                  <td className="px-3 py-2 text-muted-foreground">
-                    {b.manager_name ??
-                      (b.manager_employee_id ? "มอบหมายแล้ว" : "ยังไม่มอบหมาย")}
+                  <td className="px-3 py-2">
+                    <BranchManagerSelect
+                      branchId={b.id}
+                      value={b.manager_employee_id}
+                      candidates={managerCandidates}
+                      readOnly={readOnly}
+                    />
                   </td>
                   <td className="px-3 py-2 text-right">
                     <Link
@@ -133,8 +141,8 @@ export function BranchesPanel({
       </div>
       {!readOnly ? (
         <p className="text-xs text-muted-foreground">
-          มอบหมาย Branch Manager ทีหลังได้ — ตั้ง role เป็น branch_manager แล้วอัปเดต
-          manager_employee_id ในสาขา
+          เลือกผู้ดูแลสาขาจากพนักงานที่ลงทะเบียนและอนุมัติแล้ว — ระบบจะตั้ง role เป็น
+          Branch Manager ให้อัตโนมัติ
         </p>
       ) : null}
     </div>

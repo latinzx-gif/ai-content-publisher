@@ -13,6 +13,8 @@ import { WidgetCard } from "@/components/brand/WidgetCard"
 import type { BranchDashboardData } from "@/features/branch-dashboard/data"
 import { BranchEmployeeAlertIcons } from "@/features/branches/BranchEmployeeAlertIcons"
 import { BranchInfoEditor } from "@/features/branches/BranchInfoEditor"
+import { BranchManagerSelect } from "@/features/branches/BranchManagerSelect"
+import type { BranchManagerCandidate } from "@/features/branches/manager-candidates"
 import type {
   BranchDetail,
   BranchEmployeeWithAlerts,
@@ -71,12 +73,14 @@ export function HrBranchHub({
   dashboard,
   employees,
   overtimeQueue,
+  managerCandidates,
   readOnly = false,
 }: {
   branch: BranchDetail
   dashboard: BranchDashboardData
   employees: BranchEmployeeWithAlerts[]
   overtimeQueue: Array<Record<string, unknown>>
+  managerCandidates: BranchManagerCandidate[]
   readOnly?: boolean
 }) {
   const links = sectionLinks(branch)
@@ -105,23 +109,15 @@ export function HrBranchHub({
                 <span className="italic">ยังไม่ระบุที่อยู่</span>
               )}
             </p>
-            <p className="mt-2 text-sm">
-              <span className="text-muted-foreground">ผู้ดูแลสาขา (Manager): </span>
-              {branch.manager_name ? (
-                branch.manager_employee_id ? (
-                  <Link
-                    href={`/admin/employees/${branch.manager_employee_id}`}
-                    className="font-medium text-brand-red hover:underline"
-                  >
-                    {branch.manager_name}
-                  </Link>
-                ) : (
-                  <span className="font-medium">{branch.manager_name}</span>
-                )
-              ) : (
-                <span className="text-muted-foreground">ยังไม่มอบหมาย</span>
-              )}
-            </p>
+            <div className="mt-2 flex flex-wrap items-center gap-2 text-sm">
+              <span className="text-muted-foreground">ผู้ดูแลสาขา (Manager):</span>
+              <BranchManagerSelect
+                branchId={branch.id}
+                value={branch.manager_employee_id}
+                candidates={managerCandidates}
+                readOnly={readOnly}
+              />
+            </div>
             {!readOnly ? <BranchInfoEditor branch={branch} /> : null}
           </div>
           <div className="flex flex-wrap gap-2">

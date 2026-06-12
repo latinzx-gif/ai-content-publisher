@@ -32,19 +32,6 @@ export function parseDevViewAs(value: string | undefined): DevViewAs {
 export function getDevNavGroups(view: DevViewAs): AdminNavGroup[] {
   switch (view) {
     case "hr":
-      return [
-        {
-          title: "Quick Access",
-          items: [
-            {
-              label: "↳ Branch Dashboard",
-              href: "/admin/branch",
-              icon: "layout-dashboard",
-            },
-          ],
-        },
-        ...ADMIN_NAV_GROUPS,
-      ]
     case "ceo":
       return ADMIN_NAV_GROUPS
     case "branch":

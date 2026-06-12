@@ -2,22 +2,27 @@ import type { messagingApi } from "@line/bot-sdk"
 
 import { flexMessage, simpleBubble } from "@/lib/line/flex/base"
 
+const LINE_BODY_MAX = 1200
+
+function announcementBodyLines(body: string): string[] {
+  const text =
+    body.length > LINE_BODY_MAX ? `${body.slice(0, LINE_BODY_MAX - 1)}…` : body
+  const lines = text.split(/\r?\n/)
+  return lines.length > 0 ? lines : [text]
+}
+
 export function announcementBroadcastFlex(options: {
   title: string
   body: string
+  hasImage?: boolean
 }): messagingApi.FlexMessage {
-  const preview =
-    options.body.length > 200
-      ? `${options.body.slice(0, 197)}...`
-      : options.body
-
   return flexMessage(
     `ประกาศ: ${options.title}`,
     simpleBubble({
       title: options.title,
       accentColor: "#00897B",
-      rows: [{ label: "รายละเอียด", value: preview }],
-      footerNote: "ประกาศจาก HR",
+      lines: announcementBodyLines(options.body),
+      footerNote: options.hasImage ? "ประกาศจาก HR (มีรูปแนบ)" : "ประกาศจาก HR",
     })
   )
 }

@@ -1,4 +1,5 @@
 import type { AnnouncementRow } from "@/features/announcements/data"
+import { announcementImagePublicUrl } from "@/lib/announcements/image"
 import type { LeaveBalance } from "@/features/leave/LeaveBalanceCard"
 import {
   DOC_TYPE_LABELS,
@@ -85,7 +86,9 @@ export async function getEmployeeAnnouncements(
   const supabase = await createClient()
   const { data, error } = await supabase
     .from("hr_announcements")
-    .select("id, title, body, target_type, target_value, status, sent_at, created_at")
+    .select(
+      "id, title, body, image_path, target_type, target_value, status, sent_at, created_at"
+    )
     .eq("status", "sent")
     .order("sent_at", { ascending: false })
     .limit(20)
@@ -96,6 +99,7 @@ export async function getEmployeeAnnouncements(
     id: string
     title: string
     body: string
+    image_path: string | null
     target_type: string
     target_value: string | null
     status: string
@@ -115,6 +119,8 @@ export async function getEmployeeAnnouncements(
       id: row.id,
       title: row.title,
       body: row.body,
+      imagePath: row.image_path,
+      imageUrl: announcementImagePublicUrl(row.image_path),
       targetType: row.target_type as AnnouncementRow["targetType"],
       targetValue: row.target_value,
       status: row.status as AnnouncementRow["status"],
