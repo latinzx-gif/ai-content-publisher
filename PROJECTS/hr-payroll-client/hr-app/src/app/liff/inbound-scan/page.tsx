@@ -1,6 +1,6 @@
 "use client"
 
-import { Suspense, useState, useTransition } from "react"
+import { Suspense, useCallback, useState, useTransition } from "react"
 import { useSearchParams } from "next/navigation"
 import { Barcode, CheckCircle2 } from "lucide-react"
 
@@ -13,6 +13,7 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { scanInvInboundItem } from "@/features/inventory/actions/inbound"
+import { InboundBarcodeScanner } from "@/features/inventory/InboundBarcodeScanner"
 
 function InboundScanForm() {
   const searchParams = useSearchParams()
@@ -28,10 +29,10 @@ function InboundScanForm() {
   const [error, setError] = useState<string | null>(null)
   const [pending, startTransition] = useTransition()
 
-  async function lookupBarcode() {
+  const lookupBarcodeValue = useCallback(async (value: string) => {
     setError(null)
     setLookup(null)
-    const trimmed = barcode.trim()
+    const trimmed = value.trim()
     if (!trimmed) return
 
     const res = await fetch(
@@ -47,6 +48,18 @@ function InboundScanForm() {
       return
     }
     setLookup(data.sku)
+  }, [])
+
+  const handleScanned = useCallback(
+    (value: string) => {
+      setBarcode(value)
+      void lookupBarcodeValue(value)
+    },
+    [lookupBarcodeValue]
+  )
+
+  async function lookupBarcode() {
+    await lookupBarcodeValue(barcode)
   }
 
   function submit() {
@@ -109,6 +122,8 @@ function InboundScanForm() {
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
+        <InboundBarcodeScanner onScanned={handleScanned} disabled={pending} />
+
         <div className="space-y-2">
           <label className="text-sm font-medium" htmlFor="barcode">
             Barcode
