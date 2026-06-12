@@ -24,6 +24,7 @@ import { InboundOrderActions } from "@/features/inventory/InboundOrderActions"
 import { InventoryDeleteButton } from "@/features/inventory/InventoryDeleteButton"
 import type { InvInboundStatus } from "@/features/inventory/types"
 import { formatThaiDate } from "@/lib/datetime/thailand"
+import { inboundScanHref } from "@/lib/line/inbound-scan-url"
 import { canManageHr, isCeo, isDev } from "@/lib/auth/roles"
 import { requireRole } from "@/lib/auth/require-role"
 import { cn } from "@/lib/utils"
@@ -145,7 +146,7 @@ export default async function InboundOrderDetailPage({ params }: PageProps) {
         <p className="mt-4 text-sm text-muted-foreground">
           เปิดรับสแกน — คลังสแกน barcode ได้ที่{" "}
           <a
-            href={`/liff/inbound-scan?order=${order.id}`}
+            href={inboundScanHref(order.id)}
             className="font-medium text-brand-red underline"
             target="_blank"
             rel="noreferrer"

@@ -6,6 +6,7 @@ import { buttonVariants } from "@/components/ui/button"
 import { listInvInboundOrders } from "@/features/inventory/inbound-data"
 import { getCurrentEmployee } from "@/lib/auth/session"
 import { formatThaiDate } from "@/lib/datetime/thailand"
+import { inboundScanHref } from "@/lib/line/inbound-scan-url"
 import { cn } from "@/lib/utils"
 
 export default async function PortalInboundPage() {
@@ -64,7 +65,7 @@ export default async function PortalInboundPage() {
                 ) : null}
               </div>
               <Link
-                href={`/liff/inbound-scan?order=${order.id}`}
+                href={inboundScanHref(order.id)}
                 className={cn(
                   buttonVariants({ size: "sm" }),
                   "inline-flex shrink-0 items-center gap-1.5"

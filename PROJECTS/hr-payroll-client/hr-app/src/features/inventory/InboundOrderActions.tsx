@@ -9,6 +9,7 @@ import {
   cancelInvInboundOrder,
   submitInvInboundOrder,
 } from "@/features/inventory/actions/inbound"
+import { inboundScanHref } from "@/lib/line/inbound-scan-url"
 import type { InvInboundStatus } from "@/features/inventory/types"
 
 export function InboundOrderActions({
@@ -73,7 +74,7 @@ export function InboundOrderActions({
       ) : null}
       {status === "pending" ? (
         <a
-          href={`/liff/inbound-scan?order=${orderId}`}
+          href={inboundScanHref(orderId)}
           className="text-sm font-medium text-brand-red underline"
           target="_blank"
           rel="noreferrer"

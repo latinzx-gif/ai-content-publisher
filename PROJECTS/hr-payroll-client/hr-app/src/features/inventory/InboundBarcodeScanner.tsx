@@ -8,7 +8,12 @@ import {
 } from "html5-qrcode"
 
 import { Button } from "@/components/ui/button"
-import { initLiffClient, scanBarcodeWithLiff } from "@/lib/line/liff-client"
+import {
+  initInboundScanLiff,
+  isLikelyLineBrowser,
+  scanBarcodeWithLiff,
+  type LiffContext,
+} from "@/lib/line/liff-client"
 
 const CAMERA_FORMATS = [
   Html5QrcodeSupportedFormats.EAN_13,
@@ -19,6 +24,48 @@ const CAMERA_FORMATS = [
   Html5QrcodeSupportedFormats.QR_CODE,
 ]
 
+function formatCameraError(err: unknown): string {
+  if (!(err instanceof Error)) return "เปิดกล้องไม่สำเร็จ"
+  const msg = err.message
+  if (/NotAllowed|Permission/i.test(msg)) {
+    return "ไม่อนุญาตใช้กล้อง — เปิดสิทธิ์ใน Settings ของเบราว์เซอร์"
+  }
+  if (/NotFound|DevicesNotFound/i.test(msg)) {
+    return "ไม่พบกล้องบนอุปกรณ์นี้"
+  }
+  if (/not supported|NotSupported/i.test(msg)) {
+    return "เบราว์เซอร์นี้ไม่รองรับกล้อง — ใช้สแกน LINE หรือพิมพ์ barcode"
+  }
+  if (/element.*not found/i.test(msg)) {
+    return "เปิดกล้องไม่สำเร็จ — ลองอีกครั้ง"
+  }
+  return msg || "เปิดกล้องไม่สำเร็จ"
+}
+
+async function waitForElement(id: string, attempts = 20): Promise<HTMLElement> {
+  for (let i = 0; i < attempts; i += 1) {
+    const el = document.getElementById(id)
+    if (el) return el
+    await new Promise((r) => requestAnimationFrame(r))
+  }
+  throw new Error(`HTML Element with id=${id} not found`)
+}
+
+async function resolveCameraId(): Promise<string | { facingMode: string }> {
+  try {
+    const cameras = await Html5Qrcode.getCameras()
+    if (cameras.length === 0) {
+      return { facingMode: "environment" }
+    }
+    const rear = cameras.find((c) =>
+      /back|rear|environment|หลัง/i.test(c.label)
+    )
+    return rear?.id ?? cameras[cameras.length - 1].id
+  } catch {
+    return { facingMode: "environment" }
+  }
+}
+
 export function InboundBarcodeScanner({
   onScanned,
   disabled,
@@ -28,17 +75,17 @@ export function InboundBarcodeScanner({
 }) {
   const readerId = useId().replace(/:/g, "")
   const scannerRef = useRef<Html5Qrcode | null>(null)
-  const [liffReady, setLiffReady] = useState(false)
-  const [inLine, setInLine] = useState(false)
+  const [liffCtx, setLiffCtx] = useState<LiffContext | null>(null)
   const [cameraOpen, setCameraOpen] = useState(false)
   const [busy, setBusy] = useState(false)
   const [scanError, setScanError] = useState<string | null>(null)
 
+  const inLine = liffCtx?.inClient ?? isLikelyLineBrowser()
+  const showLineScan = inLine
+  const showCamera = !inLine
+
   useEffect(() => {
-    void initLiffClient().then((ctx) => {
-      setLiffReady(ctx.ready)
-      setInLine(ctx.inClient)
-    })
+    void initInboundScanLiff().then(setLiffCtx)
   }, [])
 
   const stopCamera = useCallback(async () => {
@@ -70,15 +117,21 @@ export function InboundBarcodeScanner({
       await stopCamera()
       if (cancelled) return
 
-      const scanner = new Html5Qrcode(elementId, {
-        formatsToSupport: CAMERA_FORMATS,
-        verbose: false,
-      })
-      scannerRef.current = scanner
-
       try {
+        await waitForElement(elementId)
+        if (cancelled) return
+
+        const scanner = new Html5Qrcode(elementId, {
+          formatsToSupport: CAMERA_FORMATS,
+          verbose: false,
+        })
+        scannerRef.current = scanner
+
+        const cameraId = await resolveCameraId()
+        if (cancelled) return
+
         await scanner.start(
-          { facingMode: "environment" },
+          cameraId,
           { fps: 10, qrbox: { width: 260, height: 160 } },
           (decoded) => {
             onScanned(decoded.trim())
@@ -91,10 +144,10 @@ export function InboundBarcodeScanner({
           }
         )
       } catch (err) {
-        setScanError(
-          err instanceof Error ? err.message : "เปิดกล้องไม่สำเร็จ"
-        )
-        setCameraOpen(false)
+        if (!cancelled) {
+          setScanError(formatCameraError(err))
+          setCameraOpen(false)
+        }
       }
     })()
 
@@ -118,6 +171,12 @@ export function InboundBarcodeScanner({
   }
 
   function handleOpenCamera() {
+    if (inLine) {
+      setScanError(
+        "ใน LINE ใช้ปุ่ม「สแกนด้วย LINE」หรือพิมพ์ barcode ด้านล่าง — กล้องเว็บใช้ไม่ได้ในแอป LINE"
+      )
+      return
+    }
     setScanError(null)
     setCameraOpen(true)
   }
@@ -125,7 +184,7 @@ export function InboundBarcodeScanner({
   return (
     <>
       <div className="flex flex-col gap-2">
-        {inLine && liffReady ? (
+        {showLineScan ? (
           <Button
             type="button"
             className="w-full"
@@ -136,17 +195,33 @@ export function InboundBarcodeScanner({
             {busy ? "กำลังเปิดสแกน LINE…" : "สแกนด้วย LINE"}
           </Button>
         ) : null}
-        <Button
-          type="button"
-          variant={inLine && liffReady ? "outline" : "default"}
-          className="w-full"
-          disabled={disabled || busy || cameraOpen}
-          onClick={handleOpenCamera}
-        >
-          <Camera className="size-4" />
-          สแกนด้วยกล้อง
-        </Button>
+        {showCamera ? (
+          <Button
+            type="button"
+            variant={showLineScan ? "outline" : "default"}
+            className="w-full"
+            disabled={disabled || busy || cameraOpen}
+            onClick={handleOpenCamera}
+          >
+            <Camera className="size-4" />
+            สแกนด้วยกล้อง
+          </Button>
+        ) : null}
       </div>
+
+      {inLine && liffCtx && !liffCtx.ready && liffCtx.error ? (
+        <p className="text-xs text-muted-foreground">
+          LIFF: {liffCtx.error}. ตั้ง LIFF endpoint เป็น{" "}
+          <span className="font-mono">/liff/inbound-scan</span> + Scan QR หรือพิมพ์
+          barcode ด้านล่าง
+        </p>
+      ) : null}
+
+      {inLine && !liffCtx?.scanCodeAvailable && liffCtx?.ready ? (
+        <p className="text-xs text-amber-700">
+          เปิด Scan QR ใน LINE Console สำหรับ LIFF app นี้
+        </p>
+      ) : null}
 
       {scanError ? (
         <p className="text-sm text-destructive">{scanError}</p>
@@ -167,7 +242,7 @@ export function InboundBarcodeScanner({
           </div>
           <div
             id={`inbound-scan-${readerId}`}
-            className="mx-auto w-full max-w-sm overflow-hidden rounded-xl bg-black"
+            className="mx-auto min-h-[240px] w-full max-w-sm overflow-hidden rounded-xl bg-black"
           />
         </div>
       ) : null}
