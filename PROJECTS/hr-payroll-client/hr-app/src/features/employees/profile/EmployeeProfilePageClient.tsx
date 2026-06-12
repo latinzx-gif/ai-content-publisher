@@ -39,9 +39,11 @@ export function EmployeeProfilePageClient({
   positions: OrgPosition[]
   readOnly?: boolean
 }) {
-  const [editing, setEditing] = useState(false)
   const isPendingRegistration =
     profile.status === "inactive" && profile.role === "employee"
+  const [editing, setEditing] = useState(
+    !readOnly && isPendingRegistration
+  )
 
   if (editing) {
     return (

@@ -43,7 +43,7 @@ export function EmployeeProfileView({
     profile.employee_code?.trim() || profile.id.slice(0, 8).toUpperCase()
 
   return (
-    <div className="flex h-full min-h-0 flex-col gap-2 overflow-hidden">
+    <div className="flex flex-col gap-2">
       <div className="shrink-0 overflow-hidden rounded-xl border border-border/80 bg-card shadow-sm">
         <div className="relative bg-brand-red px-4 py-4 text-white md:px-5">
           <div
@@ -100,7 +100,7 @@ export function EmployeeProfileView({
         </div>
       </div>
 
-      <div className="grid min-h-0 flex-1 gap-2 overflow-hidden xl:grid-cols-3 xl:grid-rows-2">
+      <div className="grid gap-2 md:grid-cols-2 xl:grid-cols-3">
         <ProfileSectionCard title="Contact Information" icon={Mail}>
           <ProfileField label="Work Email" value={profile.email} />
           <ProfileField label="Work Phone" value={profile.phone} />

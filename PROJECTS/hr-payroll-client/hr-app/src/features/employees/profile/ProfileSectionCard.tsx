@@ -12,7 +12,7 @@ export function ProfileSectionCard({
   action?: React.ReactNode
 }) {
   return (
-    <section className="flex min-h-0 flex-col overflow-hidden rounded-xl border border-border/80 bg-card shadow-sm">
+    <section className="flex flex-col rounded-xl border border-border/80 bg-card shadow-sm">
       <div className="flex shrink-0 items-center justify-between gap-2 border-b border-border/60 px-3 py-2">
         <div className="flex items-center gap-1.5">
           <Icon className="size-3.5 text-brand-red" aria-hidden />
@@ -20,7 +20,7 @@ export function ProfileSectionCard({
         </div>
         {action}
       </div>
-      <div className="grid min-h-0 flex-1 content-start gap-x-2 gap-y-1.5 overflow-hidden p-2 sm:grid-cols-2">
+      <div className="grid content-start gap-x-2 gap-y-1.5 p-2 sm:grid-cols-2">
         {children}
       </div>
     </section>

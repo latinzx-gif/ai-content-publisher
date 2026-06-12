@@ -181,7 +181,7 @@ export function AddEmployeeForm() {
   return (
     <form
       onSubmit={onSubmit}
-      className="flex h-full min-h-0 flex-col gap-2 overflow-hidden"
+      className="flex flex-col gap-2"
     >
       <div className="shrink-0 overflow-hidden rounded-xl border border-border/80 bg-card shadow-sm">
         <div className="relative bg-brand-red px-4 py-3 text-white md:px-5">
@@ -249,7 +249,7 @@ export function AddEmployeeForm() {
         </div>
       </div>
 
-      <div className="grid min-h-0 flex-1 gap-2 overflow-hidden xl:grid-cols-3 xl:grid-rows-2">
+      <div className="grid gap-2 md:grid-cols-2 xl:grid-cols-3">
         <ProfileSectionCard title="Contact Information" icon={Mail}>
           <FormField label="Work Email">
             <input
