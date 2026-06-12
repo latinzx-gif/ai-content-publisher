@@ -1,16 +1,20 @@
-import Link from "next/link"
-import { Bell, CircleHelp, LogOut, Search } from "lucide-react"
+import { CircleHelp, LogOut, Search } from "lucide-react"
 
 import type { AdminNavItem } from "@/components/admin/admin-nav"
 import { AdminMobileNav } from "@/components/admin/AdminMobileNav"
+import { AdminNotificationBell } from "@/components/admin/AdminNotificationBell"
 import { DevRoleSwitcher } from "@/components/admin/DevRoleSwitcher"
 import { Button } from "@/components/ui/button"
 import type { DevViewAs } from "@/lib/auth/dev-view"
 import { roleDisplayLabel } from "@/lib/auth/labels"
 import type { Employee } from "@/lib/auth/session"
+import type { NotificationItem } from "@/features/notifications/types"
 
 export function AdminHeader({
   alertBadge = 0,
+  approvalBadge = 0,
+  notificationItems = [],
+  showComplianceLink = true,
   user,
   navItems,
   branchMode = false,
@@ -19,6 +23,9 @@ export function AdminHeader({
   devView = null,
 }: {
   alertBadge?: number
+  approvalBadge?: number
+  notificationItems?: NotificationItem[]
+  showComplianceLink?: boolean
   user?: Pick<Employee, "name" | "role" | "position">
   navItems: AdminNavItem[]
   branchMode?: boolean
@@ -48,18 +55,12 @@ export function AdminHeader({
         </div>
         <div className="flex items-center gap-1 sm:gap-2">
           {isDev && devView ? <DevRoleSwitcher currentView={devView} /> : null}
-          <Link
-            href="/admin/alerts"
-            className="relative rounded-lg p-2 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-            aria-label="Alerts"
-          >
-            <Bell className="size-5" />
-            {alertBadge > 0 ? (
-              <span className="absolute right-0.5 top-0.5 flex size-4 items-center justify-center rounded-full bg-brand-red text-[10px] font-bold text-white">
-                {alertBadge > 9 ? "9+" : alertBadge}
-              </span>
-            ) : null}
-          </Link>
+          <AdminNotificationBell
+            initialApprovalTotal={approvalBadge}
+            initialTotal={alertBadge}
+            initialItems={notificationItems}
+            showComplianceLink={showComplianceLink}
+          />
           <button
             type="button"
             className="hidden rounded-lg p-2 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground sm:block"

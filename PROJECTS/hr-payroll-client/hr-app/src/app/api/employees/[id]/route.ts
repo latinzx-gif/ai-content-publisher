@@ -32,6 +32,7 @@ type PatchBody = {
   probationAction?: "pass" | "fail" | "extend"
   role?: string
   branch_id?: string | null
+  employee_code?: string | null
 }
 
 export async function PATCH(
@@ -124,6 +125,12 @@ export async function PATCH(
       }
       updates.role = body.role
     }
+    if (body.employee_code !== undefined) {
+      updates.employee_code =
+        typeof body.employee_code === "string" && body.employee_code.trim()
+          ? body.employee_code.trim()
+          : null
+    }
     if (body.branch_id !== undefined) {
       if (body.branch_id === null || body.branch_id === "") {
         updates.branch_id = null
@@ -153,7 +160,11 @@ export async function PATCH(
     .maybeSingle()
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 })
+    const msg =
+      error.code === "23505" && error.message.includes("employee_code")
+        ? "รหัสพนักงานนี้มีในระบบแล้ว"
+        : error.message
+    return NextResponse.json({ error: msg }, { status: 500 })
   }
   if (!data) {
     return NextResponse.json({ error: "not found" }, { status: 404 })

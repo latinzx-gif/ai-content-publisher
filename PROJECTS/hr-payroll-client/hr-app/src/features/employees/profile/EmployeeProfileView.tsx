@@ -38,7 +38,8 @@ export function EmployeeProfileView({
   profile: EmployeeProfile
   actions?: React.ReactNode
 }) {
-  const employeeCode = profile.id.slice(0, 8).toUpperCase()
+  const employeeCode =
+    profile.employee_code?.trim() || profile.id.slice(0, 8).toUpperCase()
 
   return (
     <div className="flex h-full min-h-0 flex-col gap-2 overflow-hidden">
@@ -62,7 +63,9 @@ export function EmployeeProfileView({
                     variant={profile.status === "active" ? "approved" : "neutral"}
                   />
                 </div>
-                <p className="text-sm text-white/85">Employee ID · {employeeCode}</p>
+                <p className="text-sm text-white/85">
+                  รหัสพนักงาน · {employeeCode}
+                </p>
                 <p className="text-xs text-white/75">
                   {profile.contract_start
                     ? `Joined on ${formatDate(profile.contract_start)}`
@@ -113,7 +116,8 @@ export function EmployeeProfileView({
           <ProfileField label="Date of Birth" value={formatDate(profile.date_of_birth)} />
           <ProfileField label="Gender" value="—" />
           <ProfileField label="Nationality" value="—" />
-          <ProfileField label="LINE User ID" value={profile.line_user_id} className="sm:col-span-2" />
+          <ProfileField label="รหัสพนักงาน" value={profile.employee_code} />
+          <ProfileField label="LINE User ID" value={profile.line_user_id} />
         </ProfileSectionCard>
 
         <ProfileSectionCard title="Work Information" icon={Building2}>

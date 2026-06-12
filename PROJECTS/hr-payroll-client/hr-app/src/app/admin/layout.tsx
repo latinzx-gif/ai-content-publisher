@@ -7,7 +7,10 @@ import {
   withBranchPendingBadges,
 } from "@/components/admin/branch-nav"
 import { getBranchPendingCounts } from "@/features/manager/branch-pending-counts"
-import { getUrgentAlertCount } from "@/features/alerts/data"
+import {
+  getNotificationInbox,
+  resolveNotificationScope,
+} from "@/features/notifications/data"
 import {
   DEV_VIEW_COOKIE,
   getDevNavItems,
@@ -62,8 +65,12 @@ export default async function AdminLayout({
     : null
   const navMode = dev && devView ? getDevNavMode(devView) : null
 
-  const alertBadge =
-    dev || branchManager || ceo ? 0 : await getUrgentAlertCount()
+  const notificationScope = resolveNotificationScope(employee, devView)
+  const notificationInbox = notificationScope
+    ? await getNotificationInbox(employee, notificationScope)
+    : { items: [], total: 0, approvalTotal: 0, complianceTotal: 0 }
+  const alertBadge = notificationInbox.total
+  const approvalBadge = notificationInbox.approvalTotal
   let navItems =
     dev && devView ? getDevNavItems(devView) : getNavItemsForRole(employee.role)
 
@@ -75,6 +82,9 @@ export default async function AdminLayout({
   return (
     <AdminShell
       alertBadge={alertBadge}
+      approvalBadge={approvalBadge}
+      notificationItems={notificationInbox.items}
+      showComplianceLink={notificationScope === "hr"}
       branchMode={navMode?.branchMode ?? branchManager}
       ceoMode={navMode?.ceoMode ?? ceo}
       devAllMode={navMode?.devAllMode ?? false}

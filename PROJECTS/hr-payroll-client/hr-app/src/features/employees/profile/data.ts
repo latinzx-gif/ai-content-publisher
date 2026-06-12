@@ -9,6 +9,7 @@ export type ContractType = "full_time" | "part_time" | "contract" | null
 
 export type EmployeeProfile = {
   id: string
+  employee_code: string | null
   line_user_id: string | null
   name: string
   date_of_birth: string | null
@@ -52,7 +53,7 @@ export async function getEmployeeProfile(
   const { data, error } = await supabase
     .from("hr_employees")
     .select(
-      "id, line_user_id, name, date_of_birth, phone, email, position, department, branch_id, salary, contract_start, contract_type, contract_end, probation_end, probation_outcome, probation_outcome_note, probation_extended_until, visa_expiry, work_permit_expiry, role, status"
+      "id, employee_code, line_user_id, name, date_of_birth, phone, email, position, department, branch_id, salary, contract_start, contract_type, contract_end, probation_end, probation_outcome, probation_outcome_note, probation_extended_until, visa_expiry, work_permit_expiry, role, status"
     )
     .eq("id", id)
     .maybeSingle()

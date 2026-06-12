@@ -27,6 +27,7 @@ type CreateBody = {
   work_permit_expiry?: string | null
   status?: "active" | "inactive"
   role?: string
+  employee_code?: string | null
 }
 
 export async function POST(request: Request) {
@@ -76,10 +77,16 @@ export async function POST(request: Request) {
     }
   }
 
+  const employeeCode =
+    typeof body.employee_code === "string" && body.employee_code.trim()
+      ? body.employee_code.trim()
+      : null
+
   const { data, error } = await supabase
     .from("hr_employees")
     .insert({
       name,
+      employee_code: employeeCode,
       line_user_id: body.line_user_id?.trim() || null,
       date_of_birth: body.date_of_birth || null,
       phone: body.phone?.trim() || null,
@@ -102,7 +109,9 @@ export async function POST(request: Request) {
   if (error) {
     const msg =
       error.code === "23505"
-        ? "LINE user ID นี้มีในระบบแล้ว"
+        ? error.message.includes("employee_code")
+          ? "รหัสพนักงานนี้มีในระบบแล้ว"
+          : "LINE user ID นี้มีในระบบแล้ว"
         : error.message
     return NextResponse.json({ error: msg }, { status: 500 })
   }

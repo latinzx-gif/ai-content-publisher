@@ -89,6 +89,7 @@ export function AddEmployeeForm() {
     work_permit_expiry: "",
     status: "active" as "active" | "inactive",
     role: "employee" as AssignableRole,
+    employee_code: "",
   })
 
   function setField<K extends keyof typeof form>(key: K, value: (typeof form)[K]) {
@@ -125,6 +126,7 @@ export function AddEmployeeForm() {
           work_permit_expiry: form.work_permit_expiry || null,
           status: form.status,
           role: form.role,
+          employee_code: form.employee_code.trim() || null,
         }),
       })
       const body = (await res.json().catch(() => null)) as
@@ -170,7 +172,9 @@ export function AddEmployeeForm() {
                   />
                 </div>
                 <p className="text-xs text-white/85">
-                  Employee ID · Auto-generated on save
+                  {form.employee_code.trim()
+                    ? `รหัสพนักงาน · ${form.employee_code.trim()}`
+                    : "รหัสพนักงาน · ระบุในฟอร์มด้านล่าง (ไม่บังคับ)"}
                 </p>
               </div>
             </div>
@@ -316,6 +320,14 @@ export function AddEmployeeForm() {
               placeholder="Uxxxxxxxx… (optional — หรือให้พนักงาน login LINE เอง)"
               value={form.line_user_id}
               onChange={(e) => setField("line_user_id", e.target.value)}
+            />
+          </FormField>
+          <FormField label="รหัสพนักงาน">
+            <input
+              className={inputClassName}
+              placeholder="เช่น EMP-001"
+              value={form.employee_code}
+              onChange={(e) => setField("employee_code", e.target.value)}
             />
           </FormField>
           <FormField label="Role">

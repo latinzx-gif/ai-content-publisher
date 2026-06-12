@@ -121,6 +121,7 @@ export type Database = {
           date_of_birth: string | null
           department: string | null
           email: string | null
+          employee_code: string | null
           id: string
           line_user_id: string | null
           name: string
@@ -141,6 +142,7 @@ export type Database = {
           date_of_birth?: string | null
           department?: string | null
           email?: string | null
+          employee_code?: string | null
           id?: string
           line_user_id?: string | null
           name: string
@@ -161,6 +163,7 @@ export type Database = {
           date_of_birth?: string | null
           department?: string | null
           email?: string | null
+          employee_code?: string | null
           id?: string
           line_user_id?: string | null
           name?: string

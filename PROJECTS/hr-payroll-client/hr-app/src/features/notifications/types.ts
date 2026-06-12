@@ -1,0 +1,29 @@
+export type NotificationKind =
+  | "registration"
+  | "leave"
+  | "attendance"
+  | "overtime"
+  | "document"
+  | "complaint"
+  | "probation"
+  | "visa"
+  | "work_permit"
+
+export type NotificationItem = {
+  id: string
+  kind: NotificationKind
+  title: string
+  summary: string
+  href: string
+  createdAt: string | null
+  urgency: "normal" | "urgent"
+}
+
+export type NotificationInbox = {
+  items: NotificationItem[]
+  /** All notifications (approvals + compliance reminders) */
+  total: number
+  /** Pending approval queue only — shown on bell badge */
+  approvalTotal: number
+  complianceTotal: number
+}

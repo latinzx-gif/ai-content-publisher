@@ -56,6 +56,7 @@ type FormState = {
   work_permit_expiry: string
   status: "active" | "inactive"
   role: AssignableRole
+  employee_code: string
   branch_id: string
 }
 
@@ -77,6 +78,7 @@ function toFormState(profile: EmployeeProfile): FormState {
     role: (ASSIGNABLE_ROLES as readonly string[]).includes(profile.role)
       ? (profile.role as AssignableRole)
       : "employee",
+    employee_code: profile.employee_code ?? "",
     branch_id: profile.branch_id ?? "",
   }
 }
@@ -137,6 +139,7 @@ export function EmployeeProfileForm({
           work_permit_expiry: form.work_permit_expiry || null,
           status: form.status,
           role: form.role,
+          employee_code: form.employee_code.trim() || null,
           branch_id: form.branch_id || null,
         }),
       })
@@ -245,25 +248,35 @@ export function EmployeeProfileForm({
                 onChange={(e) => setField("department", e.target.value)}
               />
             </Field>
-            <Field label="สิทธิ์เข้าใช้งาน (Role)">
-              <select
-                className={inputClassName}
-                value={form.role}
-                onChange={(e) =>
-                  setField("role", e.target.value as AssignableRole)
-                }
-              >
-                {ASSIGNABLE_ROLES.map((role) => (
-                  <option key={role} value={role}>
-                    {roleDisplayLabel(role)}
-                  </option>
-                ))}
-              </select>
-              <p className="mt-1 text-xs text-muted-foreground">
-                Employee = LIFF เท่านั้น · Branch Manager / HR / Admin / CEO =
-                Dashboard
-              </p>
-            </Field>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <Field label="รหัสพนักงาน">
+                <input
+                  className={inputClassName}
+                  placeholder="เช่น EMP-001"
+                  value={form.employee_code}
+                  onChange={(e) => setField("employee_code", e.target.value)}
+                />
+              </Field>
+              <Field label="สิทธิ์เข้าใช้งาน (Role)">
+                <select
+                  className={inputClassName}
+                  value={form.role}
+                  onChange={(e) =>
+                    setField("role", e.target.value as AssignableRole)
+                  }
+                >
+                  {ASSIGNABLE_ROLES.map((role) => (
+                    <option key={role} value={role}>
+                      {roleDisplayLabel(role)}
+                    </option>
+                  ))}
+                </select>
+              </Field>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Employee = LIFF เท่านั้น · Branch Manager / HR / Admin / CEO =
+              Dashboard
+            </p>
             <Field label="สาขา">
               <select
                 className={inputClassName}
