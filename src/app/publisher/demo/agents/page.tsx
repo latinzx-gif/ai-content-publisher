@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useDemoStore } from "@/lib/publisher/demo/store";
 import {
   Bot, Sparkles, Image as ImageIcon, ShieldCheck, Send,
   Zap, Activity, CheckCircle2, AlertCircle, Clock,
@@ -176,6 +177,8 @@ function OrchestratorNode() {
 // ── Agent card (org chart node) ───────────────────────────────────────────────
 function AgentNode({ agent }: { agent: Agent }) {
   const [open, setOpen] = useState(false);
+  const [running, setRunning] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
   const sc = STATUS[agent.status];
 
   return (
@@ -281,15 +284,15 @@ function AgentNode({ agent }: { agent: Agent }) {
               <button
                 className="flex-1 flex items-center justify-center gap-1 text-[11px] font-semibold py-1.5 rounded-lg border transition-colors"
                 style={{ borderColor: agent.color + "40", color: agent.color, background: agent.color + "0d" }}
-                onClick={(e) => e.stopPropagation()}
+                onClick={(e) => { e.stopPropagation(); setRunning(true); setTimeout(() => setRunning(false), 1500); }}
               >
-                <Play size={10} /> Run
+                <Play size={10} /> {running ? "Running…" : "Run"}
               </button>
               <button
                 className="flex items-center justify-center gap-1 text-[11px] font-semibold py-1.5 px-3 rounded-lg border border-[#e5e7eb] text-gray-500 hover:bg-gray-50 transition-colors"
-                onClick={(e) => e.stopPropagation()}
+                onClick={(e) => { e.stopPropagation(); setRefreshing(true); setTimeout(() => setRefreshing(false), 1000); }}
               >
-                <RefreshCw size={10} />
+                <RefreshCw size={10} className={refreshing ? "animate-spin" : ""} />
               </button>
             </div>
           </div>
@@ -310,9 +313,19 @@ const ACTIVITY = [
 
 // ── Page ──────────────────────────────────────────────────────────────────────
 export default function AgentsPage() {
+  const [runningAll, setRunningAll] = useState(false);
+  const { activities } = useDemoStore();
   const running  = AGENTS.filter((a) => a.status === "running").length;
   const queued   = AGENTS.filter((a) => a.status === "queued").length;
   const idle     = AGENTS.filter((a) => a.status === "idle").length;
+
+  const displayActivity = activities.length > 0
+    ? activities.slice(0, 10).map((ev) => ({
+        time: new Date(ev.at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+        icon: "success" as const,
+        text: ev.message,
+      }))
+    : ACTIVITY;
 
   return (
     <div className="flex flex-col h-full overflow-hidden bg-[#f8f9fc]">
@@ -340,8 +353,11 @@ export default function AgentsPage() {
             <span className="w-1.5 h-1.5 rounded-full bg-gray-300" />
             {idle} idle
           </span>
-          <button className="flex items-center gap-1.5 bg-[#6366f1] hover:bg-[#4f46e5] text-white text-[13px] font-semibold px-4 py-2 rounded-lg transition-colors shadow-sm ml-2">
-            <Zap size={13} /> Run all
+          <button
+            className="flex items-center gap-1.5 bg-[#6366f1] hover:bg-[#4f46e5] text-white text-[13px] font-semibold px-4 py-2 rounded-lg transition-colors shadow-sm ml-2"
+            onClick={() => { setRunningAll(true); setTimeout(() => setRunningAll(false), 2000); }}
+          >
+            <Zap size={13} /> {runningAll ? "Running…" : "Run all"}
           </button>
         </div>
       </div>
@@ -399,7 +415,7 @@ export default function AgentsPage() {
               </span>
             </div>
             <div className="divide-y divide-[#f8f8f8]">
-              {ACTIVITY.map((ev, i) => (
+              {displayActivity.map((ev, i) => (
                 <div key={i} className="flex items-center gap-3 px-5 py-3 hover:bg-gray-50 transition-colors">
                   {ev.icon === "success"
                     ? <CheckCircle2 size={14} className="text-emerald-400 flex-shrink-0" />

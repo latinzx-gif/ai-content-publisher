@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useDemoStore } from "@/lib/publisher/demo/store";
 import {
   TrendingUp, TrendingDown, Plus, Megaphone,
   ChevronDown, BarChart2, Users, FileText,
@@ -525,18 +526,26 @@ export default function CampaignsPage() {
   const [filter, setFilter] = useState<"all" | CampaignStatus>("all");
   const [search, setSearch] = useState("");
   const [showModal, setShowModal] = useState(false);
+  const [campaigns, setCampaigns] = useState<Campaign[]>(MOCK_CAMPAIGNS);
+  const [newCampaignName, setNewCampaignName] = useState("");
+  const { posts } = useDemoStore();
 
-  const filtered = MOCK_CAMPAIGNS.filter((c) => {
+  const enrichedCampaigns = campaigns.map((c) => ({
+    ...c,
+    postsPublished: posts.filter((p) => p.campaign === c.name && p.status === "published").length || c.postsPublished,
+  }));
+
+  const filtered = enrichedCampaigns.filter((c) => {
     const matchFilter = filter === "all" || c.status === filter;
     const matchSearch = !search || c.name.toLowerCase().includes(search.toLowerCase());
     return matchFilter && matchSearch;
   });
 
   // Summary KPIs
-  const active = MOCK_CAMPAIGNS.filter((c) => c.status === "active");
+  const active = enrichedCampaigns.filter((c) => c.status === "active");
   const totalReach = active.reduce((s, c) => s + c.reach, 0);
   const avgEng = active.filter((c) => c.engagement > 0).reduce((s, c, _, a) => s + c.engagement / a.length, 0);
-  const totalPosts = MOCK_CAMPAIGNS.reduce((s, c) => s + c.postsTotal, 0);
+  const totalPosts = posts.length || campaigns.reduce((s, c) => s + c.postsTotal, 0);
 
   return (
     <div className="flex flex-col h-full overflow-hidden bg-[#f9fafb]">
@@ -547,7 +556,7 @@ export default function CampaignsPage() {
           <Megaphone size={18} className="text-[#4f46e5]" />
           <span className="text-[16px] font-bold text-gray-900">Campaign Manager</span>
           <span className="text-[12px] text-gray-400 bg-gray-100 px-2.5 py-1 rounded-full font-medium">
-            {MOCK_CAMPAIGNS.length} campaigns
+            {campaigns.length} campaigns
           </span>
         </div>
         <div className="flex items-center gap-2">
@@ -663,7 +672,7 @@ export default function CampaignsPage() {
             <div className="flex flex-col gap-4">
               <div>
                 <label className="text-[11px] font-bold text-gray-500 uppercase tracking-wider block mb-1.5">Campaign name</label>
-                <input placeholder="e.g. Q3 Brand Awareness" className="w-full border border-[#e5e7eb] rounded-xl px-3 py-2.5 text-[13px] focus:outline-none focus:border-[#4f46e5] transition-colors" />
+                <input placeholder="e.g. Q3 Brand Awareness" value={newCampaignName} onChange={(e) => setNewCampaignName(e.target.value)} className="w-full border border-[#e5e7eb] rounded-xl px-3 py-2.5 text-[13px] focus:outline-none focus:border-[#4f46e5] transition-colors" />
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
@@ -685,7 +694,24 @@ export default function CampaignsPage() {
                 Cancel
               </button>
               <button
-                onClick={() => setShowModal(false)}
+                onClick={() => {
+                  if (newCampaignName.trim()) {
+                    setCampaigns((prev) => [...prev, {
+                      id: `c-${prev.length + 1}`,
+                      name: newCampaignName.trim(),
+                      status: "planning" as CampaignStatus,
+                      startDate: "", endDate: "",
+                      platforms: [],
+                      postsTotal: 0, postsPublished: 0,
+                      reach: 0, engagement: 0,
+                      color: "#6366f1",
+                      themes: [],
+                      targetAudience: "",
+                    }]);
+                  }
+                  setNewCampaignName("");
+                  setShowModal(false);
+                }}
                 className="flex-1 py-2.5 rounded-xl text-[13px] font-bold text-white transition-all hover:opacity-90 active:scale-[0.98]"
                 style={{ background: "linear-gradient(135deg, #4f46e5, #8b5cf6)" }}
               >

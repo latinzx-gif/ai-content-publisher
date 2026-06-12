@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useDemoStore } from "@/lib/publisher/demo/store";
 import {
   TrendingUp, TrendingDown, Eye, Heart, Send,
   Clock, BarChart2, Calendar, Bot, ChevronDown,
@@ -145,10 +146,9 @@ function KpiCard({ icon, label, value, unit, delta, color, sparkData }: {
 function DonutChart({ data }: { data: typeof PLATFORM_DATA["7d"] }) {
   const total = data.reduce((s, d) => s + d.posts, 0);
   const R = 52; const cx = 68; const cy = 68; const stroke = 22;
-  let acc = 0;
-  const slices = data.map((d) => {
+  const slices = data.map((d, i) => {
     const pct = d.posts / total;
-    const start = acc; acc += pct;
+    const start = data.slice(0, i).reduce((s, x) => s + x.posts / total, 0);
     return { ...d, pct, start };
   });
 
@@ -324,7 +324,8 @@ function AgentThroughput() {
 // ── Page ──────────────────────────────────────────────────────────────────────
 export default function AnalyticsPage() {
   const [range, setRange] = useState<Range>("30d");
-  const kpi = KPI[range];
+  const { posts } = useDemoStore();
+  const kpi = { ...KPI[range], published: posts.filter((p) => p.status === "published").length || KPI[range].published };
   const platforms = PLATFORM_DATA[range];
   const bars = WEEKLY_BARS[range];
   const spark = SPARKLINES[range];

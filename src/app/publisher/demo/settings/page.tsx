@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { useDemoStore } from "@/lib/publisher/demo/store";
 import {
   Settings, FileText, Users, CheckSquare,
   LayoutTemplate, Tag, Clock, Plug,
@@ -66,6 +68,8 @@ function GeneralSection() {
   const [internal, setInternal] = useState(false);
   const [hideEmails, setHideEmails] = useState(false);
   const [saved, setSaved] = useState(false);
+  const { resetDemo } = useDemoStore();
+  const router = useRouter();
 
   function save() { setSaved(true); setTimeout(() => setSaved(false), 2000); }
 
@@ -138,7 +142,10 @@ function GeneralSection() {
       <div className="border-t border-[#f0f0f0] pt-6">
         <h4 className="text-[15px] font-semibold text-gray-800 mb-1">Delete workspace</h4>
         <p className="text-[13px] text-gray-400 mb-3">Permanently deletes this workspace and all its data.<br />This cannot be undone.</p>
-        <button className="text-[13px] font-semibold text-red-500 hover:underline">
+        <button
+          className="text-[13px] font-semibold text-red-500 hover:underline"
+          onClick={() => { if (window.confirm("Delete this workspace? This cannot be undone.")) { resetDemo(); router.push("/publisher/demo"); } }}
+        >
           Delete this workspace
         </button>
       </div>
@@ -170,7 +177,7 @@ function BrandSection() {
           <div className="flex items-start gap-3">
             <span className="text-[#4f46e5] text-[16px] mt-0.5">✦</span>
             <div>
-              <p className="text-[13px] font-semibold text-gray-800">Fill these in and Postable's AI will use them to write on-brand content</p>
+              <p className="text-[13px] font-semibold text-gray-800">Fill these in and Postable&apos;s AI will use them to write on-brand content</p>
               <p className="text-[12px] text-gray-500 mt-0.5">Add more sections or skip any you don&apos;t need.</p>
             </div>
           </div>
