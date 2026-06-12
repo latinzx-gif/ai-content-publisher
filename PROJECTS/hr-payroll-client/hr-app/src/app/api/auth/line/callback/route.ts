@@ -47,7 +47,7 @@ export async function GET(request: NextRequest) {
 
   const { data: employee } = await admin
     .from("hr_employees")
-    .select("id, role, status")
+    .select("id, role, status, department")
     .eq("line_user_id", lineUserId)
     .maybeSingle()
 
@@ -59,9 +59,11 @@ export async function GET(request: NextRequest) {
   }
 
   const role = employee.role as Parameters<typeof adminLoginPath>[0]
+  const department =
+    typeof employee.department === "string" ? employee.department : null
   const destination =
     employee.status === "active"
-      ? adminLoginPath(role, "active")
+      ? adminLoginPath(role, "active", department)
       : PENDING_REGISTRATION_PATH
 
   const response = NextResponse.redirect(new URL(destination, origin))

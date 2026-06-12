@@ -3,6 +3,7 @@ import {
   type AdminNavItem,
 } from "@/components/admin/admin-nav"
 import { CEO_NAV_ITEMS } from "@/components/admin/ceo-nav"
+import { isManagementDepartment } from "@/lib/auth/department-access"
 
 /** Branch section routes — hub links only, not in BM left sidebar */
 export const BRANCH_SECTION_ITEMS: AdminNavItem[] = [
@@ -17,11 +18,20 @@ export const BRANCH_NAV_ITEMS: AdminNavItem[] = [
   { label: "Dashboard", href: "/admin/branch", icon: "layout-dashboard" },
 ]
 
+/** แผนก Management + role Employee — Dashboard เท่านั้น */
+export const MANAGEMENT_EMPLOYEE_NAV_ITEMS: AdminNavItem[] = [
+  { label: "Dashboard", href: "/admin", icon: "layout-dashboard" },
+]
+
 export function getNavItemsForRole(
-  role: "employee" | "hr" | "admin" | "branch_manager" | "ceo" | "dev"
+  role: "employee" | "hr" | "admin" | "branch_manager" | "ceo" | "dev",
+  department: string | null = null
 ): AdminNavItem[] {
   if (role === "branch_manager") return BRANCH_NAV_ITEMS
   if (role === "ceo") return CEO_NAV_ITEMS
+  if (role === "employee" && isManagementDepartment(department)) {
+    return MANAGEMENT_EMPLOYEE_NAV_ITEMS
+  }
   return ADMIN_NAV_ITEMS
 }
 

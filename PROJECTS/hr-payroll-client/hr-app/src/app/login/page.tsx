@@ -31,7 +31,7 @@ export default async function LoginPage({
   } = await supabase.auth.getUser()
   const employee = user && !error ? await getCurrentEmployee() : null
   const dashboardPath = employee
-    ? adminLoginPath(employee.role, employee.status)
+    ? adminLoginPath(employee.role, employee.status, employee.department)
     : null
 
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL?.trim()

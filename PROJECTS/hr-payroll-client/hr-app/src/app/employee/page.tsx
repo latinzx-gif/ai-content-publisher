@@ -15,7 +15,7 @@ export default async function EmployeeInfoPage() {
   }
 
   if (employee.role !== "employee" && employee.role !== "dev") {
-    redirect(adminLoginPath(employee.role, employee.status))
+    redirect(adminLoginPath(employee.role, employee.status, employee.department))
   }
 
   if (isPendingRegistration(employee)) {

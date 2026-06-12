@@ -14,7 +14,7 @@ export default async function RegisterPage() {
       redirect("/register/pending")
     }
     if (employee.status === "active") {
-      redirect(adminLoginPath(employee.role, employee.status))
+      redirect(adminLoginPath(employee.role, employee.status, employee.department))
     }
   }
 

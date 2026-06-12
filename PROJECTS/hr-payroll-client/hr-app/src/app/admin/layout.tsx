@@ -17,11 +17,12 @@ import {
   parseDevViewAs,
 } from "@/lib/auth/dev-view"
 import {
-  canAccessAdminPortal,
+  canEmployeeAccessAdminPortal,
   isBranchManager,
   isCeo,
   isCeoAllowedPath,
   isDev,
+  isManagementDashboardEmployee,
 } from "@/lib/auth/roles"
 import { getCurrentEmployee } from "@/lib/auth/session"
 
@@ -32,7 +33,7 @@ export default async function AdminLayout({
 }) {
   const employee = await getCurrentEmployee()
   if (!employee) redirect("/login?error=session_failed")
-  if (!canAccessAdminPortal(employee.role)) {
+  if (!canEmployeeAccessAdminPortal(employee)) {
     redirect("/login?error=forbidden")
   }
 
@@ -57,6 +58,14 @@ export default async function AdminLayout({
     if (!ceo && !branchManager && pathname.startsWith("/admin/ceo")) {
       redirect("/admin")
     }
+
+    if (
+      isManagementDashboardEmployee(employee) &&
+      pathname.startsWith("/admin") &&
+      pathname !== "/admin"
+    ) {
+      redirect("/admin")
+    }
   }
 
   const devView = dev
@@ -77,7 +86,9 @@ export default async function AdminLayout({
   const alertBadge = notificationInbox.total
   const approvalBadge = notificationInbox.approvalTotal
   let navItems =
-    dev && devView ? getDevNavItems(devView) : getNavItemsForRole(employee.role)
+    dev && devView
+      ? getDevNavItems(devView)
+      : getNavItemsForRole(employee.role, employee.department)
 
   if (Object.keys(notificationInbox.navBadges).length > 0) {
     navItems = withNavAlertBadges(navItems, notificationInbox.navBadges)

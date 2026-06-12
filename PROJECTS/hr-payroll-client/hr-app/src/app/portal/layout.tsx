@@ -20,7 +20,7 @@ export default async function PortalLayout({
     redirect(
       employee.role === "employee"
         ? EMPLOYEE_INFO_PATH
-        : adminLoginPath(employee.role, employee.status)
+        : adminLoginPath(employee.role, employee.status, employee.department)
     )
   }
 

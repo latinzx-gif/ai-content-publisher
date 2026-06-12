@@ -382,8 +382,9 @@ export function EmployeeProfileForm({
               </Field>
             </div>
             <p className="text-xs text-muted-foreground">
-              Employee = LIFF เท่านั้น · Admin / HR / Branch Manager / Developers /
-              CEO = Dashboard
+              แผนก Management — ทุกคนใช้ Dashboard ได้ · สิทธิ์ตาม Role (Admin /
+              HR / Branch Manager / Developers / CEO) · พนักงานสาขาอื่น (Employee)
+              = LINE เท่านั้น
             </p>
             <Field label="สาขา">
               <select

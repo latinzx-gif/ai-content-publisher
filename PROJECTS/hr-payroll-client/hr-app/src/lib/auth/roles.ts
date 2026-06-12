@@ -1,3 +1,4 @@
+import { isManagementDepartment } from "@/lib/auth/department-access"
 import {
   EMPLOYEE_INFO_PATH,
   PENDING_REGISTRATION_PATH,
@@ -24,6 +25,21 @@ export function isBranchManager(role: AppRole): boolean {
 
 export function canAccessAdminPortal(role: AppRole): boolean {
   return isHrAdmin(role) || isCeo(role) || isBranchManager(role) || isDev(role)
+}
+
+/** Dashboard access — role-based; แผนก Management (active) เข้าได้ทุกคน สิทธิ์ภายในตาม Role */
+export function canEmployeeAccessAdminPortal(employee: Employee): boolean {
+  if (employee.status !== "active") return false
+  if (canAccessAdminPortal(employee.role)) return true
+  return isManagementDepartment(employee.department)
+}
+
+/** แผนก Management + role Employee — Dashboard เท่านั้น (ไม่มีสิทธิ์ HR) */
+export function isManagementDashboardEmployee(employee: Employee): boolean {
+  return (
+    employee.role === "employee" &&
+    isManagementDepartment(employee.department)
+  )
 }
 
 /** Worker web portal disabled — employees use LINE OA only. */
@@ -56,12 +72,13 @@ export function isCeoAllowedPath(pathname: string): boolean {
 
 export function adminLoginPath(
   role: AppRole,
-  status: Employee["status"] = "active"
+  status: Employee["status"] = "active",
+  department: string | null = null
 ): string {
+  if (status === "inactive") return PENDING_REGISTRATION_PATH
   if (role === "dev") return "/admin/ceo"
   if (role === "branch_manager") return "/admin/branch"
   if (role === "ceo") return "/admin/ceo"
-  if (isHrAdmin(role)) return "/admin"
-  if (status === "inactive") return PENDING_REGISTRATION_PATH
+  if (isHrAdmin(role) || isManagementDepartment(department)) return "/admin"
   return EMPLOYEE_INFO_PATH
 }

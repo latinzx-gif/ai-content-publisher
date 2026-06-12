@@ -12,7 +12,7 @@ export default async function RegisterPendingPage() {
   }
 
   if (!isPendingRegistration(employee)) {
-    redirect(adminLoginPath(employee.role, employee.status))
+    redirect(adminLoginPath(employee.role, employee.status, employee.department))
   }
 
   return <PendingRegistrationCard name={employee.name} showLoginHint />

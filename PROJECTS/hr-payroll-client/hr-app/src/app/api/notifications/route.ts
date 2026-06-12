@@ -9,12 +9,12 @@ import {
   DEV_VIEW_COOKIE,
   parseDevViewAs,
 } from "@/lib/auth/dev-view"
-import { canAccessAdminPortal } from "@/lib/auth/roles"
+import { canEmployeeAccessAdminPortal } from "@/lib/auth/roles"
 import { getCurrentEmployee } from "@/lib/auth/session"
 
 export async function GET() {
   const employee = await getCurrentEmployee()
-  if (!employee || !canAccessAdminPortal(employee.role)) {
+  if (!employee || !canEmployeeAccessAdminPortal(employee)) {
     return NextResponse.json({ error: "forbidden" }, { status: 403 })
   }
 
