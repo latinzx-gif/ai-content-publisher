@@ -119,8 +119,8 @@ function toFormState(profile: EmployeeProfile): FormState {
     bank_account_number: profile.bank_account_number ?? "",
     bank_branch: profile.bank_branch ?? "",
     work_shift_id: profile.work_shift_id ?? "",
-    default_check_in_time: (profile as any).default_check_in_time ?? "",
-    default_check_out_time: (profile as any).default_check_out_time ?? "",
+    default_check_in_time: profile.default_check_in_time ?? "",
+    default_check_out_time: profile.default_check_out_time ?? "",
   }
 }
 

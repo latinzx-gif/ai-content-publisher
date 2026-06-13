@@ -14,6 +14,7 @@ import { normalizeBankFields } from "@/lib/employees/bank-fields"
 import { createClient } from "@/lib/supabase/server"
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+const TIME_RE = /^([0-1][0-9]|2[0-3]):[0-5][0-9]$/
 
 type CreateBody = {
   name?: string
@@ -39,6 +40,8 @@ type CreateBody = {
   bank_account_number?: string | null
   bank_branch?: string | null
   work_shift_id?: string | null
+  default_check_in_time?: string | null
+  default_check_out_time?: string | null
 }
 
 export async function POST(request: Request) {
@@ -116,6 +119,13 @@ export async function POST(request: Request) {
     }
   }
 
+  if (body.default_check_in_time && !TIME_RE.test(body.default_check_in_time)) {
+    return NextResponse.json({ error: "invalid default_check_in_time format (HH:MM)" }, { status: 400 })
+  }
+  if (body.default_check_out_time && !TIME_RE.test(body.default_check_out_time)) {
+    return NextResponse.json({ error: "invalid default_check_out_time format (HH:MM)" }, { status: 400 })
+  }
+
   const { data, error } = await supabase
     .from("hr_employees")
     .insert({
@@ -137,6 +147,8 @@ export async function POST(request: Request) {
       status: body.status === "inactive" ? "inactive" : "active",
       role,
       work_shift_id: workShiftId,
+      default_check_in_time: body.default_check_in_time || null,
+      default_check_out_time: body.default_check_out_time || null,
       ...bank.updates,
     })
     .select("id")

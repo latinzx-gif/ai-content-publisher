@@ -14,6 +14,7 @@ import { createClient } from "@/lib/supabase/server"
 
 const DAY_MS = 86_400_000
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+const TIME_RE = /^([0-1][0-9]|2[0-3]):[0-5][0-9]$/
 
 function addDays(date: string, days: number): string {
   const t = Date.parse(`${date}T00:00:00Z`) + days * DAY_MS
@@ -44,6 +45,8 @@ type PatchBody = {
   bank_account_number?: string | null
   bank_branch?: string | null
   work_shift_id?: string | null
+  default_check_in_time?: string | null
+  default_check_out_time?: string | null
 }
 
 export async function PATCH(
@@ -164,6 +167,19 @@ export async function PATCH(
       } catch {
         return NextResponse.json({ error: "work shift not found" }, { status: 400 })
       }
+    }
+
+    if (body.default_check_in_time !== undefined) {
+      if (body.default_check_in_time !== null && body.default_check_in_time !== "" && !TIME_RE.test(body.default_check_in_time)) {
+        return NextResponse.json({ error: "invalid default_check_in_time format (HH:MM)" }, { status: 400 })
+      }
+      updates.default_check_in_time = body.default_check_in_time || null
+    }
+    if (body.default_check_out_time !== undefined) {
+      if (body.default_check_out_time !== null && body.default_check_out_time !== "" && !TIME_RE.test(body.default_check_out_time)) {
+        return NextResponse.json({ error: "invalid default_check_out_time format (HH:MM)" }, { status: 400 })
+      }
+      updates.default_check_out_time = body.default_check_out_time || null
     }
 
     const bank = normalizeBankFields(body)

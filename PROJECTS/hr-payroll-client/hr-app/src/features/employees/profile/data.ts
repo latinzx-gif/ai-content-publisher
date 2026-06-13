@@ -25,6 +25,8 @@ export type EmployeeProfile = {
   branch_id: string | null
   work_shift_id: string | null
   workShift: WorkShiftSummary | null
+  default_check_in_time: string | null
+  default_check_out_time: string | null
   salary: number | null
   contract_start: string | null
   contract_type: ContractType
@@ -73,7 +75,7 @@ export async function getEmployeeProfile(
   const { data, error } = await supabase
     .from("hr_employees")
     .select(
-      "id, employee_code, line_user_id, name, date_of_birth, phone, email, position, department, branch_id, work_shift_id, salary, contract_start, contract_type, contract_end, contract_file_path, contract_file_name, contract_uploaded_at, probation_end, probation_outcome, probation_outcome_note, probation_extended_until, visa_expiry, work_permit_expiry, salary_payment_method, bank_name, bank_account_name, bank_account_number, bank_branch, leave_blacklisted, leave_blacklist_reason, leave_blacklisted_at, avatar_path, role, status, hr_work_shifts(id, code, name, start_hour, start_minute, end_hour, end_minute, crosses_midnight, grace_minutes, standard_hours, is_active)"
+      "id, employee_code, line_user_id, name, date_of_birth, phone, email, position, department, branch_id, work_shift_id, default_check_in_time, default_check_out_time, salary, contract_start, contract_type, contract_end, contract_file_path, contract_file_name, contract_uploaded_at, probation_end, probation_outcome, probation_outcome_note, probation_extended_until, visa_expiry, work_permit_expiry, salary_payment_method, bank_name, bank_account_name, bank_account_number, bank_branch, leave_blacklisted, leave_blacklist_reason, leave_blacklisted_at, avatar_path, role, status, hr_work_shifts(id, code, name, start_hour, start_minute, end_hour, end_minute, crosses_midnight, grace_minutes, standard_hours, is_active)"
     )
     .eq("id", id)
     .maybeSingle()
@@ -92,6 +94,8 @@ export async function getEmployeeProfile(
     ...row,
     work_shift_id: (data.work_shift_id as string | null) ?? null,
     workShift,
+    default_check_in_time: (data.default_check_in_time as string | null) ?? null,
+    default_check_out_time: (data.default_check_out_time as string | null) ?? null,
     avatar_path,
     avatarUrl: employeeAvatarPublicUrl(avatar_path),
     contract_type: (data.contract_type as ContractType) ?? null,
