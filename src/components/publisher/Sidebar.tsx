@@ -13,8 +13,6 @@ type RouteItem = {
   href: string;
   label: string;
   phase: Phase;
-  /** Page exists but is suspended from use (boss call, 2026-06-11). */
-  paused?: boolean;
 };
 
 type RouteGroup = {
@@ -26,39 +24,12 @@ const routeGroups: RouteGroup[] = [
   {
     title: "Main",
     items: [
-      { href: "/publisher", label: "Dashboard", phase: "P1" },
-      { href: "/publisher/create", label: "Create", phase: "P1", paused: true },
-      { href: "/publisher/review", label: "Review", phase: "P1" },
-      { href: "/publisher/calendar", label: "Calendar", phase: "P1" },
-      { href: "/publisher/publishing", label: "Publishing", phase: "P1" },
-    ],
-  },
-  {
-    title: "Workflow",
-    items: [
-      { href: "/publisher/briefs", label: "Brief Builder", phase: "P1" },
-      { href: "/publisher/sources", label: "Sources", phase: "P2" },
-      { href: "/publisher/knowledge", label: "Knowledge", phase: "P2" },
-      { href: "/publisher/rules", label: "Rules", phase: "P1" },
-      { href: "/publisher/content-generation", label: "Content Generation", phase: "P1" },
-      { href: "/publisher/image-prompts", label: "Image Prompts", phase: "P1" },
-      { href: "/publisher/images", label: "Images", phase: "P1" },
-      { href: "/publisher/quality-check", label: "Quality Check", phase: "P1" },
-      { href: "/publisher/content-library", label: "Content Library", phase: "P2" },
-    ],
-  },
-  {
-    title: "Intelligence",
-    items: [
-      { href: "/publisher/analytics", label: "Analytics", phase: "P2" },
-      { href: "/publisher/learning-loop", label: "Learning Loop", phase: "P3" },
-    ],
-  },
-  {
-    title: "System",
-    items: [
-      { href: "/publisher/logs", label: "Logs", phase: "P1" },
-      { href: "/publisher/settings", label: "Settings", phase: "P1" },
+      { href: "/publisher/index", label: "Demo Dashboard", phase: "P1" },
+      { href: "/publisher/index/create", label: "Create", phase: "P1" },
+      { href: "/publisher/index/approvals", label: "Approvals", phase: "P1" },
+      { href: "/publisher/index/analytics", label: "Analytics", phase: "P1" },
+      { href: "/publisher/index/agents", label: "Agents", phase: "P1" },
+      { href: "/publisher/index/campaigns", label: "Campaigns", phase: "P1" },
     ],
   },
 ];
@@ -89,9 +60,6 @@ export default function Sidebar() {
   function isActiveRoute(itemHref: string) {
     if (!pathname) return false;
     if (pathname === itemHref) return true;
-    // Dashboard ("/publisher") matches exactly, otherwise it would light up
-    // on every publisher page.
-    if (itemHref === "/publisher") return false;
     return pathname.startsWith(`${itemHref}/`);
   }
 

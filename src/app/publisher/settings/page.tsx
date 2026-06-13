@@ -20,7 +20,7 @@ export default async function SettingsPage() {
         </p>
         <Link
           className="mt-4 inline-flex rounded-lg border border-[var(--border)] bg-[var(--surface-muted)] px-4 py-2 text-sm font-semibold text-[var(--navy)] hover:bg-white"
-          href="/?page=settings"
+          href="/publisher/index/settings"
         >
           Open Integrations
         </Link>
