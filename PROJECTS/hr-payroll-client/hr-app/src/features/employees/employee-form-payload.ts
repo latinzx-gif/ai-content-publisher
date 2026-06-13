@@ -98,6 +98,8 @@ export type AddEmployeeFormState = {
   employee_code: string
   date_of_birth: string
   work_shift_id: string
+  default_check_in_time: string
+  default_check_out_time: string
 } & BankFields
 
 export function buildAddEmployeeBody(form: AddEmployeeFormState): Record<string, unknown> {
@@ -120,6 +122,8 @@ export function buildAddEmployeeBody(form: AddEmployeeFormState): Record<string,
     role: form.role,
     employee_code: form.employee_code.trim() || null,
     work_shift_id: form.work_shift_id || null,
+    default_check_in_time: form.default_check_in_time || null,
+    default_check_out_time: form.default_check_out_time || null,
     ...buildBankPatchFields(form),
   }
 }

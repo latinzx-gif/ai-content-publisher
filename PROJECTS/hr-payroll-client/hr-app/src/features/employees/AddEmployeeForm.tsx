@@ -37,25 +37,10 @@ import {
   type AssignableRole,
 } from "@/lib/auth/employee-roles"
 import { roleDisplayLabel } from "@/lib/auth/labels"
-import { ictToday } from "@/lib/datetime/thailand"
 import { cn } from "@/lib/utils"
 
 const inputClassName =
   "mt-0.5 h-7 w-full rounded-md border border-input bg-transparent px-2 text-xs outline-none transition-colors focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/50"
-
-type ManualAttendanceState = {
-  date: string
-  checkInTime: string
-  checkOutTime: string
-  workShiftId: string
-}
-
-const initialManualAttendance = (): ManualAttendanceState => ({
-  date: ictToday(),
-  checkInTime: "",
-  checkOutTime: "",
-  workShiftId: "",
-})
 
 const CONTRACT_OPTIONS: Array<{ value: ContractType; label: string }> = [
   { value: "full_time", label: "Full-time" },
@@ -95,16 +80,7 @@ export function AddEmployeeForm({
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [draftId, setDraftId] = useState<string | null>(null)
-  const [attendance, setAttendance] = useState<ManualAttendanceState>(
-    initialManualAttendance
-  )
-  const [attendanceSaving, setAttendanceSaving] = useState(false)
-  const [attendanceFeedback, setAttendanceFeedback] = useState<string | null>(
-    null
-  )
   const draftIdRef = useRef<string | null>(null)
-  const attendanceSavedKeyRef = useRef<string | null>(null)
-  const savedAttendanceEmployeeIdRef = useRef<string | null>(null)
 
   const [form, setForm] = useState({
     name: "",
@@ -141,6 +117,8 @@ export function AddEmployeeForm({
     role: "employee" as AssignableRole,
     employee_code: "",
     work_shift_id: "",
+    default_check_in_time: "",
+    default_check_out_time: "",
   })
 
   function suggestShiftForAddForm(input: {
@@ -158,95 +136,6 @@ export function AddEmployeeForm({
 
   function setField<K extends keyof typeof form>(key: K, value: (typeof form)[K]) {
     setForm((prev) => ({ ...prev, [key]: value }))
-  }
-
-  function setAttendanceField<K extends keyof ManualAttendanceState>(
-    key: K,
-    value: ManualAttendanceState[K]
-  ) {
-    setAttendance((prev) => ({ ...prev, [key]: value }))
-    setAttendanceFeedback(null)
-    attendanceSavedKeyRef.current = null
-    savedAttendanceEmployeeIdRef.current = null
-  }
-
-  const selectedManualShiftId = attendance.workShiftId || form.work_shift_id
-
-  function buildAttendancePayload(employeeId: string) {
-    const date = attendance.date.trim()
-    const checkInTime = attendance.checkInTime.trim()
-    const checkOutTime = attendance.checkOutTime.trim()
-    return {
-      employeeId,
-      date,
-      checkInTime,
-      checkOutTime: checkOutTime || null,
-      workShiftId: selectedManualShiftId,
-    }
-  }
-
-  function attendancePayloadKey(employeeId: string) {
-    const payload = buildAttendancePayload(employeeId)
-    return JSON.stringify(payload)
-  }
-
-  async function saveManualAttendance(employeeId: string, options?: { silent?: boolean }) {
-    if (!attendance.date.trim()) {
-      throw new Error("กรุณาระบุวันที่บันทึกเวลา")
-    }
-
-    const checkInTime = attendance.checkInTime.trim()
-    const checkOutTime = attendance.checkOutTime.trim()
-    if (!checkInTime) {
-      if (!checkOutTime) {
-        return
-      }
-      throw new Error("กรุณาระบุเวลาเข้าเมื่อจะใส่เวลาเลิกงาน")
-    }
-
-    const requestBody = {
-      employeeId,
-      date: attendance.date.trim(),
-      checkInTime,
-      checkOutTime: checkOutTime || null,
-      workShiftId: selectedManualShiftId,
-    }
-
-    const hasInput = checkInTime || checkOutTime
-    const payloadKey = attendancePayloadKey(employeeId)
-    if (attendanceSavedKeyRef.current === payloadKey) {
-      if (!options?.silent) {
-        setAttendanceFeedback("บันทึกเวลาเข้า/ออกแล้ว")
-      }
-      return
-    }
-
-    setAttendanceSaving(true)
-    if (!options?.silent) {
-      setAttendanceFeedback(null)
-    }
-    try {
-      const res = await fetch("/api/admin/attendance", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify(requestBody),
-      })
-
-      if (!res.ok) {
-        const body = (await res.json().catch(() => null)) as { error?: string } | null
-        throw new Error(body?.error ?? "บันทึกเวลาไม่สำเร็จ")
-      }
-
-      if (hasInput) {
-        attendanceSavedKeyRef.current = payloadKey
-        savedAttendanceEmployeeIdRef.current = employeeId
-      }
-      if (!options?.silent) {
-        setAttendanceFeedback("บันทึกเวลาเข้า/ออกเรียบร้อย")
-      }
-    } finally {
-      setAttendanceSaving(false)
-    }
   }
 
   const roleOptions = useMemo(() => {
@@ -327,16 +216,6 @@ export function AddEmployeeForm({
       const id = await persistDraft()
       markSaved(formSnapshot)
       if (id) {
-        const hasAttendanceInput =
-          Boolean(attendance.checkInTime.trim() || attendance.checkOutTime.trim())
-        const shouldSaveAttendance =
-          hasAttendanceInput &&
-          (savedAttendanceEmployeeIdRef.current !== id ||
-            attendanceSavedKeyRef.current !== attendancePayloadKey(id))
-
-        if (shouldSaveAttendance) {
-          await saveManualAttendance(id, { silent: true })
-        }
         router.push(`/admin/employees/${id}`)
       } else {
         router.refresh()
@@ -639,82 +518,30 @@ export function AddEmployeeForm({
               hint="แนะนำอัตโนมัติจากแผนก/Role — แก้ได้ด้วยตนเอง"
             />
           </FormField>
-          <FormField label="กะสำหรับคำนวณสาย (ทางเลือก)" className="sm:col-span-2">
-            <select
-              className={inputClassName}
-              value={selectedManualShiftId}
-              onChange={(e) => setAttendanceField("workShiftId", e.target.value)}
-            >
-              <option value="">ใช้กะที่เลือกในหน้าแล้ว</option>
-              {workShifts.map((shift) => (
-                <option key={shift.id} value={shift.id}>
-                  {shift.name}
-                </option>
-              ))}
-            </select>
-          </FormField>
-          <FormField label="วันที่ (ICT)" className="sm:col-span-2">
-            <div className="grid grid-cols-2 gap-2">
-              <div className="grid gap-1">
-                <input
-                  type="date"
-                  className={inputClassName}
-                  value={attendance.date}
-                  onChange={(e) => setAttendanceField("date", e.target.value)}
-                />
-              </div>
-              <div className="grid gap-1">
-                <span className="text-[10px] text-muted-foreground">สถานะ</span>
-                <p className="mt-0.5 text-[11px] text-muted-foreground">
-                  {draftId ? "รอบันทึกหลังกดบันทึกพนักงาน" : "ยังไม่มีรหัสพนักงาน"}
-                </p>
-              </div>
-            </div>
-          </FormField>
-          <FormField label="เวลาเข้า" className="col-span-2 sm:col-span-1">
+          <FormField label="เวลาเข้างาน (เริ่มต้น)" className="col-span-2 sm:col-span-1">
             <input
               type="time"
               className={inputClassName}
-              value={attendance.checkInTime}
-              onChange={(e) => setAttendanceField("checkInTime", e.target.value)}
-              required={!!attendance.checkOutTime}
+              value={form.default_check_in_time}
+              onChange={(e) => setField("default_check_in_time", e.target.value)}
+              placeholder="เช่น 09:00"
             />
-          </FormField>
-          <FormField label="เวลาเลิกงาน" className="col-span-2 sm:col-span-1">
-            <input
-              type="time"
-              className={inputClassName}
-              value={attendance.checkOutTime}
-              onChange={(e) => setAttendanceField("checkOutTime", e.target.value)}
-            />
-          </FormField>
-          <div className="sm:col-span-2 flex items-center justify-between gap-2">
-            <p className="text-[11px] text-muted-foreground">
-              ใส่ได้หลังจากมีรหัสพนักงานแล้ว — ถ้าใส่เวลาเข้าแล้วจะบันทึกพร้อม
-              Create Employee
+            <p className="mt-1 text-[10px] text-muted-foreground">
+              เวลาเข้างานปกติของพนักงานคนนี้
             </p>
-            <Button
-              type="button"
-              size="sm"
-              onClick={() => {
-                if (!draftId) {
-                  setAttendanceFeedback("ยังไม่มีรหัสพนักงานให้บันทึกเวลา")
-                  return
-                }
-                saveManualAttendance(draftId).catch((err) => {
-                  setAttendanceFeedback(
-                    err instanceof Error ? err.message : "บันทึกเวลาไม่สำเร็จ"
-                  )
-                })
-              }}
-              disabled={attendanceSaving || !draftId || !attendance.checkInTime}
-            >
-              บันทึกเวลาเข้า/ออกตอนนี้
-            </Button>
-          </div>
-          {attendanceFeedback ? (
-            <p className="sm:col-span-2 text-xs text-muted-foreground">{attendanceFeedback}</p>
-          ) : null}
+          </FormField>
+          <FormField label="เวลาเลิกงาน (เริ่มต้น)" className="col-span-2 sm:col-span-1">
+            <input
+              type="time"
+              className={inputClassName}
+              value={form.default_check_out_time}
+              onChange={(e) => setField("default_check_out_time", e.target.value)}
+              placeholder="เช่น 18:00"
+            />
+            <p className="mt-1 text-[10px] text-muted-foreground">
+              เวลาเลิกงานปกติของพนักงานคนนี้
+            </p>
+          </FormField>
           <FormField label="Employment Type">
             <select
               className={inputClassName}
