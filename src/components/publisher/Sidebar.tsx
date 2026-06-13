@@ -13,6 +13,7 @@ type RouteItem = {
   href: string;
   label: string;
   phase: Phase;
+  paused?: boolean;
 };
 
 type RouteGroup = {
@@ -91,7 +92,7 @@ export default function Sidebar() {
                       aria-current={isActive ? "page" : undefined}
                       className={cn(
                         "flex items-center justify-between gap-2 rounded-lg px-2 py-2 text-sm text-white/75 transition-colors hover:bg-white/5 hover:text-white",
-                        (item.phase !== "P1" || item.paused) && "opacity-55",
+                        (item.phase !== "P1" || Boolean(item.paused)) && "opacity-55",
                         isActive && "bg-white/10 font-medium text-white"
                       )}
                       href={item.href}
