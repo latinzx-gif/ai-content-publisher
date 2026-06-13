@@ -10,6 +10,7 @@ type CreateBody = {
   checkInTime?: string
   checkOutTime?: string | null
   workHours?: number | null
+  workShiftId?: string | null
 }
 
 export async function POST(request: NextRequest) {
@@ -38,6 +39,10 @@ export async function POST(request: NextRequest) {
       checkInTime: body.checkInTime,
       checkOutTime: body.checkOutTime,
       workHours: body.workHours,
+      workShiftId:
+        typeof body.workShiftId === "string" && body.workShiftId.trim() !== ""
+          ? body.workShiftId.trim()
+          : null,
     })
     return NextResponse.json({ id: row.id })
   } catch (e) {
