@@ -22,3 +22,4 @@
 ### สถานะหลังรอบนี้
 - เริ่มลดความไม่แน่นอนของ UX ได้แล้ว
 - ยังควรทำรอบถัดไป: ตัดปุ่มที่ยังเป็น “placeholder feedback” ออก/แปลงเป็น component จริง และ unify ความสัมพันธ์กับ mock/stub ของหน้าใหม่ทั้งหมด
+- 2026-06-13 (ต่อ): แก้ build blocker โดยเพิ่ม `src/lib/agents/runtime/prompts.ts` ที่ให้ `CONTENT_AGENT_PROMPT(...)` กลับสู่เส้นทาง import เดิมสำหรับหน้า demo create/quick form เพื่อให้ TypeScript resolution ผ่าน และลดปัญหา deploy.
