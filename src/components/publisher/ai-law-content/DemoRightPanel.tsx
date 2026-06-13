@@ -44,6 +44,7 @@ export default function DemoRightPanel({ postId, onClose }: Props) {
     post.imageOptions?.[0];
 
   function addComment() {
+    if (!post) return;
     const text = commentText.trim();
     if (!text) return;
 
