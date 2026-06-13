@@ -61,6 +61,14 @@ export type InventoryActionState = {
   id?: string
 }
 
+export type InventoryMultiActionState = InventoryActionState & {
+  ids?: string[]
+  statuses?: InvDamageStatus[]
+  autoApproved?: boolean
+  autoApprovedCount?: number
+  pendingCount?: number
+}
+
 export type InvInboundStatus = "draft" | "pending" | "approved" | "cancelled"
 
 export type InvInboundOrder = {
@@ -166,4 +174,80 @@ export type InvRequisitionCreateOptions = {
   branches: InvBranch[]
   warehouses: Array<InvWarehouse & { branch_name: string }>
   skus: Array<InvSku & { unit_name: string | null; unit_abbreviation: string | null }>
+}
+
+export type InvConsumptionType = "production" | "sampling" | "testing"
+
+export type InvDamageType =
+  | "damaged"
+  | "spoiled"
+  | "expired"
+  | "lost"
+  | "adjustment"
+
+export type InvDamageStatus = "pending" | "approved" | "rejected"
+
+export type InvDamageApprovalRole = "auto" | "hr" | "admin"
+
+export type InvConsumption = {
+  id: string
+  branch_id: string
+  warehouse_id: string
+  sku_id: string
+  qty: number
+  consumption_type: InvConsumptionType
+  recorded_by: string
+  recorded_at: string
+  notes: string | null
+  created_at: string
+}
+
+export type InvDamage = {
+  id: string
+  branch_id: string
+  warehouse_id: string
+  sku_id: string
+  qty: number
+  damage_type: InvDamageType
+  reason: string
+  photo_url: string | null
+  status: InvDamageStatus
+  cost_value: number
+  approval_required_role: InvDamageApprovalRole
+  auto_approved: boolean
+  approver_id: string | null
+  approved_at: string | null
+  rejected_at: string | null
+  rejection_reason: string | null
+  created_by: string
+  created_at: string
+  updated_at: string
+  notes: string | null
+}
+
+export type InvInventoryCreateOptions = {
+  branches: InvBranch[]
+  warehouses: Array<InvWarehouse & { branch_name: string }>
+  skus: Array<
+    InvSku & {
+      unit_name: string | null
+      unit_abbreviation: string | null
+      latest_cost: number | null
+    }
+  >
+}
+
+export type InvDamageRow = InvDamage & {
+  branch_name: string
+  warehouse_name: string
+  sku_code: string
+  sku_name: string
+  unit_name: string | null
+  unit_abbreviation: string | null
+  created_by_name: string
+  approver_name: string | null
+}
+
+export type InvDamageDetail = InvDamageRow & {
+  photo_signed_url: string | null
 }
