@@ -10,8 +10,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
-import { WorkShiftField } from "@/features/shifts/WorkShiftField"
-import type { WorkShiftSummary } from "@/features/shifts/types"
 import { formatThaiDateTime } from "@/lib/datetime/thailand"
 
 const FIELD_CLASS =
@@ -25,18 +23,14 @@ type SubmitMessageState = {
 }
 
 export function AttendanceManualClient({
-  shifts,
-  defaultShiftId,
   defaultDate,
   defaultTime,
 }: {
-  shifts: WorkShiftSummary[]
-  defaultShiftId: string
   defaultDate: string
   defaultTime: string
 }) {
   const [date, setDate] = useState(defaultDate)
-  const [shiftId, setShiftId] = useState(defaultShiftId)
+  const [shiftId, setShiftId] = useState("")
   const [checkInTime, setCheckInTime] = useState(defaultTime)
   const [checkOutTime, setCheckOutTime] = useState("")
   const [busyMode, setBusyMode] = useState<"idle" | "checkin" | "checkout" | "both">(
@@ -159,16 +153,6 @@ export function AttendanceManualClient({
               className={FIELD_CLASS}
               value={date}
               onChange={(event) => setDate(event.target.value)}
-            />
-          </label>
-          <label className="grid gap-1 text-sm">
-            <span className="font-medium">กะทำงาน</span>
-            <WorkShiftField
-              shifts={shifts}
-              value={shiftId}
-              onChange={setShiftId}
-              inputClassName={FIELD_CLASS}
-              hint="เลือกกะที่เข้าใช้งานวันนี้ ถ้าไม่เลือก ระบบใช้กะจากโปรไฟล์/การตั้งค่า"
             />
           </label>
           <div className="grid grid-cols-2 gap-3">

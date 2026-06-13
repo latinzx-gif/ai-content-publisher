@@ -10,7 +10,6 @@ import { EmployeeProfileView } from "@/features/employees/profile/EmployeeProfil
 import { LifecyclePanel } from "@/features/employees/profile/LifecyclePanel"
 import { PendingRegistrationApproval } from "@/features/employees/profile/PendingRegistrationApproval"
 import type { EmployeeProfile } from "@/features/employees/profile/data"
-import type { WorkShiftSummary } from "@/features/shifts/types"
 
 import type { BranchRow } from "@/features/branches/data"
 import type {
@@ -31,7 +30,6 @@ export function EmployeeProfilePageClient({
   branches,
   departments,
   positions,
-  workShifts,
   readOnly = false,
 }: {
   profile: EmployeeProfile
@@ -39,7 +37,6 @@ export function EmployeeProfilePageClient({
   branches: BranchRow[]
   departments: OrgDepartment[]
   positions: OrgPosition[]
-  workShifts: WorkShiftSummary[]
   readOnly?: boolean
 }) {
   const isPendingRegistration =
@@ -68,7 +65,6 @@ export function EmployeeProfilePageClient({
             branches={branches}
             departments={departments}
             positions={positions}
-            workShifts={workShifts}
           />
         </div>
       </div>

@@ -18,9 +18,6 @@ import type { ContractType, EmployeeProfile } from "@/features/employees/profile
 import { EmployeeAvatarUpload } from "@/features/employees/profile/EmployeeAvatarUpload"
 import { EmployeeContractUpload } from "@/features/employees/profile/EmployeeContractUpload"
 import { PendingRegistrationApproval } from "@/features/employees/profile/PendingRegistrationApproval"
-import { suggestShiftId } from "@/features/shifts/helpers"
-import type { WorkShiftSummary } from "@/features/shifts/types"
-import { WorkShiftField } from "@/features/shifts/WorkShiftField"
 import {
   PAYMENT_METHOD_OPTIONS,
   type SalaryPaymentMethod,
@@ -90,17 +87,8 @@ type FormState = {
   bank_account_number: string
   bank_branch: string
   work_shift_id: string
-}
-
-function suggestShiftForForm(
-  workShifts: WorkShiftSummary[],
-  input: Pick<FormState, "role" | "department" | "branch_id">
-): string {
-  return suggestShiftId(workShifts, {
-    role: input.role,
-    department: input.department || null,
-    branchId: input.branch_id || null,
-  })
+  default_check_in_time: string
+  default_check_out_time: string
 }
 
 function toFormState(profile: EmployeeProfile): FormState {
@@ -131,6 +119,8 @@ function toFormState(profile: EmployeeProfile): FormState {
     bank_account_number: profile.bank_account_number ?? "",
     bank_branch: profile.bank_branch ?? "",
     work_shift_id: profile.work_shift_id ?? "",
+    default_check_in_time: (profile as any).default_check_in_time ?? "",
+    default_check_out_time: (profile as any).default_check_out_time ?? "",
   }
 }
 
@@ -154,13 +144,11 @@ export function EmployeeProfileForm({
   branches,
   departments,
   positions,
-  workShifts,
 }: {
   profile: EmployeeProfile
   branches: BranchRow[]
   departments: OrgDepartment[]
   positions: OrgPosition[]
-  workShifts: WorkShiftSummary[]
 }) {
   const router = useRouter()
   const [form, setForm] = useState<FormState>(() => toFormState(profile))
@@ -348,15 +336,11 @@ export function EmployeeProfileForm({
                     const nextRole = defaultRoleForDepartment(nextDept)
                     const allowed = allowedRolesForDepartment(nextDept)
                     const role = allowed.includes(prev.role) ? prev.role : nextRole
-                    const next = {
+                    return {
                       ...prev,
                       department: nextDept,
                       position: stillValid ? prev.position : "",
                       role,
-                    }
-                    return {
-                      ...next,
-                      work_shift_id: suggestShiftForForm(workShifts, next),
                     }
                   })
                 }}
@@ -412,14 +396,10 @@ export function EmployeeProfileForm({
                   className={inputClassName}
                   value={form.role}
                   onChange={(e) => {
-                    const nextRole = e.target.value as AssignableRole
-                    setForm((prev) => {
-                      const next = { ...prev, role: nextRole }
-                      return {
-                        ...next,
-                        work_shift_id: suggestShiftForForm(workShifts, next),
-                      }
-                    })
+                    setForm((prev) => ({
+                      ...prev,
+                      role: e.target.value as AssignableRole,
+                    }))
                   }}
                 >
                   {roleOptions.map((role) => (
@@ -451,15 +431,11 @@ export function EmployeeProfileForm({
                       ? departments.filter((d) => d.branch_id === nextBranchId)
                       : departments
                     const deptOk = nextDepts.some((d) => d.name === prev.department)
-                    const next = {
+                    return {
                       ...prev,
                       branch_id: nextBranchId,
                       department: deptOk ? prev.department : "",
                       position: deptOk ? prev.position : "",
-                    }
-                    return {
-                      ...next,
-                      work_shift_id: suggestShiftForForm(workShifts, next),
                     }
                   })
                 }}
@@ -473,14 +449,27 @@ export function EmployeeProfileForm({
                 ))}
               </select>
             </Field>
-            <Field label="กะทำงาน">
-              <WorkShiftField
-                shifts={workShifts}
-                value={form.work_shift_id}
-                onChange={(shiftId) => setField("work_shift_id", shiftId)}
-                inputClassName={inputClassName}
-                hint="ถ้าไม่ระบุ ระบบใช้เวลาเริ่มงานจาก Settings เป็น fallback"
+            <Field label="เวลาเข้างาน (เริ่มต้น)">
+              <input
+                type="time"
+                className={inputClassNameCompact}
+                value={form.default_check_in_time}
+                onChange={(e) => setField("default_check_in_time", e.target.value)}
               />
+              <p className="mt-1 text-xs text-muted-foreground">
+                เวลาเข้างานปกติของพนักงานคนนี้
+              </p>
+            </Field>
+            <Field label="เวลาเลิกงาน (เริ่มต้น)">
+              <input
+                type="time"
+                className={inputClassNameCompact}
+                value={form.default_check_out_time}
+                onChange={(e) => setField("default_check_out_time", e.target.value)}
+              />
+              <p className="mt-1 text-xs text-muted-foreground">
+                เวลาเลิกงานปกติของพนักงานคนนี้
+              </p>
             </Field>
             <p className="rounded-lg bg-muted/40 px-3 py-2 text-xs text-muted-foreground">
               LINE ID:{" "}
