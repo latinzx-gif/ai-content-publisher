@@ -1,4 +1,4 @@
-# CURRENT TASK: T136 — Unit Conversion Runtime Logic
+# CURRENT TASK: T138 — Kitchen Requisition Web Admin
 
 ## Phase
 
@@ -6,117 +6,188 @@ EXECUTE
 
 ## Status
 
-Plan APPROVED — Ready for EXECUTE
+Ready for Codex (Office-Style Collaboration)
 
 ## Primary Agent
 
 Codex (GPT-5.5)
 
+## Collaboration Mode
+
+🏢 **Office-Style Discussion** (Trial #1)
+
 ## Context
 
-Implement runtime unit conversion for stock operations (inbound, requisition, consumption, transfer). Currently, the Inventory system has `inv_units` table with conversion rates but no runtime logic to convert quantities during stock operations.
+Implement 4-step kitchen requisition workflow: หัวหน้าครัว request → หัวหน้าคลัง approve → คลัง issue → ครัว receive. This is a complex feature requiring coordination across schema design, business logic, RLS policies, and multi-role UI.
 
-**Business need:** Allow warehouse staff to receive goods in secondary units (e.g., "ลัง" instead of "ชิ้น") and automatically convert to base unit for stock balance.
+**Business need:** Kitchen staff (หัวหน้าครัว) need to request ingredients from warehouse without direct access to stock balance. Warehouse manager (หัวหน้าคลัง) approves/adjusts quantities before warehouse staff (เจ้าหน้าที่คลัง) physically issues goods. Kitchen confirms receipt.
 
-**Example:** SKU "น้ำดื่ม" has base unit "ขวด" and secondary unit "ลัง" (1 ลัง = 12 ขวด). Staff receives "2 ลัง" → system stores 24 ขวด in `inv_stock_balances`.
+**Workflow:**
+1. **Request (draft → pending):** หัวหน้าครัวเลือก SKU + qty_requested → submit
+2. **Approve:** หัวหน้าคลังอนุมัติ (เต็ม/บางส่วน/reject) → set qty_approved
+3. **Issue:** เจ้าหน้าที่คลังระบุ Lot + qty_issued → **stock ลดตอนนี้**
+4. **Receive:** หัวหน้าครัวยืนยัน qty_received → ถ้า < issued บันทึกส่วนต่าง
 
 ## Goal
 
-1. **Create conversion library** at `src/lib/inventory/unit-conversion.ts`
-2. **Server action:** `convertQuantity(skuId, qty, fromUnit, toUnit)` → normalized qty
-3. **Inbound enhancement:** Allow receiving in secondary unit (dropdown shows conversion rate)
-4. **Stock balance rule:** Always store in **base unit** (normalize before save)
-5. **UI feedback:** Show conversion rate when user selects secondary unit
+1. **Schema:** `inv_requisitions` + `inv_requisition_items`
+2. **Routes:** list, create, detail (with 3 action buttons: approve, issue, receive)
+3. **Server actions:** create, submit, approve, reject, issue, receive
+4. **RLS:** requester sees own only; HR/warehouse manager see all
+5. **Stock impact:** deduct when issue (not approve)
+6. **Audit:** `inv_stock_movements` with type=requisition_issue
 
 ## Allowed Files
 
 ```
-PROJECTS/hr-payroll-client/hr-app/src/lib/inventory/unit-conversion.ts (create)
-PROJECTS/hr-payroll-client/hr-app/src/features/inventory/actions/inbound.ts (read + edit — add conversion)
-PROJECTS/hr-payroll-client/hr-app/src/features/inventory/InboundAddItemForm.tsx (read + edit — unit dropdown)
-PROJECTS/hr-payroll-client/hr-app/src/features/inventory/InboundScanPageContent.tsx (read + edit — scanner unit selection)
-PROJECTS/hr-payroll-client/hr-app/src/app/admin/inventory/inbound/[id]/page.tsx (read + edit — conversion display)
-PROJECTS/hr-payroll-client/hr-app/supabase/migrations/ (read only — check inv_units schema)
+PROJECTS/hr-payroll-client/hr-app/supabase/migrations/20260613120000_inv_requisitions.sql (create — schema + RLS)
+PROJECTS/hr-payroll-client/hr-app/src/features/inventory/types.ts (edit — add requisition types)
+PROJECTS/hr-payroll-client/hr-app/src/features/inventory/validators/requisition.ts (create — Zod schemas)
+PROJECTS/hr-payroll-client/hr-app/src/features/inventory/actions/requisition.ts (create — server actions)
+PROJECTS/hr-payroll-client/hr-app/src/app/admin/inventory/requisition/page.tsx (create — list)
+PROJECTS/hr-payroll-client/hr-app/src/app/admin/inventory/requisition/create/page.tsx (create — form)
+PROJECTS/hr-payroll-client/hr-app/src/app/admin/inventory/requisition/[id]/page.tsx (create — detail)
+PROJECTS/hr-payroll-client/hr-app/src/features/inventory/RequisitionListTable.tsx (create — list UI)
+PROJECTS/hr-payroll-client/hr-app/src/features/inventory/RequisitionCreateForm.tsx (create — create form)
+PROJECTS/hr-payroll-client/hr-app/src/features/inventory/RequisitionDetailView.tsx (create — detail + actions)
 ```
 
 ## Forbidden
 
-- Do NOT change existing `inv_stock_balances` schema
-- Do NOT add new tables (use existing `inv_units` table)
-- Do NOT modify inbound approval workflow
-- Do NOT touch other inventory features (requisition, consumption, etc. — those are T138+)
+- Do NOT modify existing stock balance logic
 - Do NOT add new dependencies without approval
+- Do NOT implement mobile view (that's T139)
+- Do NOT implement BOM/consumption features (T137, T140)
+- Do NOT change existing inbound/supplier/warehouse features
 
 ## Acceptance Criteria
 
-- [ ] `src/lib/inventory/unit-conversion.ts` created with:
-  - [ ] `convertQuantity()` function with unit validation
-  - [ ] Error handling for invalid units / missing conversion rates
-  - [ ] TypeScript types for conversion results
-- [ ] Inbound form UI:
-  - [ ] Unit dropdown shows base + secondary units for selected SKU
-  - [ ] Conversion rate displayed when secondary unit selected (e.g., "1 ลัง = 12 ขวด")
-  - [ ] Quantity input accepts decimal for both units
-- [ ] Server action `scanInvInboundItem` or equivalent:
-  - [ ] Converts qty to base unit before saving to `inv_inbound_items`
-  - [ ] Stock balance always in base unit
-- [ ] End-to-end test case:
-  - [ ] Create SKU "น้ำดื่ม" with base unit "ขวด" + secondary "ลัง" (1 ลัง = 12 ขวด)
-  - [ ] Receive 1 ลัง via inbound form
-  - [ ] Verify `inv_stock_balances.quantity = 12` (not 1)
-  - [ ] Verify `inv_inbound_items` shows original "1 ลัง" + converted "12 ขวด"
+- [ ] Migration 20260613120000_inv_requisitions.sql:
+  - [ ] Table `inv_requisitions` with columns: id, branch_id, warehouse_id, requester_id, status (enum), notes, created_at, updated_at, approved_by, approved_at, issued_by, issued_at, received_by, received_at
+  - [ ] Table `inv_requisition_items` with columns: id, requisition_id, sku_id, qty_requested, qty_approved, qty_issued, qty_received, lot_number, notes
+  - [ ] Status enum: draft, pending, approved, issued, completed, rejected
+  - [ ] RLS policies: requester sees own; hr/inventory_manage see all
+  - [ ] Foreign keys + cascade rules
+- [ ] Server actions `/features/inventory/actions/requisition.ts`:
+  - [ ] createRequisition(branchId, warehouseId, items[])
+  - [ ] submitRequisition(id) → draft → pending
+  - [ ] approveRequisition(id, items[{id, qty_approved}])
+  - [ ] rejectRequisition(id, reason)
+  - [ ] issueRequisition(id, items[{id, qty_issued, lot_number}]) → **deduct stock**
+  - [ ] receiveRequisition(id, items[{id, qty_received}])
+- [ ] Routes:
+  - [ ] `/admin/inventory/requisition` — list (status filter, branch filter)
+  - [ ] `/admin/inventory/requisition/create` — form (select warehouse, add items)
+  - [ ] `/admin/inventory/requisition/[id]` — detail + action buttons based on status
+- [ ] Stock impact:
+  - [ ] Issue action: insert `inv_stock_movements` (type=requisition_issue, quantity=-qty_issued)
+  - [ ] Stock balance updated via trigger/RPC
+  - [ ] Approve action: NO stock impact
+- [ ] E2E acceptance:
+  - [ ] หัวหน้าครัวสร้างใบเบิก 3 SKU (A:10, B:5, C:8) → submit
+  - [ ] หัวหน้าคลัง approve (A:10, B:3, C:reject) → 2 items approved
+  - [ ] คลัง issue (A:10 lot#123, B:3 lot#124) → stock ลด 10+3
+  - [ ] ครัว receive (A:10, B:2) → บันทึก B ส่วนต่าง 1
+  - [ ] Status flow: draft → pending → approved → issued → completed
 - [ ] `npm run build && npm run typecheck && npm run lint` pass
 
 ## Depends
 
-- T134 (Inventory Phase 4 — Inbound + LIFF scanner) — **DONE**
+- T136 (Unit Conversion) — **DONE**
 
 ## Skills to Load
 
 **Codex should read these before starting:**
 
-From `/Users/jakarinosk/HEAD-OFFICE/orchestration/workflow-skills/`:
-- `03-claude-plan/SKILL.md` — PLAN phase workflow (use this, no codex-specific version)
+From `/Users/jakarinosk/HEAD-OFFICE/PROJECTS/hr-payroll-client/orchestration/workflow-skills/`:
+- `08-office-collaboration/SKILL.md` — **NEW Office-Style workflow**
+- `03-claude-plan/SKILL.md` — PLAN phase workflow
 - `05-claude-execute/SKILL.md` — EXECUTE phase workflow
+- `12-supabase-migration/SKILL.md` — schema + RLS best practices
 
 From project:
 - `/Users/jakarinosk/HEAD-OFFICE/COMPANY_OS.md` — company rules, agent roles
 - `/Users/jakarinosk/HEAD-OFFICE/PROJECTS/hr-payroll-client/GROUND_TRUTH.md` — project scope, forbidden
-- `/Users/jakarinosk/HEAD-OFFICE/PROJECTS/hr-payroll-client/hr-app/reports/INVENTORY_EXPANSION_PLAN.md` — T136 detail + agent team strategy
+- `/Users/jakarinosk/HEAD-OFFICE/PROJECTS/hr-payroll-client/hr-app/reports/INVENTORY_EXPANSION_PLAN.md` — T138 detail
 
-**IMPORTANT — Agent Team Strategy:**
+## Agent Team Strategy — Office-Style Collaboration
 
-สำหรับ T136 (moderate complexity), ให้ใช้ Task tool สร้าง agent team มาช่วยทำงานแบบ parallel:
+**Phase 1: Setup (Codex)**
+1. สร้าง `_agent/TEAM_SYNC.md` — shared discussion file
+2. เขียน header + sections: Round 1 (Proposals), Round 2 (Synthesis), Round 3 (Revisions), Final Plan
 
-**Suggested Agent Team (3 agents):**
-1. **Library Agent (best-of-n-runner):** สร้าง `unit-conversion.ts` library + types + tests
-2. **Backend Agent (best-of-n-runner):** แก้ server actions เพิ่ม conversion logic
-3. **Frontend Agent (best-of-n-runner):** แก้ Inbound form UI + unit dropdown + conversion display
+**Phase 2: Spawn Agent Team (Parallel)**
 
-**Workflow:**
-1. PLAN phase: วางแผนแบ่งงานให้ 3 agents (ใช้ Task tool spawn parallel)
-2. รอ agents เสร็จ → รวมผลลัพธ์
-3. Integration test (manual E2E)
-4. Quality gates + เขียน TASK_RESULT.md
+Codex spawns 4 agents พร้อมกัน via Task tool:
 
-Standard workflow:
-1. Read this `CURRENT_TASK.md`
-2. Read allowed files (understand current state)
-3. Write `_agent/TASK_PLAN.md` with:
-   - Agent team strategy (which agents, what each does)
-   - Exact files to change per agent
-   - Integration plan
-   - Risk assessment
-4. Write `_agent/CURSOR_PLAN_REQUEST.md` → **STOP**
+**Agent 1 — Schema Specialist (best-of-n-runner):**
+- Responsibility: migration SQL, table design, RLS policies
+- Files: `supabase/migrations/20260613120000_inv_requisitions.sql`
+- Proposal: write in TEAM_SYNC.md with questions for @API @UI
+
+**Agent 2 — API Specialist (best-of-n-runner):**
+- Responsibility: server actions, validators, business logic
+- Files: `actions/requisition.ts`, `validators/requisition.ts`, `types.ts`
+- Proposal: write in TEAM_SYNC.md with questions for @Schema @UI
+
+**Agent 3 — UI Specialist (best-of-n-runner):**
+- Responsibility: routes, components, forms, action buttons
+- Files: 3 routes + 3 components
+- Proposal: write in TEAM_SYNC.md with questions for @API @Schema
+
+**Agent 4 — Test Specialist (generalPurpose):**
+- Responsibility: test cases across all layers, edge cases
+- Proposal: write in TEAM_SYNC.md with E2E flow
+
+**Phase 3: Synthesis (Codex)**
+1. รอ agents เขียน proposals ครบ
+2. อ่าน TEAM_SYNC.md ทั้งหมด
+3. เขียน synthesis: agreements ✅, conflicts ⚠️, missing ❌
+4. ตัดสินใจ conflicts (พร้อม rationale)
+5. ระบุ dependencies order
+
+**Phase 4: Iteration (if needed)**
+- ถ้ามี conflicts หรือ missing → resume agents ที่ต้อง revise
+- Agents เขียน Revision proposals
+- Codex checks convergence
+- Repeat จนกว่า converged (max 3 rounds)
+
+**Phase 5: Final Execution (Codex)**
+1. เขียน Final Integration Plan ใน TEAM_SYNC.md
+2. Implement ตาม execution order (Schema → API → UI → Test)
+3. Integrate outputs from agents
+4. Quality gates: build + typecheck + lint
+5. Manual E2E verification
+6. เขียน TASK_RESULT.md + CURSOR_REVIEW_REQUEST.md
+7. **STOP** — wait for Cursor review
+
+## Workflow
+
+**PLAN Phase:**
+1. Read this CURRENT_TASK.md
+2. Read Office-Style skill `08-office-collaboration/SKILL.md`
+3. Write _agent/TEAM_SYNC.md (setup discussion room)
+4. Spawn 4 agents with prompts to write proposals in TEAM_SYNC.md
+5. Read all proposals → write synthesis
+6. Iterate if needed → check convergence
+7. Write final integration plan
+8. Write _agent/TASK_PLAN.md (summary of discussion + execution order)
+9. Write _agent/CURSOR_PLAN_REQUEST.md → **STOP**
 
 Wait for Cursor approval before EXECUTE.
 
+**EXECUTE Phase:**
+1. Implement ตาม final integration plan
+2. Quality gates
+3. Manual E2E
+4. Write TASK_RESULT.md → **STOP**
+
 ## Queue
 
-After T136 → T137 (BOM Consumption) or T138 (Kitchen Requisition) — ดู INVENTORY_EXPANSION_PLAN.md
+After T138 → T140 (Consumption & Damage) or T141 (Stock Count) — ดู INVENTORY_EXPANSION_PLAN.md
 
 ## Linear
 
-**Issue:** [JAK-191](https://linear.app/jakarinosk/issue/JAK-191/hrp-t136-unit-conversion-runtime-logic)  
+**Issue:** [JAK-193](https://linear.app/jakarinosk/issue/JAK-193/hrp-t138-kitchen-requisition-web-admin)  
 **Project:** LINE OA HR & Payroll  
 **State:** Todo → will update to In Progress when work starts

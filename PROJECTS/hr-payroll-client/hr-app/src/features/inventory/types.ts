@@ -96,3 +96,74 @@ export type InvInboundItemRow = InvInboundItem & {
   sku_code: string
   sku_name: string
 }
+
+export type InvRequisitionStatus =
+  | "draft"
+  | "pending"
+  | "approved"
+  | "issued"
+  | "completed"
+  | "rejected"
+
+export type InvRequisition = {
+  id: string
+  branch_id: string
+  warehouse_id: string
+  requester_id: string
+  status: InvRequisitionStatus
+  notes: string | null
+  rejection_reason: string | null
+  approved_by: string | null
+  approved_at: string | null
+  issued_by: string | null
+  issued_at: string | null
+  received_by: string | null
+  received_at: string | null
+  created_at: string
+  updated_at: string
+}
+
+export type InvRequisitionItem = {
+  id: string
+  requisition_id: string
+  sku_id: string
+  qty_requested: number
+  qty_approved: number
+  qty_issued: number
+  qty_received: number
+  lot_number: string | null
+  notes: string | null
+  created_at: string
+  updated_at: string
+}
+
+export type InvRequisitionRow = InvRequisition & {
+  branch_name: string
+  warehouse_name: string
+  requester_name: string
+  item_count: number
+}
+
+export type InvRequisitionItemRow = InvRequisitionItem & {
+  sku_code: string
+  sku_name: string
+  unit_name: string | null
+  unit_abbreviation: string | null
+}
+
+export type InvRequisitionDetail = {
+  requisition: InvRequisition
+  branch_name: string
+  warehouse_name: string
+  requester_name: string
+  approved_by_name: string | null
+  issued_by_name: string | null
+  received_by_name: string | null
+  items: InvRequisitionItemRow[]
+}
+
+export type InvRequisitionCreateOptions = {
+  branches: InvBranch[]
+  warehouses: Array<InvWarehouse & { branch_name: string }>
+  skus: Array<InvSku & { unit_name: string | null; unit_abbreviation: string | null }>
+}
