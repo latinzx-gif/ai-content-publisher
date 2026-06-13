@@ -18,6 +18,11 @@ export function WorkShiftField({
   hint?: string
 }) {
   const selected = shifts.find((shift) => shift.id === value)
+  const toOptionLabel = (shift: WorkShiftSummary): string => {
+    const range = formatShiftTimeRange(shift)
+    const name = shift.name.includes(range) ? shift.name : `${shift.name} (${range})`
+    return `${name} (${shift.standard_hours}h)`
+  }
 
   return (
     <div className="space-y-1">
@@ -30,7 +35,7 @@ export function WorkShiftField({
         <option value="">— ยังไม่กำหนด (ใช้เวลา Settings fallback) —</option>
         {shifts.map((shift) => (
           <option key={shift.id} value={shift.id}>
-            {shift.name} ({formatShiftTimeRange(shift)}, {shift.standard_hours}h)
+            {toOptionLabel(shift)}
           </option>
         ))}
         {value && !selected ? (
