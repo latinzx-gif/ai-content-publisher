@@ -23,6 +23,7 @@ import {
 } from "@/components/ui/card"
 import {
   deleteMobileInvInboundItem,
+  getInvSkuUnitOptionsByBarcode,
   listMobileInvInboundItems,
   scanInvInboundItem,
 } from "@/features/inventory/actions/inbound"
@@ -35,7 +36,52 @@ import {
 import { readInboundOrderId } from "@/lib/line/inbound-order-id"
 import { cn } from "@/lib/utils"
 
-type LookupSku = { code: string; name: string }
+type LookupUnit = {
+  id: string
+  name: string
+  abbreviation?: string | null
+  factorToBase?: number
+  factor_to_base?: number
+}
+
+type LookupSku = {
+  id?: string
+  code: string
+  name: string
+  unit_id?: string | null
+  base_unit?: LookupUnit | null
+  unit?: LookupUnit | null
+  units?: LookupUnit[]
+  unit_options?: LookupUnit[]
+}
+
+function unitLabel(unit: LookupUnit) {
+  return unit.abbreviation || unit.name
+}
+
+function formatNumber(value: number) {
+  return Number.isInteger(value) ? String(value) : String(Number(value.toFixed(6)))
+}
+
+function factorToBase(unit: LookupUnit) {
+  const factor = unit.factorToBase ?? unit.factor_to_base ?? 1
+  return Number.isFinite(factor) && factor > 0 ? factor : 1
+}
+
+function unitOptionsForSku(sku: LookupSku | null) {
+  if (!sku) return []
+  const rawOptions = sku.unit_options ?? sku.units ?? []
+  const baseUnit = sku.base_unit ?? sku.unit ?? rawOptions.find((unit) => unit.id === sku.unit_id)
+  const options = baseUnit ? [baseUnit, ...rawOptions] : rawOptions
+  const unique = new Map<string, LookupUnit>()
+
+  for (const option of options) {
+    if (!option.id) continue
+    unique.set(option.id, option)
+  }
+
+  return Array.from(unique.values())
+}
 
 function useInboundOrderId(pathOrderId?: string): {
   orderId: string
@@ -97,6 +143,7 @@ export function InboundScanPageContent({
   const quantityRef = useRef<HTMLInputElement | null>(null)
   const [barcode, setBarcode] = useState("")
   const [quantity, setQuantity] = useState("1")
+  const [selectedUnitId, setSelectedUnitId] = useState("")
   const [lot, setLot] = useState("")
   const [expiry, setExpiry] = useState("")
   const [lookup, setLookup] = useState<LookupSku | null>(null)
@@ -139,35 +186,57 @@ export function InboundScanPageContent({
     const trimmed = value.trim()
     if (!trimmed) return null
 
-    let res: Response
+    let result: Awaited<ReturnType<typeof getInvSkuUnitOptionsByBarcode>>
     try {
-      res = await fetch(
-        `/api/inventory/inbound/lookup?barcode=${encodeURIComponent(trimmed)}`
-      )
+      result = await getInvSkuUnitOptionsByBarcode({ barcode: trimmed })
     } catch {
       setError("เชื่อมต่อไม่สำเร็จ — ตรวจอินเทอร์เน็ตแล้วกดค้นหาอีกครั้ง")
       return null
     }
 
-    const data = (await res.json().catch(() => null)) as {
-      sku?: LookupSku
-      error?: string
-    } | null
+    if (!result.success || !result.sku) {
+      setError(result.error ?? "ไม่พบ SKU")
+      return null
+    }
 
-    if (res.status === 401) {
-      setError("เซสชันหมดอายุ — เปิดเมนูคลังสินค้าใน LINE ใหม่อีกครั้ง")
-      return null
+    const optionUnits = (result.options ?? []).map((option) => ({
+      id: option.id,
+      name: option.name,
+      abbreviation: option.abbreviation,
+      factorToBase: option.factorToBaseUnit,
+    }))
+    const baseOption = result.options?.find((option) => option.isBaseUnit)
+    const sku: LookupSku = {
+      ...result.sku,
+      unit_id: baseOption?.id ?? optionUnits[0]?.id ?? null,
+      base_unit: baseOption
+        ? {
+            id: baseOption.id,
+            name: baseOption.name,
+            abbreviation: baseOption.abbreviation,
+            factorToBase: baseOption.factorToBaseUnit,
+          }
+        : optionUnits[0] ?? null,
+      unit_options: optionUnits,
     }
-    if (!res.ok || !data?.sku) {
-      setError(data?.error ?? "ไม่พบ SKU")
-      return null
-    }
-    setLookup(data.sku)
-    return data.sku
+
+    setLookup(sku)
+    const options = unitOptionsForSku(sku)
+    setSelectedUnitId(
+      sku.unit_id ??
+        sku.base_unit?.id ??
+        sku.unit?.id ??
+        options[0]?.id ??
+        ""
+    )
+    return sku
   }, [])
 
   useEffect(() => {
-    void loadItems()
+    const timeout = window.setTimeout(() => {
+      void loadItems()
+    }, 0)
+    return () => window.clearTimeout(timeout)
   }, [loadItems])
 
   useEffect(() => {
@@ -185,7 +254,12 @@ export function InboundScanPageContent({
   }, [message])
 
   const submit = useCallback(
-    (override?: { barcode?: string; quantity?: string; skuCode?: string }) => {
+    (override?: {
+      barcode?: string
+      quantity?: string
+      skuCode?: string
+      unitId?: string
+    }) => {
       setMessage(null)
       setMessageVisible(false)
       setError(null)
@@ -203,16 +277,19 @@ export function InboundScanPageContent({
         return
       }
 
+      const nextUnitId = override?.unitId ?? selectedUnitId
       startTransition(async () => {
         let result: Awaited<ReturnType<typeof scanInvInboundItem>>
         try {
-          result = await scanInvInboundItem({
+          const payload = {
             order_id: orderId,
             barcode: nextBarcode.trim(),
             quantity: qty,
             lot_number: lot.trim() || null,
             expiry_date: expiry || null,
-          })
+            ...(nextUnitId ? { unit_id: nextUnitId } : {}),
+          } as Parameters<typeof scanInvInboundItem>[0] & { unit_id?: string }
+          result = await scanInvInboundItem(payload)
         } catch {
           setError("เชื่อมต่อไม่สำเร็จ — ตรวจอินเทอร์เน็ตแล้วกดบันทึกอีกครั้ง")
           return
@@ -224,6 +301,7 @@ export function InboundScanPageContent({
           )
           setBarcode("")
           setQuantity("1")
+          setSelectedUnitId("")
           setLot("")
           setExpiry("")
           setLookup(null)
@@ -241,6 +319,7 @@ export function InboundScanPageContent({
       lot,
       orderId,
       quantity,
+      selectedUnitId,
       showMessage,
     ]
   )
@@ -251,7 +330,14 @@ export function InboundScanPageContent({
       void (async () => {
         const sku = await lookupBarcodeValue(value)
         if (sku && quickSave && Number(quantity) === 1) {
-          submit({ barcode: value, quantity: "1", skuCode: sku.code })
+          const options = unitOptionsForSku(sku)
+          submit({
+            barcode: value,
+            quantity: "1",
+            skuCode: sku.code,
+            unitId:
+              sku.unit_id ?? sku.base_unit?.id ?? sku.unit?.id ?? options[0]?.id,
+          })
           return
         }
         window.requestAnimationFrame(() => quantityRef.current?.focus())
@@ -263,12 +349,24 @@ export function InboundScanPageContent({
   useEffect(() => {
     const value = searchParams.get("barcode")?.trim()
     if (!value) return
-    handleScanned(value)
+    const timeout = window.setTimeout(() => handleScanned(value), 0)
+    return () => window.clearTimeout(timeout)
   }, [handleScanned, searchParams])
 
   async function lookupBarcode() {
     await lookupBarcodeValue(barcode)
   }
+
+  const lookupUnitOptions = unitOptionsForSku(lookup)
+  const selectedUnit =
+    lookupUnitOptions.find((unit) => unit.id === selectedUnitId) ??
+    lookupUnitOptions[0]
+  const baseUnit =
+    lookup?.base_unit ??
+    lookup?.unit ??
+    lookupUnitOptions.find((unit) => unit.id === lookup?.unit_id) ??
+    lookupUnitOptions[0]
+  const selectedFactor = selectedUnit ? factorToBase(selectedUnit) : 1
 
   async function deleteItem(item: InvInboundItemRow) {
     if (!window.confirm(`ลบรายการ ${item.sku_code} จำนวน ${item.quantity}?`)) {
@@ -427,6 +525,39 @@ export function InboundScanPageContent({
                   onChange={(event) => setQuantity(event.target.value)}
                 />
               </div>
+              {lookupUnitOptions.length > 0 ? (
+                <div className="space-y-1">
+                  <label className="text-sm font-medium" htmlFor="unit_id">
+                    หน่วย
+                  </label>
+                  <select
+                    id="unit_id"
+                    className="h-10 w-full rounded-lg border border-input px-3 text-sm"
+                    value={selectedUnitId}
+                    onChange={(event) => setSelectedUnitId(event.target.value)}
+                  >
+                    {lookupUnitOptions.map((unit) => (
+                      <option key={unit.id} value={unit.id}>
+                        {unit.name}
+                        {unit.abbreviation ? ` (${unit.abbreviation})` : ""}
+                      </option>
+                    ))}
+                  </select>
+                  {selectedUnit && baseUnit && selectedUnit.id !== baseUnit.id ? (
+                    <p className="text-xs text-muted-foreground">
+                      1 {unitLabel(selectedUnit)} = {formatNumber(selectedFactor)}{" "}
+                      {unitLabel(baseUnit)}
+                    </p>
+                  ) : baseUnit ? (
+                    <p className="text-xs text-muted-foreground">
+                      หน่วยฐาน: {unitLabel(baseUnit)}
+                    </p>
+                  ) : null}
+                </div>
+              ) : null}
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1">
                 <label className="text-sm font-medium" htmlFor="lot">
                   Lot

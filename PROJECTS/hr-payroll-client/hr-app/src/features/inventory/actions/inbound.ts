@@ -16,6 +16,9 @@ import {
 } from "@/features/inventory/validators/inbound"
 import { getAdminClient } from "@/lib/auth/admin-client"
 import { getCurrentEmployee } from "@/lib/auth/session"
+import type { SkuUnitOption } from "@/lib/inventory/unit-conversion"
+import { convertQuantity } from "@/lib/inventory/unit-conversion"
+import { getSkuUnitOptions } from "@/lib/inventory/unit-conversion"
 import { createClient } from "@/lib/supabase/server"
 
 const LIST_PATH = "/admin/inventory/inbound"
@@ -25,6 +28,25 @@ function revalidateInbound(orderId?: string) {
   if (orderId) revalidatePath(`${LIST_PATH}/${orderId}`)
   revalidatePath("/admin/inventory/stock")
   revalidatePath("/admin/report")
+}
+
+async function normalizeInboundQuantity(input: {
+  skuId: string
+  quantity: number
+  unitId?: string | null
+  baseUnitId?: string | null
+}) {
+  const fromUnitId = input.unitId || input.baseUnitId
+  if (!fromUnitId || !input.baseUnitId) {
+    throw new Error("SKU นี้ยังไม่ได้กำหนดหน่วยฐาน")
+  }
+  const conversion = await convertQuantity(
+    input.skuId,
+    input.quantity,
+    fromUnitId,
+    input.baseUnitId
+  )
+  return conversion.convertedQuantity
 }
 
 export async function createInvInboundOrder(
@@ -78,6 +100,7 @@ export async function addInvInboundItem(
       lot_number: formData.get("lot_number") || null,
       expiry_date: formData.get("expiry_date") || null,
     })
+    const unitId = formData.get("unit_id")?.toString() || null
 
     const supabase = await createClient()
     const { data: order, error: orderError } = await supabase
@@ -92,9 +115,26 @@ export async function addInvInboundItem(
       return { success: false, error: "ไม่สามารถเพิ่มรายการในสถานะนี้ได้" }
     }
 
+    const { data: sku, error: skuError } = await supabase
+      .from("inv_skus")
+      .select("unit_id")
+      .eq("id", payload.sku_id)
+      .maybeSingle()
+
+    if (skuError) return { success: false, error: skuError.message }
+    if (!sku) return { success: false, error: "ไม่พบ SKU" }
+
+    const quantity = await normalizeInboundQuantity({
+      skuId: payload.sku_id,
+      quantity: payload.quantity,
+      unitId,
+      baseUnitId: sku.unit_id,
+    })
+
     const { error } = await supabase.from("inv_inbound_items").insert({
       inbound_order_id: orderId,
       ...payload,
+      quantity,
       cost_per_unit: payload.cost_per_unit ?? null,
       lot_number: payload.lot_number || null,
       expiry_date: payload.expiry_date || null,
@@ -232,6 +272,64 @@ async function assertActiveInventoryScanner() {
   return employee
 }
 
+export async function getInvSkuUnitOptions(input: {
+  sku_id: string
+}): Promise<{
+  success: boolean
+  error?: string
+  options?: SkuUnitOption[]
+}> {
+  try {
+    await assertActiveInventoryScanner()
+    const skuId = input.sku_id.trim()
+    if (!skuId) return { success: false, error: "กรุณาเลือก SKU" }
+
+    const options = await getSkuUnitOptions(skuId)
+    return { success: true, options }
+  } catch (error) {
+    return { success: false, error: formatInventoryError(error) }
+  }
+}
+
+export async function getInvSkuUnitOptionsByBarcode(input: {
+  barcode: string
+}): Promise<{
+  success: boolean
+  error?: string
+  sku?: { id: string; code: string; name: string }
+  options?: SkuUnitOption[]
+}> {
+  try {
+    await assertActiveInventoryScanner()
+    const barcode = input.barcode.trim()
+    if (!barcode) return { success: false, error: "กรุณาระบุ barcode" }
+
+    const supabase = await createClient()
+    const { data: sku, error: skuError } = await supabase
+      .from("inv_skus")
+      .select("id, code, name")
+      .eq("barcode", barcode)
+      .eq("is_active", true)
+      .maybeSingle()
+
+    if (skuError) return { success: false, error: skuError.message }
+    if (!sku) return { success: false, error: "ไม่พบ SKU จาก barcode นี้" }
+
+    const options = await getSkuUnitOptions(sku.id as string)
+    return {
+      success: true,
+      sku: {
+        id: sku.id as string,
+        code: sku.code as string,
+        name: sku.name as string,
+      },
+      options,
+    }
+  } catch (error) {
+    return { success: false, error: formatInventoryError(error) }
+  }
+}
+
 export async function listMobileInvInboundItems(
   orderId: string
 ): Promise<{
@@ -324,6 +422,7 @@ export async function scanInvInboundItem(input: {
   order_id: string
   barcode: string
   quantity: number
+  unit_id?: string | null
   lot_number?: string | null
   expiry_date?: string | null
 }): Promise<InventoryActionState> {
@@ -337,6 +436,7 @@ export async function scanInvInboundItem(input: {
       order_id: input.order_id,
       barcode: input.barcode.trim(),
       quantity: input.quantity,
+      unit_id: input.unit_id ?? null,
       lot_number: input.lot_number ?? null,
       expiry_date: input.expiry_date ?? null,
     }
@@ -360,7 +460,7 @@ export async function scanInvInboundItem(input: {
 
     const { data: sku, error: skuError } = await supabase
       .from("inv_skus")
-      .select("id")
+      .select("id, unit_id")
       .eq("barcode", payload.barcode)
       .eq("is_active", true)
       .maybeSingle()
@@ -368,10 +468,17 @@ export async function scanInvInboundItem(input: {
     if (skuError) return { success: false, error: skuError.message }
     if (!sku) return { success: false, error: "ไม่พบ SKU จาก barcode นี้" }
 
+    const quantity = await normalizeInboundQuantity({
+      skuId: sku.id,
+      quantity: payload.quantity,
+      unitId: payload.unit_id,
+      baseUnitId: sku.unit_id,
+    })
+
     const { error } = await getAdminClient().from("inv_inbound_items").insert({
       inbound_order_id: payload.order_id,
       sku_id: sku.id,
-      quantity: payload.quantity,
+      quantity,
       lot_number: payload.lot_number,
       expiry_date: payload.expiry_date || null,
     })

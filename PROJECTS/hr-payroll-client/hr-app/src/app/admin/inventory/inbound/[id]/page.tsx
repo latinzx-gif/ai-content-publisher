@@ -14,12 +14,15 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { deleteInvInboundItem } from "@/features/inventory/actions/inbound"
-import { getInvSkus } from "@/features/inventory/actions/sku"
+import { getInvSkus, getInvUnits } from "@/features/inventory/actions/sku"
 import {
   getInvInboundOrderDetail,
   INBOUND_STATUS_LABELS,
 } from "@/features/inventory/inbound-data"
-import { InboundAddItemForm } from "@/features/inventory/InboundAddItemForm"
+import {
+  InboundAddItemForm,
+  type InboundSkuUnitConfig,
+} from "@/features/inventory/InboundAddItemForm"
 import { InboundOrderActions } from "@/features/inventory/InboundOrderActions"
 import { InventoryDeleteButton } from "@/features/inventory/InventoryDeleteButton"
 import type { InvInboundStatus } from "@/features/inventory/types"
@@ -27,12 +30,22 @@ import { formatThaiDate } from "@/lib/datetime/thailand"
 import { inboundScanHref } from "@/lib/line/inbound-scan-url"
 import { canManageHr, isCeo, isDev } from "@/lib/auth/roles"
 import { requireRole } from "@/lib/auth/require-role"
+import { getSkuUnitOptions } from "@/lib/inventory/unit-conversion"
 import { cn } from "@/lib/utils"
 
 function statusVariant(status: InvInboundStatus) {
   if (status === "approved") return "approved" as const
   if (status === "pending") return "pending" as const
   return "neutral" as const
+}
+
+function formatQuantity(value: number) {
+  return Number.isInteger(value) ? String(value) : String(Number(value.toFixed(6)))
+}
+
+function unitLabel(unit?: { name: string; abbreviation: string | null } | null) {
+  if (!unit) return ""
+  return unit.abbreviation || unit.name
 }
 
 type PageProps = {
@@ -51,8 +64,55 @@ export default async function InboundOrderDetailPage({ params }: PageProps) {
   const { order, supplier_name, warehouse_name, items } = detail
   const editable = canManage && (order.status === "draft" || order.status === "pending")
 
-  const skus =
-    editable ? (await getInvSkus()).filter((s) => s.is_active) : []
+  const [allSkus, units] = await Promise.all([getInvSkus(), getInvUnits()])
+  const skus = editable ? allSkus.filter((s) => s.is_active) : []
+  const unitsById = new Map(units.map((unit) => [unit.id, unit]))
+  const skuBaseUnitsById = new Map(
+    allSkus.map((sku) => [
+      sku.id,
+      sku.unit_id ? unitsById.get(sku.unit_id) ?? null : null,
+    ])
+  )
+
+  let unitConfigs: Record<string, InboundSkuUnitConfig> = {}
+
+  if (skus.length > 0) {
+    const configs = await Promise.all(
+      skus.map(async (sku) => {
+        const fallbackBaseUnit = sku.unit_id ? unitsById.get(sku.unit_id) ?? null : null
+
+        try {
+          const options = await getSkuUnitOptions(sku.id)
+          return [
+            sku.id,
+            {
+              baseUnit:
+                options.find((option) => option.isBaseUnit) ?? fallbackBaseUnit,
+              options: options.map((option) => ({
+                unit: {
+                  id: option.id,
+                  name: option.name,
+                  abbreviation: option.abbreviation,
+                },
+                factorToBase: option.factorToBaseUnit,
+              })),
+            },
+          ] as const
+        } catch {
+          return [
+            sku.id,
+            {
+              baseUnit: fallbackBaseUnit,
+              options: fallbackBaseUnit
+                ? [{ unit: fallbackBaseUnit, factorToBase: 1 }]
+                : [],
+            },
+          ] as const
+        }
+      })
+    )
+    unitConfigs = Object.fromEntries(configs)
+  }
 
   return (
     <AdminPageShell
@@ -95,7 +155,7 @@ export default async function InboundOrderDetailPage({ params }: PageProps) {
             <TableRow>
               <TableHead>SKU</TableHead>
               <TableHead>ชื่อ</TableHead>
-              <TableHead>จำนวน</TableHead>
+              <TableHead>จำนวน (หน่วยฐาน)</TableHead>
               <TableHead>Lot</TableHead>
               <TableHead>หมดอายุ</TableHead>
               {editable ? <TableHead className="text-right">ลบ</TableHead> : null}
@@ -107,7 +167,12 @@ export default async function InboundOrderDetailPage({ params }: PageProps) {
                 <TableRow key={item.id}>
                   <TableCell className="font-medium">{item.sku_code}</TableCell>
                   <TableCell>{item.sku_name}</TableCell>
-                  <TableCell>{item.quantity}</TableCell>
+                  <TableCell>
+                    {formatQuantity(item.quantity)}
+                    {unitLabel(skuBaseUnitsById.get(item.sku_id ?? ""))
+                      ? ` ${unitLabel(skuBaseUnitsById.get(item.sku_id ?? ""))}`
+                      : ""}
+                  </TableCell>
                   <TableCell>{item.lot_number || "—"}</TableCell>
                   <TableCell>
                     {item.expiry_date ? formatThaiDate(item.expiry_date) : "—"}
@@ -138,7 +203,11 @@ export default async function InboundOrderDetailPage({ params }: PageProps) {
 
       {editable ? (
         <div className="mt-4">
-          <InboundAddItemForm orderId={order.id} skus={skus} />
+          <InboundAddItemForm
+            orderId={order.id}
+            skus={skus}
+            unitConfigs={unitConfigs}
+          />
         </div>
       ) : null}
 
