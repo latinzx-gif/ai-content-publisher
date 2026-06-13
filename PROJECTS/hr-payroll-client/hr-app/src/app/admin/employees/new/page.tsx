@@ -2,13 +2,9 @@ import Link from "next/link"
 
 import { AddEmployeeForm } from "@/features/employees/AddEmployeeForm"
 import { getOrganizationMasterData } from "@/features/organization/master-data"
-import { listWorkShifts } from "@/features/shifts/data"
 
 export default async function NewEmployeePage() {
-  const [organization, workShifts] = await Promise.all([
-    getOrganizationMasterData(),
-    listWorkShifts(),
-  ])
+  const organization = await getOrganizationMasterData()
 
   return (
     <div className="flex h-full min-h-0 flex-1 flex-col gap-2 overflow-hidden">
@@ -21,7 +17,6 @@ export default async function NewEmployeePage() {
         <AddEmployeeForm
           departments={organization.departments}
           positions={organization.positions}
-          workShifts={workShifts}
         />
       </div>
     </div>
