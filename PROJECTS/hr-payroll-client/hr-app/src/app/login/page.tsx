@@ -61,7 +61,7 @@ export default async function LoginPage({
         <div className="flex flex-col gap-4 p-6">
           <p className="text-center text-sm text-muted-foreground">
             เข้าสู่ระบบด้วย LINE — พนักงานใหม่กรอกข้อมูลแล้วรอ HR อนุมัติ
-            (ใช้งานผ่าน LINE OA ไม่มี Dashboard)
+            (ใช้งานผ่าน LINE OA และ Portal พนักงาน)
           </p>
           {errorMessage ? (
             <p className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">

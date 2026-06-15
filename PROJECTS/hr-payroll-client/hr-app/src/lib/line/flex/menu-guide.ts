@@ -32,11 +32,11 @@ export function welcomeFlex(): messagingApi.FlexMessage {
             size: "sm",
             color: "#111827",
           },
-          ...menuItemRow("📍", "เช็คอินเข้างาน", "บันทึกเวลาเข้างานและเลิกงาน"),
+          ...menuItemRow("📍", "เช็คอิน / เช็คเอาท์", "บันทึกเวลาเข้างานและเลิกงาน"),
           ...menuItemRow("⏱️", "ขอ OT", "ยื่นคำขอทำงานล่วงเวลา"),
-          ...menuItemRow("📄", "ยื่นเอกสาร", "ขอหนังสือรับรอง / เอกสาร HR"),
-          ...menuItemRow("📦", "คลังสินค้า", "สแกน barcode รับเข้าสินค้า"),
-          ...menuItemRow("💬", "ข้อเสนอแนะ", "แจ้งปัญหาหรือร้องเรียน"),
+          ...menuItemRow("📄", "ขอเอกสาร", "ขอหนังสือรับรอง / เอกสาร HR"),
+          ...menuItemRow("📅", "ขอลา", "ยื่นคำขอลาออนไลน์"),
+          ...menuItemRow("📢", "ร้องเรียน", "แจ้งปัญหาหรือข้อเสนอแนะ"),
           ...menuItemRow("🎧", "ติดต่อ HR", "สอบถามหรือติดต่อทีม HR"),
           { type: "separator", margin: "lg" },
           {
@@ -48,10 +48,18 @@ export function welcomeFlex(): messagingApi.FlexMessage {
             contents: [
               {
                 type: "text",
-                text: "💡 กดปุ่ม \"เมนู HR\" ด้านล่างแชท แล้วเลือกบริการที่ต้องการ",
+                text: "💡 กดปุ่ม \"เมนู HR\" ด้านล่างแชท (6 ปุ่ม) แล้วเลือกบริการที่ต้องการ",
                 wrap: true,
                 size: "xs",
                 color: "#B71C1C",
+              },
+              {
+                type: "text",
+                text: "📦 คลังสินค้า: พิมพ์ /stock หรือ /inbound (เมื่อ HR เปิดใช้)",
+                wrap: true,
+                size: "xs",
+                color: "#B71C1C",
+                margin: "sm",
               },
             ],
           },
@@ -345,14 +353,8 @@ export function alreadyCheckedOutFlex(timeText: string): messagingApi.FlexMessag
   })
 }
 
-export function leaveGuideFlex(liffId?: string): messagingApi.FlexMessage {
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL?.replace(/\/$/, "")
-  const leaveUri = baseUrl
-    ? `${baseUrl}/liff/leave`
-    : liffId
-      ? `https://liff.line.me/${liffId}`
-      : undefined
-  const hasLiff = Boolean(leaveUri)
+export function leaveGuideFlex(formUrl?: string): messagingApi.FlexMessage {
+  const hasLiff = Boolean(formUrl)
 
   return guide(
     hasLiff ? "ขอลา — เปิดแบบฟอร์ม" : "ขอลา — เตรียมเปิดใช้งาน",
@@ -380,7 +382,7 @@ export function leaveGuideFlex(liffId?: string): messagingApi.FlexMessage {
         ? {
             button: {
               label: "เปิดแบบฟอร์มขอลา",
-              uri: leaveUri!,
+              uri: formUrl!,
             },
           }
         : { statusLabel: "⏳ เร็วๆ นี้" }),
@@ -634,10 +636,10 @@ export function pendingApprovalFlex(): messagingApi.FlexMessage {
       "ทีม HR กำลังตรวจสอบข้อมูลของคุณ ยังไม่สามารถเช็คอิน ขอลา หรือยื่นเอกสารได้",
     steps: [
       "รอ HR อนุมัติในระบบ (โดยปกติภายใน 1–2 วันทำการ)",
-      "เมื่ออนุมัติแล้ว กลับมากดเมนู HR ในแชทนี้",
-      "ใช้งานผ่าน LINE OA — ไม่ต้องเข้า Web Dashboard",
+      "ตรวจสอบสถานะได้ทาง LINE — กดเมนู \"ติดต่อ HR\" เพื่อสอบถาม",
+      "เมื่ออนุมัติแล้ว ใช้เมนู HR ในแชทนี้ หรือ Portal พนักงาน (ถ้ามีสิทธิ์)",
     ],
-    tip: "กดเมนู \"ติดต่อ HR\" เพื่อสอบถามสถานะ",
+    tip: "ระบบจะแจ้งผลอนุมัติทาง LINE — ไม่จำเป็นต้องเข้า Dashboard HR",
   })
 }
 
@@ -648,13 +650,13 @@ export function menuHintFlex(): messagingApi.FlexMessage {
     subtitle: "ระบบ HR & Payroll",
     accentColor: BRAND_RED,
     description:
-      "กรุณาเลือกบริการจากเมนู \"เมนู HR\" ด้านล่างแชท เช่น เช็คอิน OT หรือติดต่อ HR",
+      "กรุณาเลือกบริการจากเมนู \"เมนู HR\" ด้านล่างแชท — 6 ปุ่ม: เช็คอิน, OT, เอกสาร, ลา, ร้องเรียน, ติดต่อ HR",
     steps: [
-      "กดปุ่ม \"เมนู HR\" ด้านล่างแชท",
-      "เลือกบริการที่ต้องการ",
+      "กดปุ่ม \"เมนู HR\" ด้านล่างแชท แล้วเลือกบริการ",
+      "หรือพิมพ์คำสั่ง เช่น /leave /ot /doc /complaint /stock /inbound",
       "ทำตามคำแนะนำในการ์ดที่ระบบส่งให้",
     ],
-    tip: "หากเพิ่งเพิ่มเพื่อน ลองกดเมนูใดเมนูหนึ่งเพื่อดูวิธีใช้งาน",
+    tip: "คลังสินค้าใช้ /stock หรือ /inbound (เมื่อ HR เปิดใช้)",
   })
 }
 

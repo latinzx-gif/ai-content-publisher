@@ -5,6 +5,8 @@ import {
   Clock,
   ExternalLink,
   Megaphone,
+  MessageSquareWarning,
+  Package,
   QrCode,
   Timer,
 } from "lucide-react"
@@ -158,9 +160,17 @@ export function PortalHomeDashboard({
             <Timer className="size-4 text-brand-red" />
             ขอ OT
           </LiffLink>
+          <LiffLink href="/liff/complaint">
+            <MessageSquareWarning className="size-4 text-brand-red" />
+            ร้องเรียน
+          </LiffLink>
           <LiffLink href="/portal/inbound">
             <Barcode className="size-4 text-brand-red" />
             สแกนรับเข้า
+          </LiffLink>
+          <LiffLink href="/portal/stock">
+            <Package className="size-4 text-brand-red" />
+            เช็คสต็อก
           </LiffLink>
         </div>
         <p className="mt-3 text-xs text-muted-foreground">

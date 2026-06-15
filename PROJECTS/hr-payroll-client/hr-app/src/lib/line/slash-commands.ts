@@ -2,6 +2,17 @@ import type { RichMenuPostbackAction } from "@/lib/line/types"
 
 /** Slash/text shortcuts — work even when LINE_USER_CHAT_ENABLED=false */
 const SLASH_COMMANDS: Record<string, RichMenuPostbackAction> = {
+  "/leave": "leave",
+  "/ลา": "leave",
+  "/ot": "overtime",
+  "/overtime": "overtime",
+  "/doc": "document",
+  "/document": "document",
+  "/เอกสาร": "document",
+  "/complaint": "complaint",
+  "/ร้องเรียน": "complaint",
+  "/announce": "announcement",
+  "/ประกาศ": "announcement",
   "/stock": "check_stock",
   "/สต็อก": "check_stock",
   "/inbound": "inventory",

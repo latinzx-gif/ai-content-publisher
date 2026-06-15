@@ -8,10 +8,13 @@
 
 1. **Self-register** — LINE login → `/register` → employee LIFF/portal
 2. **HR onboarding queue** — `/admin/employees?status=onboarding`
-3. **Employee Web Portal** — `/portal` (profile, attendance, leave, documents)
-4. **OT** — พนักงานยื่นเองผ่าน LIFF → BM อนุมัติ → HR อนุมัติ
-5. **คลังสินค้า** — HR สร้างใบรับเข้า → พนักงานสแกนผ่าน `/portal/inbound` หรือ LINE Rich Menu「คลังสินค้า」
-6. **ประกาศ** — HR ส่งจาก `/admin/announcements` (LINE push) — ไม่มีปุ่มประกาศใน Rich Menu
+3. **Employee Web Portal v2** — `/portal` (profile, attendance, leave, documents, announcements, stock)
+4. **Dual channel LINE + Portal** — พนักงานใช้ Rich Menu / slash commands ใน LINE หรือ Portal ตามสิทธิ์
+5. **Rich Menu v3 (2×3)** — เช็คอิน | OT | เอกสาร / ลา | ร้องเรียน | ติดต่อ HR (คลังแยกเป็นคำสั่ง)
+6. **Slash commands** — `/leave` `/ot` `/doc` `/complaint` `/announce` `/stock` `/inbound` (ทำงานแม้ปิด free-text chat)
+7. **OT** — พนักงานยื่นเองผ่าน LIFF → BM อนุมัติ → HR อนุมัติ
+8. **คลังสินค้า** — `/stock` หรือ `/portal/stock` ดูยอด · `/inbound` หรือ `/portal/inbound` สแกนรับเข้า (เมื่อ `LINE_STOCK_COMMAND_ENABLED=true`)
+9. **ประกาศ** — HR ส่งจาก `/admin/announcements` (LINE push) · พนักงานดูย้อนหลังที่ `/portal/announcements`
 
 ## Key URLs
 

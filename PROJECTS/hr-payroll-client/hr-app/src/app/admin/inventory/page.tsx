@@ -8,14 +8,7 @@ export default async function AdminInventoryPage() {
   const staffMode = isInventoryPortalUser(employee)
 
   return (
-    <AdminPageShell
-      title="คลังสินค้า"
-      description={
-        staffMode
-          ? "งานคลังสินค้า — รับเข้า สต็อก ใบเบิก และแจ้งเตือน"
-          : "ข้อมูลหลัก — SKU Supplier สาขาและคลัง (Phase 1)"
-      }
-    >
+    <AdminPageShell title="คลังสินค้า">
       <InventoryHub staffMode={staffMode} />
     </AdminPageShell>
   )

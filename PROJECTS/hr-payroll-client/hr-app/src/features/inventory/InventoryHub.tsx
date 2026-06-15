@@ -1,4 +1,5 @@
 import Link from "next/link"
+import type { LucideIcon } from "lucide-react"
 import {
   BarChart3,
   Building2,
@@ -9,91 +10,113 @@ import {
   Warehouse,
 } from "lucide-react"
 
-import { WidgetCard } from "@/components/brand/WidgetCard"
+type HubItem = {
+  title: string
+  href: string
+  icon: LucideIcon
+}
 
-const OPERATIONAL_SECTIONS = [
+const OPERATIONAL_ITEMS: HubItem[] = [
   {
-    title: "รับเข้าสินค้า",
-    description: "Inbound — สร้างใบ → คลังสแกน → Inventory อนุมัติเพิ่มสต็อก",
+    title: "รับเข้า",
     href: "/admin/inventory/inbound",
     icon: PackagePlus,
   },
   {
-    title: "สต็อกคงเหลือ",
-    description: "ยอดตาม SKU และคลัง — กรองต่ำกว่า Min",
+    title: "สต็อก",
     href: "/admin/inventory/stock",
     icon: BarChart3,
   },
   {
-    title: "ใบเบิกสินค้า",
-    description: "อนุมัติและจ่ายสินค้าตามใบเบิก",
+    title: "ใบเบิก",
     href: "/admin/inventory/requisition",
     icon: ClipboardList,
   },
   {
-    title: "บันทึกใช้จริง",
-    description: "บันทึกการใช้วัตถุดิบจริง — สต็อกลดทันที",
+    title: "ใช้จริง",
     href: "/admin/inventory/consumption",
     icon: Package,
   },
   {
-    title: "แจ้งเสียหาย",
-    description: "รายงานสินค้าเสียหาย / หมดอายุ / สูญหาย",
+    title: "เสียหาย",
     href: "/admin/inventory/damage",
     icon: PackagePlus,
   },
-] as const
+]
 
-const MASTER_DATA_SECTIONS = [
+const MASTER_DATA_ITEMS: HubItem[] = [
   {
-    title: "SKU / วัตถุดิบ",
-    description: "รหัสสินค้า Barcode หน่วย Min/Max",
+    title: "SKU",
     href: "/admin/inventory/sku",
     icon: Package,
   },
   {
     title: "Supplier",
-    description: "ผู้จัดจำหน่ายและข้อมูลติดต่อ",
     href: "/admin/inventory/suppliers",
     icon: Truck,
   },
   {
-    title: "สาขา (คลัง)",
-    description: "สาขาร้านสำหรับระบบคลัง (แยกจาก HR)",
+    title: "สาขา",
     href: "/admin/inventory/branches",
     icon: Building2,
   },
   {
-    title: "คลังสินค้า",
-    description: "Main/Sub warehouse ต่อสาขา",
+    title: "คลัง",
     href: "/admin/inventory/warehouses",
     icon: Warehouse,
   },
-] as const
+]
+
+function HubTile({ href, icon: Icon, title }: HubItem) {
+  return (
+    <Link
+      href={href}
+      className="flex min-h-10 items-center gap-2 rounded-lg border border-border/80 bg-muted/15 px-3 py-2 text-sm font-medium transition-colors hover:border-brand-red/35 hover:bg-muted/40"
+    >
+      <Icon className="size-4 shrink-0 text-brand-red" aria-hidden />
+      <span className="truncate">{title}</span>
+    </Link>
+  )
+}
+
+function HubSection({
+  label,
+  items,
+  columnsClass,
+}: {
+  label: string
+  items: HubItem[]
+  columnsClass: string
+}) {
+  return (
+    <section className="space-y-2">
+      <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+        {label}
+      </h2>
+      <div className={`grid gap-2 ${columnsClass}`}>
+        {items.map((item) => (
+          <HubTile key={item.href} {...item} />
+        ))}
+      </div>
+    </section>
+  )
+}
 
 export function InventoryHub({ staffMode = false }: { staffMode?: boolean }) {
-  const sections = staffMode
-    ? OPERATIONAL_SECTIONS
-    : [...OPERATIONAL_SECTIONS, ...MASTER_DATA_SECTIONS]
-
   return (
-    <div className="grid gap-4 sm:grid-cols-2">
-      {sections.map((section) => {
-        const Icon = section.icon
-        return (
-          <Link key={section.href} href={section.href} className="block h-full">
-            <WidgetCard title={section.title} compact>
-              <div className="space-y-2 p-3">
-                <Icon className="size-8 text-brand-red" aria-hidden />
-                <p className="text-sm text-muted-foreground">{section.description}</p>
-                <span className="text-sm font-medium text-brand-red hover:underline">
-                  จัดการ →
-                </span>
-              </div>
-            </WidgetCard>
-          </Link>
-        )
-      })}
+    <div className="space-y-4">
+      <HubSection
+        label="งานคลัง"
+        items={OPERATIONAL_ITEMS}
+        columnsClass="grid-cols-2 sm:grid-cols-3 lg:grid-cols-5"
+      />
+      {!staffMode ? (
+        <HubSection
+          label="ข้อมูลหลัก"
+          items={MASTER_DATA_ITEMS}
+          columnsClass="grid-cols-2 sm:grid-cols-4"
+        />
+      ) : null}
     </div>
   )
 }
