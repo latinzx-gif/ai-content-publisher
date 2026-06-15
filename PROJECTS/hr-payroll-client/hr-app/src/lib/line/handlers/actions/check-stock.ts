@@ -8,7 +8,7 @@ export function checkStockAction(): messagingApi.Message[] {
     return [stockCommandDisabledMessage()]
   }
   const base = process.env.NEXT_PUBLIC_BASE_URL?.replace(/\/$/, "")
-  const stockUrl = base ? `${base}/admin/inventory/stock` : undefined
+  const stockUrl = base ? `${base}/portal/stock` : undefined
   const inboundUrl = base ? `${base}/portal/inbound` : undefined
   return [checkStockGuideFlex({ stockUrl, inboundUrl })]
 }

@@ -8,7 +8,8 @@ export const PORTAL_NAV_ITEMS: AdminNavItem[] = [
   { label: "ขอลา", href: "/portal/leave", icon: "calendar" },
   { label: "เอกสาร", href: "/portal/documents", icon: "file-text" },
   { label: "สลิปเงินเดือน", href: "/portal/payslips", icon: "file-text" },
-  { label: "คลังสินค้า", href: "/portal/inbound", icon: "inventory" },
+  { label: "รับเข้า", href: "/portal/inbound", icon: "inventory" },
+  { label: "เช็คสต็อก", href: "/portal/stock", icon: "list-checks" },
 ]
 
 export function isPortalNavActive(pathname: string, href: string): boolean {

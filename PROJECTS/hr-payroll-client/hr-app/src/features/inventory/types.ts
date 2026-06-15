@@ -251,3 +251,82 @@ export type InvDamageRow = InvDamage & {
 export type InvDamageDetail = InvDamageRow & {
   photo_signed_url: string | null
 }
+
+export type InvStockCountScope = "all" | "category" | "sku"
+
+export type InvStockCountStatus = "draft" | "counting" | "completed" | "cancelled"
+
+export type InvStockCount = {
+  id: string
+  branch_id: string
+  warehouse_id: string
+  scope: InvStockCountScope
+  status: InvStockCountStatus
+  planned_at: string | null
+  started_at: string | null
+  completed_at: string | null
+  created_by: string
+  notes: string | null
+  created_at: string
+  updated_at: string
+}
+
+export type InvStockCountItem = {
+  id: string
+  count_id: string
+  sku_id: string
+  system_qty: number
+  physical_qty: number | null
+  lot_number: string | null
+  counted_by: string | null
+  counted_at: string | null
+  created_at: string
+  updated_at: string
+}
+
+export type InvStockAdjustmentStatus = "pending" | "applied"
+
+export type InvStockAdjustment = {
+  id: string
+  count_id: string | null
+  warehouse_id: string
+  sku_id: string
+  qty_delta: number
+  reason: string | null
+  status: InvStockAdjustmentStatus
+  created_by: string
+  applied_at: string | null
+  created_at: string
+  updated_at: string
+}
+
+export type InvTransferStatus = "draft" | "in_transit" | "received" | "cancelled"
+
+export type InvTransfer = {
+  id: string
+  from_warehouse_id: string
+  to_warehouse_id: string
+  from_branch_id: string
+  to_branch_id: string
+  status: InvTransferStatus
+  shipper: string | null
+  created_by: string
+  sent_by: string | null
+  received_by: string | null
+  sent_at: string | null
+  received_at: string | null
+  notes: string | null
+  created_at: string
+  updated_at: string
+}
+
+export type InvTransferItem = {
+  id: string
+  transfer_id: string
+  sku_id: string
+  qty_sent: number
+  qty_received: number
+  lot_number: string | null
+  created_at: string
+  updated_at: string
+}
