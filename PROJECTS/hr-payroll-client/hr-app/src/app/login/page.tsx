@@ -2,6 +2,7 @@ import Link from "next/link"
 
 import { BrandMark } from "@/components/brand/BrandMark"
 import { Button, buttonVariants } from "@/components/ui/button"
+import { EmployeeCodeLoginForm } from "@/features/auth/EmployeeCodeLoginForm"
 import { cn } from "@/lib/utils"
 import { adminLoginPath } from "@/lib/auth/roles"
 import { getCurrentEmployee } from "@/lib/auth/session"
@@ -12,6 +13,8 @@ const ERROR_MESSAGES: Record<string, string> = {
     "บัญชีไม่มีสิทธิ์เข้า Admin — ตรวจ Role ต้องเป็น hr (HR Officer) และสถานะ active",
   invalid_state: "การเข้าสู่ระบบหมดอายุ กรุณาลองใหม่อีกครั้ง",
   line_login_failed: "เข้าสู่ระบบด้วย LINE ไม่สำเร็จ กรุณาลองใหม่อีกครั้ง",
+  invalid_credentials: "รหัสพนักงานหรือสาขาไม่ถูกต้อง",
+  portal_login_failed: "เข้าสู่ระบบไม่สำเร็จ กรุณาลองใหม่อีกครั้ง",
   session_failed:
     "เซสชันไม่สมบูรณ์ (cookie เก่าหรือบัญชียังไม่ผูกกับพนักงาน) — กดล้าง session แล้ว login ใหม่",
 }
@@ -60,8 +63,8 @@ export default async function LoginPage({
         </div>
         <div className="flex flex-col gap-4 p-6">
           <p className="text-center text-sm text-muted-foreground">
-            เข้าสู่ระบบด้วย LINE — พนักงานใหม่กรอกข้อมูลแล้วรอ HR อนุมัติ
-            (ใช้งานผ่าน LINE OA และ Portal พนักงาน)
+            เข้าสู่ระบบด้วยรหัสพนักงานและสาขา — dev ใช้{" "}
+            <strong>000</strong> + Head Office (000)
           </p>
           {errorMessage ? (
             <p className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">
@@ -84,13 +87,16 @@ export default async function LoginPage({
               กรุณากด &quot;เข้าสู่ระบบด้วย LINE&quot; อีกครั้งเพื่อไปหน้าลงทะเบียน
             </p>
           ) : null}
+          {!employee || error ? <EmployeeCodeLoginForm /> : null}
           {!employee || error ? (
-            <Button
-              render={<a href={lineStartUrl} />}
-              className="w-full bg-[#06C755] hover:bg-[#06C755]/80"
-            >
-              เข้าสู่ระบบด้วย LINE
-            </Button>
+            <p className="text-center text-xs text-muted-foreground">
+              <a
+                href={lineStartUrl}
+                className="text-brand-red underline-offset-2 hover:underline"
+              >
+                พนักงานใหม่ — ลงทะเบียนด้วย LINE
+              </a>
+            </p>
           ) : null}
           {user || error ? (
             <form action="/api/auth/logout" method="post">

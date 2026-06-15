@@ -3,7 +3,6 @@
 import { useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
 
-import { BrandMark } from "@/components/brand/BrandMark"
 import { Button } from "@/components/ui/button"
 
 const inputClassName =
@@ -11,13 +10,13 @@ const inputClassName =
 
 type BranchOption = { id: string; name: string; code: string | null }
 
-export function RegisterForm() {
+export function EmployeeCodeLoginForm() {
   const router = useRouter()
   const [employeeCode, setEmployeeCode] = useState("")
   const [branchId, setBranchId] = useState("")
   const [branches, setBranches] = useState<BranchOption[]>([])
   const [branchesLoading, setBranchesLoading] = useState(true)
-  const [saving, setSaving] = useState(false)
+  const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
@@ -49,10 +48,10 @@ export function RegisterForm() {
       return
     }
 
-    setSaving(true)
+    setSubmitting(true)
     setError(null)
     try {
-      const res = await fetch("/api/auth/register", {
+      const res = await fetch("/api/auth/portal/login", {
         method: "POST",
         headers: { "content-type": "application/json" },
         credentials: "include",
@@ -66,28 +65,23 @@ export function RegisterForm() {
         error?: string
       } | null
       if (!res.ok) {
-        throw new Error(data?.error ?? "ลงทะเบียนไม่สำเร็จ")
+        throw new Error(data?.error ?? "เข้าสู่ระบบไม่สำเร็จ")
       }
       if (data?.redirect) {
         router.push(data.redirect)
         router.refresh()
         return
       }
-      router.push("/register/pending")
+      router.refresh()
     } catch (err) {
-      setError(err instanceof Error ? err.message : "ลงทะเบียนไม่สำเร็จ")
+      setError(err instanceof Error ? err.message : "เข้าสู่ระบบไม่สำเร็จ")
     } finally {
-      setSaving(false)
+      setSubmitting(false)
     }
   }
 
   return (
     <form onSubmit={onSubmit} className="flex flex-col gap-4">
-      <p className="text-center text-sm text-muted-foreground">
-        กรอกรหัสพนักงานและสาขาที่ HR แจ้งให้ — ระบบจะผูกบัญชี LINE ของคุณ (ถ้ามี)
-        แล้วรอ HR อนุมัติ
-      </p>
-
       <label className="block text-sm">
         <span className="text-muted-foreground">รหัสพนักงาน *</span>
         <input
@@ -129,36 +123,11 @@ export function RegisterForm() {
 
       <Button
         type="submit"
-        disabled={saving || branchesLoading}
+        disabled={submitting || branchesLoading}
         className="w-full bg-brand-red text-white hover:bg-brand-red/90"
       >
-        {saving ? "กำลังส่งคำขอ…" : "ส่งคำขอลงทะเบียน"}
+        {submitting ? "กำลังเข้าสู่ระบบ…" : "เข้าสู่ระบบ"}
       </Button>
     </form>
-  )
-}
-
-export function RegisterShell({ children }: { children: React.ReactNode }) {
-  return (
-    <main className="flex min-h-screen items-center justify-center bg-background p-4">
-      <div className="w-full max-w-sm overflow-hidden rounded-2xl border border-border/80 bg-card shadow-lg">
-        <div className="relative overflow-hidden bg-brand-red px-6 py-10 text-center text-white">
-          <div
-            className="pointer-events-none absolute inset-0 opacity-25"
-            style={{
-              backgroundImage:
-                "radial-gradient(circle at 30% 20%, #fff 0, transparent 45%), radial-gradient(circle at 80% 80%, #fff 0, transparent 40%)",
-            }}
-          />
-          <div className="relative">
-            <BrandMark variant="login" onDark />
-            <p className="mt-4 text-sm font-medium text-white/90">
-              ลงทะเบียนพนักงาน
-            </p>
-          </div>
-        </div>
-        <div className="p-6">{children}</div>
-      </div>
-    </main>
   )
 }

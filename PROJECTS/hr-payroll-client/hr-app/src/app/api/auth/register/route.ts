@@ -7,25 +7,22 @@ import {
   LINE_REGISTER_COOKIE,
   LINE_REGISTER_COOKIE_OPTS,
 } from "@/lib/auth/register-cookie"
+import { adminLoginPath } from "@/lib/auth/roles"
+import type { Employee } from "@/lib/auth/session"
 import { notifyRegistrationPending } from "@/lib/line/notify-registration"
-import { defaultPayTypeForBranchCode } from "@/lib/payroll/pay-type"
 
 type RegisterBody = {
-  name?: string
-  phone?: string | null
-  branch_id?: string | null
+  employee_code?: string
+  branch_id?: string
 }
 
-const PHONE_RE = /^[0-9+\-\s()]{8,20}$/
+function isRealLineId(id: string | null | undefined): id is string {
+  return typeof id === "string" && id.startsWith("U")
+}
 
 export async function POST(request: NextRequest) {
-  const lineUserId = request.cookies.get(LINE_REGISTER_COOKIE)?.value
-  if (!lineUserId || !lineUserId.startsWith("U")) {
-    return NextResponse.json(
-      { error: "registration session expired — login with LINE again" },
-      { status: 401 }
-    )
-  }
+  const cookieLineId = request.cookies.get(LINE_REGISTER_COOKIE)?.value
+  const hasRealLineCookie = isRealLineId(cookieLineId)
 
   let body: RegisterBody
   try {
@@ -34,16 +31,12 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "invalid body" }, { status: 400 })
   }
 
-  const name = body.name?.trim()
-  const phone = body.phone?.trim() ?? ""
+  const employeeCode = body.employee_code?.trim() ?? ""
   const branchId = body.branch_id?.trim() ?? ""
 
-  if (!name) {
-    return NextResponse.json({ error: "name is required" }, { status: 400 })
-  }
-  if (!phone || !PHONE_RE.test(phone)) {
+  if (!employeeCode) {
     return NextResponse.json(
-      { error: "กรุณากรอกเบอร์ติดต่อที่ถูกต้อง" },
+      { error: "กรุณากรอกรหัสพนักงาน" },
       { status: 400 }
     )
   }
@@ -53,108 +46,152 @@ export async function POST(request: NextRequest) {
 
   const admin = getAdminClient()
 
-  const { data: branch } = await admin
-    .from("hr_branches")
-    .select("id, code")
-    .eq("id", branchId)
-    .maybeSingle()
+  let existingLineEmployeeId: string | undefined
+  if (hasRealLineCookie) {
+    const { data: lineEmployee, error: lineLookupError } = await admin
+      .from("hr_employees")
+      .select("id")
+      .eq("line_user_id", cookieLineId)
+      .maybeSingle()
 
-  if (!branch) {
-    return NextResponse.json({ error: "สาขาไม่ถูกต้อง" }, { status: 400 })
+    if (lineLookupError) {
+      console.error("register line lookup failed", lineLookupError)
+      return NextResponse.json(
+        { error: "ลงทะเบียนไม่สำเร็จ" },
+        { status: 500 }
+      )
+    }
+
+    existingLineEmployeeId = lineEmployee?.id as string | undefined
   }
 
-  const { data: existing } = await admin
+  const { data: employee, error: lookupError } = await admin
     .from("hr_employees")
-    .select("id, role, status, leave_blacklisted")
-    .eq("line_user_id", lineUserId)
+    .select(
+      "id, line_user_id, role, status, department, leave_blacklisted"
+    )
+    .eq("branch_id", branchId)
+    .ilike("employee_code", employeeCode)
     .maybeSingle()
 
-  if (existing?.leave_blacklisted) {
+  if (lookupError) {
+    console.error("register employee lookup failed", lookupError)
+    return NextResponse.json({ error: "ลงทะเบียนไม่สำเร็จ" }, { status: 500 })
+  }
+
+  if (!employee) {
     return NextResponse.json(
-      { error: "บัญชี LINE นี้อยู่ใน Leave Blacklist — ติดต่อ HR" },
+      { error: "รหัสพนักงานหรือสาขาไม่ถูกต้อง — ติดต่อ HR" },
+      { status: 400 }
+    )
+  }
+
+  if (employee.leave_blacklisted) {
+    return NextResponse.json(
+      { error: "บัญชีอยู่ใน Leave Blacklist — ติดต่อ HR" },
       { status: 403 }
     )
   }
 
-  if (existing?.status === "active") {
+  if (
+    hasRealLineCookie &&
+    existingLineEmployeeId &&
+    existingLineEmployeeId !== employee.id
+  ) {
     return NextResponse.json(
-      { error: "บัญชี LINE นี้ลงทะเบียนและอนุมัติแล้ว" },
+      { error: "บัญชี LINE นี้ผูกกับพนักงานคนอื่นแล้ว" },
       { status: 409 }
     )
   }
 
-  const baseRow = {
-    line_user_id: lineUserId,
-    name,
-    phone,
-    branch_id: branchId,
-    pay_type: defaultPayTypeForBranchCode(branch.code as string | null),
-    role: "employee" as const,
-    status: "inactive" as const,
+  const existingLineId = employee.line_user_id as string | null
+  const employeeHasRealLine = isRealLineId(existingLineId)
+
+  if (
+    employeeHasRealLine &&
+    hasRealLineCookie &&
+    existingLineId !== cookieLineId
+  ) {
+    return NextResponse.json(
+      { error: "รหัสพนักงานนี้ถูกผูกกับบัญชีอื่นแล้ว" },
+      { status: 409 }
+    )
   }
 
-  let employeeId: string
+  if (employeeHasRealLine && !hasRealLineCookie) {
+    return NextResponse.json(
+      {
+        error:
+          "รหัสพนักงานนี้ถูกผูกกับ LINE แล้ว — เข้าสู่ระบบด้วย LINE หรือรหัสพนักงาน",
+      },
+      { status: 409 }
+    )
+  }
 
-  if (existing) {
+  const role = employee.role as Employee["role"]
+  const status = employee.status as Employee["status"]
+  const department =
+    typeof employee.department === "string" ? employee.department : null
+
+  const hadRealLineBefore = employeeHasRealLine
+  let sessionLineUserId = existingLineId
+
+  if (hasRealLineCookie && existingLineId !== cookieLineId) {
     const { error: updateError } = await admin
       .from("hr_employees")
-      .update(baseRow)
-      .eq("id", existing.id)
+      .update({ line_user_id: cookieLineId })
+      .eq("id", employee.id)
 
     if (updateError) {
-      const msg =
-        updateError.code === "23505"
-          ? updateError.message.includes("employee_code")
-            ? "รหัสพนักงานนี้มีในระบบแล้ว"
-            : "บัญชี LINE นี้ลงทะเบียนแล้ว"
-          : updateError.message
-      return NextResponse.json({ error: msg }, { status: 500 })
+      console.error("register line link failed", updateError)
+      return NextResponse.json({ error: "ลงทะเบียนไม่สำเร็จ" }, { status: 500 })
     }
-    employeeId = existing.id
-  } else {
-    const { data: inserted, error: insertError } = await admin
+    sessionLineUserId = cookieLineId
+  } else if (!existingLineId) {
+    sessionLineUserId = `portal_${employee.id}`
+    const { error: updateError } = await admin
       .from("hr_employees")
-      .insert({
-        ...baseRow,
-        employee_code: null,
-        department: null,
-        position: null,
-      })
-      .select("id")
-      .single()
+      .update({ line_user_id: sessionLineUserId })
+      .eq("id", employee.id)
 
-    if (insertError || !inserted) {
-      const msg =
-        insertError?.code === "23505"
-          ? insertError.message.includes("employee_code")
-            ? "รหัสพนักงานนี้มีในระบบแล้ว"
-            : "บัญชี LINE นี้ลงทะเบียนแล้ว"
-          : (insertError?.message ?? "insert failed")
-      return NextResponse.json({ error: msg }, { status: 500 })
+    if (updateError) {
+      console.error("register portal id assign failed", updateError)
+      return NextResponse.json({ error: "ลงทะเบียนไม่สำเร็จ" }, { status: 500 })
     }
-    employeeId = inserted.id as string
   }
 
-  const response = NextResponse.json({ redirect: PENDING_REGISTRATION_PATH })
+  const redirect =
+    status === "active"
+      ? adminLoginPath(role, status, department)
+      : PENDING_REGISTRATION_PATH
+
+  const response = NextResponse.json({ redirect })
 
   try {
-    await mintLineUserSession(request, response, lineUserId)
+    await mintLineUserSession(request, response, sessionLineUserId!)
   } catch (error) {
     console.error("register session mint failed", error)
     return NextResponse.json(
-      { error: "ส่งคำขอแล้ว แต่เข้าระบบไม่สำเร็จ — ลอง login LINE อีกครั้ง" },
+      { error: "ลงทะเบียนไม่สำเร็จ — กรุณาลองใหม่อีกครั้ง" },
       { status: 500 }
     )
   }
 
-  response.cookies.set(LINE_REGISTER_COOKIE, "", {
-    ...LINE_REGISTER_COOKIE_OPTS,
-    maxAge: 0,
-  })
+  if (hasRealLineCookie) {
+    response.cookies.set(LINE_REGISTER_COOKIE, "", {
+      ...LINE_REGISTER_COOKIE_OPTS,
+      maxAge: 0,
+    })
+  }
 
-  void notifyRegistrationPending(employeeId).catch((err) => {
-    console.error("register notify HR failed:", err)
-  })
+  const shouldNotify =
+    status === "inactive" && hasRealLineCookie && !hadRealLineBefore
+
+  if (shouldNotify) {
+    void notifyRegistrationPending(employee.id as string).catch((err) => {
+      console.error("register notify HR failed:", err)
+    })
+  }
 
   return response
 }
