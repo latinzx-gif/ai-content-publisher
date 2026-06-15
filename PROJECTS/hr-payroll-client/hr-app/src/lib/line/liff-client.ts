@@ -1,5 +1,13 @@
 "use client"
 
+import { t } from "@/lib/i18n/translate"
+import {
+  coerceLocale,
+  DEFAULT_LOCALE,
+  isAppLocale,
+  LOCALE_COOKIE,
+  type AppLocale,
+} from "@/lib/i18n/types"
 import { INBOUND_SCAN_LIFF_ID } from "@/lib/line/inbound-order-id"
 
 export type LiffContext = {
@@ -31,6 +39,20 @@ let lastInitDiagnostics: LiffInitDiagnostics | null = null
 /** Latest liff.init() failure details — for UI display and live debugging */
 export function getLastLiffInitDiagnostics(): LiffInitDiagnostics | null {
   return lastInitDiagnostics
+}
+
+function resolveClientLocale(locale?: AppLocale): AppLocale {
+  if (locale) return coerceLocale(locale)
+  if (typeof window === "undefined") return DEFAULT_LOCALE
+
+  const urlLang = new URLSearchParams(window.location.search).get("lang")
+  if (isAppLocale(urlLang)) return urlLang
+
+  const cookie = document.cookie
+    .split("; ")
+    .find((row) => row.startsWith(`${LOCALE_COOKIE}=`))
+    ?.split("=")[1]
+  return isAppLocale(cookie) ? cookie : DEFAULT_LOCALE
 }
 
 function readLiffErrorCode(err: unknown): string | undefined {
@@ -83,19 +105,20 @@ function isFetchLikeError(err: unknown): boolean {
   )
 }
 
-function describeLiffInitError(err: unknown): string {
+function describeLiffInitError(err: unknown, locale?: AppLocale): string {
+  const loc = resolveClientLocale(locale)
   if (isFetchLikeError(err)) {
-    return "เชื่อมต่อ LINE ไม่สำเร็จ — ตรวจอินเทอร์เน็ตแล้วกดสแกนอีกครั้ง"
+    return t("liff.client.networkError", loc)
   }
   if (err instanceof Error && err.message) {
     return err.message
   }
-  return "LIFF init ไม่สำเร็จ — ตรวจ endpoint URL ใน LINE Console"
+  return t("liff.client.initFailed", loc)
 }
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
 
-async function doInit(id: string): Promise<LiffContext> {
+async function doInit(id: string, locale?: AppLocale): Promise<LiffContext> {
   const liff = (await import("@line/liff")).default
 
   let lastError: unknown
@@ -138,12 +161,15 @@ async function doInit(id: string): Promise<LiffContext> {
     inClient: isLikelyLineBrowser(),
     scanCodeAvailable: false,
     liffId: id,
-    error: describeLiffInitError(lastError),
+    error: describeLiffInitError(lastError, locale),
     errorCode: lastInitDiagnostics?.errorCode ?? lastInitDiagnostics?.errorName,
   }
 }
 
-export function initLiffClient(liffId?: string): Promise<LiffContext> {
+export function initLiffClient(
+  liffId?: string,
+  locale?: AppLocale
+): Promise<LiffContext> {
   if (typeof window === "undefined") {
     return Promise.resolve({
       ready: false,
@@ -157,19 +183,21 @@ export function initLiffClient(liffId?: string): Promise<LiffContext> {
     process.env.NEXT_PUBLIC_LINE_LIFF_ID?.trim() ||
     undefined
 
+  const loc = resolveClientLocale(locale)
+
   if (!id) {
     return Promise.resolve({
       ready: false,
       inClient: isLikelyLineBrowser(),
       scanCodeAvailable: false,
-      error: "ไม่ได้ตั้งค่า NEXT_PUBLIC_LINE_LIFF_ID",
+      error: t("liff.client.missingLiffId", loc),
     })
   }
 
   const cached = initCache.get(id)
   if (cached) return cached
 
-  const promise = doInit(id).then((ctx) => {
+  const promise = doInit(id, loc).then((ctx) => {
     if (!ctx.ready) {
       // Drop failed result so the next call retries from scratch
       initCache.delete(id)
@@ -181,49 +209,49 @@ export function initLiffClient(liffId?: string): Promise<LiffContext> {
   return promise
 }
 
-export function initInboundScanLiff(): Promise<LiffContext> {
+export function initInboundScanLiff(locale?: AppLocale): Promise<LiffContext> {
+  const loc = resolveClientLocale(locale)
   const id = getInboundScanLiffId()
   if (!id) {
     return Promise.resolve({
       ready: false,
       inClient: isLikelyLineBrowser(),
       scanCodeAvailable: false,
-      error: "ไม่ได้ตั้งค่า LIFF สำหรับ inbound scan",
+      error: t("liff.client.missingInboundLiff", loc),
     })
   }
-  return initLiffClient(id)
+  return initLiffClient(id, loc)
 }
 
-export async function scanBarcodeWithLiff(liffId?: string): Promise<string> {
+export async function scanBarcodeWithLiff(
+  liffId?: string,
+  locale?: AppLocale
+): Promise<string> {
+  const loc = resolveClientLocale(locale)
   const id = liffId?.trim() || getInboundScanLiffId()
   if (!id) {
-    throw new Error("ไม่ได้ตั้งค่า LIFF — ติดต่อผู้ดูแลระบบ")
+    throw new Error(t("liff.client.notConfigured", loc))
   }
 
   const liff = (await import("@line/liff")).default
-  const ctx = await initLiffClient(id)
+  const ctx = await initLiffClient(id, loc)
 
   if (!ctx.ready) {
-    throw new Error(
-      ctx.error ??
-        "LIFF ไม่พร้อม — เปิดลิงก์ผ่าน liff.line.me หรือตั้ง endpoint เป็น /liff/inbound-scan"
-    )
+    throw new Error(ctx.error ?? t("liff.client.notReady", loc))
   }
 
   if (!ctx.inClient) {
-    throw new Error("เปิดจากแอป LINE เพื่อใช้สแกน LIFF")
+    throw new Error(t("liff.client.openInLine", loc))
   }
 
   if (!liff.isApiAvailable("scanCodeV2")) {
-    throw new Error(
-      "เปิด Scan QR ใน LINE Console สำหรับ LIFF app นี้ (scanCodeV2)"
-    )
+    throw new Error(t("liff.client.scanNotEnabled", loc))
   }
 
   const result = await liff.scanCodeV2()
   const value = result.value?.trim()
   if (!value) {
-    throw new Error("ไม่พบ barcode จากการสแกน")
+    throw new Error(t("liff.client.noBarcode", loc))
   }
   return value
 }
