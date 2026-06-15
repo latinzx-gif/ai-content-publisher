@@ -124,19 +124,21 @@ function menuItemRow(
   ]
 }
 
-export function attendancePickerFlex(_liffId?: string): messagingApi.FlexMessage {
-  return flexMessage("บันทึกเวลา — เข้างาน / เลิกงาน", {
+export function attendancePickerFlex(
+  locale: AppLocale = DEFAULT_LOCALE
+): messagingApi.FlexMessage {
+  return flexMessage(t("line.attendancePicker.alt", locale), {
     type: "bubble",
     header: brandedTitleHeader({
-      title: "เช็คอิน · เข้างาน",
-      subtitle: "เข้างาน · เลิกงาน",
+      title: t("line.attendancePicker.title", locale),
+      subtitle: t("line.attendancePicker.subtitle", locale),
       accentColor: BRAND_RED,
       emoji: "⏱️",
     }),
     body: cardBody([
         {
           type: "text",
-          text: "วันละ 1 ครั้งต่อประเภท — เข้างานตอนเริ่มงาน เลิกงานตอนออก",
+          text: t("line.attendancePicker.desc", locale),
           wrap: true,
           size: "sm",
           color: "#4B5563",
@@ -158,7 +160,7 @@ export function attendancePickerFlex(_liffId?: string): messagingApi.FlexMessage
                 { type: "text", text: "🟢", size: "lg", align: "center" },
                 {
                   type: "text",
-                  text: "เข้างาน",
+                  text: t("line.attendancePicker.checkin", locale),
                   weight: "bold",
                   size: "sm",
                   color: "#065F46",
@@ -167,7 +169,7 @@ export function attendancePickerFlex(_liffId?: string): messagingApi.FlexMessage
                 },
                 {
                   type: "text",
-                  text: "แชร์ตำแหน่ง",
+                  text: t("line.attendancePicker.shareLocation", locale),
                   size: "xxs",
                   color: "#059669",
                   align: "center",
@@ -185,7 +187,7 @@ export function attendancePickerFlex(_liffId?: string): messagingApi.FlexMessage
                 { type: "text", text: "🔴", size: "lg", align: "center" },
                 {
                   type: "text",
-                  text: "เลิกงาน",
+                  text: t("line.attendancePicker.checkout", locale),
                   weight: "bold",
                   size: "sm",
                   color: "#1E40AF",
@@ -194,7 +196,7 @@ export function attendancePickerFlex(_liffId?: string): messagingApi.FlexMessage
                 },
                 {
                   type: "text",
-                  text: "แชร์ตำแหน่ง",
+                  text: t("line.attendancePicker.shareLocation", locale),
                   size: "xxs",
                   color: "#2563EB",
                   align: "center",
@@ -205,7 +207,7 @@ export function attendancePickerFlex(_liffId?: string): messagingApi.FlexMessage
         },
         {
           type: "text",
-          text: "ขอลาใช้ปุ่ม \"ขอลา\" บน Rich Menu · สต็อกพิมพ์ /stock (เมื่อ HR เปิดใช้)",
+          text: t("line.attendancePicker.footer", locale),
           wrap: true,
           size: "xxs",
           color: "#9CA3AF",
@@ -225,7 +227,7 @@ export function attendancePickerFlex(_liffId?: string): messagingApi.FlexMessage
           height: "sm",
           action: {
             type: "postback",
-            label: "🟢 เข้างาน",
+            label: t("line.attendancePicker.btnCheckin", locale),
             data: "action=checkin_in",
           },
         },
@@ -236,7 +238,7 @@ export function attendancePickerFlex(_liffId?: string): messagingApi.FlexMessage
           height: "sm",
           action: {
             type: "postback",
-            label: "🔴 เลิกงาน",
+            label: t("line.attendancePicker.btnCheckout", locale),
             data: "action=checkout",
           },
         },
@@ -245,37 +247,39 @@ export function attendancePickerFlex(_liffId?: string): messagingApi.FlexMessage
   })
 }
 
-export function checkinGuideFlex(): messagingApi.FlexMessage {
-  return guide("เข้างาน — แชร์ตำแหน่งเพื่อบันทึกเวลา", {
+export function checkinGuideFlex(
+  locale: AppLocale = DEFAULT_LOCALE
+): messagingApi.FlexMessage {
+  return guide(t("line.checkinGuide.alt", locale), {
     emoji: "🟢",
-    title: "เข้างาน",
-    subtitle: "บันทึกเวลาเข้างานประจำวัน",
+    title: t("line.checkinGuide.title", locale),
+    subtitle: t("line.checkinGuide.subtitle", locale),
     accentColor: "#06C755",
-    description:
-      "ระบบจะบันทึกเวลาเข้างานพร้อมตำแหน่งของคุณ ต้องอยู่ในรัศมี 200m จากสาขา (เมื่อ HR ตั้ง Geofence แล้ว)",
+    description: t("line.checkinGuide.desc", locale),
     steps: [
-      "กดปุ่ม \"แชร์ตำแหน่ง\" ด้านล่างข้อความนี้",
-      "อนุญาตให้ LINE ใช้ตำแหน่งของคุณ",
-      "รอรับการยืนยันเข้างานสำเร็จในแชท",
+      t("line.checkinGuide.step1", locale),
+      t("line.checkinGuide.step2", locale),
+      t("line.checkinGuide.step3", locale),
     ],
-    tip: "ควรบันทึกเมื่อถึงที่ทำงานหรือพื้นที่ที่บริษัทกำหนด",
+    tip: t("line.checkinGuide.tip", locale),
   })
 }
 
-export function checkoutGuideFlex(): messagingApi.FlexMessage {
-  return guide("เลิกงาน — แชร์ตำแหน่งเพื่อบันทึกเวลา", {
+export function checkoutGuideFlex(
+  locale: AppLocale = DEFAULT_LOCALE
+): messagingApi.FlexMessage {
+  return guide(t("line.checkoutGuide.alt", locale), {
     emoji: "🔴",
-    title: "เลิกงาน",
-    subtitle: "บันทึกเวลาเลิกงานประจำวัน",
+    title: t("line.checkoutGuide.title", locale),
+    subtitle: t("line.checkoutGuide.subtitle", locale),
     accentColor: "#1E6FD9",
-    description:
-      "ระบบจะบันทึกเวลาเลิกงานและสรุปชั่วโมงทำงานของวันนี้ ต้องอยู่ในรัศมี 200m จากสาขา",
+    description: t("line.checkoutGuide.desc", locale),
     steps: [
-      "ต้องเข้างานแล้วก่อนจึงจะเลิกงานได้",
-      "กดปุ่ม \"แชร์ตำแหน่ง\" ด้านล่างข้อความนี้",
-      "อนุญาตให้ LINE ใช้ตำแหน่ง แล้วรอรับสรุปเวลาเข้า-ออก",
+      t("line.checkoutGuide.step1", locale),
+      t("line.checkoutGuide.step2", locale),
+      t("line.checkoutGuide.step3", locale),
     ],
-    tip: "ใช้ได้วันละ 1 ครั้ง — หลังเลิกงานแล้วไม่สามารถบันทึกซ้ำได้",
+    tip: t("line.checkoutGuide.tip", locale),
   })
 }
 

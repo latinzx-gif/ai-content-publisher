@@ -5,6 +5,10 @@ import { checkOut } from "@/lib/attendance/check-out"
 import { formatIctTime } from "@/lib/attendance/late"
 import { getLineTodayAttendanceState } from "@/lib/attendance/today-state"
 import { resolveLocaleForLineUser } from "@/lib/i18n/employee-locale"
+import {
+  handleLocaleSlashCommand,
+  parseLocaleSlashCommand,
+} from "@/lib/i18n/locale-slash-command"
 import { t } from "@/lib/i18n/translate"
 import { DEFAULT_LOCALE, type AppLocale } from "@/lib/i18n/types"
 import { getLineClient } from "@/lib/line/client"
@@ -175,6 +179,16 @@ export async function handleMessage(
   const locale = lineUserId
     ? await resolveLocaleForLineUser(lineUserId)
     : DEFAULT_LOCALE
+
+  const localeCommand = parseLocaleSlashCommand(text)
+  if (localeCommand) {
+    const messages = await handleLocaleSlashCommand(lineUserId, localeCommand)
+    await getLineClient().replyMessage({
+      replyToken: event.replyToken,
+      messages,
+    })
+    return
+  }
 
   const slashAction = parseSlashCommand(text)
   if (slashAction) {

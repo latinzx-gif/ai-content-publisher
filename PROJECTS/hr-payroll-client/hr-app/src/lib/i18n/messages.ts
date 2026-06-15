@@ -156,9 +156,51 @@ const th: MessageCatalog = {
     "กรุณาเลือกบริการจากเมนู \"เมนู HR\" ด้านล่างแชท — 6 ปุ่ม: เช็คอิน, OT, เอกสาร, ลา, ร้องเรียน, ติดต่อ HR",
   "line.menuHint.step1": "กดปุ่ม \"เมนู HR\" ด้านล่างแชท แล้วเลือกบริการ",
   "line.menuHint.step2":
-    "หรือพิมพ์คำสั่ง เช่น /leave /ot /doc /complaint /stock /inbound",
+    "เปลี่ยนภาษา: /th /en /zh /my (หรือ /ch) · คำสั่งอื่น: /leave /ot /doc",
   "line.menuHint.step3": "ทำตามคำแนะนำในการ์ดที่ระบบส่งให้",
   "line.menuHint.tip": "คลังสินค้าใช้ /stock หรือ /inbound (เมื่อ HR เปิดใช้)",
+
+  "line.lang.menu":
+    "เปลี่ยนภาษา LINE OA:\n/th — ไทย\n/en — English\n/zh หรือ /ch — 中文\n/my — မြန်မာ\n\nพิมพ์คำสั่งแล้วกดเมนูเช็คอินอีกครั้งเพื่อดูข้อความใหม่",
+  "line.lang.changed": "✅ ตั้งภาษาเป็น {lang} แล้ว — ลองกดเมนูเช็คอินอีกครั้ง",
+  "line.lang.notRegistered":
+    "ยังไม่ได้ลงทะเบียน — ลงทะเบียนก่อนจึงจะเปลี่ยนภาษาได้",
+
+  "line.attendancePicker.alt": "บันทึกเวลา — เข้างาน / เลิกงาน",
+  "line.attendancePicker.title": "เช็คอิน · เข้างาน",
+  "line.attendancePicker.subtitle": "เข้างาน · เลิกงาน",
+  "line.attendancePicker.desc":
+    "วันละ 1 ครั้งต่อประเภท — เข้างานตอนเริ่มงาน เลิกงานตอนออก",
+  "line.attendancePicker.checkin": "เข้างาน",
+  "line.attendancePicker.checkout": "เลิกงาน",
+  "line.attendancePicker.shareLocation": "แชร์ตำแหน่ง",
+  "line.attendancePicker.footer":
+    "ขอลาใช้ปุ่ม \"ขอลา\" บน Rich Menu · สต็อกพิมพ์ /stock · ภาษา /th /en /zh /my",
+  "line.attendancePicker.btnCheckin": "🟢 เข้างาน",
+  "line.attendancePicker.btnCheckout": "🔴 เลิกงาน",
+
+  "line.checkinGuide.alt": "เข้างาน — แชร์ตำแหน่งเพื่อบันทึกเวลา",
+  "line.checkinGuide.title": "เข้างาน",
+  "line.checkinGuide.subtitle": "บันทึกเวลาเข้างานประจำวัน",
+  "line.checkinGuide.desc":
+    "ระบบจะบันทึกเวลาเข้างานพร้อมตำแหน่งของคุณ ต้องอยู่ในรัศมี 200m จากสาขา (เมื่อ HR ตั้ง Geofence แล้ว)",
+  "line.checkinGuide.step1": "กดปุ่ม \"แชร์ตำแหน่ง\" ด้านล่างข้อความนี้",
+  "line.checkinGuide.step2": "อนุญาตให้ LINE ใช้ตำแหน่งของคุณ",
+  "line.checkinGuide.step3": "รอรับการยืนยันเข้างานสำเร็จในแชท",
+  "line.checkinGuide.tip": "ควรบันทึกเมื่อถึงที่ทำงานหรือพื้นที่ที่บริษัทกำหนด",
+  "line.checkinGuide.shareLocation": "📍 แชร์ตำแหน่ง",
+
+  "line.checkoutGuide.alt": "เลิกงาน — แชร์ตำแหน่งเพื่อบันทึกเวลา",
+  "line.checkoutGuide.title": "เลิกงาน",
+  "line.checkoutGuide.subtitle": "บันทึกเวลาเลิกงานประจำวัน",
+  "line.checkoutGuide.desc":
+    "ระบบจะบันทึกเวลาเลิกงานและสรุปชั่วโมงทำงานของวันนี้ ต้องอยู่ในรัศมี 200m จากสาขา",
+  "line.checkoutGuide.step1": "ต้องเข้างานแล้วก่อนจึงจะเลิกงานได้",
+  "line.checkoutGuide.step2": "กดปุ่ม \"แชร์ตำแหน่ง\" ด้านล่างข้อความนี้",
+  "line.checkoutGuide.step3": "อนุญาตให้ LINE ใช้ตำแหน่ง แล้วรอรับสรุปเวลาเข้า-ออก",
+  "line.checkoutGuide.tip":
+    "ใช้ได้วันละ 1 ครั้ง — หลังเลิกงานแล้วไม่สามารถบันทึกซ้ำได้",
+  "line.checkoutGuide.shareLocation": "📍 แชร์ตำแหน่ง",
 }
 
 const en: MessageCatalog = {
@@ -316,9 +358,50 @@ const en: MessageCatalog = {
     "Choose a service from \"HR Menu\" below — 6 buttons: check-in, OT, documents, leave, complaint, contact HR",
   "line.menuHint.step1": "Tap \"HR Menu\" below and choose a service",
   "line.menuHint.step2":
-    "Or type commands such as /leave /ot /doc /complaint /stock /inbound",
+    "Change language: /th /en /zh /my (or /ch) · Other: /leave /ot /doc",
   "line.menuHint.step3": "Follow the cards sent by the system",
   "line.menuHint.tip": "Inventory: /stock or /inbound (when enabled by HR)",
+
+  "line.lang.menu":
+    "Change LINE OA language:\n/th — Thai\n/en — English\n/zh or /ch — Chinese\n/my — Myanmar\n\nThen open Check-in menu again to see the new language.",
+  "line.lang.changed": "✅ Language set to {lang} — open Check-in menu again.",
+  "line.lang.notRegistered":
+    "Not registered yet — register before changing language.",
+
+  "line.attendancePicker.alt": "Time record — check in / out",
+  "line.attendancePicker.title": "Check-in · Clock in",
+  "line.attendancePicker.subtitle": "Clock in · Clock out",
+  "line.attendancePicker.desc":
+    "Once per day each — clock in at start, clock out when leaving.",
+  "line.attendancePicker.checkin": "Clock in",
+  "line.attendancePicker.checkout": "Clock out",
+  "line.attendancePicker.shareLocation": "Share location",
+  "line.attendancePicker.footer":
+    "Leave: Rich Menu \"Leave\" · Stock: /stock · Language: /th /en /zh /my",
+  "line.attendancePicker.btnCheckin": "🟢 Clock in",
+  "line.attendancePicker.btnCheckout": "🔴 Clock out",
+
+  "line.checkinGuide.alt": "Clock in — share location to record time",
+  "line.checkinGuide.title": "Clock in",
+  "line.checkinGuide.subtitle": "Record daily check-in time",
+  "line.checkinGuide.desc":
+    "We record check-in time with your location. You must be within 200 m of the branch (when geofence is enabled).",
+  "line.checkinGuide.step1": "Tap \"Share location\" below this message",
+  "line.checkinGuide.step2": "Allow LINE to use your location",
+  "line.checkinGuide.step3": "Wait for check-in confirmation in chat",
+  "line.checkinGuide.tip": "Record when you arrive at work or the assigned area",
+  "line.checkinGuide.shareLocation": "📍 Share location",
+
+  "line.checkoutGuide.alt": "Clock out — share location to record time",
+  "line.checkoutGuide.title": "Clock out",
+  "line.checkoutGuide.subtitle": "Record daily check-out time",
+  "line.checkoutGuide.desc":
+    "We record check-out and today's work hours. You must be within 200 m of the branch.",
+  "line.checkoutGuide.step1": "You must check in before checking out",
+  "line.checkoutGuide.step2": "Tap \"Share location\" below this message",
+  "line.checkoutGuide.step3": "Allow location, then wait for the summary in chat",
+  "line.checkoutGuide.tip": "Once per day — cannot record again after clocking out",
+  "line.checkoutGuide.shareLocation": "📍 Share location",
 }
 
 const zh: MessageCatalog = {
