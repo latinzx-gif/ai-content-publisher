@@ -5,22 +5,31 @@ import { usePathname } from "next/navigation"
 
 import { cn } from "@/lib/utils"
 
-const LINKS = [
+const OPERATIONAL_LINKS = [
   { href: "/admin/inventory", label: "ภาพรวม", exact: true },
   { href: "/admin/inventory/stock", label: "สต็อก" },
   { href: "/admin/inventory/inbound", label: "รับเข้า" },
+  { href: "/admin/inventory/requisition", label: "ใบเบิก" },
+  { href: "/admin/inventory/consumption", label: "บันทึกใช้" },
+  { href: "/admin/inventory/damage", label: "แจ้งเสียหาย" },
+] as const
+
+const MASTER_DATA_LINKS = [
   { href: "/admin/inventory/sku", label: "SKU" },
   { href: "/admin/inventory/suppliers", label: "Supplier" },
   { href: "/admin/inventory/branches", label: "สาขา (คลัง)" },
   { href: "/admin/inventory/warehouses", label: "คลังสินค้า" },
 ] as const
 
-export function InventorySubNav() {
+export function InventorySubNav({ staffMode = false }: { staffMode?: boolean }) {
   const pathname = usePathname()
+  const links = staffMode
+    ? OPERATIONAL_LINKS
+    : [...OPERATIONAL_LINKS, ...MASTER_DATA_LINKS]
 
   return (
     <nav className="flex flex-wrap gap-1 rounded-xl border border-border/80 bg-muted/30 p-1">
-      {LINKS.map((link) => {
+      {links.map((link) => {
         const active =
           "exact" in link && link.exact
             ? pathname === link.href

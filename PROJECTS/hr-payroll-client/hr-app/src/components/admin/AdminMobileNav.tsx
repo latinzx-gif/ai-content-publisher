@@ -20,11 +20,13 @@ export function AdminMobileNav({
   groups,
   items,
   branchMode = false,
+  inventoryMode = false,
   devAllMode = false,
 }: {
   groups?: AdminNavGroup[]
   items?: AdminNavItem[]
   branchMode?: boolean
+  inventoryMode?: boolean
   devAllMode?: boolean
 }) {
   const [open, setOpen] = useState(false)
@@ -48,6 +50,7 @@ export function AdminMobileNav({
             groups={groups}
             items={items}
             branchMode={branchMode}
+            inventoryMode={inventoryMode}
             devAllMode={devAllMode}
             onNavigate={() => setOpen(false)}
           />

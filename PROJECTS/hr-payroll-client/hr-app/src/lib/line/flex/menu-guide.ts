@@ -199,7 +199,7 @@ export function attendancePickerFlex(liffId?: string): messagingApi.FlexMessage 
                 },
                 {
                   type: "text",
-                  text: "บันทึกทันที",
+                  text: "แชร์ตำแหน่ง",
                   size: "xxs",
                   color: "#2563EB",
                   align: "center",
@@ -282,7 +282,7 @@ export function checkinGuideFlex(): messagingApi.FlexMessage {
     subtitle: "บันทึกเวลาเข้างานประจำวัน",
     accentColor: "#06C755",
     description:
-      "ระบบจะบันทึกเวลาเข้างานพร้อมตำแหน่งของคุณ ใช้ได้วันละ 1 ครั้ง",
+      "ระบบจะบันทึกเวลาเข้างานพร้อมตำแหน่งของคุณ ต้องอยู่ในรัศมี 200m จากสาขา (เมื่อ HR ตั้ง Geofence แล้ว)",
     steps: [
       "กดปุ่ม \"แชร์ตำแหน่ง\" ด้านล่างข้อความนี้",
       "อนุญาตให้ LINE ใช้ตำแหน่งของคุณ",
@@ -293,23 +293,42 @@ export function checkinGuideFlex(): messagingApi.FlexMessage {
 }
 
 export function checkoutGuideFlex(): messagingApi.FlexMessage {
-  return guide("เลิกงาน — บันทึกเวลาออก", {
+  return guide("เลิกงาน — แชร์ตำแหน่งเพื่อบันทึกเวลา", {
     emoji: "🔴",
     title: "เลิกงาน",
     subtitle: "บันทึกเวลาเลิกงานประจำวัน",
     accentColor: "#1E6FD9",
     description:
-      "ระบบจะบันทึกเวลาเลิกงานและสรุปชั่วโมงทำงานของวันนี้ให้อัตโนมัติ",
+      "ระบบจะบันทึกเวลาเลิกงานและสรุปชั่วโมงทำงานของวันนี้ ต้องอยู่ในรัศมี 200m จากสาขา",
     steps: [
       "ต้องเข้างานแล้วก่อนจึงจะเลิกงานได้",
-      "กดปุ่ม \"ยืนยันเลิกงาน\" ด้านล่าง",
-      "รับสรุปเวลาเข้า-ออกและชั่วโมงทำงาน",
+      "กดปุ่ม \"แชร์ตำแหน่ง\" ด้านล่างข้อความนี้",
+      "อนุญาตให้ LINE ใช้ตำแหน่ง แล้วรอรับสรุปเวลาเข้า-ออก",
     ],
     tip: "ใช้ได้วันละ 1 ครั้ง — หลังเลิกงานแล้วไม่สามารถบันทึกซ้ำได้",
-    postbackButton: {
-      label: "✅ ยืนยันเลิกงาน",
-      data: "action=checkout_confirm",
-    },
+  })
+}
+
+export function outsideGeofenceFlex({
+  distanceM,
+  limitM,
+}: {
+  distanceM: number
+  limitM: number
+}): messagingApi.FlexMessage {
+  const dist = Math.round(distanceM)
+  return guide("อยู่นอกพื้นที่สาขา", {
+    emoji: "📍",
+    title: "อยู่นอกพื้นที่สาขา",
+    subtitle: `ห่างจากจุดศูนย์ ${dist} เมตร (จำกัด ${limitM}m)`,
+    accentColor: "#EF4444",
+    description: `คุณอยู่นอกพื้นที่สาขา (${dist} เมตร จากจุดศูนย์ จำกัด ${limitM}m) กรุณาเข้าใกล้สาขาแล้วลองใหม่`,
+    steps: [
+      "เดินเข้าใกล้สาขาที่คุณสังกัด",
+      "กด \"แชร์ตำแหน่ง\" อีกครั้ง",
+      "รอรับการยืนยันในแชท",
+    ],
+    tip: "หากอยู่ที่สาขาแล้วแต่ยังไม่ผ่าน กรุณาแจ้ง HR ให้ตรวจสอบพิกัด Geofence",
   })
 }
 
@@ -319,17 +338,14 @@ export function alreadyCheckedInFlex(timeText: string): messagingApi.FlexMessage
     title: "เข้างานแล้ววันนี้",
     subtitle: `เวลา ${timeText} น.`,
     accentColor: "#059669",
-    description: "คุณบันทึกเวลาเข้างานวันนี้แล้ว หากต้องการออกจากงานให้กดเลิกงาน",
+    description:
+      "คุณบันทึกเวลาเข้างานวันนี้แล้ว หากต้องการออกจากงานให้แชร์ตำแหน่งเพื่อเลิกงาน (ต้องอยู่ในรัศมี 200m จากสาขา)",
     steps: [
-      "กดปุ่ม \"ยืนยันเลิกงาน\" ด้านล่าง",
-      "ระบบจะบันทึกเวลาเลิกงานทันที",
+      "กดปุ่ม \"แชร์ตำแหน่ง\" ด้านล่างข้อความนี้",
+      "อนุญาตให้ LINE ใช้ตำแหน่งของคุณ",
       "รับสรุปชั่วโมงทำงานของวัน",
     ],
     tip: "หากบันทึกผิดพลาด กรุณาติดต่อ HR",
-    postbackButton: {
-      label: "🔴 ยืนยันเลิกงาน",
-      data: "action=checkout_confirm",
-    },
   })
 }
 

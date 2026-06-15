@@ -13,12 +13,9 @@ type BranchOption = { id: string; name: string; code: string | null }
 
 export function RegisterForm() {
   const router = useRouter()
-  const [employeeCode, setEmployeeCode] = useState("")
   const [name, setName] = useState("")
   const [phone, setPhone] = useState("")
   const [branchId, setBranchId] = useState("")
-  const [department, setDepartment] = useState("")
-  const [position, setPosition] = useState("")
   const [branches, setBranches] = useState<BranchOption[]>([])
   const [branchesLoading, setBranchesLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -44,10 +41,6 @@ export function RegisterForm() {
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault()
-    if (!employeeCode.trim()) {
-      setError("กรุณากรอกรหัสพนักงาน")
-      return
-    }
     if (!name.trim()) {
       setError("กรุณากรอกชื่อ-นามสกุล")
       return
@@ -69,12 +62,9 @@ export function RegisterForm() {
         headers: { "content-type": "application/json" },
         credentials: "include",
         body: JSON.stringify({
-          employee_code: employeeCode.trim(),
           name: name.trim(),
           phone: phone.trim(),
           branch_id: branchId,
-          department: department.trim() || null,
-          position: position.trim() || null,
         }),
       })
       const data = (await res.json().catch(() => null)) as {
@@ -100,21 +90,9 @@ export function RegisterForm() {
   return (
     <form onSubmit={onSubmit} className="flex flex-col gap-4">
       <p className="text-center text-sm text-muted-foreground">
-        กรอกข้อมูลเพื่อขอเข้าใช้งาน — <strong>HR จะอนุมัติก่อน</strong>{" "}
-        จึงจะใช้เมนู HR ใน LINE ได้ (ไม่มี Web Dashboard)
+        กรอกเฉพาะข้อมูลสำคัญ — <strong>HR จะเติมรายละเอียดที่เหลือ</strong>{" "}
+        และอนุมัติก่อนใช้งานได้เต็มรูปแบบ
       </p>
-
-      <label className="block text-sm">
-        <span className="text-muted-foreground">รหัสพนักงาน *</span>
-        <input
-          className={inputClassName}
-          value={employeeCode}
-          onChange={(e) => setEmployeeCode(e.target.value)}
-          placeholder="เช่น EMP-001"
-          required
-          autoComplete="off"
-        />
-      </label>
 
       <label className="block text-sm">
         <span className="text-muted-foreground">ชื่อ-นามสกุล *</span>
@@ -159,26 +137,6 @@ export function RegisterForm() {
             </option>
           ))}
         </select>
-      </label>
-
-      <label className="block text-sm">
-        <span className="text-muted-foreground">แผนก</span>
-        <input
-          className={inputClassName}
-          value={department}
-          onChange={(e) => setDepartment(e.target.value)}
-          placeholder="เช่น Operations"
-        />
-      </label>
-
-      <label className="block text-sm">
-        <span className="text-muted-foreground">ตำแหน่งงาน</span>
-        <input
-          className={inputClassName}
-          value={position}
-          onChange={(e) => setPosition(e.target.value)}
-          placeholder="เช่น พนักงานขาย"
-        />
       </label>
 
       {error ? (

@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache"
 import { redirect } from "next/navigation"
 
 import {
-  assertInventoryManage,
+  assertInventoryOperate,
   formatInventoryError,
   mapSupabaseInventoryError,
 } from "@/features/inventory/actions/auth"
@@ -53,7 +53,7 @@ export async function createInvInboundOrder(
   formData: FormData
 ): Promise<InventoryActionState> {
   try {
-    const employee = await assertInventoryManage()
+    const employee = await assertInventoryOperate()
     const payload = invInboundOrderSchema.parse({
       supplier_id: formData.get("supplier_id"),
       warehouse_id: formData.get("warehouse_id"),
@@ -92,7 +92,7 @@ export async function addInvInboundItem(
   formData: FormData
 ): Promise<InventoryActionState> {
   try {
-    await assertInventoryManage()
+    await assertInventoryOperate()
     const payload = invInboundItemSchema.parse({
       sku_id: formData.get("sku_id"),
       quantity: formData.get("quantity"),
@@ -152,7 +152,7 @@ export async function submitInvInboundOrder(
   orderId: string
 ): Promise<InventoryActionState> {
   try {
-    await assertInventoryManage()
+    await assertInventoryOperate()
     const supabase = await createClient()
 
     const { data: order, error: fetchError } = await supabase
@@ -184,7 +184,7 @@ export async function approveInvInboundOrder(
   orderId: string
 ): Promise<InventoryActionState> {
   try {
-    await assertInventoryManage()
+    await assertInventoryOperate()
     const supabase = await createClient()
 
     const { count, error: countError } = await supabase
@@ -216,7 +216,7 @@ export async function cancelInvInboundOrder(
   orderId: string
 ): Promise<InventoryActionState> {
   try {
-    await assertInventoryManage()
+    await assertInventoryOperate()
     const supabase = await createClient()
     const { error } = await supabase
       .from("inv_inbound_orders")
@@ -237,7 +237,7 @@ export async function deleteInvInboundItem(
   orderId: string
 ): Promise<InventoryActionState> {
   try {
-    await assertInventoryManage()
+    await assertInventoryOperate()
     const supabase = await createClient()
 
     const { data: order, error: orderError } = await supabase

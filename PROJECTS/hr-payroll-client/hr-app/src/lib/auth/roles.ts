@@ -1,4 +1,8 @@
-import { isManagementDepartment } from "@/lib/auth/department-access"
+import {
+  isManagementDepartment,
+  isHrOfficerDepartment,
+  isInventoryDepartment,
+} from "@/lib/auth/department-access"
 import {
   EMPLOYEE_INFO_PATH,
   PENDING_REGISTRATION_PATH,
@@ -15,6 +19,15 @@ export function isCeo(role: AppRole): boolean {
   return role === "ceo"
 }
 
+export function isHrOfficer(role: AppRole): boolean {
+  return role === "hr"
+}
+
+/** อนุมัติลา / OT / เข้างาน — HR Officer (role hr) เท่านั้น */
+export function canApproveHrRequests(role: AppRole): boolean {
+  return isHrOfficer(role)
+}
+
 export function isHrAdmin(role: AppRole): boolean {
   return role === "hr" || role === "admin"
 }
@@ -27,11 +40,38 @@ export function canAccessAdminPortal(role: AppRole): boolean {
   return isHrAdmin(role) || isCeo(role) || isBranchManager(role) || isDev(role)
 }
 
-/** Dashboard access — role-based; แผนก Management (active) เข้าได้ทุกคน สิทธิ์ภายในตาม Role */
+/** Inventory dept — restricted admin portal (คลังสินค้า only) */
+export function isInventoryPortalUser(employee: Employee): boolean {
+  if (employee.status !== "active") return false
+  if (!isInventoryDepartment(employee.department)) return false
+  if (isDev(employee.role) || isCeo(employee.role)) return false
+  if (isHrAdmin(employee.role)) return false
+  if (isBranchManager(employee.role)) return false
+  return true
+}
+
+/** Operational inventory staff (role employee in Inventory dept) */
+export function isInventoryStaff(employee: Employee): boolean {
+  return isInventoryPortalUser(employee) && employee.role === "employee"
+}
+
+/** Inventory portal + HR/CEO/Dev full inventory access */
+export function canAccessInventoryPortal(employee: Employee): boolean {
+  if (isDev(employee.role) || isCeo(employee.role) || canManageHr(employee.role)) {
+    return true
+  }
+  return isInventoryPortalUser(employee)
+}
+
+/** Dashboard access — role-based; Head Office departments (active) เข้าได้ */
 export function canEmployeeAccessAdminPortal(employee: Employee): boolean {
   if (employee.status !== "active") return false
   if (canAccessAdminPortal(employee.role)) return true
-  return isManagementDepartment(employee.department)
+  return (
+    isManagementDepartment(employee.department) ||
+    isHrOfficerDepartment(employee.department) ||
+    isInventoryDepartment(employee.department)
+  )
 }
 
 /** แผนก Management + role Employee — full admin nav (no longer dashboard-only) */
@@ -75,7 +115,14 @@ export function adminLoginPath(
   if (role === "dev") return "/admin"
   if (role === "branch_manager") return "/admin/branch"
   if (role === "ceo") return "/admin/report"
-  if (role === "employee") return "/portal"
-  if (isHrAdmin(role) || isManagementDepartment(department)) return "/admin"
+  if (role === "employee") {
+    if (isHrOfficerDepartment(department)) return "/admin"
+    if (isInventoryDepartment(department)) return "/admin/inventory"
+    return "/portal"
+  }
+  if (isInventoryDepartment(department)) return "/admin/inventory"
+  if (isHrAdmin(role) || isManagementDepartment(department) || isHrOfficerDepartment(department)) {
+    return "/admin"
+  }
   return EMPLOYEE_INFO_PATH
 }

@@ -66,7 +66,7 @@ export async function submitDailyAttendance({
       work_date: workDate,
       submitted_at: submittedAt.toISOString(),
       expires_at: expiresAt.toISOString(),
-      approval_status: "pending_manager",
+      approval_status: "pending_hr",
       manager_decided_by: null,
       manager_decided_at: null,
       hr_decided_by: null,

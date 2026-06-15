@@ -3,12 +3,16 @@
 import Link from "next/link"
 import { useCallback, useEffect, useRef, useState } from "react"
 import {
+  AlertTriangle,
   Bell,
   CalendarDays,
+  ClipboardList,
   Clock,
   FileText,
   MessageCircleWarning,
+  PackagePlus,
   Timer,
+  TrendingDown,
   UserPlus,
   type LucideIcon,
 } from "lucide-react"
@@ -35,6 +39,10 @@ const KIND_META: Record<
   probation: { icon: CalendarDays, tone: "text-amber-700" },
   visa: { icon: CalendarDays, tone: "text-rose-600" },
   work_permit: { icon: CalendarDays, tone: "text-indigo-600" },
+  inbound: { icon: PackagePlus, tone: "text-brand-red" },
+  requisition: { icon: ClipboardList, tone: "text-sky-600" },
+  damage: { icon: AlertTriangle, tone: "text-orange-600" },
+  low_stock: { icon: TrendingDown, tone: "text-amber-700" },
 }
 
 function formatWhen(iso: string | null): string {

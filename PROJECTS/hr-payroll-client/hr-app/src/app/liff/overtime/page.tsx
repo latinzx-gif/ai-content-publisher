@@ -35,7 +35,7 @@ export default async function OvertimeLiffPage() {
         <CardHeader>
           <CardTitle>ขอทำ OT</CardTitle>
           <CardDescription>
-            {employee.name} — หัวหน้าสาขาอนุมัติขั้นแรก แล้วส่งต่อ HR
+            {employee.name} — ยื่นแล้วแจ้ง HR ทาง LINE Group รออนุมัติ
           </CardDescription>
         </CardHeader>
         <CardContent>

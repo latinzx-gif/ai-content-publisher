@@ -28,6 +28,10 @@ export type BranchDetail = {
   name: string
   code: string | null
   address: string | null
+  latitude: number | null
+  longitude: number | null
+  geofence_radius_m: number
+  geofence_enabled: boolean
   manager_employee_id: string | null
   manager_name: string | null
 }
@@ -132,7 +136,7 @@ export async function getBranchEmployeesWithAlerts(
       .from("hr_overtime_requests")
       .select(`employee_id, ${EMPLOYEE_VIA_OVERTIME}!inner(branch_id)`)
       .eq("hr_employees.branch_id", branchId)
-      .in("approval_status", ["pending_manager", "pending_hr"]),
+      .eq("approval_status", "pending_hr"),
     supabase
       .from("hr_attendance")
       .select("employee_id, hr_employees!inner(branch_id)")

@@ -11,6 +11,7 @@ import {
 } from "@/components/admin/admin-nav"
 import { AdminNavIcon } from "@/components/admin/admin-nav-icons"
 import { isBranchNavActive } from "@/components/admin/branch-nav"
+import { isInventoryNavActive } from "@/components/admin/inventory-nav"
 import { isDevNavActive } from "@/lib/auth/dev-view"
 import { ADMIN_SIDEBAR_WIDTH_CLASS } from "@/components/admin/admin-layout"
 import { BrandMark } from "@/components/brand/BrandMark"
@@ -48,21 +49,25 @@ export function AdminNavLinks({
   groups,
   items,
   branchMode = false,
+  inventoryMode = false,
   devAllMode = false,
   onNavigate,
 }: {
   groups?: AdminNavGroup[]
   items?: AdminNavItem[]
   branchMode?: boolean
+  inventoryMode?: boolean
   devAllMode?: boolean
   onNavigate?: () => void
 }) {
   const pathname = usePathname()
   const isActive = devAllMode
     ? isDevNavActive
-    : branchMode
-      ? isBranchNavActive
-      : isAdminNavActive
+    : inventoryMode
+      ? isInventoryNavActive
+      : branchMode
+        ? isBranchNavActive
+        : isAdminNavActive
 
   if (groups && groups.length > 0) {
     return (
@@ -169,11 +174,13 @@ export function AdminSidebar({
   groups,
   items,
   branchMode = false,
+  inventoryMode = false,
   devAllMode = false,
 }: {
   groups?: AdminNavGroup[]
   items?: AdminNavItem[]
   branchMode?: boolean
+  inventoryMode?: boolean
   devAllMode?: boolean
 }) {
   return (
@@ -191,6 +198,7 @@ export function AdminSidebar({
           groups={groups}
           items={items}
           branchMode={branchMode}
+          inventoryMode={inventoryMode}
           devAllMode={devAllMode}
         />
       </div>

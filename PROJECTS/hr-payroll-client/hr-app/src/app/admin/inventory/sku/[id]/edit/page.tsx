@@ -5,14 +5,14 @@ import { AdminPageShell } from "@/components/brand/AdminPageShell"
 import { getInvSku, getInvUnits } from "@/features/inventory/actions/sku"
 import { SkuForm } from "@/features/inventory/SkuForm"
 import { canManageHr, isCeo, isDev } from "@/lib/auth/roles"
-import { requireRole } from "@/lib/auth/require-role"
+import { requireInventoryMasterData } from "@/lib/auth/require-inventory-portal"
 
 type PageProps = {
   params: Promise<{ id: string }>
 }
 
 export default async function EditSkuPage({ params }: PageProps) {
-  const employee = await requireRole("hr", "admin", "ceo", "dev")
+  const employee = await requireInventoryMasterData()
   const readOnly = isCeo(employee.role) && !isDev(employee.role)
   const { id } = await params
 

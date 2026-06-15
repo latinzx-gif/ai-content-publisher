@@ -5,14 +5,14 @@ import { AdminPageShell } from "@/components/brand/AdminPageShell"
 import { getInvBranch } from "@/features/inventory/actions/branch"
 import { BranchForm } from "@/features/inventory/BranchForm"
 import { canManageHr, isCeo, isDev } from "@/lib/auth/roles"
-import { requireRole } from "@/lib/auth/require-role"
+import { requireInventoryMasterData } from "@/lib/auth/require-inventory-portal"
 
 type PageProps = {
   params: Promise<{ id: string }>
 }
 
 export default async function EditBranchPage({ params }: PageProps) {
-  const employee = await requireRole("hr", "admin", "ceo", "dev")
+  const employee = await requireInventoryMasterData()
   const readOnly = isCeo(employee.role) && !isDev(employee.role)
   const { id } = await params
 

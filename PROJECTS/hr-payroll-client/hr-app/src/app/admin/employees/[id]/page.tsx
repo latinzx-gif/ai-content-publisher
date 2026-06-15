@@ -20,7 +20,7 @@ export default async function EmployeeProfilePage({
   const [profile, notes, branches, organization] = await Promise.all([
     getEmployeeProfile(id),
     getComplianceNotes(id),
-    listBranches(),
+    listBranches({ forForms: true }),
     getOrganizationMasterData(),
   ])
   if (!profile) notFound()

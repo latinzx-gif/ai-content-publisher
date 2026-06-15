@@ -28,8 +28,8 @@ import { InventoryDeleteButton } from "@/features/inventory/InventoryDeleteButto
 import type { InvInboundStatus } from "@/features/inventory/types"
 import { formatThaiDate } from "@/lib/datetime/thailand"
 import { inboundScanHref } from "@/lib/line/inbound-scan-url"
-import { canManageHr, isCeo, isDev } from "@/lib/auth/roles"
-import { requireRole } from "@/lib/auth/require-role"
+import { canAccessInventoryPortal, isCeo, isDev } from "@/lib/auth/roles"
+import { requireInventoryPortal } from "@/lib/auth/require-inventory-portal"
 import { getSkuUnitOptions } from "@/lib/inventory/unit-conversion"
 import { cn } from "@/lib/utils"
 
@@ -53,8 +53,8 @@ type PageProps = {
 }
 
 export default async function InboundOrderDetailPage({ params }: PageProps) {
-  const employee = await requireRole("hr", "admin", "ceo", "dev")
-  const canManage = canManageHr(employee.role)
+  const employee = await requireInventoryPortal()
+  const canManage = canAccessInventoryPortal(employee)
   const readOnly = isCeo(employee.role) && !isDev(employee.role)
 
   const { id } = await params

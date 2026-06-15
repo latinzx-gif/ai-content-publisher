@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache"
 
 import {
-  assertInventoryManage,
+  assertInventoryOperate,
   formatInventoryError,
   mapSupabaseInventoryError,
 } from "@/features/inventory/actions/auth"
@@ -32,7 +32,12 @@ import {
   type InvRequisitionReceiveInput,
   type InvRequisitionRejectInput,
 } from "@/features/inventory/validators/requisition"
-import { canManageHr, isCeo, isDev } from "@/lib/auth/roles"
+import {
+  canAccessInventoryPortal,
+  canManageHr,
+  isCeo,
+  isDev,
+} from "@/lib/auth/roles"
 import { getCurrentEmployee } from "@/lib/auth/session"
 import { createClient } from "@/lib/supabase/server"
 
@@ -47,12 +52,12 @@ function revalidateRequisition(id?: string) {
   revalidatePath("/admin/report")
 }
 
-function canManageInventory(role: Parameters<typeof canManageHr>[0]) {
-  return canManageHr(role) || isDev(role)
+function canManageInventory(employee: Awaited<ReturnType<typeof assertActiveInventoryEmployee>>) {
+  return canManageHr(employee.role) || isDev(employee.role) || canAccessInventoryPortal(employee)
 }
 
-function canReadAllInventory(role: Parameters<typeof canManageHr>[0]) {
-  return canManageInventory(role) || isCeo(role)
+function canReadAllInventory(employee: Awaited<ReturnType<typeof assertActiveInventoryEmployee>>) {
+  return canManageInventory(employee) || isCeo(employee.role)
 }
 
 async function assertActiveInventoryEmployee() {
@@ -136,7 +141,7 @@ export async function listInvRequisitions(options?: {
     .select("*")
     .order("created_at", { ascending: false })
 
-  if (!canReadAllInventory(employee.role)) {
+  if (!canReadAllInventory(employee)) {
     query = query.eq("requester_id", employee.id)
   }
   if (options?.status) query = query.eq("status", options.status)
@@ -186,7 +191,7 @@ export async function getInvRequisitionDetail(
 
   const requisition = mapRequisition(requisitionRaw as Record<string, unknown>)
   if (
-    !canReadAllInventory(employee.role) &&
+    !canReadAllInventory(employee) &&
     requisition.requester_id !== employee.id
   ) {
     return null
@@ -396,7 +401,7 @@ export async function submitRequisition(
     if (!requisition) return { success: false, error: "ไม่พบใบเบิก" }
     if (
       requisition.requester_id !== employee.id &&
-      !canManageInventory(employee.role)
+      !canManageInventory(employee)
     ) {
       return { success: false, error: "ไม่มีสิทธิ์ส่งใบเบิกนี้" }
     }
@@ -430,7 +435,7 @@ export async function approveRequisition(
   input: InvRequisitionApproveInput
 ): Promise<InventoryActionState> {
   try {
-    const employee = await assertInventoryManage()
+    const employee = await assertInventoryOperate()
     const payload = invRequisitionApproveSchema.parse(input)
     const supabase = await createClient()
 
@@ -505,7 +510,7 @@ export async function rejectRequisition(
   input: InvRequisitionRejectInput
 ): Promise<InventoryActionState> {
   try {
-    const employee = await assertInventoryManage()
+    const employee = await assertInventoryOperate()
     const payload = invRequisitionRejectSchema.parse(input)
     const supabase = await createClient()
 
@@ -532,7 +537,7 @@ export async function issueRequisition(
   input: InvRequisitionIssueInput
 ): Promise<InventoryActionState> {
   try {
-    await assertInventoryManage()
+    await assertInventoryOperate()
     const payload = invRequisitionIssueSchema.parse(input)
     const supabase = await createClient()
     const { error } = await supabase.rpc("inv_issue_requisition", {
@@ -566,7 +571,7 @@ export async function receiveRequisition(
     if (!requisition) return { success: false, error: "ไม่พบใบเบิก" }
     if (
       requisition.requester_id !== employee.id &&
-      !canManageInventory(employee.role)
+      !canManageInventory(employee)
     ) {
       return { success: false, error: "ไม่มีสิทธิ์รับสินค้าของใบเบิกนี้" }
     }

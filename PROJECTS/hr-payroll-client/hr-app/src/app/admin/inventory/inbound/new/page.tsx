@@ -11,7 +11,7 @@ import {
   InventoryTextInput,
 } from "@/features/inventory/InventoryFormFields"
 import { invInputClass } from "@/features/inventory/form-styles"
-import { requireRole } from "@/lib/auth/require-role"
+import { requireInventoryPortal } from "@/lib/auth/require-inventory-portal"
 import { cn } from "@/lib/utils"
 
 function warehouseLabel(w: {
@@ -26,7 +26,7 @@ function warehouseLabel(w: {
 }
 
 export default async function NewInboundOrderPage() {
-  await requireRole("hr", "admin", "dev")
+  await requireInventoryPortal()
 
   const [suppliers, warehouses] = await Promise.all([
     getInvSuppliers(),

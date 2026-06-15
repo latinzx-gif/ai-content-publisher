@@ -6,14 +6,14 @@ import { getInvBranches } from "@/features/inventory/actions/branch"
 import { getInvWarehouse } from "@/features/inventory/actions/warehouse"
 import { WarehouseForm } from "@/features/inventory/WarehouseForm"
 import { canManageHr, isCeo, isDev } from "@/lib/auth/roles"
-import { requireRole } from "@/lib/auth/require-role"
+import { requireInventoryMasterData } from "@/lib/auth/require-inventory-portal"
 
 type PageProps = {
   params: Promise<{ id: string }>
 }
 
 export default async function EditWarehousePage({ params }: PageProps) {
-  const employee = await requireRole("hr", "admin", "ceo", "dev")
+  const employee = await requireInventoryMasterData()
   const readOnly = isCeo(employee.role) && !isDev(employee.role)
   const { id } = await params
 

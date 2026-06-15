@@ -4,6 +4,9 @@ import {
   type AdminNavGroup,
   type AdminNavItem,
 } from "@/components/admin/admin-nav"
+import { getInventoryNavGroups } from "@/components/admin/inventory-nav"
+import { isInventoryPortalUser } from "@/lib/auth/roles"
+import type { Employee } from "@/lib/auth/session"
 
 /** BM portal — /admin/branch เท่านั้น + legacy sub-routes (ไม่รวม /admin/branch/<slug> ของ HR) */
 export function isBranchPortalPath(pathname: string): boolean {
@@ -36,6 +39,12 @@ export const BRANCH_NAV_ITEMS: AdminNavItem[] = [
 const BRANCH_NAV_GROUPS: AdminNavGroup[] = [
   { title: "", items: BRANCH_NAV_ITEMS },
 ]
+
+export function getNavGroupsForEmployee(employee: Employee): AdminNavGroup[] {
+  if (isInventoryPortalUser(employee)) return getInventoryNavGroups()
+  if (employee.role === "branch_manager") return BRANCH_NAV_GROUPS
+  return ADMIN_NAV_GROUPS
+}
 
 export function getNavGroupsForRole(
   role: "employee" | "hr" | "admin" | "branch_manager" | "ceo" | "dev"

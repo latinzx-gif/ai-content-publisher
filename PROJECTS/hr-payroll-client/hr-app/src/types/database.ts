@@ -125,6 +125,7 @@ export type Database = {
           id: string
           line_user_id: string | null
           name: string
+          pay_type: string
           phone: string | null
           position: string | null
           probation_end: string | null
@@ -146,6 +147,7 @@ export type Database = {
           id?: string
           line_user_id?: string | null
           name: string
+          pay_type?: string
           phone?: string | null
           position?: string | null
           probation_end?: string | null
@@ -167,6 +169,7 @@ export type Database = {
           id?: string
           line_user_id?: string | null
           name?: string
+          pay_type?: string
           phone?: string | null
           position?: string | null
           probation_end?: string | null
@@ -176,6 +179,24 @@ export type Database = {
           updated_at?: string
           visa_expiry?: string | null
           work_permit_expiry?: string | null
+        }
+        Relationships: []
+      }
+      hr_payroll_config: {
+        Row: {
+          key: string
+          updated_at: string
+          value: string
+        }
+        Insert: {
+          key: string
+          updated_at?: string
+          value: string
+        }
+        Update: {
+          key?: string
+          updated_at?: string
+          value?: string
         }
         Relationships: []
       }

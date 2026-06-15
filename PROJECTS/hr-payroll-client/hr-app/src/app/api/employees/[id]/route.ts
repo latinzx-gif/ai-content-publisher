@@ -10,6 +10,13 @@ import { validateEmployeeDepartmentRole } from "@/lib/employees/validate-departm
 import { normalizeBankFields } from "@/lib/employees/bank-fields"
 import { validateWorkShiftId } from "@/features/shifts/validate"
 import { permanentDeleteEmployee } from "@/lib/employees/permanent-delete"
+import { defaultPayTypeForBranchCode, isValidPayType } from "@/lib/payroll/pay-type"
+import type { PayType } from "@/lib/payroll/pay-type"
+import {
+  defaultPayDayForNationality,
+  isValidNationality,
+  isValidPayDay,
+} from "@/lib/payroll/pay-day"
 import { createClient } from "@/lib/supabase/server"
 
 const DAY_MS = 86_400_000
@@ -38,6 +45,7 @@ type PatchBody = {
   probationAction?: "pass" | "fail" | "extend"
   role?: string
   branch_id?: string | null
+  pay_type?: PayType
   employee_code?: string | null
   salary_payment_method?: SalaryPaymentMethod
   bank_name?: string | null
@@ -47,6 +55,8 @@ type PatchBody = {
   work_shift_id?: string | null
   default_check_in_time?: string | null
   default_check_out_time?: string | null
+  nationality?: string | null
+  pay_day?: number | null
 }
 
 export async function PATCH(
@@ -97,6 +107,27 @@ export async function PATCH(
       updates.name = body.name.trim()
     }
     if (body.date_of_birth !== undefined) updates.date_of_birth = body.date_of_birth
+    if (body.nationality !== undefined) {
+      if (body.nationality === null || body.nationality === "") {
+        updates.nationality = null
+      } else if (!isValidNationality(body.nationality)) {
+        return NextResponse.json({ error: "invalid nationality" }, { status: 400 })
+      } else {
+        updates.nationality = body.nationality
+        if (body.pay_day === undefined) {
+          updates.pay_day = defaultPayDayForNationality(body.nationality)
+        }
+      }
+    }
+    if (body.pay_day !== undefined) {
+      if (body.pay_day === null) {
+        updates.pay_day = null
+      } else if (!isValidPayDay(body.pay_day)) {
+        return NextResponse.json({ error: "invalid pay_day (must be 4 or 5)" }, { status: 400 })
+      } else {
+        updates.pay_day = body.pay_day
+      }
+    }
     if (body.phone !== undefined) {
       updates.phone =
         typeof body.phone === "string" && body.phone.trim()
@@ -151,14 +182,23 @@ export async function PATCH(
       } else {
         const { data: branch } = await supabase
           .from("hr_branches")
-          .select("id")
+          .select("id, code")
           .eq("id", body.branch_id)
           .maybeSingle()
         if (!branch) {
           return NextResponse.json({ error: "branch not found" }, { status: 400 })
         }
         updates.branch_id = body.branch_id
+        if (body.pay_type === undefined) {
+          updates.pay_type = defaultPayTypeForBranchCode(branch.code as string | null)
+        }
       }
+    }
+    if (body.pay_type !== undefined) {
+      if (!isValidPayType(body.pay_type)) {
+        return NextResponse.json({ error: "invalid pay_type" }, { status: 400 })
+      }
+      updates.pay_type = body.pay_type
     }
 
     if (body.work_shift_id !== undefined) {

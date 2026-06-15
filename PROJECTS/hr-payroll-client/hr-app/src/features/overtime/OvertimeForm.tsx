@@ -29,6 +29,18 @@ const schema = z
 
 type FormValues = z.infer<typeof schema>
 
+const API_ERROR_MESSAGES: Record<string, string> = {
+  forbidden: "บัญชีของคุณไม่มีสิทธิ์ส่งคำขอ OT นี้",
+  unauthorized: "กรุณาเข้าสู่ระบบใหม่",
+  invalid_fields: "ข้อมูลไม่ครบหรือไม่ถูกต้อง",
+}
+
+function formatOvertimeApiError(body: { error?: string } | null): string {
+  const code = body?.error
+  if (!code) return "ส่งคำขอไม่สำเร็จ"
+  return API_ERROR_MESSAGES[code] ?? code
+}
+
 const inputClassName =
   "h-9 w-full rounded-lg border border-input bg-transparent px-3 text-sm"
 
@@ -52,7 +64,7 @@ export function OvertimeForm() {
       })
       if (!res.ok) {
         const body = (await res.json().catch(() => null)) as { error?: string } | null
-        throw new Error(body?.error ?? "ส่งคำขอไม่สำเร็จ")
+        throw new Error(formatOvertimeApiError(body))
       }
       setSuccess(true)
       form.reset()
@@ -66,7 +78,7 @@ export function OvertimeForm() {
   if (success) {
     return (
       <p className="text-sm text-green-700">
-        ส่งคำขอ OT แล้ว — รอหัวหน้าสาขาอนุมัติ แล้ว HR จะแจ้งผลทาง LINE
+        ส่งคำขอ OT แล้ว — แจ้ง HR ทาง LINE Group แล้ว รอ HR อนุมัติ
       </p>
     )
   }

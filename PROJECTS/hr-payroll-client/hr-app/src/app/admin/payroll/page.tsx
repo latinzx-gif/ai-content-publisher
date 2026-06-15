@@ -2,6 +2,8 @@ import Link from "next/link"
 
 import { AdminPageShell } from "@/components/brand/AdminPageShell"
 import { getPayrollHourReport } from "@/features/payroll/data"
+import { payTypeDisplayLabel, salaryFieldLabel } from "@/lib/payroll/pay-type"
+import type { PayType } from "@/lib/payroll/pay-type"
 import { requireRole } from "@/lib/auth/require-role"
 import { createClient } from "@/lib/supabase/server"
 
@@ -17,7 +19,7 @@ export default async function AdminPayrollPage() {
     getPayrollHourReport(year, month),
     supabase
       .from("hr_employees")
-      .select("id, name, department, salary, status")
+      .select("id, name, department, salary, pay_type, status")
       .eq("status", "active")
       .order("name")
       .limit(50),
@@ -28,17 +30,33 @@ export default async function AdminPayrollPage() {
   return (
     <AdminPageShell
       title="Payroll Hub"
-      description={`สรุปชม.การทำงานที่อนุมัติแล้ว — ${month}/${year} (ยังไม่คำนวณเงินเป็นบาท)`}
+      description={`สรุปชม.การทำงานที่อนุมัติแล้ว — ${month}/${year}`}
     >
+      <div className="mb-4 flex flex-wrap gap-3">
+        <Link
+          href="/admin/payroll/odoo"
+          className="rounded-lg border-2 border-blue-200 bg-blue-50 px-4 py-2 text-sm font-medium text-blue-900 hover:bg-blue-100"
+        >
+          Odoo Integration
+        </Link>
+        <Link
+          href="/admin/payroll/settings"
+          className="rounded-lg border-2 border-emerald-200 bg-emerald-50 px-4 py-2 text-sm font-medium text-emerald-900 hover:bg-emerald-100"
+        >
+          ตั้งค่าเงินเดือน
+        </Link>
+      </div>
+
       <div className="mb-4 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
-        ชม.ปกติ / OT / ลาป่วยรายชม. จะถูกบันทึกหลัง HR อนุมัติขั้นสุดท้าย — ขอสลิปผ่าน{" "}
+        <strong>Office (monthly):</strong> อ้างอิงเงินเดือนในโปรไฟล์ — sync ส่ง OT/ลา ·{" "}
+        <strong>หน้าร้าน (hourly):</strong> ชม.จาก ledger ที่อนุมัติ × อัตราชั่วโมง — ขอสลิปผ่าน{" "}
         <Link href="/admin/documents" className="font-medium underline">
           คำขอเอกสาร
         </Link>
       </div>
 
       <section className="mb-6">
-        <h3 className="mb-2 text-sm font-semibold">ชม.ที่อนุมัติแล้ว (เดือนนี้)</h3>
+        <h3 className="mb-2 text-sm font-semibold">ชม.ที่อนุมัติแล้ว (เดือนนี้ — hourly)</h3>
         {report.length === 0 ? (
           <p className="text-sm text-muted-foreground">ยังไม่มีชม.ที่บันทึกใน ledger</p>
         ) : (
@@ -74,26 +92,40 @@ export default async function AdminPayrollPage() {
       </section>
 
       <section>
-        <h3 className="mb-2 text-sm font-semibold">เงินเดือนที่บันทึก (อ้างอิง)</h3>
+        <h3 className="mb-2 text-sm font-semibold">อัตราที่บันทึก (อ้างอิง sync Odoo)</h3>
         <div className="overflow-x-auto rounded-xl border">
           <table className="w-full text-left text-sm">
             <thead className="border-b bg-muted/40">
               <tr>
                 <th className="px-3 py-2">พนักงาน</th>
                 <th className="px-3 py-2">แผนก</th>
-                <th className="px-3 py-2">เงินเดือน (บันทึก)</th>
+                <th className="px-3 py-2">ประเภท</th>
+                <th className="px-3 py-2">อัตรา (บันทึก)</th>
               </tr>
             </thead>
             <tbody>
-              {employees.map((e) => (
-                <tr key={e.id as string} className="border-b last:border-0">
-                  <td className="px-3 py-2">{e.name as string}</td>
-                  <td className="px-3 py-2">{(e.department as string) ?? "—"}</td>
-                  <td className="px-3 py-2">
-                    {e.salary != null ? Number(e.salary).toLocaleString("th-TH") : "—"}
-                  </td>
-                </tr>
-              ))}
+              {employees.map((e) => {
+                const payType = (e.pay_type as PayType | null) ?? "hourly"
+                return (
+                  <tr key={e.id as string} className="border-b last:border-0">
+                    <td className="px-3 py-2">{e.name as string}</td>
+                    <td className="px-3 py-2">{(e.department as string) ?? "—"}</td>
+                    <td className="px-3 py-2">{payTypeDisplayLabel(payType)}</td>
+                    <td className="px-3 py-2">
+                      {e.salary != null ? (
+                        <>
+                          {Number(e.salary).toLocaleString("th-TH")}{" "}
+                          <span className="text-xs text-muted-foreground">
+                            ({salaryFieldLabel(payType).replace(/.*\(/, "").replace(/\)/, "")})
+                          </span>
+                        </>
+                      ) : (
+                        "—"
+                      )}
+                    </td>
+                  </tr>
+                )
+              })}
             </tbody>
           </table>
         </div>

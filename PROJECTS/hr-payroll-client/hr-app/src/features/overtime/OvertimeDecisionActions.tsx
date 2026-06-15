@@ -13,7 +13,7 @@ export function OvertimeDecisionActions({ ot }: { ot: OvertimeRequestRow }) {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  if (ot.approvalStatus !== "pending_hr") {
+  if (ot.approvalStatus !== "pending_hr" && ot.approvalStatus !== "pending_manager") {
     return (
       <span className="text-xs text-muted-foreground">
         {ot.decisionNote ?? "—"}

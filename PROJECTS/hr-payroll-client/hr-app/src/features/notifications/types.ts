@@ -12,6 +12,10 @@ export type NotificationKind =
   | "probation"
   | "visa"
   | "work_permit"
+  | "inbound"
+  | "requisition"
+  | "damage"
+  | "low_stock"
 
 export type NotificationItem = {
   id: string

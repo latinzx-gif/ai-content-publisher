@@ -1,5 +1,11 @@
 import { ictToday } from "@/features/employees/data"
 import type { SalaryPaymentMethod } from "@/features/employees/profile/payment-method"
+import type { PayType } from "@/lib/payroll/pay-type"
+import {
+  resolvePayDay,
+  type Nationality,
+  type PayDay,
+} from "@/lib/payroll/pay-day"
 import {
   expiryStatusLabel,
   type ExpiryStatusLabel,
@@ -18,6 +24,8 @@ export type EmployeeProfile = {
   line_user_id: string | null
   name: string
   date_of_birth: string | null
+  nationality: Nationality | null
+  pay_day: PayDay | null
   phone: string | null
   email: string | null
   position: string | null
@@ -27,6 +35,7 @@ export type EmployeeProfile = {
   workShift: WorkShiftSummary | null
   default_check_in_time: string | null
   default_check_out_time: string | null
+  pay_type: PayType
   salary: number | null
   contract_start: string | null
   contract_type: ContractType
@@ -75,13 +84,47 @@ export async function getEmployeeProfile(
   const { data, error } = await supabase
     .from("hr_employees")
     .select(
-      "id, employee_code, line_user_id, name, date_of_birth, phone, email, position, department, branch_id, work_shift_id, default_check_in_time, default_check_out_time, salary, contract_start, contract_type, contract_end, contract_file_path, contract_file_name, contract_uploaded_at, probation_end, probation_outcome, probation_outcome_note, probation_extended_until, visa_expiry, work_permit_expiry, salary_payment_method, bank_name, bank_account_name, bank_account_number, bank_branch, leave_blacklisted, leave_blacklist_reason, leave_blacklisted_at, avatar_path, role, status, hr_work_shifts(id, code, name, start_hour, start_minute, end_hour, end_minute, crosses_midnight, grace_minutes, standard_hours, is_active)"
+      "id, employee_code, line_user_id, name, date_of_birth, nationality, pay_day, phone, email, position, department, branch_id, work_shift_id, default_check_in_time, default_check_out_time, salary, contract_start, contract_type, contract_end, contract_file_path, contract_file_name, contract_uploaded_at, probation_end, probation_outcome, probation_outcome_note, probation_extended_until, visa_expiry, work_permit_expiry, salary_payment_method, bank_name, bank_account_name, bank_account_number, bank_branch, leave_blacklisted, leave_blacklist_reason, leave_blacklisted_at, avatar_path, role, status, hr_work_shifts(id, code, name, start_hour, start_minute, end_hour, end_minute, crosses_midnight, grace_minutes, standard_hours, is_active)"
     )
     .eq("id", id)
     .maybeSingle()
 
   if (error) throw error
   if (!data) return null
+
+  let pay_type: PayType = "hourly"
+  let nationality: Nationality | null = null
+  let pay_day: PayDay | null = null
+
+  const { data: payRow, error: payTypeError } = await supabase
+    .from("hr_employees")
+    .select("pay_type, nationality, pay_day")
+    .eq("id", id)
+    .maybeSingle()
+
+  if (!payTypeError && payRow) {
+    if (payRow.pay_type === "monthly" || payRow.pay_type === "hourly") {
+      pay_type = payRow.pay_type
+    }
+    nationality = (payRow.nationality as Nationality | null) ?? null
+    pay_day =
+      payRow.pay_day === 4 || payRow.pay_day === 5
+        ? payRow.pay_day
+        : resolvePayDay(nationality, null)
+  } else if (
+    payTypeError?.message?.includes("nationality") ||
+    payTypeError?.message?.includes("pay_day")
+  ) {
+    const { data: legacyPayRow } = await supabase
+      .from("hr_employees")
+      .select("pay_type")
+      .eq("id", id)
+      .maybeSingle()
+    if (legacyPayRow?.pay_type === "monthly" || legacyPayRow?.pay_type === "hourly") {
+      pay_type = legacyPayRow.pay_type
+    }
+    pay_day = 4
+  }
 
   const status = data.status as "active" | "inactive"
 
@@ -96,6 +139,9 @@ export async function getEmployeeProfile(
     workShift,
     default_check_in_time: (data.default_check_in_time as string | null) ?? null,
     default_check_out_time: (data.default_check_out_time as string | null) ?? null,
+    nationality,
+    pay_day,
+    pay_type,
     avatar_path,
     avatarUrl: employeeAvatarPublicUrl(avatar_path),
     contract_type: (data.contract_type as ContractType) ?? null,

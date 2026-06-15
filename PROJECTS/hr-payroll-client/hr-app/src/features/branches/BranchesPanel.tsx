@@ -10,6 +10,7 @@ import { BranchManagerSelect } from "@/features/branches/BranchManagerSelect"
 import type { BranchRow } from "@/features/branches/data"
 import type { BranchManagerCandidate } from "@/features/branches/manager-candidates"
 import { branchAdminPath } from "@/lib/branches/branch-slug"
+import { branchGeofenceLabel, branchGeofenceReady } from "@/lib/geofence/status"
 
 export function BranchesPanel({
   branches,
@@ -87,6 +88,7 @@ export function BranchesPanel({
               <th className="px-3 py-2">ชื่อสาขา</th>
               <th className="px-3 py-2">รหัส</th>
               <th className="px-3 py-2">ที่อยู่</th>
+              <th className="px-3 py-2">Geofence</th>
               <th className="px-3 py-2">Manager</th>
               <th className="px-3 py-2 w-24" />
             </tr>
@@ -94,7 +96,7 @@ export function BranchesPanel({
           <tbody>
             {branches.length === 0 ? (
               <tr>
-                <td colSpan={5} className="px-3 py-8 text-center text-muted-foreground">
+                <td colSpan={6} className="px-3 py-8 text-center text-muted-foreground">
                   ยังไม่มีสาขาในระบบ
                 </td>
               </tr>
@@ -115,6 +117,17 @@ export function BranchesPanel({
                   <td className="px-3 py-2">{b.code ?? "—"}</td>
                   <td className="max-w-[200px] truncate px-3 py-2 text-muted-foreground">
                     {b.address?.trim() || "—"}
+                  </td>
+                  <td className="px-3 py-2">
+                    <span
+                      className={`text-xs font-medium ${
+                        branchGeofenceReady(b)
+                          ? "text-green-700"
+                          : "text-amber-700"
+                      }`}
+                    >
+                      {branchGeofenceLabel(b)}
+                    </span>
                   </td>
                   <td className="px-3 py-2">
                     <BranchManagerSelect

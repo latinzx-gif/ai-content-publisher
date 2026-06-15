@@ -72,6 +72,28 @@ export function buildBranchNavBadges(counts: BranchNavAlertCounts): NavAlertBadg
   return badges
 }
 
+export type InventoryNavAlertCounts = {
+  inbound: number
+  requisition: number
+  damage: number
+  lowStock: number
+  total: number
+}
+
+export function buildInventoryNavBadges(
+  counts: InventoryNavAlertCounts
+): NavAlertBadgeMap {
+  const badges: NavAlertBadgeMap = {}
+  if (counts.total > 0) badges["/admin/inventory"] = counts.total
+  if (counts.inbound > 0) badges["/admin/inventory/inbound"] = counts.inbound
+  if (counts.requisition > 0) {
+    badges["/admin/inventory/requisition"] = counts.requisition
+  }
+  if (counts.damage > 0) badges["/admin/inventory/damage"] = counts.damage
+  if (counts.lowStock > 0) badges["/admin/inventory/stock"] = counts.lowStock
+  return badges
+}
+
 function applyBadgesToItems(
   items: AdminNavItem[],
   badges: NavAlertBadgeMap

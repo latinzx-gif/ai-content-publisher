@@ -1,5 +1,5 @@
 import { getManagedBranchId } from "@/lib/auth/branch"
-import { canManageHr } from "@/lib/auth/roles"
+import { canManageHr, isHrOfficer } from "@/lib/auth/roles"
 import type { Employee } from "@/lib/auth/session"
 import { createClient } from "@/lib/supabase/server"
 
@@ -9,7 +9,7 @@ export async function getManagerScope(
   caller: Employee,
   scope: ManagerQueueScope = "branch"
 ) {
-  if (scope === "hr" && canManageHr(caller.role)) {
+  if (scope === "hr" && isHrOfficer(caller.role)) {
     return { branchId: null as string | null, isHr: true }
   }
 
@@ -26,35 +26,13 @@ export async function getManagerScope(
   return { branchId, isHr: false }
 }
 
-export async function getManagerAttendanceQueue(
-  caller: Employee,
-  scope: ManagerQueueScope = "branch"
-) {
-  const { branchId, isHr } = await getManagerScope(caller, scope)
-  const supabase = await createClient()
-
-  const query = supabase
-    .from("hr_attendance_submissions")
-    .select("id, work_date, submitted_at, hr_employees!employee_id(name, branch_id)")
-    .eq("approval_status", isHr ? "pending_hr" : "pending_manager")
-    .order("submitted_at", { ascending: true })
-    .limit(50)
-
-  const { data, error } = await query
-  if (error) throw error
-
-  return (data ?? []).filter((row) => {
-    if (isHr) return true
-    const emp = Array.isArray(row.hr_employees) ? row.hr_employees[0] : row.hr_employees
-    return (emp as { branch_id?: string })?.branch_id === branchId
-  })
-}
-
 export async function getManagerLeaveQueue(
   caller: Employee,
   scope: ManagerQueueScope = "branch"
 ) {
-  const { branchId, isHr } = await getManagerScope(caller, scope)
+  const { isHr } = await getManagerScope(caller, scope)
+  if (!isHr) return []
+
   const supabase = await createClient()
 
   const { data, error } = await supabase
@@ -62,24 +40,41 @@ export async function getManagerLeaveQueue(
     .select(
       "id, type, start_date, end_date, leave_unit, leave_hours, hr_employees!employee_id(name, branch_id)"
     )
-    .eq("approval_status", isHr ? "pending_hr" : "pending_manager")
+    .eq("approval_status", "pending_hr")
     .order("submitted_at", { ascending: true })
     .limit(50)
 
   if (error) throw error
+  return data ?? []
+}
 
-  return (data ?? []).filter((row) => {
-    if (isHr) return true
-    const emp = Array.isArray(row.hr_employees) ? row.hr_employees[0] : row.hr_employees
-    return (emp as { branch_id?: string })?.branch_id === branchId
-  })
+export async function getManagerAttendanceQueue(
+  caller: Employee,
+  scope: ManagerQueueScope = "branch"
+) {
+  const { isHr } = await getManagerScope(caller, scope)
+  if (!isHr) return []
+
+  const supabase = await createClient()
+
+  const { data, error } = await supabase
+    .from("hr_attendance_submissions")
+    .select("id, work_date, submitted_at, hr_employees!employee_id(name, branch_id)")
+    .eq("approval_status", "pending_hr")
+    .order("submitted_at", { ascending: true })
+    .limit(50)
+
+  if (error) throw error
+  return data ?? []
 }
 
 export async function getManagerOvertimeQueue(
   caller: Employee,
   scope: ManagerQueueScope = "branch"
 ) {
-  const { branchId, isHr } = await getManagerScope(caller, scope)
+  const { isHr } = await getManagerScope(caller, scope)
+  if (!isHr) return []
+
   const supabase = await createClient()
 
   const { data, error } = await supabase
@@ -87,17 +82,12 @@ export async function getManagerOvertimeQueue(
     .select(
       "id, work_date, start_time, end_time, hr_employees!employee_id(name, branch_id)"
     )
-    .eq("approval_status", isHr ? "pending_hr" : "pending_manager")
+    .eq("approval_status", "pending_hr")
     .order("submitted_at", { ascending: true })
     .limit(50)
 
   if (error) throw error
-
-  return (data ?? []).filter((row) => {
-    if (isHr) return true
-    const emp = Array.isArray(row.hr_employees) ? row.hr_employees[0] : row.hr_employees
-    return (emp as { branch_id?: string })?.branch_id === branchId
-  })
+  return data ?? []
 }
 
 export async function getBranchEmployees(caller: Employee) {

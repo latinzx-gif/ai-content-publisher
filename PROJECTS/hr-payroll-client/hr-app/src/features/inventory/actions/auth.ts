@@ -1,13 +1,34 @@
-import { canManageHr } from "@/lib/auth/roles"
+import {
+  canAccessInventoryPortal,
+  canManageHr,
+  isDev,
+} from "@/lib/auth/roles"
 import { getCurrentEmployee } from "@/lib/auth/session"
 import { ZodError } from "zod"
 
-export async function assertInventoryManage() {
+export async function assertInventoryAccess() {
   const employee = await getCurrentEmployee()
-  if (!employee || !canManageHr(employee.role)) {
-    throw new Error("ไม่มีสิทธิ์จัดการคลังสินค้า")
+  if (!employee || !canAccessInventoryPortal(employee)) {
+    throw new Error("ไม่มีสิทธิ์เข้าถึงคลังสินค้า")
   }
   return employee
+}
+
+/** Master data — SKU, Supplier, branches, warehouses (HR/Dev) */
+export async function assertInventoryManage() {
+  const employee = await getCurrentEmployee()
+  if (
+    !employee ||
+    (!canManageHr(employee.role) && !isDev(employee.role))
+  ) {
+    throw new Error("ไม่มีสิทธิ์จัดการข้อมูลหลักคลังสินค้า")
+  }
+  return employee
+}
+
+/** Operational mutations — inbound, requisition approve/issue, etc. */
+export async function assertInventoryOperate() {
+  return assertInventoryAccess()
 }
 
 type SupabaseLikeError = {
@@ -35,7 +56,7 @@ export function mapSupabaseInventoryError(error: SupabaseLikeError): string {
     return "ข้อมูลซ้ำในระบบ — ตรวจสอบรหัสที่กรอก"
   }
   if (error.code === "23503") {
-    return "ไม่สามารถลบได้ — มีข้อมูลอื่นอ้างอิงอยู่ (เช่น คลังหรือสต็อก)"
+    return "ไม่สามารถลบได้ — มีข้อมูลอ้างอิงอยู่ (เช่น คลังหรือสต็อก)"
   }
   return error.message
 }

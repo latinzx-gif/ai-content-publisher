@@ -2,6 +2,8 @@
 // Service-role client by design (webhook has no user session, T02).
 import { getAdminClient } from "@/lib/auth/admin-client"
 import { ictDayRangeUtc } from "@/lib/attendance/late"
+import type { CheckInLocation } from "@/lib/attendance/check-in"
+import { assertWithinBranchGeofence } from "@/lib/geofence/branch-geofence"
 
 // Phase 1: display-only OT threshold (8h). No pay calculation.
 const STANDARD_WORK_MINUTES = 480
@@ -17,21 +19,28 @@ export type CheckOutResult =
     }
   | { status: "not_checked_in" }
   | { status: "already_checked_out"; checkOutAt: Date }
+  | {
+      status: "outside_geofence"
+      distanceM: number
+      limitM: number
+    }
   | { status: "pending_approval" }
   | { status: "not_registered" }
 
 export async function checkOut({
   lineUserId,
+  location,
   now = new Date(),
 }: {
   lineUserId: string
+  location?: CheckInLocation
   now?: Date
 }): Promise<CheckOutResult> {
   const admin = getAdminClient()
 
   const { data: row, error: employeeError } = await admin
     .from("hr_employees")
-    .select("id, name, status")
+    .select("id, name, status, branch_id")
     .eq("line_user_id", lineUserId)
     .maybeSingle()
 
@@ -66,6 +75,22 @@ export async function checkOut({
     return {
       status: "already_checked_out",
       checkOutAt: new Date(record.check_out_at),
+    }
+  }
+
+  if (location && employee.branch_id) {
+    const geo = await assertWithinBranchGeofence({
+      branchId: employee.branch_id as string,
+      latitude: location.latitude,
+      longitude: location.longitude,
+      admin,
+    })
+    if (!geo.ok && "reason" in geo && geo.reason === "outside") {
+      return {
+        status: "outside_geofence",
+        distanceM: geo.distanceM,
+        limitM: geo.limitM,
+      }
     }
   }
 

@@ -18,8 +18,8 @@ import {
 } from "@/features/inventory/inbound-data"
 import type { InvInboundStatus } from "@/features/inventory/types"
 import { formatThaiDate } from "@/lib/datetime/thailand"
-import { canManageHr, isCeo, isDev } from "@/lib/auth/roles"
-import { requireRole } from "@/lib/auth/require-role"
+import { canAccessInventoryPortal, isCeo, isDev } from "@/lib/auth/roles"
+import { requireInventoryPortal } from "@/lib/auth/require-inventory-portal"
 import { cn } from "@/lib/utils"
 
 function statusVariant(status: InvInboundStatus) {
@@ -30,9 +30,9 @@ function statusVariant(status: InvInboundStatus) {
 }
 
 export default async function InventoryInboundPage() {
-  const employee = await requireRole("hr", "admin", "ceo", "dev")
+  const employee = await requireInventoryPortal()
   const readOnly = isCeo(employee.role) && !isDev(employee.role)
-  const canManage = canManageHr(employee.role)
+  const canManage = canAccessInventoryPortal(employee)
 
   let loadError: string | null = null
   let orders: Awaited<ReturnType<typeof listInvInboundOrders>> = []

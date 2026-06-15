@@ -3,15 +3,10 @@ import { NextResponse, type NextRequest } from "next/server"
 import { recordPayrollHours } from "@/lib/approval/payroll-ledger"
 import {
   getCurrentEmployeeWithBranch,
-  getManagedBranchId,
-  isBranchManager,
-  isHrOrAdmin,
+  canApproveHrRequests,
 } from "@/lib/auth/branch"
-import {
-  overtimeResultFlex,
-  overtimeSubmitHrNotifyFlex,
-} from "@/lib/line/flex/overtime-request"
-import { notifyHr, pushToLineUser } from "@/lib/line/notify-hr"
+import { overtimeResultFlex } from "@/lib/line/flex/overtime-request"
+import { pushToLineUser } from "@/lib/line/notify-hr"
 import { createClient } from "@/lib/supabase/server"
 
 type DecideBody = {
@@ -143,56 +138,15 @@ export async function POST(
     return { id, status: "approved" }
   }
 
-  if (ot.approval_status === "pending_manager") {
-    if (!isBranchManager(caller.role) && !isHrOrAdmin(caller.role)) {
-      return NextResponse.json({ error: "forbidden" }, { status: 403 })
-    }
-    if (isBranchManager(caller.role)) {
-      const managed = await getManagedBranchId(caller.id)
-      if (managed !== branchId) {
-        return NextResponse.json({ error: "forbidden" }, { status: 403 })
-      }
-    }
-
-    if (body.action === "reject") {
-      try {
-        return NextResponse.json(await finalizeReject("manager"))
-      } catch (e) {
-        return NextResponse.json({ error: String(e) }, { status: 500 })
-      }
-    }
-
-    const { error } = await supabase
-      .from("hr_overtime_requests")
-      .update({
-        approval_status: "pending_hr",
-        manager_decided_by: caller.id,
-        manager_decided_at: new Date().toISOString(),
-      })
-      .eq("id", id)
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 })
-
-    try {
-      await notifyHr([
-        overtimeSubmitHrNotifyFlex({
-          employeeName: emp?.name ?? "—",
-          department: emp?.department ?? null,
-          workDate: ot.work_date as string,
-          startTime: String(ot.start_time).slice(0, 5),
-          endTime: String(ot.end_time).slice(0, 5),
-          reason: ot.reason as string,
-        }),
-      ])
-    } catch (lineError) {
-      console.error("overtime BM→HR notify failed:", lineError)
-    }
-
-    return NextResponse.json({ id, approval_status: "pending_hr" })
-  }
-
-  if (ot.approval_status === "pending_hr") {
-    if (!isHrOrAdmin(caller.role)) {
-      return NextResponse.json({ error: "forbidden" }, { status: 403 })
+  if (
+    ot.approval_status === "pending_hr" ||
+    ot.approval_status === "pending_manager"
+  ) {
+    if (!canApproveHrRequests(caller.role)) {
+      return NextResponse.json(
+        { error: "เฉพาะ HR Officer เท่านั้นที่อนุมัติ OT ได้" },
+        { status: 403 }
+      )
     }
 
     if (body.action === "reject") {

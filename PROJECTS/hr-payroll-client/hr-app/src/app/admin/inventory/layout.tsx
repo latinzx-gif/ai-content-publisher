@@ -1,16 +1,18 @@
 import { InventorySubNav } from "@/features/inventory/InventorySubNav"
-import { requireRole } from "@/lib/auth/require-role"
+import { isInventoryPortalUser } from "@/lib/auth/roles"
+import { requireInventoryPortal } from "@/lib/auth/require-inventory-portal"
 
 export default async function InventoryLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
-  await requireRole("hr", "admin", "ceo", "dev")
+  const employee = await requireInventoryPortal()
+  const staffMode = isInventoryPortalUser(employee)
 
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-3">
-      <InventorySubNav />
+      <InventorySubNav staffMode={staffMode} />
       {children}
     </div>
   )

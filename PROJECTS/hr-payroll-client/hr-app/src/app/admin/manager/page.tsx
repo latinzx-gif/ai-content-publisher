@@ -16,7 +16,7 @@ const HR_QUEUE = "hr" as const
 
 /** คิวอนุมัติขั้นสุดท้ายสำหรับ HR / Admin / Dev */
 export default async function HrApprovalQueuePage() {
-  const employee = await requireRole("hr", "admin", "dev")
+  const employee = await requireRole("hr", "dev")
   const [attendance, leaves, overtime] = await Promise.all([
     getManagerAttendanceQueue(employee, HR_QUEUE),
     getManagerLeaveQueue(employee, HR_QUEUE),
@@ -26,7 +26,7 @@ export default async function HrApprovalQueuePage() {
   return (
     <AdminPageShell
       title="HR Approval Queue"
-      description="อนุมัติขั้นสุดท้าย — หลัง Branch Manager อนุมัติแล้ว (ลา · เข้างาน · OT)"
+      description="อนุมัติลา · OT · เข้างาน — HR Officer (role hr) เท่านั้น"
     >
       <div className="grid gap-4 lg:grid-cols-3">
         <ApprovalQueue

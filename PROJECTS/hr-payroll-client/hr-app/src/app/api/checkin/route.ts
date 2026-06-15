@@ -5,6 +5,11 @@ import { formatIctTime } from "@/lib/attendance/late"
 import { getAdminClient } from "@/lib/auth/admin-client"
 import { verifyCheckinToken } from "@/lib/checkin/qr-token"
 
+function outsideGeofenceMessage(distanceM: number, limitM: number): string {
+  const dist = Math.round(distanceM)
+  return `คุณอยู่นอกพื้นที่สาขา (${dist} เมตร จากจุดศูนย์ จำกัด ${limitM}m) กรุณาเข้าใกล้สาขาแล้วลองใหม่`
+}
+
 // QR check-in: verifies the day-bound token, then runs the same T07
 // pipeline (duplicate guard + late calc) — imported, never modified.
 export async function POST(request: NextRequest) {
@@ -66,6 +71,18 @@ export async function POST(request: NextRequest) {
         status: "already_checked_in",
         timeText: formatIctTime(result.checkInAt),
       })
+    case "outside_geofence":
+      return NextResponse.json(
+        {
+          error: "outside_geofence",
+          distanceM: result.distanceM,
+          limitM: result.limitM,
+          message: outsideGeofenceMessage(result.distanceM, result.limitM),
+        },
+        { status: 403 }
+      )
+    case "pending_approval":
+      return NextResponse.json({ error: "pending_approval" }, { status: 403 })
     case "not_registered":
       return NextResponse.json({ error: "not_registered" }, { status: 404 })
   }

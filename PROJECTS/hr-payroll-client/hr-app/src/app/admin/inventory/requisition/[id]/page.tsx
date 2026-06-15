@@ -5,8 +5,8 @@ import { AdminPageShell } from "@/components/brand/AdminPageShell"
 import { buttonVariants } from "@/components/ui/button"
 import { getInvRequisitionDetail } from "@/features/inventory/actions/requisition"
 import { RequisitionDetailView } from "@/features/inventory/RequisitionDetailView"
-import { canManageHr, isDev } from "@/lib/auth/roles"
-import { requireRole } from "@/lib/auth/require-role"
+import { canAccessInventoryPortal } from "@/lib/auth/roles"
+import { requireInventoryPortal } from "@/lib/auth/require-inventory-portal"
 import { cn } from "@/lib/utils"
 
 type PageProps = {
@@ -14,19 +14,12 @@ type PageProps = {
 }
 
 export default async function RequisitionDetailPage({ params }: PageProps) {
-  const employee = await requireRole(
-    "employee",
-    "branch_manager",
-    "hr",
-    "admin",
-    "ceo",
-    "dev"
-  )
+  const employee = await requireInventoryPortal()
   const { id } = await params
   const detail = await getInvRequisitionDetail(id)
   if (!detail) notFound()
 
-  const canManage = canManageHr(employee.role) || isDev(employee.role)
+  const canManage = canAccessInventoryPortal(employee)
   const isRequester = detail.requisition.requester_id === employee.id
   const canSubmit = isRequester || canManage
   const canReceive = isRequester || canManage

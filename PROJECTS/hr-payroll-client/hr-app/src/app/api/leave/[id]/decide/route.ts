@@ -4,16 +4,13 @@ import { countLeaveDays, type LeaveType } from "@/features/leave/types"
 import { recordPayrollHours } from "@/lib/approval/payroll-ledger"
 import {
   getCurrentEmployeeWithBranch,
-  getManagedBranchId,
-  isBranchManager,
-  isHrOrAdmin,
+  canApproveHrRequests,
 } from "@/lib/auth/branch"
-import { leaveSubmitHrNotifyFlex } from "@/lib/line/flex/leave-request"
 import {
   leaveApprovedFlex,
   leaveRejectedFlex,
 } from "@/lib/line/flex/leave-result"
-import { notifyHr, pushToLineUser } from "@/lib/line/notify-hr"
+import { pushToLineUser } from "@/lib/line/notify-hr"
 import { createClient } from "@/lib/supabase/server"
 
 type DecideBody = {
@@ -174,56 +171,15 @@ export async function POST(
     return { id, status: "rejected" }
   }
 
-  if (leave.approval_status === "pending_manager") {
-    if (!isBranchManager(caller.role) && !isHrOrAdmin(caller.role)) {
-      return NextResponse.json({ error: "forbidden" }, { status: 403 })
-    }
-    if (isBranchManager(caller.role)) {
-      const managed = await getManagedBranchId(caller.id)
-      if (managed !== branchId) {
-        return NextResponse.json({ error: "forbidden" }, { status: 403 })
-      }
-    }
-
-    if (body.action === "reject") {
-      try {
-        return NextResponse.json(await finalizeReject("manager"))
-      } catch (e) {
-        return NextResponse.json({ error: String(e) }, { status: 500 })
-      }
-    }
-
-    const { error } = await supabase
-      .from("hr_leaves")
-      .update({
-        approval_status: "pending_hr",
-        manager_decided_by: caller.id,
-        manager_decided_at: new Date().toISOString(),
-      })
-      .eq("id", id)
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 })
-
-    try {
-      await notifyHr([
-        leaveSubmitHrNotifyFlex({
-          employeeName: employeeJoin?.name ?? "—",
-          department: (employeeJoin as { department?: string | null })?.department ?? null,
-          type: leaveType,
-          startDate: leave.start_date as string,
-          endDate: leave.end_date as string,
-          reason: (leave.reason as string) ?? "—",
-        }),
-      ])
-    } catch (lineError) {
-      console.error("leave BM→HR notify failed:", lineError)
-    }
-
-    return NextResponse.json({ id, approval_status: "pending_hr" })
-  }
-
-  if (leave.approval_status === "pending_hr") {
-    if (!isHrOrAdmin(caller.role)) {
-      return NextResponse.json({ error: "forbidden" }, { status: 403 })
+  if (
+    leave.approval_status === "pending_hr" ||
+    leave.approval_status === "pending_manager"
+  ) {
+    if (!canApproveHrRequests(caller.role)) {
+      return NextResponse.json(
+        { error: "เฉพาะ HR Officer เท่านั้นที่อนุมัติลาได้" },
+        { status: 403 }
+      )
     }
 
     if (body.action === "reject") {

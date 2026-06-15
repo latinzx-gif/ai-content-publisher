@@ -9,7 +9,46 @@ type BranchCore = {
   name: string
   code: string | null
   address: string | null
+  latitude: number | null
+  longitude: number | null
+  geofence_radius_m: number
+  geofence_enabled: boolean
   manager_employee_id: string | null
+}
+
+const BRANCH_SELECT =
+  "id, name, code, address, latitude, longitude, geofence_radius_m, geofence_enabled, manager_employee_id"
+
+/** Minimal branch fields for employee forms — avoids hard dependency on geofence migrations. */
+const BRANCH_FORM_SELECT =
+  "id, name, code, address, manager_employee_id"
+
+function parseBranchRow(
+  row: Record<string, unknown>,
+  options?: { includeGeofence?: boolean }
+): BranchCore {
+  const includeGeofence = options?.includeGeofence !== false
+  return {
+    id: row.id as string,
+    name: row.name as string,
+    code: (row.code as string | null) ?? null,
+    address: (row.address as string | null) ?? null,
+    latitude:
+      includeGeofence && row.latitude != null && row.latitude !== ""
+        ? Number(row.latitude)
+        : null,
+    longitude:
+      includeGeofence && row.longitude != null && row.longitude !== ""
+        ? Number(row.longitude)
+        : null,
+    geofence_radius_m: includeGeofence
+      ? ((row.geofence_radius_m as number) ?? 200)
+      : 200,
+    geofence_enabled: includeGeofence
+      ? ((row.geofence_enabled as boolean) ?? true)
+      : true,
+    manager_employee_id: (row.manager_employee_id as string | null) ?? null,
+  }
 }
 
 export async function loadManagerName(
@@ -27,13 +66,7 @@ export async function loadManagerName(
 }
 
 function mapBranchCore(row: BranchCore): BranchCore {
-  return {
-    id: row.id,
-    name: row.name,
-    code: row.code,
-    address: row.address,
-    manager_employee_id: row.manager_employee_id,
-  }
+  return { ...row }
 }
 
 export async function fetchBranchBySlug(
@@ -48,7 +81,7 @@ export async function fetchBranchBySlug(
 
   const { data, error } = await supabase
     .from("hr_branches")
-    .select("id, name, code, address, manager_employee_id")
+    .select(BRANCH_SELECT)
     .order("name")
 
   if (error) throw error
@@ -73,30 +106,41 @@ export async function fetchBranchById(
 ): Promise<BranchDetail | null> {
   const { data, error } = await supabase
     .from("hr_branches")
-    .select("id, name, code, address, manager_employee_id")
+    .select(BRANCH_SELECT)
     .eq("id", branchId)
     .maybeSingle()
 
   if (error) throw error
   if (!data) return null
 
-  const core = mapBranchCore(data as BranchCore)
+  const core = mapBranchCore(parseBranchRow(data as Record<string, unknown>))
   const manager_name = await loadManagerName(supabase, core.manager_employee_id)
 
   return { ...core, manager_name }
 }
 
 export async function fetchAllBranches(
-  supabase: SupabaseClient
+  supabase: SupabaseClient,
+  options?: { forForms?: boolean }
 ): Promise<BranchRow[]> {
-  const { data, error } = await supabase
-    .from("hr_branches")
-    .select("id, name, code, address, manager_employee_id")
-    .order("name")
+  const includeGeofence = !options?.forForms
+  const { data, error } = options?.forForms
+    ? await supabase
+        .from("hr_branches")
+        .select(BRANCH_FORM_SELECT)
+        .order("name")
+    : await supabase
+        .from("hr_branches")
+        .select(BRANCH_SELECT)
+        .order("name")
 
   if (error) throw error
 
-  const rows = (data ?? []) as BranchCore[]
+  const rows = (data ?? []).map((row) =>
+    parseBranchRow(row as unknown as Record<string, unknown>, {
+      includeGeofence,
+    })
+  )
   const managerIds = [
     ...new Set(
       rows

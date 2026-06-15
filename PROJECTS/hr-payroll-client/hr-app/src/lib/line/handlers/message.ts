@@ -1,13 +1,19 @@
 import type { messagingApi, webhook } from "@line/bot-sdk"
 
-import { checkIn } from "@/lib/attendance/check-in"
+import { checkIn, type CheckInLocation } from "@/lib/attendance/check-in"
+import { checkOut } from "@/lib/attendance/check-out"
 import { formatIctTime } from "@/lib/attendance/late"
+import { getLineTodayAttendanceState } from "@/lib/attendance/today-state"
 import { getLineClient } from "@/lib/line/client"
 import { checkinConfirmFlex } from "@/lib/line/flex/checkin"
+import { checkoutSummaryFlex } from "@/lib/line/flex/checkout"
 import {
   alreadyCheckedInFlex,
+  alreadyCheckedOutFlex,
   menuHintFlex,
+  notCheckedInFlex,
   notRegisteredFlex,
+  outsideGeofenceFlex,
   pendingApprovalFlex,
 } from "@/lib/line/flex/menu-guide"
 import { buildActionMessages } from "@/lib/line/handlers/actions"
@@ -19,7 +25,73 @@ function isUserChatEnabled(): boolean {
   return process.env.LINE_USER_CHAT_ENABLED === "true"
 }
 
-async function checkinMessages(
+function locationFromMessage(
+  message: webhook.LocationMessageContent
+): CheckInLocation {
+  return {
+    latitude: message.latitude,
+    longitude: message.longitude,
+    ...(message.address ? { address: message.address } : {}),
+  }
+}
+
+function checkInMessages(result: Awaited<ReturnType<typeof checkIn>>): messagingApi.Message[] {
+  switch (result.status) {
+    case "success":
+      return [
+        checkinConfirmFlex({
+          name: result.employeeName,
+          timeText: formatIctTime(result.checkInAt),
+          lateMinutes: result.lateMinutes,
+        }),
+      ]
+    case "already_checked_in":
+      return [alreadyCheckedInFlex(formatIctTime(result.checkInAt))]
+    case "outside_geofence":
+      return [
+        outsideGeofenceFlex({
+          distanceM: result.distanceM,
+          limitM: result.limitM,
+        }),
+      ]
+    case "pending_approval":
+      return [pendingApprovalFlex()]
+    case "not_registered":
+      return [notRegisteredFlex()]
+  }
+}
+
+function checkOutMessages(result: Awaited<ReturnType<typeof checkOut>>): messagingApi.Message[] {
+  switch (result.status) {
+    case "success":
+      return [
+        checkoutSummaryFlex({
+          name: result.employeeName,
+          inText: formatIctTime(result.checkInAt),
+          outText: formatIctTime(result.checkOutAt),
+          workMinutes: result.workMinutes,
+          overtimeMinutes: result.overtimeMinutes,
+        }),
+      ]
+    case "already_checked_out":
+      return [alreadyCheckedOutFlex(formatIctTime(result.checkOutAt))]
+    case "outside_geofence":
+      return [
+        outsideGeofenceFlex({
+          distanceM: result.distanceM,
+          limitM: result.limitM,
+        }),
+      ]
+    case "not_checked_in":
+      return [notCheckedInFlex()]
+    case "pending_approval":
+      return [pendingApprovalFlex()]
+    case "not_registered":
+      return [notRegisteredFlex()]
+  }
+}
+
+async function locationMessages(
   event: webhook.MessageEvent & { message: webhook.LocationMessageContent },
 ): Promise<messagingApi.Message[]> {
   const lineUserId =
@@ -33,30 +105,26 @@ async function checkinMessages(
     ]
   }
 
-  const result = await checkIn({
-    lineUserId,
-    location: {
-      latitude: event.message.latitude,
-      longitude: event.message.longitude,
-      ...(event.message.address ? { address: event.message.address } : {}),
-    },
-  })
+  const location = locationFromMessage(event.message)
+  const now = new Date()
+  const today = await getLineTodayAttendanceState(lineUserId, now)
 
-  switch (result.status) {
-    case "success":
-      return [
-        checkinConfirmFlex({
-          name: result.employeeName,
-          timeText: formatIctTime(result.checkInAt),
-          lateMinutes: result.lateMinutes,
-        }),
-      ]
-    case "already_checked_in":
-      return [alreadyCheckedInFlex(formatIctTime(result.checkInAt))]
-    case "pending_approval":
-      return [pendingApprovalFlex()]
+  switch (today.kind) {
     case "not_registered":
       return [notRegisteredFlex()]
+    case "none": {
+      const result = await checkIn({ lineUserId, location, now })
+      return checkInMessages(result)
+    }
+    case "checked_in": {
+      const result = await checkOut({ lineUserId, location, now })
+      if (result.status === "not_checked_in") {
+        return [alreadyCheckedInFlex(formatIctTime(today.checkInAt))]
+      }
+      return checkOutMessages(result)
+    }
+    case "checked_out":
+      return [alreadyCheckedOutFlex(formatIctTime(today.checkOutAt))]
   }
 }
 
@@ -68,7 +136,7 @@ export async function handleMessage(
   }
 
   if (event.message.type === "location") {
-    const messages = await checkinMessages(
+    const messages = await locationMessages(
       event as webhook.MessageEvent & {
         message: webhook.LocationMessageContent
       }

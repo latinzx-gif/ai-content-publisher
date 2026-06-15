@@ -8,7 +8,8 @@ import { getCurrentEmployee } from "@/lib/auth/session"
 import { createClient } from "@/lib/supabase/server"
 
 const ERROR_MESSAGES: Record<string, string> = {
-  forbidden: "บัญชีของคุณไม่มีสิทธิ์เข้าถึงหน้านี้",
+  forbidden:
+    "บัญชีไม่มีสิทธิ์เข้า Admin — ตรวจ Role ต้องเป็น hr (HR Officer) และสถานะ active",
   invalid_state: "การเข้าสู่ระบบหมดอายุ กรุณาลองใหม่อีกครั้ง",
   line_login_failed: "เข้าสู่ระบบด้วย LINE ไม่สำเร็จ กรุณาลองใหม่อีกครั้ง",
   session_failed:

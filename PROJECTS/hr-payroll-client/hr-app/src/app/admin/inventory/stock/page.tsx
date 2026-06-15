@@ -15,7 +15,7 @@ import { InventoryLoadError } from "@/features/inventory/InventorySearchBar"
 import { listInvStockRows } from "@/features/inventory/stock-data"
 import { StockFilters } from "@/features/inventory/StockFilters"
 import { isCeo, isDev } from "@/lib/auth/roles"
-import { requireRole } from "@/lib/auth/require-role"
+import { requireInventoryPortal } from "@/lib/auth/require-inventory-portal"
 
 type PageProps = {
   searchParams?: Promise<{
@@ -27,7 +27,7 @@ type PageProps = {
 }
 
 export default async function InventoryStockPage({ searchParams }: PageProps) {
-  const employee = await requireRole("hr", "admin", "ceo", "dev")
+  const employee = await requireInventoryPortal()
   const readOnly = isCeo(employee.role) && !isDev(employee.role)
 
   const params = await searchParams

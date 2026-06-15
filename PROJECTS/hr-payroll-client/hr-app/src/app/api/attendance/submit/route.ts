@@ -2,7 +2,7 @@ import { NextResponse } from "next/server"
 
 import { submitDailyAttendance } from "@/lib/attendance/submit-daily"
 import { getCurrentEmployee } from "@/lib/auth/session"
-import { notifyBranchManager } from "@/lib/line/notify-branch-manager"
+import { notifyHr } from "@/lib/line/notify-hr"
 
 export async function POST() {
   const employee = await getCurrentEmployee()
@@ -14,11 +14,17 @@ export async function POST() {
 
   switch (result.status) {
     case "success": {
-      await notifyBranchManager({
-        employeeId: result.employeeId,
-        kind: "attendance",
-        employeeName: result.employeeName,
-      }).catch((err) => console.error("attendance submit BM notify:", err))
+      const baseUrl = process.env.NEXT_PUBLIC_BASE_URL ?? "https://hr-app-two-iota.vercel.app"
+      await notifyHr([
+        {
+          type: "text",
+          text: [
+            "📋 สรุปเข้างานรอ HR อนุมัติ",
+            `พนักงาน: ${result.employeeName}`,
+            `อนุมัติ: ${baseUrl}/admin/attendance`,
+          ].join("\n"),
+        },
+      ]).catch((err) => console.error("attendance submit HR notify:", err))
       return NextResponse.json({ ok: true, expiresAt: result.expiresAt })
     }
     case "not_checked_in":

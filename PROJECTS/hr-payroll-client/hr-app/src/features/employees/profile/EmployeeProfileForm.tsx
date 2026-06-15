@@ -1,5 +1,6 @@
 "use client"
 
+import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useCallback, useMemo, useState } from "react"
 
@@ -31,6 +32,20 @@ import {
   type AssignableRole,
 } from "@/lib/auth/employee-roles"
 import { roleDisplayLabel } from "@/lib/auth/labels"
+import {
+  defaultPayTypeForBranchCode,
+  PAY_TYPE_OPTIONS,
+  salaryFieldLabel,
+  type PayType,
+} from "@/lib/payroll/pay-type"
+import {
+  defaultPayDayForNationality,
+  NATIONALITY_OPTIONS,
+  PAY_DAY_OPTIONS,
+  payDayLabel,
+  type Nationality,
+  type PayDay,
+} from "@/lib/payroll/pay-day"
 import { cn } from "@/lib/utils"
 
 const inputBase =
@@ -67,6 +82,8 @@ const CONTRACT_OPTIONS: Array<{ value: ContractType; label: string }> = [
 type FormState = {
   name: string
   date_of_birth: string
+  nationality: Nationality | ""
+  pay_day: PayDay | ""
   phone: string
   email: string
   position: string
@@ -81,6 +98,7 @@ type FormState = {
   role: AssignableRole
   employee_code: string
   branch_id: string
+  pay_type: PayType
   salary_payment_method: SalaryPaymentMethod
   bank_name: string
   bank_account_name: string
@@ -95,6 +113,8 @@ function toFormState(profile: EmployeeProfile): FormState {
   return {
     name: profile.name,
     date_of_birth: profile.date_of_birth ?? "",
+    nationality: profile.nationality ?? "",
+    pay_day: profile.pay_day ?? "",
     phone: profile.phone ?? "",
     email: profile.email ?? "",
     position: profile.position ?? "",
@@ -111,6 +131,7 @@ function toFormState(profile: EmployeeProfile): FormState {
       : "employee",
     employee_code: profile.employee_code ?? "",
     branch_id: profile.branch_id ?? "",
+    pay_type: profile.pay_type,
     salary_payment_method:
       profile.salary_payment_method ??
       (profile.bank_account_number ? "bank" : null),
@@ -303,6 +324,49 @@ export function EmployeeProfileForm({
                 onChange={(e) => setField("date_of_birth", e.target.value)}
               />
             </Field>
+            <Field label="สัญชาติ">
+              <select
+                className={inputClassNameCompact}
+                value={form.nationality}
+                onChange={(e) => {
+                  const nationality = e.target.value as Nationality | ""
+                  setForm((prev) => ({
+                    ...prev,
+                    nationality,
+                    pay_day: nationality ? defaultPayDayForNationality(nationality) : prev.pay_day,
+                  }))
+                }}
+              >
+                <option value="">— เลือก —</option>
+                {NATIONALITY_OPTIONS.map((opt) => (
+                  <option key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </option>
+                ))}
+              </select>
+            </Field>
+            <Field label="วันจ่ายเงินเดือน">
+              <select
+                className={inputClassNameCompact}
+                value={form.pay_day === "" ? "" : String(form.pay_day)}
+                onChange={(e) => {
+                  const v = e.target.value
+                  setField("pay_day", v === "" ? "" : (Number(v) as PayDay))
+                }}
+              >
+                <option value="">— ตามสัญชาติ —</option>
+                {PAY_DAY_OPTIONS.map((opt) => (
+                  <option key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </option>
+                ))}
+              </select>
+              {form.pay_day !== "" ? (
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Odoo batch: {payDayLabel(form.pay_day)}
+                </p>
+              ) : null}
+            </Field>
             <Field label="เบอร์โทร">
               <input
                 type="tel"
@@ -431,9 +495,13 @@ export function EmployeeProfileForm({
                       ? departments.filter((d) => d.branch_id === nextBranchId)
                       : departments
                     const deptOk = nextDepts.some((d) => d.name === prev.department)
+                    const branch = branches.find((b) => b.id === nextBranchId)
                     return {
                       ...prev,
                       branch_id: nextBranchId,
+                      pay_type: branch
+                        ? defaultPayTypeForBranchCode(branch.code)
+                        : prev.pay_type,
                       department: deptOk ? prev.department : "",
                       position: deptOk ? prev.position : "",
                     }
@@ -508,7 +576,28 @@ export function EmployeeProfileForm({
                 ))}
               </select>
             </Field>
-            <Field label="เงินเดือน (บาท)">
+            <Field label="ประเภทการจ่าย">
+              <select
+                className={inputClassName}
+                value={form.pay_type}
+                onChange={(e) =>
+                  setField("pay_type", e.target.value as PayType)
+                }
+              >
+                {PAY_TYPE_OPTIONS.map((opt) => (
+                  <option key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </option>
+                ))}
+              </select>
+              <p className="mt-1 text-xs text-muted-foreground">
+                ดูเงื่อนไขและค่า Odoo ที่{" "}
+                <Link href="/admin/payroll/settings" className="text-brand-red hover:underline">
+                  ตั้งค่าเงินเดือน
+                </Link>
+              </p>
+            </Field>
+            <Field label={salaryFieldLabel(form.pay_type)}>
               <input
                 type="number"
                 min="0"
@@ -518,6 +607,11 @@ export function EmployeeProfileForm({
                 onChange={(e) => setField("salary", e.target.value)}
               />
             </Field>
+            {form.status === "active" && !form.salary.trim() ? (
+              <p className="text-xs text-amber-700">
+                พนักงาน Active ควรมี {salaryFieldLabel(form.pay_type).toLowerCase()} ก่อน sync Odoo
+              </p>
+            ) : null}
             <Field label="สถานะพนักงาน">
               <select
                 className={inputClassNameCompact}

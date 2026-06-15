@@ -3,9 +3,10 @@ import { redirect } from "next/navigation"
 
 import { AdminShell } from "@/components/admin/AdminShell"
 import {
-  getNavGroupsForRole,
+  getNavGroupsForEmployee,
   isBranchPortalPath,
 } from "@/components/admin/branch-nav"
+import { isInventoryPortalPath } from "@/components/admin/inventory-nav"
 import { withNavGroupAlertBadges } from "@/features/notifications/nav-badges"
 import {
   getNotificationInbox,
@@ -20,6 +21,7 @@ import {
 import {
   canEmployeeAccessAdminPortal,
   isBranchManager,
+  isInventoryPortalUser,
   hasFullDataAccess,
   isDev,
 } from "@/lib/auth/roles"
@@ -39,6 +41,7 @@ export default async function AdminLayout({
   const pathname = (await headers()).get("x-pathname") ?? ""
   const dev = isDev(employee.role)
   const branchManager = !dev && isBranchManager(employee.role)
+  const inventoryPortal = !dev && isInventoryPortalUser(employee)
 
   if (!dev) {
     if (
@@ -47,6 +50,13 @@ export default async function AdminLayout({
       !isBranchPortalPath(pathname)
     ) {
       redirect("/admin/branch")
+    }
+    if (
+      inventoryPortal &&
+      pathname.startsWith("/admin") &&
+      !isInventoryPortalPath(pathname)
+    ) {
+      redirect("/admin/inventory")
     }
   }
 
@@ -70,7 +80,7 @@ export default async function AdminLayout({
   let navGroups =
     dev && devView
       ? getDevNavGroups(devView)
-      : getNavGroupsForRole(employee.role)
+      : getNavGroupsForEmployee(employee)
 
   if (Object.keys(notificationInbox.navBadges).length > 0) {
     navGroups = withNavGroupAlertBadges(navGroups, notificationInbox.navBadges)
@@ -81,8 +91,12 @@ export default async function AdminLayout({
       alertBadge={alertBadge}
       approvalBadge={approvalBadge}
       notificationItems={notificationInbox.items}
-      showComplianceLink={notificationScope === "hr" || hasFullDataAccess(employee.role)}
+      showComplianceLink={
+        (notificationScope === "hr" || hasFullDataAccess(employee.role)) &&
+        !inventoryPortal
+      }
       branchMode={navMode?.branchMode ?? branchManager}
+      inventoryMode={inventoryPortal}
       devAllMode={navMode?.devAllMode ?? false}
       devView={devView}
       navGroups={navGroups}

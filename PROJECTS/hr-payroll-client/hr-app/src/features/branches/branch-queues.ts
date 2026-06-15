@@ -45,7 +45,7 @@ export async function getBranchOvertimeQueue(branchId: string) {
       `id, work_date, start_time, end_time, approval_status, ${EMPLOYEE_VIA_OVERTIME}!inner(name, branch_id)`
     )
     .eq("hr_employees.branch_id", branchId)
-    .in("approval_status", ["pending_manager", "pending_hr"])
+    .eq("approval_status", "pending_hr")
     .order("submitted_at", { ascending: true })
     .limit(50)
 

@@ -32,7 +32,7 @@ import {
   type RecordConsumptionInput,
   type RejectDamageInput,
 } from "@/features/inventory/validators/consumption"
-import { canManageHr, isCeo, isDev } from "@/lib/auth/roles"
+import { canAccessInventoryPortal, canManageHr, isCeo, isDev } from "@/lib/auth/roles"
 import { getCurrentEmployee } from "@/lib/auth/session"
 import { createClient } from "@/lib/supabase/server"
 
@@ -52,12 +52,17 @@ function revalidateConsumptionDamage(id?: string) {
   if (id) revalidatePath(`${DAMAGE_PATH}/${id}`)
 }
 
-function canReadAllInventory(role: Parameters<typeof canManageHr>[0]) {
-  return canManageHr(role) || isDev(role) || isCeo(role)
+function canReadAllInventory(employee: Awaited<ReturnType<typeof assertActiveInventoryEmployee>>) {
+  return (
+    canManageHr(employee.role) ||
+    isDev(employee.role) ||
+    isCeo(employee.role) ||
+    canAccessInventoryPortal(employee)
+  )
 }
 
-function canApproveDamageRole(role: Parameters<typeof canManageHr>[0]) {
-  return canManageHr(role) || isDev(role)
+function canApproveDamageRole(employee: Awaited<ReturnType<typeof assertActiveInventoryEmployee>>) {
+  return canManageHr(employee.role) || isDev(employee.role) || canAccessInventoryPortal(employee)
 }
 
 function canApproveAdminDamageRole(role: Parameters<typeof canManageHr>[0]) {
@@ -283,7 +288,7 @@ export async function listDamageReports(
     .select("*")
     .order("created_at", { ascending: false })
 
-  if (!canReadAllInventory(employee.role)) {
+  if (!canReadAllInventory(employee)) {
     query = query.eq("created_by", employee.id)
   }
   if (payload.status) query = query.eq("status", payload.status)
@@ -312,7 +317,7 @@ export async function getDamageReportDetail(
   if (!data) return null
 
   const damage = mapDamage(data as Record<string, unknown>)
-  if (!canReadAllInventory(employee.role) && damage.created_by !== employee.id) {
+  if (!canReadAllInventory(employee) && damage.created_by !== employee.id) {
     return null
   }
 
@@ -419,7 +424,7 @@ export async function approveDamage(
 ): Promise<InventoryActionState> {
   try {
     const employee = await assertActiveInventoryEmployee()
-    if (!canApproveDamageRole(employee.role)) {
+    if (!canApproveDamageRole(employee)) {
       return { success: false, error: "ไม่มีสิทธิ์อนุมัติรายงานความเสียหาย" }
     }
     const payload = approveDamageSchema.parse(input)
@@ -450,7 +455,7 @@ export async function rejectDamage(
 ): Promise<InventoryActionState> {
   try {
     const employee = await assertActiveInventoryEmployee()
-    if (!canApproveDamageRole(employee.role)) {
+    if (!canApproveDamageRole(employee)) {
       return { success: false, error: "ไม่มีสิทธิ์ปฏิเสธรายงานความเสียหาย" }
     }
     const payload = rejectDamageSchema.parse(input)

@@ -1,8 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server"
 
 import { recordPayrollHours } from "@/lib/approval/payroll-ledger"
-import { getCurrentEmployeeWithBranch, getManagedBranchId, isBranchManager, isHrOrAdmin } from "@/lib/auth/branch"
-import { notifyHr } from "@/lib/line/notify-hr"
+import { canApproveHrRequests, getCurrentEmployeeWithBranch } from "@/lib/auth/branch"
 import { createClient } from "@/lib/supabase/server"
 
 export async function POST(
@@ -41,66 +40,15 @@ export async function POST(
   const emp = Array.isArray(row.hr_employees) ? row.hr_employees[0] : row.hr_employees
   const branchId = (emp as { branch_id?: string })?.branch_id ?? null
 
-  if (row.approval_status === "pending_manager") {
-    if (!isBranchManager(caller.role) && !isHrOrAdmin(caller.role)) {
-      return NextResponse.json({ error: "forbidden" }, { status: 403 })
-    }
-    if (isBranchManager(caller.role)) {
-      const managed = await getManagedBranchId(caller.id)
-      if (managed !== branchId) {
-        return NextResponse.json({ error: "forbidden" }, { status: 403 })
-      }
-    }
-
-    if (body.action === "reject") {
-      const { error } = await supabase
-        .from("hr_attendance_submissions")
-        .update({
-          approval_status: "rejected",
-          manager_decided_by: caller.id,
-          manager_decided_at: new Date().toISOString(),
-          decision_note: body.note?.trim() || null,
-        })
-        .eq("id", id)
-      if (error) return NextResponse.json({ error: error.message }, { status: 500 })
-      return NextResponse.json({ ok: true })
-    }
-
-    const { error } = await supabase
-      .from("hr_attendance_submissions")
-      .update({
-        approval_status: "pending_hr",
-        manager_decided_by: caller.id,
-        manager_decided_at: new Date().toISOString(),
-      })
-      .eq("id", id)
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 })
-
-    const employeeName = (emp as { name?: string })?.name ?? "—"
-    const workDate = row.work_date as string
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL ?? "https://hr-app-two-iota.vercel.app"
-    try {
-      await notifyHr([
-        {
-          type: "text",
-          text: [
-            "📋 สรุปเข้างานรอ HR อนุมัติ",
-            `พนักงาน: ${employeeName}`,
-            `วันที่: ${workDate}`,
-            `อนุมัติ: ${baseUrl}/admin/attendance`,
-          ].join("\n"),
-        },
-      ])
-    } catch (lineError) {
-      console.error("attendance BM→HR notify failed:", lineError)
-    }
-
-    return NextResponse.json({ ok: true })
-  }
-
-  if (row.approval_status === "pending_hr") {
-    if (!isHrOrAdmin(caller.role)) {
-      return NextResponse.json({ error: "forbidden" }, { status: 403 })
+  if (
+    row.approval_status === "pending_hr" ||
+    row.approval_status === "pending_manager"
+  ) {
+    if (!canApproveHrRequests(caller.role)) {
+      return NextResponse.json(
+        { error: "เฉพาะ HR Officer เท่านั้นที่อนุมัติสรุปเข้างานได้" },
+        { status: 403 }
+      )
     }
 
     if (body.action === "reject") {
@@ -120,28 +68,32 @@ export async function POST(
     const att = Array.isArray(row.hr_attendance) ? row.hr_attendance[0] : row.hr_attendance
     const hours = Number((att as { work_hours?: number })?.work_hours ?? 0)
 
-    const { error } = await supabase
+    const { error: updateError } = await supabase
       .from("hr_attendance_submissions")
       .update({
         approval_status: "approved",
         hr_decided_by: caller.id,
         hr_decided_at: new Date().toISOString(),
+        decision_note: body.note?.trim() || null,
       })
       .eq("id", id)
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
-    await recordPayrollHours({
-      employeeId: row.employee_id as string,
-      branchId,
-      workDate: row.work_date as string,
-      hours,
-      lineType: "regular",
-      sourceType: "attendance_submission",
-      sourceId: id,
-    })
+    if (updateError) return NextResponse.json({ error: updateError.message }, { status: 500 })
+
+    if (hours > 0) {
+      await recordPayrollHours({
+        employeeId: row.employee_id as string,
+        branchId,
+        workDate: row.work_date as string,
+        hours,
+        lineType: "regular",
+        sourceType: "attendance",
+        sourceId: id,
+      })
+    }
 
     return NextResponse.json({ ok: true })
   }
 
-  return NextResponse.json({ error: "invalid state" }, { status: 400 })
+  return NextResponse.json({ error: "already decided" }, { status: 409 })
 }

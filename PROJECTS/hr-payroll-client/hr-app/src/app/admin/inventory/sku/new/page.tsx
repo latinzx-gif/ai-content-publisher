@@ -5,10 +5,10 @@ import { AdminPageShell } from "@/components/brand/AdminPageShell"
 import { getInvUnits } from "@/features/inventory/actions/sku"
 import { SkuForm } from "@/features/inventory/SkuForm"
 import { canManageHr } from "@/lib/auth/roles"
-import { requireRole } from "@/lib/auth/require-role"
+import { requireInventoryMasterData } from "@/lib/auth/require-inventory-portal"
 
 export default async function NewSkuPage() {
-  const employee = await requireRole("hr", "admin", "ceo", "dev")
+  const employee = await requireInventoryMasterData()
   if (!canManageHr(employee.role)) {
     redirect("/admin/inventory/sku")
   }

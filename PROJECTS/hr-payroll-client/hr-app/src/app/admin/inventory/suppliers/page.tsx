@@ -22,7 +22,7 @@ import {
   InventorySearchBar,
 } from "@/features/inventory/InventorySearchBar"
 import { canManageHr, isCeo, isDev } from "@/lib/auth/roles"
-import { requireRole } from "@/lib/auth/require-role"
+import { requireInventoryMasterData } from "@/lib/auth/require-inventory-portal"
 import { cn } from "@/lib/utils"
 
 type PageProps = {
@@ -30,7 +30,7 @@ type PageProps = {
 }
 
 export default async function InventorySuppliersPage({ searchParams }: PageProps) {
-  const employee = await requireRole("hr", "admin", "ceo", "dev")
+  const employee = await requireInventoryMasterData()
   const readOnly = isCeo(employee.role) && !isDev(employee.role)
   const canManage = canManageHr(employee.role)
 

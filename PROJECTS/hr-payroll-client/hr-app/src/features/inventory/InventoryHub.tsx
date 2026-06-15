@@ -1,9 +1,17 @@
 import Link from "next/link"
-import { BarChart3, Building2, Package, PackagePlus, Truck, Warehouse } from "lucide-react"
+import {
+  BarChart3,
+  Building2,
+  ClipboardList,
+  Package,
+  PackagePlus,
+  Truck,
+  Warehouse,
+} from "lucide-react"
 
 import { WidgetCard } from "@/components/brand/WidgetCard"
 
-const SECTIONS = [
+const OPERATIONAL_SECTIONS = [
   {
     title: "รับเข้าสินค้า",
     description: "Inbound — สร้างใบ → คลังสแกน → Inventory อนุมัติเพิ่มสต็อก",
@@ -16,6 +24,27 @@ const SECTIONS = [
     href: "/admin/inventory/stock",
     icon: BarChart3,
   },
+  {
+    title: "ใบเบิกสินค้า",
+    description: "อนุมัติและจ่ายสินค้าตามใบเบิก",
+    href: "/admin/inventory/requisition",
+    icon: ClipboardList,
+  },
+  {
+    title: "บันทึกใช้จริง",
+    description: "บันทึกการใช้วัตถุดิบจริง — สต็อกลดทันที",
+    href: "/admin/inventory/consumption",
+    icon: Package,
+  },
+  {
+    title: "แจ้งเสียหาย",
+    description: "รายงานสินค้าเสียหาย / หมดอายุ / สูญหาย",
+    href: "/admin/inventory/damage",
+    icon: PackagePlus,
+  },
+] as const
+
+const MASTER_DATA_SECTIONS = [
   {
     title: "SKU / วัตถุดิบ",
     description: "รหัสสินค้า Barcode หน่วย Min/Max",
@@ -42,10 +71,14 @@ const SECTIONS = [
   },
 ] as const
 
-export function InventoryHub() {
+export function InventoryHub({ staffMode = false }: { staffMode?: boolean }) {
+  const sections = staffMode
+    ? OPERATIONAL_SECTIONS
+    : [...OPERATIONAL_SECTIONS, ...MASTER_DATA_SECTIONS]
+
   return (
     <div className="grid gap-4 sm:grid-cols-2">
-      {SECTIONS.map((section) => {
+      {sections.map((section) => {
         const Icon = section.icon
         return (
           <Link key={section.href} href={section.href} className="block h-full">

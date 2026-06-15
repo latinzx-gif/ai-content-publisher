@@ -13,7 +13,7 @@ import { WidgetCard } from "@/components/brand/WidgetCard"
 import type { BranchDashboardData } from "@/features/branch-dashboard/data"
 import { BranchEmployeeAlertIcons } from "@/features/branches/BranchEmployeeAlertIcons"
 import { BranchDeleteButton } from "@/features/branches/BranchDeleteButton"
-import { BranchInfoEditor } from "@/features/branches/BranchInfoEditor"
+import { BranchLocationEditor } from "@/features/branches/BranchLocationEditor"
 import { BranchManagerSelect } from "@/features/branches/BranchManagerSelect"
 import type { BranchManagerCandidate } from "@/features/branches/manager-candidates"
 import type {
@@ -22,6 +22,7 @@ import type {
 } from "@/features/branches/branch-hub-data"
 import { roleDisplayLabel } from "@/lib/auth/labels"
 import { branchAdminSubPath } from "@/lib/branches/branch-slug"
+import { branchGeofenceBadgeText, branchGeofenceReady } from "@/lib/geofence/status"
 
 const sectionLinks = (branch: BranchDetail) =>
   [
@@ -101,6 +102,15 @@ export function HrBranchHub({
                   รหัส {branch.code}
                 </span>
               ) : null}
+              <span
+                className={`rounded-full px-2 py-0.5 text-xs font-medium ${
+                  branchGeofenceReady(branch)
+                    ? "bg-green-100 text-green-800"
+                    : "bg-amber-100 text-amber-900"
+                }`}
+              >
+                {branchGeofenceBadgeText(branch)}
+              </span>
             </div>
             <p className="mt-2 flex items-start gap-1.5 text-sm text-muted-foreground">
               <MapPin className="mt-0.5 size-3.5 shrink-0" />
@@ -119,7 +129,7 @@ export function HrBranchHub({
                 readOnly={readOnly}
               />
             </div>
-            {!readOnly ? <BranchInfoEditor branch={branch} /> : null}
+            {!readOnly ? <BranchLocationEditor branch={branch} /> : null}
           </div>
           <div className="flex flex-col items-end gap-2">
             {!readOnly ? (

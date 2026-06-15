@@ -18,6 +18,7 @@ import { Button, buttonVariants } from "@/components/ui/button"
 import { AutoSaveIndicator } from "@/features/employees/AutoSaveIndicator"
 import { buildAddEmployeeBody } from "@/features/employees/employee-form-payload"
 import { useDebouncedAutoSave } from "@/features/employees/use-debounced-auto-save"
+import type { BranchRow } from "@/features/branches/data"
 import type {
   OrgDepartment,
   OrgPosition,
@@ -34,6 +35,19 @@ import {
   type AssignableRole,
 } from "@/lib/auth/employee-roles"
 import { roleDisplayLabel } from "@/lib/auth/labels"
+import {
+  defaultPayTypeForBranchCode,
+  PAY_TYPE_OPTIONS,
+  salaryFieldLabel,
+  type PayType,
+} from "@/lib/payroll/pay-type"
+import {
+  defaultPayDayForNationality,
+  NATIONALITY_OPTIONS,
+  PAY_DAY_OPTIONS,
+  type Nationality,
+  type PayDay,
+} from "@/lib/payroll/pay-day"
 import { cn } from "@/lib/utils"
 
 const inputClassName =
@@ -67,9 +81,11 @@ function FormField({
 export function AddEmployeeForm({
   departments,
   positions,
+  branches,
 }: {
   departments: OrgDepartment[]
   positions: OrgPosition[]
+  branches: BranchRow[]
 }) {
   const router = useRouter()
   const [saving, setSaving] = useState(false)
@@ -90,7 +106,8 @@ export function AddEmployeeForm({
     emergency_address: "",
     date_of_birth: "",
     gender: "",
-    nationality: "",
+    nationality: "" as Nationality | "",
+    pay_day: "" as PayDay | "",
     id_number: "",
     department: "",
     position: "",
@@ -111,6 +128,8 @@ export function AddEmployeeForm({
     status: "active" as "active" | "inactive",
     role: "employee" as AssignableRole,
     employee_code: "",
+    branch_id: "",
+    pay_type: "hourly" as PayType,
     work_shift_id: "",
     default_check_in_time: "",
     default_check_out_time: "",
@@ -377,11 +396,42 @@ export function AddEmployeeForm({
             </select>
           </FormField>
           <FormField label="Nationality">
-            <input
+            <select
               className={inputClassName}
               value={form.nationality}
-              onChange={(e) => setField("nationality", e.target.value)}
-            />
+              onChange={(e) => {
+                const nationality = e.target.value as Nationality | ""
+                setForm((prev) => ({
+                  ...prev,
+                  nationality,
+                  pay_day: nationality ? defaultPayDayForNationality(nationality) : "",
+                }))
+              }}
+            >
+              <option value="">—</option>
+              {NATIONALITY_OPTIONS.map((opt) => (
+                <option key={opt.value} value={opt.value}>
+                  {opt.label}
+                </option>
+              ))}
+            </select>
+          </FormField>
+          <FormField label="Pay Day">
+            <select
+              className={inputClassName}
+              value={form.pay_day === "" ? "" : String(form.pay_day)}
+              onChange={(e) => {
+                const v = e.target.value
+                setField("pay_day", v === "" ? "" : (Number(v) as PayDay))
+              }}
+            >
+              <option value="">— auto —</option>
+              {PAY_DAY_OPTIONS.map((opt) => (
+                <option key={opt.value} value={opt.value}>
+                  {opt.label}
+                </option>
+              ))}
+            </select>
           </FormField>
           <FormField label="ID Number">
             <input
@@ -538,7 +588,51 @@ export function AddEmployeeForm({
               onChange={(e) => setField("probation_end", e.target.value)}
             />
           </FormField>
-          <FormField label="Salary (THB)">
+          <FormField label="สาขา">
+            <select
+              className={inputClassName}
+              value={form.branch_id}
+              onChange={(e) => {
+                const nextBranchId = e.target.value
+                const branch = branches.find((b) => b.id === nextBranchId)
+                setForm((prev) => ({
+                  ...prev,
+                  branch_id: nextBranchId,
+                  pay_type: defaultPayTypeForBranchCode(branch?.code ?? null),
+                }))
+              }}
+            >
+              <option value="">— ไม่ระบุ —</option>
+              {branches.map((b) => (
+                <option key={b.id} value={b.id}>
+                  {b.name}
+                  {b.code ? ` (${b.code})` : ""}
+                </option>
+              ))}
+            </select>
+          </FormField>
+          <FormField label="ประเภทการจ่าย">
+            <select
+              className={inputClassName}
+              value={form.pay_type}
+              onChange={(e) =>
+                setField("pay_type", e.target.value as PayType)
+              }
+            >
+              {PAY_TYPE_OPTIONS.map((opt) => (
+                <option key={opt.value} value={opt.value}>
+                  {opt.label}
+                </option>
+              ))}
+            </select>
+            <p className="mt-1 text-[10px] text-muted-foreground">
+              เปลี่ยนอัตโนมัติตามสาขา — ดูเงื่อนไขที่{" "}
+              <Link href="/admin/payroll/settings" className="text-brand-red hover:underline">
+                ตั้งค่าเงินเดือน
+              </Link>
+            </p>
+          </FormField>
+          <FormField label={salaryFieldLabel(form.pay_type)}>
             <input
               type="number"
               min="0"
@@ -547,6 +641,11 @@ export function AddEmployeeForm({
               value={form.salary}
               onChange={(e) => setField("salary", e.target.value)}
             />
+            {form.status === "active" && !form.salary ? (
+              <p className="mt-1 text-[10px] text-amber-700">
+                แนะนำกรอกอัตราก่อน sync Odoo
+              </p>
+            ) : null}
           </FormField>
           <FormField label="Status">
             <select

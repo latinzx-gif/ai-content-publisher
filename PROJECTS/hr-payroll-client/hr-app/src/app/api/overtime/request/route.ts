@@ -11,7 +11,6 @@ import {
   overtimeSubmitConfirmFlex,
   overtimeSubmitHrNotifyFlex,
 } from "@/lib/line/flex/overtime-request"
-import { notifyBranchManager } from "@/lib/line/notify-branch-manager"
 import { notifyHr, pushToLineUser } from "@/lib/line/notify-hr"
 import { createClient } from "@/lib/supabase/server"
 
@@ -50,6 +49,10 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "invalid fields" }, { status: 400 })
   }
 
+  const otWorkDate: string = workDate
+  const otStartTime: string = startTime
+  const otEndTime: string = endTime
+
   const caller = await getCurrentEmployee()
   if (!caller || caller.status !== "active") {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 })
@@ -57,20 +60,31 @@ export async function POST(request: NextRequest) {
 
   const supabase = await createClient()
   const submittedAt = new Date()
+  const activeCaller = caller
 
-  // Employee self-submit → pending_manager → BM → HR
-  if (caller.role === "employee") {
+  const employeeId =
+    typeof body.employeeId === "string" ? body.employeeId.trim() : undefined
+  const isProxySubmit =
+    Boolean(employeeId && employeeId !== activeCaller.id) &&
+    isBranchManager(activeCaller.role)
+
+  async function insertSelfRequest(
+    submitterId: string,
+    submitterName: string,
+    submitterDepartment: string | null,
+    lineUserId: string | null
+  ) {
     const { data: row, error } = await supabase
       .from("hr_overtime_requests")
       .insert({
-        employee_id: caller.id,
-        work_date: workDate,
-        start_time: startTime,
-        end_time: endTime,
+        employee_id: submitterId,
+        work_date: otWorkDate,
+        start_time: otStartTime,
+        end_time: otEndTime,
         reason,
         status: "pending",
-        approval_status: "pending_manager",
-        submitted_by: caller.id,
+        approval_status: "pending_hr",
+        submitted_by: activeCaller.id,
         submitted_at: submittedAt.toISOString(),
         expires_at: expiresAtFrom(submittedAt).toISOString(),
       })
@@ -78,46 +92,65 @@ export async function POST(request: NextRequest) {
       .single()
 
     if (error || !row) {
-      return NextResponse.json({ error: error?.message ?? "insert failed" }, { status: 500 })
+      return NextResponse.json(
+        { error: error?.message ?? "insert failed" },
+        { status: 500 }
+      )
     }
 
     try {
-      if (caller.line_user_id) {
-        await pushToLineUser(caller.line_user_id, [
+      if (lineUserId) {
+        await pushToLineUser(lineUserId, [
           overtimeSubmitConfirmFlex({
-            employeeName: caller.name,
-            workDate,
-            startTime,
-            endTime,
-            stage: "manager",
+            employeeName: submitterName,
+            workDate: otWorkDate,
+            startTime: otStartTime,
+            endTime: otEndTime,
+            stage: "hr",
           }),
         ])
       }
-      await notifyBranchManager({
-        employeeId: caller.id,
-        kind: "overtime",
-        employeeName: caller.name,
-        detail: `${workDate} ${startTime}–${endTime}`,
-      })
+      await notifyHr([
+        overtimeSubmitHrNotifyFlex({
+          employeeName: submitterName,
+          department: submitterDepartment,
+          workDate: otWorkDate,
+          startTime: otStartTime,
+          endTime: otEndTime,
+          reason,
+        }),
+      ])
     } catch (lineError) {
       console.error("overtime LINE notify failed:", lineError)
     }
 
     return NextResponse.json({
       id: row.id,
-      approval_status: "pending_manager",
-      hours: otHours(startTime, endTime),
+      approval_status: "pending_hr",
+      hours: otHours(otStartTime, otEndTime),
     })
   }
 
-  // Branch manager proxy submit (optional) → skip BM step → pending_hr
-  const callerWithBranch = await getCurrentEmployeeWithBranch()
-  if (!callerWithBranch || !isBranchManager(callerWithBranch.role)) {
-    return NextResponse.json({ error: "forbidden" }, { status: 403 })
+  // Self-submit (LIFF / portal) — any active role including dev, hr, branch_manager
+  if (!isProxySubmit) {
+    return insertSelfRequest(
+      activeCaller.id,
+      activeCaller.name,
+      activeCaller.department,
+      activeCaller.line_user_id
+    )
   }
 
-  const employeeId = body.employeeId
-  if (typeof employeeId !== "string") {
+  // Branch manager proxy submit → skip BM step → pending_hr
+  const callerWithBranch = await getCurrentEmployeeWithBranch()
+  if (!callerWithBranch || !isBranchManager(callerWithBranch.role)) {
+    return NextResponse.json(
+      { error: "ไม่มีสิทธิ์ยื่น OT แทนพนักงานคนอื่น" },
+      { status: 403 }
+    )
+  }
+
+  if (!employeeId) {
     return NextResponse.json({ error: "employeeId required" }, { status: 400 })
   }
 

@@ -17,7 +17,6 @@ import {
   leaveSubmitConfirmFlex,
   leaveSubmitHrNotifyFlex,
 } from "@/lib/line/flex/leave-request"
-import { notifyBranchManager } from "@/lib/line/notify-branch-manager"
 import { notifyHr, pushToLineUser } from "@/lib/line/notify-hr"
 import { createClient } from "@/lib/supabase/server"
 
@@ -156,7 +155,7 @@ export async function POST(request: NextRequest) {
       status: "pending",
       leave_unit: leaveUnit,
       leave_hours: leaveUnit === "hours" ? leaveHours : null,
-      approval_status: "pending_manager",
+      approval_status: "pending_hr",
       submitted_at: submittedAt.toISOString(),
       expires_at: expiresAtFrom(submittedAt).toISOString(),
     })
@@ -231,13 +230,6 @@ export async function POST(request: NextRequest) {
         reason: reason.trim(),
       }),
     ])
-
-    await notifyBranchManager({
-      employeeId: employee.id,
-      kind: "leave",
-      employeeName: employee.name,
-      detail: `${startDate} – ${endDate}`,
-    })
   } catch (lineError) {
     console.error("leave request LINE notify failed:", lineError)
   }

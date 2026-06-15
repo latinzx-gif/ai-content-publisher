@@ -8,14 +8,12 @@ import {
   LINE_REGISTER_COOKIE_OPTS,
 } from "@/lib/auth/register-cookie"
 import { notifyRegistrationPending } from "@/lib/line/notify-registration"
+import { defaultPayTypeForBranchCode } from "@/lib/payroll/pay-type"
 
 type RegisterBody = {
-  employee_code?: string | null
   name?: string
   phone?: string | null
   branch_id?: string | null
-  department?: string | null
-  position?: string | null
 }
 
 const PHONE_RE = /^[0-9+\-\s()]{8,20}$/
@@ -36,14 +34,10 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "invalid body" }, { status: 400 })
   }
 
-  const employeeCode = body.employee_code?.trim() ?? ""
   const name = body.name?.trim()
   const phone = body.phone?.trim() ?? ""
   const branchId = body.branch_id?.trim() ?? ""
 
-  if (!employeeCode) {
-    return NextResponse.json({ error: "กรุณากรอกรหัสพนักงาน" }, { status: 400 })
-  }
   if (!name) {
     return NextResponse.json({ error: "name is required" }, { status: 400 })
   }
@@ -61,7 +55,7 @@ export async function POST(request: NextRequest) {
 
   const { data: branch } = await admin
     .from("hr_branches")
-    .select("id")
+    .select("id, code")
     .eq("id", branchId)
     .maybeSingle()
 
@@ -89,14 +83,12 @@ export async function POST(request: NextRequest) {
     )
   }
 
-  const row = {
+  const baseRow = {
     line_user_id: lineUserId,
-    employee_code: employeeCode,
     name,
     phone,
     branch_id: branchId,
-    department: body.department?.trim() || null,
-    position: body.position?.trim() || null,
+    pay_type: defaultPayTypeForBranchCode(branch.code as string | null),
     role: "employee" as const,
     status: "inactive" as const,
   }
@@ -106,7 +98,7 @@ export async function POST(request: NextRequest) {
   if (existing) {
     const { error: updateError } = await admin
       .from("hr_employees")
-      .update(row)
+      .update(baseRow)
       .eq("id", existing.id)
 
     if (updateError) {
@@ -122,7 +114,12 @@ export async function POST(request: NextRequest) {
   } else {
     const { data: inserted, error: insertError } = await admin
       .from("hr_employees")
-      .insert(row)
+      .insert({
+        ...baseRow,
+        employee_code: null,
+        department: null,
+        position: null,
+      })
       .select("id")
       .single()
 

@@ -18,11 +18,22 @@ type CheckinState =
   | { phase: "submitting" }
   | { phase: "done"; title: string; detail: string; ok: boolean }
 
-function describeError(status: number, error?: string): string {
+function describeError(
+  status: number,
+  data: { error?: string; message?: string; distanceM?: number; limitM?: number }
+): string {
+  if (data.error === "outside_geofence" && data.message) {
+    return data.message
+  }
   if (status === 410) return "QR นี้หมดอายุแล้ว (ใช้ได้เฉพาะวันที่ออก) กรุณาขอ QR ใหม่จาก HR"
   if (status === 401) return "QR ไม่ถูกต้อง กรุณาขอ QR ใหม่จาก HR"
+  if (status === 403 && data.error === "outside_geofence") {
+    const dist = Math.round(data.distanceM ?? 0)
+    const limit = data.limitM ?? 200
+    return `คุณอยู่นอกพื้นที่สาขา (${dist} เมตร จากจุดศูนย์ จำกัด ${limit}m) กรุณาเข้าใกล้สาขาแล้วลองใหม่`
+  }
   if (status === 404) return "ไม่พบข้อมูลพนักงาน กรุณาติดต่อ HR"
-  return error ?? "เกิดข้อผิดพลาด กรุณาลองใหม่"
+  return data.error ?? data.message ?? "เกิดข้อผิดพลาด กรุณาลองใหม่"
 }
 
 function CheckinForm() {
@@ -60,7 +71,7 @@ function CheckinForm() {
         phase: "done",
         ok: false,
         title: "เช็คอินไม่สำเร็จ",
-        detail: describeError(response.status, data.error),
+        detail: describeError(response.status, data),
       })
     }
   }

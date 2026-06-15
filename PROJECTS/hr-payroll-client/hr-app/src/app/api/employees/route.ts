@@ -11,6 +11,13 @@ import { getCurrentEmployee } from "@/lib/auth/session"
 import { validateEmployeeDepartmentRole } from "@/lib/employees/validate-department-role"
 import { validateWorkShiftId } from "@/features/shifts/validate"
 import { normalizeBankFields } from "@/lib/employees/bank-fields"
+import { defaultPayTypeForBranchCode, isValidPayType } from "@/lib/payroll/pay-type"
+import type { PayType } from "@/lib/payroll/pay-type"
+import {
+  defaultPayDayForNationality,
+  isValidNationality,
+  isValidPayDay,
+} from "@/lib/payroll/pay-day"
 import { createClient } from "@/lib/supabase/server"
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
@@ -25,6 +32,7 @@ type CreateBody = {
   position?: string | null
   department?: string | null
   branch_id?: string | null
+  pay_type?: PayType
   salary?: number | null
   contract_start?: string | null
   contract_type?: ContractType
@@ -42,6 +50,8 @@ type CreateBody = {
   work_shift_id?: string | null
   default_check_in_time?: string | null
   default_check_out_time?: string | null
+  nationality?: string | null
+  pay_day?: number | null
 }
 
 export async function POST(request: Request) {
@@ -89,14 +99,25 @@ export async function POST(request: Request) {
 
   const supabase = await createClient()
 
+  let payType: PayType = "hourly"
+  if (body.pay_type !== undefined) {
+    if (!isValidPayType(body.pay_type)) {
+      return NextResponse.json({ error: "invalid pay_type" }, { status: 400 })
+    }
+    payType = body.pay_type
+  }
+
   if (body.branch_id) {
     const { data: branch } = await supabase
       .from("hr_branches")
-      .select("id")
+      .select("id, code")
       .eq("id", body.branch_id)
       .maybeSingle()
     if (!branch) {
       return NextResponse.json({ error: "branch not found" }, { status: 400 })
+    }
+    if (body.pay_type === undefined) {
+      payType = defaultPayTypeForBranchCode(branch.code as string | null)
     }
   }
 
@@ -126,6 +147,24 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "invalid default_check_out_time format (HH:MM)" }, { status: 400 })
   }
 
+  let nationality: string | null = null
+  if (body.nationality !== undefined && body.nationality !== null && body.nationality !== "") {
+    if (!isValidNationality(body.nationality)) {
+      return NextResponse.json({ error: "invalid nationality" }, { status: 400 })
+    }
+    nationality = body.nationality
+  }
+
+  let payDay: number | null = null
+  if (body.pay_day !== undefined && body.pay_day !== null) {
+    if (!isValidPayDay(body.pay_day)) {
+      return NextResponse.json({ error: "invalid pay_day (must be 4 or 5)" }, { status: 400 })
+    }
+    payDay = body.pay_day
+  } else if (nationality) {
+    payDay = defaultPayDayForNationality(nationality)
+  }
+
   const { data, error } = await supabase
     .from("hr_employees")
     .insert({
@@ -138,6 +177,7 @@ export async function POST(request: Request) {
       position: body.position?.trim() || null,
       department: body.department?.trim() || null,
       branch_id: body.branch_id || null,
+      pay_type: payType,
       salary: body.salary ?? null,
       contract_start: body.contract_start || null,
       contract_type: body.contract_type ?? null,
@@ -149,6 +189,8 @@ export async function POST(request: Request) {
       work_shift_id: workShiftId,
       default_check_in_time: body.default_check_in_time || null,
       default_check_out_time: body.default_check_out_time || null,
+      nationality,
+      pay_day: payDay,
       ...bank.updates,
     })
     .select("id")
