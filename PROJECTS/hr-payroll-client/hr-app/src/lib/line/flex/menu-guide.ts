@@ -7,6 +7,8 @@ import {
   menuGuideBubble,
 } from "@/lib/line/flex/base"
 import { BRAND_RED } from "@/lib/line/brand"
+import { t } from "@/lib/i18n/translate"
+import { DEFAULT_LOCALE, type AppLocale } from "@/lib/i18n/types"
 
 function guide(
   altText: string,
@@ -15,11 +17,11 @@ function guide(
   return flexMessage(altText, menuGuideBubble(options))
 }
 
-export function welcomeFlex(): messagingApi.FlexMessage {
+export function welcomeFlex(locale: AppLocale = DEFAULT_LOCALE): messagingApi.FlexMessage {
   const welcomeBody: messagingApi.FlexComponent[] = [
           {
             type: "text",
-            text: "เลือกเมนูด้านล่างเพื่อใช้งานได้ทันที ระบบจะช่วยบันทึกเวลา จัดการลา และติดต่อ HR ให้สะดวกขึ้น",
+            text: t("line.welcome.intro", locale),
             wrap: true,
             size: "sm",
             color: "#4B5563",
@@ -27,17 +29,17 @@ export function welcomeFlex(): messagingApi.FlexMessage {
           { type: "separator", margin: "lg" },
           {
             type: "text",
-            text: "เมนูหลัก",
+            text: t("line.welcome.menuTitle", locale),
             weight: "bold",
             size: "sm",
             color: "#111827",
           },
-          ...menuItemRow("📍", "เช็คอิน / เช็คเอาท์", "บันทึกเวลาเข้างานและเลิกงาน"),
-          ...menuItemRow("⏱️", "ขอ OT", "ยื่นคำขอทำงานล่วงเวลา"),
-          ...menuItemRow("📄", "ขอเอกสาร", "ขอหนังสือรับรอง / เอกสาร HR"),
-          ...menuItemRow("📅", "ขอลา", "ยื่นคำขอลาออนไลน์"),
-          ...menuItemRow("📢", "ร้องเรียน", "แจ้งปัญหาหรือข้อเสนอแนะ"),
-          ...menuItemRow("🎧", "ติดต่อ HR", "สอบถามหรือติดต่อทีม HR"),
+          ...menuItemRow("📍", t("line.welcome.checkin", locale), t("line.welcome.checkinDesc", locale)),
+          ...menuItemRow("⏱️", t("line.welcome.ot", locale), t("line.welcome.otDesc", locale)),
+          ...menuItemRow("📄", t("line.welcome.doc", locale), t("line.welcome.docDesc", locale)),
+          ...menuItemRow("📅", t("line.welcome.leave", locale), t("line.welcome.leaveDesc", locale)),
+          ...menuItemRow("📢", t("line.welcome.complaint", locale), t("line.welcome.complaintDesc", locale)),
+          ...menuItemRow("🎧", t("line.welcome.contact", locale), t("line.welcome.contactDesc", locale)),
           { type: "separator", margin: "lg" },
           {
             type: "box",
@@ -48,14 +50,14 @@ export function welcomeFlex(): messagingApi.FlexMessage {
             contents: [
               {
                 type: "text",
-                text: "💡 กดปุ่ม \"เมนู HR\" ด้านล่างแชท (6 ปุ่ม) แล้วเลือกบริการที่ต้องการ",
+                text: t("line.welcome.tipMenu", locale),
                 wrap: true,
                 size: "xs",
                 color: "#B71C1C",
               },
               {
                 type: "text",
-                text: "📦 คลังสินค้า: พิมพ์ /stock หรือ /inbound (เมื่อ HR เปิดใช้)",
+                text: t("line.welcome.tipStock", locale),
                 wrap: true,
                 size: "xs",
                 color: "#B71C1C",
@@ -65,11 +67,11 @@ export function welcomeFlex(): messagingApi.FlexMessage {
           },
   ]
 
-  return flexMessage("ยินดีต้อนรับสู่ระบบ HR", {
+  return flexMessage(t("line.welcome.alt", locale), {
     type: "bubble",
     header: brandedTitleHeader({
-      title: "ยินดีต้อนรับ!",
-      subtitle: "ระบบ HR & Payroll — ChineseVibe",
+      title: t("line.welcome.title", locale),
+      subtitle: t("line.welcome.subtitle", locale),
       accentColor: BRAND_RED,
       emoji: "🐼",
     }),
@@ -280,76 +282,67 @@ export function checkoutGuideFlex(): messagingApi.FlexMessage {
 export function outsideGeofenceFlex({
   distanceM,
   limitM,
+  locale = DEFAULT_LOCALE,
 }: {
   distanceM: number
   limitM: number
+  locale?: AppLocale
 }): messagingApi.FlexMessage {
   const dist = Math.round(distanceM)
-  return guide("อยู่นอกพื้นที่สาขา", {
+  return guide(t("line.geofence.alt", locale), {
     emoji: "📍",
-    title: "อยู่นอกพื้นที่สาขา",
-    subtitle: `ห่างจากจุดศูนย์ ${dist} เมตร (จำกัด ${limitM}m)`,
+    title: t("line.geofence.title", locale),
+    subtitle: t("line.geofence.desc", locale, { distance: dist, limit: limitM }),
     accentColor: "#EF4444",
-    description: `คุณอยู่นอกพื้นที่สาขา (${dist} เมตร จากจุดศูนย์ จำกัด ${limitM}m) กรุณาเข้าใกล้สาขาแล้วลองใหม่`,
-    steps: [
-      "เดินเข้าใกล้สาขาที่คุณสังกัด",
-      "กด \"แชร์ตำแหน่ง\" อีกครั้ง",
-      "รอรับการยืนยันในแชท",
-    ],
-    tip: "หากอยู่ที่สาขาแล้วแต่ยังไม่ผ่าน กรุณาแจ้ง HR ให้ตรวจสอบพิกัด Geofence",
+    description: t("line.geofence.desc", locale, { distance: dist, limit: limitM }),
+    steps: [t("line.geofence.tip", locale)],
+    tip: t("line.geofence.tip", locale),
   })
 }
 
-export function alreadyCheckedInFlex(timeText: string): messagingApi.FlexMessage {
-  return guide(`เข้างานแล้วเมื่อ ${timeText} น.`, {
+export function alreadyCheckedInFlex(
+  timeText: string,
+  locale: AppLocale = DEFAULT_LOCALE
+): messagingApi.FlexMessage {
+  return guide(t("line.alreadyCheckedIn.alt", locale), {
     emoji: "✅",
-    title: "เข้างานแล้ววันนี้",
-    subtitle: `เวลา ${timeText} น.`,
+    title: t("line.alreadyCheckedIn.title", locale),
+    subtitle: t("line.checkin.timeValue", locale, { time: timeText }),
     accentColor: "#059669",
-    description:
-      "คุณบันทึกเวลาเข้างานวันนี้แล้ว หากต้องการออกจากงานให้แชร์ตำแหน่งเพื่อเลิกงาน (ต้องอยู่ในรัศมี 200m จากสาขา)",
-    steps: [
-      "กดปุ่ม \"แชร์ตำแหน่ง\" ด้านล่างข้อความนี้",
-      "อนุญาตให้ LINE ใช้ตำแหน่งของคุณ",
-      "รับสรุปชั่วโมงทำงานของวัน",
-    ],
-    tip: "หากบันทึกผิดพลาด กรุณาติดต่อ HR",
+    description: t("line.alreadyCheckedIn.desc", locale, { time: timeText }),
+    steps: [t("line.alreadyCheckedIn.desc", locale, { time: timeText })],
+    tip: t("line.alreadyCheckedIn.desc", locale, { time: timeText }),
   })
 }
 
-export function notCheckedInFlex(): messagingApi.FlexMessage {
-  return guide("ยังไม่ได้เข้างานวันนี้", {
+export function notCheckedInFlex(locale: AppLocale = DEFAULT_LOCALE): messagingApi.FlexMessage {
+  return guide(t("line.notCheckedIn.alt", locale), {
     emoji: "⚠️",
-    title: "ยังไม่ได้เข้างาน",
-    subtitle: "ไม่สามารถเลิกงานได้",
+    title: t("line.notCheckedIn.title", locale),
+    subtitle: t("line.notCheckedIn.title", locale),
     accentColor: "#F59E0B",
-    description: "วันนี้ยังไม่มีการบันทึกเวลาเข้างาน กรุณาเข้างานก่อนเลิกงาน",
-    steps: [
-      "กดเมนู \"เช็คอิน\" จาก Rich Menu",
-      "เลือก \"เข้างาน\"",
-      "แชร์ตำแหน่งเพื่อบันทึกเวลาเข้างาน",
-    ],
-    tip: "ต้องเข้างานก่อนจึงจะเลิกงานได้",
+    description: t("line.notCheckedIn.desc", locale),
+    steps: [t("line.notCheckedIn.desc", locale)],
+    tip: t("line.notCheckedIn.desc", locale),
     postbackButton: {
-      label: "🟢 ไปเข้างาน",
+      label: "🟢 Check-in",
       data: "action=checkin_in",
     },
   })
 }
 
-export function alreadyCheckedOutFlex(timeText: string): messagingApi.FlexMessage {
-  return guide(`เลิกงานแล้วเมื่อ ${timeText} น.`, {
+export function alreadyCheckedOutFlex(
+  timeText: string,
+  locale: AppLocale = DEFAULT_LOCALE
+): messagingApi.FlexMessage {
+  return guide(t("line.alreadyCheckedOut.alt", locale), {
     emoji: "🏁",
-    title: "เลิกงานแล้ววันนี้",
-    subtitle: `เวลา ${timeText} น.`,
+    title: t("line.alreadyCheckedOut.title", locale),
+    subtitle: t("line.checkin.timeValue", locale, { time: timeText }),
     accentColor: "#6366F1",
-    description: "คุณบันทึกเวลาเลิกงานวันนี้ครบแล้ว พรุ่งนี้สามารถเข้างานใหม่ได้",
-    steps: [
-      "ตรวจสอบสรุปชั่วโมงทำงานในข้อความก่อนหน้า",
-      "หากมีข้อผิดพลาด ติดต่อ HR",
-      "พรุ่งนี้กลับมาเข้างานตามปกติ",
-    ],
-    tip: "ขอบคุณที่ทำงานวันนี้!",
+    description: t("line.alreadyCheckedOut.desc", locale, { time: timeText }),
+    steps: [t("line.alreadyCheckedOut.desc", locale, { time: timeText })],
+    tip: t("line.alreadyCheckedOut.desc", locale, { time: timeText }),
   })
 }
 
@@ -607,56 +600,53 @@ function lineRegisterUrl(): string {
     : "/api/auth/line/start"
 }
 
-export function notRegisteredFlex(): messagingApi.FlexMessage {
+export function notRegisteredFlex(locale: AppLocale = DEFAULT_LOCALE): messagingApi.FlexMessage {
   const registerUrl = lineRegisterUrl()
-  return guide("ไม่พบข้อมูลพนักงานในระบบ", {
+  return guide(t("line.notRegistered.alt", locale), {
     emoji: "⚠️",
-    title: "ไม่พบข้อมูล",
-    subtitle: "ยังไม่ได้ลงทะเบียนในระบบ",
+    title: t("line.notRegistered.title", locale),
+    subtitle: t("line.notRegistered.subtitle", locale),
     accentColor: "#EF4444",
-    description:
-      "บัญชี LINE ของคุณยังไม่ได้ลงทะเบียน จึงไม่สามารถใช้เมนู HR ได้",
+    description: t("line.notRegistered.desc", locale),
     steps: [
-      "กดปุ่ม \"ลงทะเบียนพนักงาน\" ด้านล่าง",
-      "Login ด้วย LINE แล้วกรอกรหัสพนักงาน ชื่อ เบอร์ และสาขา",
-      "รอ HR อนุมัติก่อนใช้งานเมนู HR",
+      t("line.notRegistered.step1", locale),
+      t("line.notRegistered.step2", locale),
+      t("line.notRegistered.step3", locale),
     ],
-    tip: "หรือกดเมนู \"ติดต่อ HR\" แล้วเลือกลงทะเบียน",
-    button: { label: "ลงทะเบียนพนักงาน", uri: registerUrl },
+    tip: t("line.notRegistered.tip", locale),
+    button: { label: t("line.notRegistered.button", locale), uri: registerUrl },
   })
 }
 
-export function pendingApprovalFlex(): messagingApi.FlexMessage {
-  return guide("รอ HR อนุมัติการลงทะเบียน", {
+export function pendingApprovalFlex(locale: AppLocale = DEFAULT_LOCALE): messagingApi.FlexMessage {
+  return guide(t("line.pending.alt", locale), {
     emoji: "⏳",
-    title: "รอการอนุมัติ",
-    subtitle: "ส่งคำขอลงทะเบียนแล้ว",
+    title: t("line.pending.title", locale),
+    subtitle: t("line.pending.subtitle", locale),
     accentColor: "#F59E0B",
-    description:
-      "ทีม HR กำลังตรวจสอบข้อมูลของคุณ ยังไม่สามารถเช็คอิน ขอลา หรือยื่นเอกสารได้",
+    description: t("line.pending.desc", locale),
     steps: [
-      "รอ HR อนุมัติในระบบ (โดยปกติภายใน 1–2 วันทำการ)",
-      "ตรวจสอบสถานะได้ทาง LINE — กดเมนู \"ติดต่อ HR\" เพื่อสอบถาม",
-      "เมื่ออนุมัติแล้ว ใช้เมนู HR ในแชทนี้ หรือ Portal พนักงาน (ถ้ามีสิทธิ์)",
+      t("line.pending.step1", locale),
+      t("line.pending.step2", locale),
+      t("line.pending.step3", locale),
     ],
-    tip: "ระบบจะแจ้งผลอนุมัติทาง LINE — ไม่จำเป็นต้องเข้า Dashboard HR",
+    tip: t("line.pending.tip", locale),
   })
 }
 
-export function menuHintFlex(): messagingApi.FlexMessage {
-  return guide("เลือกเมนู HR ด้านล่าง", {
+export function menuHintFlex(locale: AppLocale = DEFAULT_LOCALE): messagingApi.FlexMessage {
+  return guide(t("line.menuHint.alt", locale), {
     emoji: "👋",
-    title: "สวัสดีครับ",
-    subtitle: "ระบบ HR & Payroll",
+    title: t("line.menuHint.title", locale),
+    subtitle: t("line.menuHint.subtitle", locale),
     accentColor: BRAND_RED,
-    description:
-      "กรุณาเลือกบริการจากเมนู \"เมนู HR\" ด้านล่างแชท — 6 ปุ่ม: เช็คอิน, OT, เอกสาร, ลา, ร้องเรียน, ติดต่อ HR",
+    description: t("line.menuHint.desc", locale),
     steps: [
-      "กดปุ่ม \"เมนู HR\" ด้านล่างแชท แล้วเลือกบริการ",
-      "หรือพิมพ์คำสั่ง เช่น /leave /ot /doc /complaint /stock /inbound",
-      "ทำตามคำแนะนำในการ์ดที่ระบบส่งให้",
+      t("line.menuHint.step1", locale),
+      t("line.menuHint.step2", locale),
+      t("line.menuHint.step3", locale),
     ],
-    tip: "คลังสินค้าใช้ /stock หรือ /inbound (เมื่อ HR เปิดใช้)",
+    tip: t("line.menuHint.tip", locale),
   })
 }
 

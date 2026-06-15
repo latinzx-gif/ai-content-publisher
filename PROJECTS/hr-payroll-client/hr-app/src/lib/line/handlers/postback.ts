@@ -8,11 +8,17 @@ import {
 } from "@/lib/line/handlers/registration-postback"
 import { lineAccessGateMessages } from "@/lib/line/line-access-gate"
 import { parsePostbackAction } from "@/lib/line/types"
+import { resolveLocaleForLineUser } from "@/lib/i18n/employee-locale"
+import { t } from "@/lib/i18n/translate"
+import { DEFAULT_LOCALE } from "@/lib/i18n/types"
 
-function fallbackText(): messagingApi.Message {
+async function fallbackText(lineUserId?: string): Promise<messagingApi.Message> {
+  const locale = lineUserId
+    ? await resolveLocaleForLineUser(lineUserId)
+    : DEFAULT_LOCALE
   return {
     type: "text",
-    text: "ขออภัย ไม่รู้จักเมนูนี้ กรุณาลองใหม่จากเมนูด้านล่าง",
+    text: t("line.error.unknownMenu", locale),
   }
 }
 
@@ -37,10 +43,14 @@ export async function handlePostback(
       lineUserId
     )
   } else if (!action) {
-    messages = [fallbackText()]
+    messages = [await fallbackText(lineUserId)]
   } else {
     const blocked = await lineAccessGateMessages(lineUserId, action)
-    messages = blocked ?? (await buildActionMessages(action, { lineUserId }))
+    const locale = lineUserId
+      ? await resolveLocaleForLineUser(lineUserId)
+      : DEFAULT_LOCALE
+    messages =
+      blocked ?? (await buildActionMessages(action, { lineUserId, locale }))
   }
 
   try {

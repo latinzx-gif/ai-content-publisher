@@ -1,4 +1,6 @@
 /** Serializable nav item — safe to pass from Server Components to client sidebar */
+import type { MessageKey } from "@/lib/i18n/messages"
+
 export type AdminNavIconName =
   | "layout-dashboard"
   | "users"
@@ -22,7 +24,8 @@ export type AdminNavIconName =
   | "bell"
 
 export type AdminNavItem = {
-  label: string
+  label?: string
+  labelKey?: MessageKey
   href: string
   icon: AdminNavIconName
   comingSoon?: boolean

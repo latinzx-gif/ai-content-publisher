@@ -4,6 +4,9 @@ import { checkIn, type CheckInLocation } from "@/lib/attendance/check-in"
 import { checkOut } from "@/lib/attendance/check-out"
 import { formatIctTime } from "@/lib/attendance/late"
 import { getLineTodayAttendanceState } from "@/lib/attendance/today-state"
+import { resolveLocaleForLineUser } from "@/lib/i18n/employee-locale"
+import { t } from "@/lib/i18n/translate"
+import { DEFAULT_LOCALE, type AppLocale } from "@/lib/i18n/types"
 import { getLineClient } from "@/lib/line/client"
 import { checkinConfirmFlex } from "@/lib/line/flex/checkin"
 import { checkoutSummaryFlex } from "@/lib/line/flex/checkout"
@@ -40,7 +43,10 @@ function locationFromMessage(
   }
 }
 
-function checkInMessages(result: Awaited<ReturnType<typeof checkIn>>): messagingApi.Message[] {
+function checkInMessages(
+  result: Awaited<ReturnType<typeof checkIn>>,
+  locale: AppLocale
+): messagingApi.Message[] {
   switch (result.status) {
     case "success":
       return [
@@ -48,25 +54,30 @@ function checkInMessages(result: Awaited<ReturnType<typeof checkIn>>): messaging
           name: result.employeeName,
           timeText: formatIctTime(result.checkInAt),
           lateMinutes: result.lateMinutes,
+          locale,
         }),
       ]
     case "already_checked_in":
-      return [alreadyCheckedInFlex(formatIctTime(result.checkInAt))]
+      return [alreadyCheckedInFlex(formatIctTime(result.checkInAt), locale)]
     case "outside_geofence":
       return [
         outsideGeofenceFlex({
           distanceM: result.distanceM,
           limitM: result.limitM,
+          locale,
         }),
       ]
     case "pending_approval":
-      return [pendingApprovalFlex()]
+      return [pendingApprovalFlex(locale)]
     case "not_registered":
-      return [notRegisteredFlex()]
+      return [notRegisteredFlex(locale)]
   }
 }
 
-function checkOutMessages(result: Awaited<ReturnType<typeof checkOut>>): messagingApi.Message[] {
+function checkOutMessages(
+  result: Awaited<ReturnType<typeof checkOut>>,
+  locale: AppLocale
+): messagingApi.Message[] {
   switch (result.status) {
     case "success":
       return [
@@ -76,23 +87,25 @@ function checkOutMessages(result: Awaited<ReturnType<typeof checkOut>>): messagi
           outText: formatIctTime(result.checkOutAt),
           workMinutes: result.workMinutes,
           overtimeMinutes: result.overtimeMinutes,
+          locale,
         }),
       ]
     case "already_checked_out":
-      return [alreadyCheckedOutFlex(formatIctTime(result.checkOutAt))]
+      return [alreadyCheckedOutFlex(formatIctTime(result.checkOutAt), locale)]
     case "outside_geofence":
       return [
         outsideGeofenceFlex({
           distanceM: result.distanceM,
           limitM: result.limitM,
+          locale,
         }),
       ]
     case "not_checked_in":
-      return [notCheckedInFlex()]
+      return [notCheckedInFlex(locale)]
     case "pending_approval":
-      return [pendingApprovalFlex()]
+      return [pendingApprovalFlex(locale)]
     case "not_registered":
-      return [notRegisteredFlex()]
+      return [notRegisteredFlex(locale)]
   }
 }
 
@@ -101,13 +114,12 @@ async function locationMessages(
 ): Promise<messagingApi.Message[]> {
   const lineUserId =
     event.source?.type === "user" ? event.source.userId : undefined
+  const locale = lineUserId
+    ? await resolveLocaleForLineUser(lineUserId)
+    : DEFAULT_LOCALE
+
   if (!lineUserId) {
-    return [
-      {
-        type: "text",
-        text: "ไม่สามารถระบุผู้ใช้ได้ กรุณาเช็คอินจากแชทส่วนตัวกับ OA",
-      },
-    ]
+    return [{ type: "text", text: t("line.error.noUser", locale) }]
   }
 
   const location = locationFromMessage(event.message)
@@ -116,20 +128,20 @@ async function locationMessages(
 
   switch (today.kind) {
     case "not_registered":
-      return [notRegisteredFlex()]
+      return [notRegisteredFlex(locale)]
     case "none": {
       const result = await checkIn({ lineUserId, location, now })
-      return checkInMessages(result)
+      return checkInMessages(result, locale)
     }
     case "checked_in": {
       const result = await checkOut({ lineUserId, location, now })
       if (result.status === "not_checked_in") {
-        return [alreadyCheckedInFlex(formatIctTime(today.checkInAt))]
+        return [alreadyCheckedInFlex(formatIctTime(today.checkInAt), locale)]
       }
-      return checkOutMessages(result)
+      return checkOutMessages(result, locale)
     }
     case "checked_out":
-      return [alreadyCheckedOutFlex(formatIctTime(today.checkOutAt))]
+      return [alreadyCheckedOutFlex(formatIctTime(today.checkOutAt), locale)]
   }
 }
 
@@ -158,21 +170,25 @@ export async function handleMessage(
   }
 
   const text = event.message.text.trim()
+  const lineUserId =
+    event.source?.type === "user" ? event.source.userId : undefined
+  const locale = lineUserId
+    ? await resolveLocaleForLineUser(lineUserId)
+    : DEFAULT_LOCALE
+
   const slashAction = parseSlashCommand(text)
   if (slashAction) {
-    const lineUserId =
-      event.source?.type === "user" ? event.source.userId : undefined
     if (
       (slashAction === "check_stock" || slashAction === "inventory") &&
       !isStockCommandEnabled()
     ) {
       await getLineClient().replyMessage({
         replyToken: event.replyToken,
-        messages: [stockCommandDisabledMessage()],
+        messages: [stockCommandDisabledMessage(locale)],
       })
       return
     }
-    const messages = await buildActionMessages(slashAction, { lineUserId })
+    const messages = await buildActionMessages(slashAction, { lineUserId, locale })
     await getLineClient().replyMessage({
       replyToken: event.replyToken,
       messages,
@@ -202,9 +218,7 @@ export async function handleMessage(
   const action = textActions[text.toLowerCase()] ?? textActions[text]
 
   if (action) {
-    const lineUserId =
-      event.source?.type === "user" ? event.source.userId : undefined
-    const messages = await buildActionMessages(action, { lineUserId })
+    const messages = await buildActionMessages(action, { lineUserId, locale })
     await getLineClient().replyMessage({
       replyToken: event.replyToken,
       messages,
@@ -214,6 +228,6 @@ export async function handleMessage(
 
   await getLineClient().replyMessage({
     replyToken: event.replyToken,
-    messages: [menuHintFlex()],
+    messages: [menuHintFlex(locale)],
   })
 }

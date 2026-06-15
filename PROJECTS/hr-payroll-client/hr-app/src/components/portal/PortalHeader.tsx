@@ -1,9 +1,13 @@
+"use client"
+
 import { LogOut } from "lucide-react"
 
 import type { AdminNavItem } from "@/components/admin/admin-nav-types"
+import { LanguageSwitcher } from "@/components/portal/LanguageSwitcher"
 import { PortalMobileNav } from "@/components/portal/PortalMobileNav"
 import { EmployeeAvatar } from "@/components/brand/EmployeeAvatar"
 import { Button } from "@/components/ui/button"
+import { useLocale } from "@/features/portal/LocaleProvider"
 import { roleDisplayLabel } from "@/lib/auth/labels"
 import type { EmployeeUserChip } from "@/lib/auth/session"
 
@@ -14,17 +18,22 @@ export function PortalHeader({
   user: EmployeeUserChip
   navItems: AdminNavItem[]
 }) {
+  const { tx } = useLocale()
+
   return (
     <header className="z-10 shrink-0 border-b border-border/80 bg-white px-3 py-2 md:px-4 md:py-2.5">
       <div className="flex items-center gap-3">
         <PortalMobileNav items={navItems} />
         <div className="min-w-0 flex-1">
-          <p className="truncate text-sm font-semibold md:text-base">Employee Portal</p>
+          <p className="truncate text-sm font-semibold md:text-base">
+            {tx("portal.title")}
+          </p>
           <p className="truncate text-xs text-muted-foreground">
             {user.position ?? roleDisplayLabel(user.role)}
           </p>
         </div>
         <div className="flex items-center gap-1 sm:gap-2">
+          <LanguageSwitcher />
           <div className="hidden items-center gap-2 rounded-lg border border-border/80 px-2 py-1 sm:flex">
             <EmployeeAvatar
               name={user.name}
@@ -42,7 +51,7 @@ export function PortalHeader({
           <form action="/api/auth/logout" method="post" className="hidden md:block">
             <Button variant="ghost" size="sm" type="submit" className="gap-2">
               <LogOut className="size-4" />
-              <span className="hidden sm:inline">ออกจากระบบ</span>
+              <span className="hidden sm:inline">{tx("portal.logout")}</span>
             </Button>
           </form>
         </div>

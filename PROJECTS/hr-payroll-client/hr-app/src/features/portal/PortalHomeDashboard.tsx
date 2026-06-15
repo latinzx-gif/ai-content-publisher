@@ -1,3 +1,5 @@
+"use client"
+
 import Link from "next/link"
 import {
   Barcode,
@@ -16,6 +18,7 @@ import type { AnnouncementRow } from "@/features/announcements/data"
 import { LEAVE_TYPE_LABELS, LEAVE_TYPES } from "@/features/leave/types"
 import type { LeaveBalance } from "@/features/leave/LeaveBalanceCard"
 import type { TodayAttendanceStatus } from "@/features/portal/data"
+import { useLocale } from "@/features/portal/LocaleProvider"
 
 function LiffLink({
   href,
@@ -46,6 +49,7 @@ export function PortalHomeDashboard({
   balances: LeaveBalance[]
   announcements: AnnouncementRow[]
 }) {
+  const { tx } = useLocale()
   const byType = new Map(balances.map((b) => [b.leave_type, b]))
   const topBalances = LEAVE_TYPES.slice(0, 4)
 
@@ -53,45 +57,51 @@ export function PortalHomeDashboard({
     <div className="flex flex-col gap-4">
       <div>
         <h1 className="text-xl font-bold tracking-tight md:text-2xl">
-          สวัสดี, {employeeName}
+          {tx("portal.home.greeting", { name: employeeName })}
         </h1>
-        <p className="text-sm text-muted-foreground">
-          สรุปวันนี้และทางลัดไปยังบริการ HR
-        </p>
+        <p className="text-sm text-muted-foreground">{tx("portal.home.subtitle")}</p>
       </div>
 
       <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-        <WidgetCard compact title="สถานะเช็คอินวันนี้" href="/portal/attendance">
+        <WidgetCard
+          compact
+          title={tx("portal.home.todayStatus")}
+          href="/portal/attendance"
+        >
           {attendance.checkedIn ? (
             <div className="space-y-2 text-sm">
               <div className="flex items-center gap-2">
                 <Clock className="size-4 text-brand-red" />
                 <span>
-                  เข้า {attendance.checkInText} น.
+                  {tx("portal.home.checkIn", { time: attendance.checkInText ?? "—" })}
                   {attendance.isLate ? (
-                    <span className="ml-1 text-amber-600">(สาย)</span>
+                    <span className="ml-1 text-amber-600">
+                      {tx("portal.home.late")}
+                    </span>
                   ) : null}
                 </span>
               </div>
               {attendance.checkOutText ? (
                 <p className="text-muted-foreground">
-                  ออก {attendance.checkOutText} น.
+                  {tx("portal.home.checkOut", { time: attendance.checkOutText })}
                   {attendance.workHours != null
-                    ? ` · ${attendance.workHours.toFixed(1)} ชม.`
+                    ? tx("portal.home.hours", {
+                        hours: attendance.workHours.toFixed(1),
+                      })
                     : ""}
                 </p>
               ) : attendance.inProgress ? (
-                <p className="text-muted-foreground">กำลังทำงาน — ยังไม่เช็คเอาท์</p>
+                <p className="text-muted-foreground">{tx("portal.home.inProgress")}</p>
               ) : null}
             </div>
           ) : (
             <p className="text-sm text-muted-foreground">
-              ยังไม่ได้เช็คอินวันนี้ — สแกน QR หรือใช้ลิงก์ด้านล่าง
+              {tx("portal.home.notCheckedIn")}
             </p>
           )}
         </WidgetCard>
 
-        <WidgetCard compact title="วันลาคงเหลือ" href="/portal/leave">
+        <WidgetCard compact title={tx("portal.home.leaveBalance")} href="/portal/leave">
           <dl className="grid grid-cols-2 gap-2">
             {topBalances.map((type) => {
               const balance = byType.get(type)
@@ -104,7 +114,9 @@ export function PortalHomeDashboard({
                     {LEAVE_TYPE_LABELS[type]}
                   </dt>
                   <dd className="text-base font-semibold tabular-nums">
-                    {remaining === null ? "—" : `${remaining} วัน`}
+                    {remaining === null
+                      ? "—"
+                      : tx("portal.home.days", { count: remaining })}
                   </dd>
                 </div>
               )
@@ -114,12 +126,14 @@ export function PortalHomeDashboard({
 
         <WidgetCard
           compact
-          title="ประกาศล่าสุด"
+          title={tx("portal.home.announcements")}
           href="/portal/announcements"
-          actionLabel="ดูทั้งหมด"
+          actionLabel={tx("portal.home.viewAll")}
         >
           {announcements.length === 0 ? (
-            <p className="text-sm text-muted-foreground">ยังไม่มีประกาศ</p>
+            <p className="text-sm text-muted-foreground">
+              {tx("portal.home.noAnnouncements")}
+            </p>
           ) : (
             <ul className="space-y-2">
               {announcements.slice(0, 3).map((item) => (
@@ -138,43 +152,43 @@ export function PortalHomeDashboard({
         </WidgetCard>
       </div>
 
-      <WidgetCard compact title="ทางลัด LIFF">
+      <WidgetCard compact title={tx("portal.home.shortcuts")}>
         <div className="flex flex-wrap gap-2">
           <LiffLink href="/liff/leave">
             <CalendarDays className="size-4 text-brand-red" />
-            ขอลา
+            {tx("portal.home.shortcutLeave")}
           </LiffLink>
           <LiffLink href="/liff/attendance">
             <Clock className="size-4 text-brand-red" />
-            บันทึกเวลาเอง
+            {tx("portal.home.shortcutManualTime")}
           </LiffLink>
           <LiffLink href="/portal/profile">
             <QrCode className="size-4 text-brand-red" />
-            QR เช็คอิน
+            {tx("portal.home.shortcutQr")}
           </LiffLink>
           <LiffLink href="/liff/documents">
             <ExternalLink className="size-4 text-brand-red" />
-            ขอเอกสาร
+            {tx("portal.home.shortcutDoc")}
           </LiffLink>
           <LiffLink href="/liff/overtime">
             <Timer className="size-4 text-brand-red" />
-            ขอ OT
+            {tx("portal.home.shortcutOt")}
           </LiffLink>
           <LiffLink href="/liff/complaint">
             <MessageSquareWarning className="size-4 text-brand-red" />
-            ร้องเรียน
+            {tx("portal.home.shortcutComplaint")}
           </LiffLink>
           <LiffLink href="/portal/inbound">
             <Barcode className="size-4 text-brand-red" />
-            สแกนรับเข้า
+            {tx("portal.home.shortcutInbound")}
           </LiffLink>
           <LiffLink href="/portal/stock">
             <Package className="size-4 text-brand-red" />
-            เช็คสต็อก
+            {tx("portal.home.shortcutStock")}
           </LiffLink>
         </div>
         <p className="mt-3 text-xs text-muted-foreground">
-          เช็คอินด้วย QR ประจำวัน — ดาวน์โหลดจากหน้าโปรไฟล์ · ประกาศจาก HR ส่งทาง LINE
+          {tx("portal.home.footerHint")}
         </p>
       </WidgetCard>
     </div>

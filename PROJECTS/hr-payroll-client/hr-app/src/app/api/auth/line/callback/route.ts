@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from "next/server"
 
 import { getAdminClient } from "@/lib/auth/admin-client"
 import { PENDING_REGISTRATION_PATH } from "@/lib/auth/employee-access"
+import { syncLocaleFromLineApp } from "@/lib/i18n/employee-locale"
 import { mintLineUserSession } from "@/lib/auth/line-session"
 import { adminLoginPath } from "@/lib/auth/roles"
 import {
@@ -47,9 +48,20 @@ export async function GET(request: NextRequest) {
 
   const { data: employee } = await admin
     .from("hr_employees")
-    .select("id, role, status, department")
+    .select("id, role, status, department, locale_source")
     .eq("line_user_id", lineUserId)
     .maybeSingle()
+
+  if (employee?.id && employee.locale_source !== "manual") {
+    const acceptLanguage = request.headers.get("accept-language")
+    const lineLang = acceptLanguage?.split(",")[0]?.trim()
+    if (lineLang) {
+      await syncLocaleFromLineApp({
+        employeeId: employee.id as string,
+        lineLanguage: lineLang,
+      }).catch((err) => console.error("locale sync on LINE login:", err))
+    }
+  }
 
   if (!employee) {
     const response = NextResponse.redirect(new URL("/register", origin))

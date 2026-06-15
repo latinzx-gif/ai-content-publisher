@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation"
+import { cookies } from "next/headers"
 
 import { PORTAL_NAV_ITEMS } from "@/components/portal/portal-nav"
 import { PortalShell } from "@/components/portal/PortalShell"
@@ -9,6 +10,7 @@ import {
 } from "@/lib/auth/employee-access"
 import { getCurrentEmployee } from "@/lib/auth/session"
 import { adminLoginPath, canAccessEmployeePortal } from "@/lib/auth/roles"
+import { coerceLocale, LOCALE_COOKIE } from "@/lib/i18n/types"
 
 export default async function PortalLayout({
   children,
@@ -30,9 +32,14 @@ export default async function PortalLayout({
     redirect(adminLoginPath(employee.role, employee.status, employee.department))
   }
 
+  const cookieStore = await cookies()
+  const cookieLocale = cookieStore.get(LOCALE_COOKIE)?.value
+  const initialLocale = coerceLocale(cookieLocale ?? employee.preferred_locale)
+
   return (
     <PortalShell
       navItems={PORTAL_NAV_ITEMS}
+      initialLocale={initialLocale}
       user={{
         name: employee.name,
         role: employee.role,

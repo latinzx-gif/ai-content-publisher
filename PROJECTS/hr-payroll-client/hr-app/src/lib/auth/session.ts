@@ -1,4 +1,5 @@
 import { employeeAvatarPublicUrl } from "@/lib/employees/avatar"
+import { coerceLocale, type AppLocale } from "@/lib/i18n/types"
 import { createClient } from "@/lib/supabase/server"
 
 export type Employee = {
@@ -11,6 +12,7 @@ export type Employee = {
   status: "active" | "inactive"
   avatar_path: string | null
   avatarUrl: string | null
+  preferred_locale: AppLocale
 }
 
 export type EmployeeUserChip = Pick<
@@ -39,7 +41,7 @@ export async function getCurrentEmployee(): Promise<Employee | null> {
   const { data } = await supabase
     .from("hr_employees")
     .select(
-      "id, line_user_id, name, position, department, role, status, avatar_path"
+      "id, line_user_id, name, position, department, role, status, avatar_path, preferred_locale"
     )
     .eq("line_user_id", lineUserId)
     .maybeSingle()
@@ -57,5 +59,6 @@ export async function getCurrentEmployee(): Promise<Employee | null> {
     status: data.status as Employee["status"],
     avatar_path,
     avatarUrl: employeeAvatarPublicUrl(avatar_path),
+    preferred_locale: coerceLocale(data.preferred_locale),
   }
 }

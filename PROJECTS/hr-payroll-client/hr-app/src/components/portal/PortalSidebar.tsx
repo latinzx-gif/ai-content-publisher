@@ -9,6 +9,7 @@ import { ADMIN_SIDEBAR_WIDTH_CLASS } from "@/components/admin/admin-layout"
 import type { AdminNavItem } from "@/components/admin/admin-nav-types"
 import { isPortalNavActive } from "@/components/portal/portal-nav"
 import { BrandMark } from "@/components/brand/BrandMark"
+import { useLocale } from "@/features/portal/LocaleProvider"
 import { cn } from "@/lib/utils"
 
 function SidebarPromo() {
@@ -47,11 +48,13 @@ export function PortalNavLinks({
   onNavigate?: () => void
 }) {
   const pathname = usePathname()
+  const { tx } = useLocale()
 
   return (
     <nav className="flex flex-col gap-0.5 px-2">
       {items.map((item) => {
         const active = isPortalNavActive(pathname, item.href)
+        const label = item.labelKey ? tx(item.labelKey) : item.label ?? item.href
         return (
           <Link
             key={item.href}
@@ -65,7 +68,7 @@ export function PortalNavLinks({
             )}
           >
             <AdminNavIcon name={item.icon} className="size-4 shrink-0" />
-            <span className="min-w-0 flex-1 leading-snug">{item.label}</span>
+            <span className="min-w-0 flex-1 leading-snug">{label}</span>
             {!active ? (
               <ChevronRight
                 className="size-4 shrink-0 text-muted-foreground/45"

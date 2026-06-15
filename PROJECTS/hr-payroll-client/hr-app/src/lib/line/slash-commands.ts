@@ -1,4 +1,7 @@
 import type { RichMenuPostbackAction } from "@/lib/line/types"
+import type { AppLocale } from "@/lib/i18n/types"
+import { t } from "@/lib/i18n/translate"
+import { DEFAULT_LOCALE } from "@/lib/i18n/types"
 
 /** Slash/text shortcuts — work even when LINE_USER_CHAT_ENABLED=false */
 const SLASH_COMMANDS: Record<string, RichMenuPostbackAction> = {
@@ -28,9 +31,11 @@ export function parseSlashCommand(text: string): RichMenuPostbackAction | null {
   return SLASH_COMMANDS[key] ?? SLASH_COMMANDS[text.trim()] ?? null
 }
 
-export function stockCommandDisabledMessage(): { type: "text"; text: string } {
+export function stockCommandDisabledMessage(
+  locale: AppLocale = DEFAULT_LOCALE
+): { type: "text"; text: string } {
   return {
     type: "text",
-    text: "คำสั่ง /stock ปิดใช้งานชั่วคราว — ใช้ Rich Menu หรือติดต่อ HR",
+    text: t("line.stock.disabled", locale),
   }
 }

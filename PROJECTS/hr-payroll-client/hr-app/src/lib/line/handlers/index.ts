@@ -1,5 +1,7 @@
 import type { webhook } from "@line/bot-sdk"
 
+import { resolveLocaleForLineUser } from "@/lib/i18n/employee-locale"
+import { DEFAULT_LOCALE } from "@/lib/i18n/types"
 import { getLineClient } from "@/lib/line/client"
 import { welcomeFlex } from "@/lib/line/flex/menu-guide"
 import { handleMessage } from "@/lib/line/handlers/message"
@@ -11,9 +13,15 @@ async function handleFollow(event: webhook.FollowEvent): Promise<void> {
     return
   }
 
+  const lineUserId =
+    event.source?.type === "user" ? event.source.userId : undefined
+  const locale = lineUserId
+    ? await resolveLocaleForLineUser(lineUserId)
+    : DEFAULT_LOCALE
+
   await getLineClient().replyMessage({
     replyToken: event.replyToken,
-    messages: [welcomeFlex()],
+    messages: [welcomeFlex(locale)],
   })
 }
 

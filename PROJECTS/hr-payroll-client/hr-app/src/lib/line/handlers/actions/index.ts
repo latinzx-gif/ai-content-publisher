@@ -1,6 +1,8 @@
 import type { messagingApi } from "@line/bot-sdk"
 
 import type { RichMenuPostbackAction } from "@/lib/line/types"
+import { resolveLocaleForLineUser } from "@/lib/i18n/employee-locale"
+import { DEFAULT_LOCALE, type AppLocale } from "@/lib/i18n/types"
 import { announcementAction } from "@/lib/line/handlers/actions/announcement"
 import { checkStockAction } from "@/lib/line/handlers/actions/check-stock"
 import { checkinAction } from "@/lib/line/handlers/actions/checkin"
@@ -20,6 +22,7 @@ import { submitAttendanceAction } from "@/lib/line/handlers/actions/submit-atten
 
 export type ActionContext = {
   lineUserId?: string
+  locale?: AppLocale
 }
 
 const ACTION_HANDLERS: Record<
@@ -46,5 +49,11 @@ export async function buildActionMessages(
   action: RichMenuPostbackAction,
   ctx: ActionContext
 ): Promise<messagingApi.Message[]> {
-  return ACTION_HANDLERS[action](ctx)
+  const locale =
+    ctx.locale ??
+    (ctx.lineUserId
+      ? await resolveLocaleForLineUser(ctx.lineUserId)
+      : DEFAULT_LOCALE)
+
+  return ACTION_HANDLERS[action]({ ...ctx, locale })
 }

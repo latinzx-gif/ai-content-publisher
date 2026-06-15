@@ -55,11 +55,13 @@ Cron Jobs: แจ้งเตือน Probation/Visa อัตโนมัต�
 | **M41 Workforce** | ❌ **CANCELLED** | T125–T128 — ไม่ต้องการตอนนี้ |
 | **M39 Payroll Baht** | 🔒 **LOCKED** | T115–T120 — needs signed CR |
 
-**Business rules (production):**
-- พนักงาน: **LINE/LIFF** (+ **Portal v2** กำลังวางแผน — ดู `PORTAL_ROADMAP.md`)
+**Business rules (production — อัปเดต 2026-06-28):**
+- พนักงาน: **LINE/LIFF** + **Portal v2** (`/portal`)
 - Onboarding: register → **inactive** → HR approve → active
-- OT: **พนักงานยื่นเอง** → BM → HR → approved
+- **Attendance:** เช็คอิน/เช็คเอาท์ → **บันทึกทันที** (auto-approve + payroll hours) — ไม่ผ่าน BM
+- **Leave / OT:** พนักงานยื่น → **HR อนุมัตiคนเดียว** (`pending_hr`) — BM ไม่ใช้ขั้นอนุมัตiแล้ว
 - Payroll: **ชม.เท่านั้น** — บาทรอ M39
+- บันทึกความคืบหน้า LINE OA: `hr-app/reports/LINE_OA_WORK_LOG.md`
 
 ---
 
@@ -120,6 +122,7 @@ Cron Jobs: แจ้งเตือน Probation/Visa อัตโนมัต�
 | Demo readiness | `hr-app/reports/DELIVERY_READINESS_AUDIT.md` |
 | Inventory roadmap | `hr-app/reports/INVENTORY_ROADMAP.md` |
 | Portal roadmap | `hr-app/reports/PORTAL_ROADMAP.md` |
+| **LINE OA work log (เตือนความจำ)** | `hr-app/reports/LINE_OA_WORK_LOG.md` |
 | Phase 2 plan | `orchestration/PHASE_2_PLAN.md` |
 | Phase 3 plan | `orchestration/PHASE_3_PLAN.md` |
 | Phase 4 plan | `orchestration/PHASE_4_PLAN.md` |
@@ -151,4 +154,4 @@ WORK_START_MINUTE=0
 
 ---
 
-*Last updated: 2026-06-12 — Client UAT hotfixes deployed; M38 planned*
+*Last updated: 2026-06-28 — LINE OA approval policy deployed (`c09f486`); see LINE_OA_WORK_LOG.md*
