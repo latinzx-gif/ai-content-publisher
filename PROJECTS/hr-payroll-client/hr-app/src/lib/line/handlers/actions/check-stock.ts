@@ -11,7 +11,7 @@ export function checkStockAction(ctx: ActionContext): messagingApi.Message[] {
     return [stockCommandDisabledMessage(locale)]
   }
   const base = process.env.NEXT_PUBLIC_BASE_URL?.replace(/\/$/, "")
-  const stockUrl = base ? `${base}/portal/stock` : undefined
-  const inboundUrl = base ? `${base}/portal/inbound` : undefined
-  return [checkStockGuideFlex({ stockUrl, inboundUrl })]
+  const stockUrl = base ? `${base}/portal/stock?lang=${locale}` : undefined
+  const inboundUrl = base ? `${base}/portal/inbound?lang=${locale}` : undefined
+  return [checkStockGuideFlex({ stockUrl, inboundUrl }, locale)]
 }

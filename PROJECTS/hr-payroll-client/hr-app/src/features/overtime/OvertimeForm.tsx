@@ -1,7 +1,7 @@
 "use client"
 
 import { zodResolver } from "@hookform/resolvers/zod"
-import { useState } from "react"
+import { useMemo, useState } from "react"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
 
@@ -14,37 +14,33 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form"
-
-const schema = z
-  .object({
-    workDate: z.string().min(1, "เลือกวันที่"),
-    startTime: z.string().min(1, "เลือกเวลาเริ่ม"),
-    endTime: z.string().min(1, "เลือกเวลาสิ้นสุด"),
-    reason: z.string().trim().min(5, "ระบุเหตุผลอย่างน้อย 5 ตัวอักษร"),
-  })
-  .refine((v) => v.endTime > v.startTime, {
-    path: ["endTime"],
-    message: "เวลาสิ้นสุดต้องหลังเวลาเริ่ม",
-  })
-
-type FormValues = z.infer<typeof schema>
-
-const API_ERROR_MESSAGES: Record<string, string> = {
-  forbidden: "บัญชีของคุณไม่มีสิทธิ์ส่งคำขอ OT นี้",
-  unauthorized: "กรุณาเข้าสู่ระบบใหม่",
-  invalid_fields: "ข้อมูลไม่ครบหรือไม่ถูกต้อง",
-}
-
-function formatOvertimeApiError(body: { error?: string } | null): string {
-  const code = body?.error
-  if (!code) return "ส่งคำขอไม่สำเร็จ"
-  return API_ERROR_MESSAGES[code] ?? code
-}
+import { useLocale } from "@/features/portal/LocaleProvider"
+import type { MessageKey } from "@/lib/i18n/translate"
 
 const inputClassName =
   "h-9 w-full rounded-lg border border-input bg-transparent px-3 text-sm"
 
 export function OvertimeForm() {
+  const { tx } = useLocale()
+
+  const schema = useMemo(
+    () =>
+      z
+        .object({
+          workDate: z.string().min(1, tx("ot.form.validation.workDate")),
+          startTime: z.string().min(1, tx("ot.form.validation.startTime")),
+          endTime: z.string().min(1, tx("ot.form.validation.endTime")),
+          reason: z.string().trim().min(5, tx("ot.form.validation.reason")),
+        })
+        .refine((v) => v.endTime > v.startTime, {
+          path: ["endTime"],
+          message: tx("ot.form.validation.endAfterStart"),
+        }),
+    [tx]
+  )
+
+  type FormValues = z.infer<typeof schema>
+
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues: { workDate: "", startTime: "18:00", endTime: "20:00", reason: "" },
@@ -52,6 +48,18 @@ export function OvertimeForm() {
   const [submitting, setSubmitting] = useState(false)
   const [success, setSuccess] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  function formatOvertimeApiError(body: { error?: string } | null): string {
+    const code = body?.error
+    if (!code) return tx("ot.form.submitFailed")
+    const keyMap: Record<string, MessageKey> = {
+      forbidden: "ot.form.error.forbidden",
+      unauthorized: "ot.form.error.unauthorized",
+      invalid_fields: "ot.form.error.invalidFields",
+    }
+    const key = keyMap[code]
+    return key ? tx(key) : code
+  }
 
   async function onSubmit(values: FormValues) {
     setSubmitting(true)
@@ -69,18 +77,14 @@ export function OvertimeForm() {
       setSuccess(true)
       form.reset()
     } catch (e) {
-      setError(e instanceof Error ? e.message : "ส่งคำขอไม่สำเร็จ")
+      setError(e instanceof Error ? e.message : tx("ot.form.submitFailed"))
     } finally {
       setSubmitting(false)
     }
   }
 
   if (success) {
-    return (
-      <p className="text-sm text-green-700">
-        ส่งคำขอ OT แล้ว — แจ้ง HR ทาง LINE Group แล้ว รอ HR อนุมัติ
-      </p>
-    )
+    return <p className="text-sm text-green-700">{tx("ot.form.success")}</p>
   }
 
   return (
@@ -91,7 +95,7 @@ export function OvertimeForm() {
           name="workDate"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>วันที่ทำ OT</FormLabel>
+              <FormLabel>{tx("ot.form.workDate")}</FormLabel>
               <FormControl>
                 <input type="date" className={inputClassName} {...field} />
               </FormControl>
@@ -105,7 +109,7 @@ export function OvertimeForm() {
             name="startTime"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>เริ่ม</FormLabel>
+                <FormLabel>{tx("ot.form.startTime")}</FormLabel>
                 <FormControl>
                   <input type="time" className={inputClassName} {...field} />
                 </FormControl>
@@ -118,7 +122,7 @@ export function OvertimeForm() {
             name="endTime"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>สิ้นสุด</FormLabel>
+                <FormLabel>{tx("ot.form.endTime")}</FormLabel>
                 <FormControl>
                   <input type="time" className={inputClassName} {...field} />
                 </FormControl>
@@ -132,7 +136,7 @@ export function OvertimeForm() {
           name="reason"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>เหตุผล / งานที่ทำ</FormLabel>
+              <FormLabel>{tx("ot.form.reason")}</FormLabel>
               <FormControl>
                 <textarea
                   className="min-h-[80px] w-full rounded-lg border border-input px-3 py-2 text-sm"
@@ -145,7 +149,7 @@ export function OvertimeForm() {
         />
         {error ? <p className="text-sm text-destructive">{error}</p> : null}
         <Button type="submit" disabled={submitting}>
-          {submitting ? "กำลังส่ง…" : "ส่งคำขอ OT"}
+          {submitting ? tx("liff.common.submitting") : tx("ot.form.submit")}
         </Button>
       </form>
     </Form>

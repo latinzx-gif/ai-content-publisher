@@ -1,9 +1,15 @@
 import type { messagingApi } from "@line/bot-sdk"
 
 import { getAdminClient } from "@/lib/auth/admin-client"
+import type { ActionContext } from "@/lib/line/handlers/actions"
 import { announcementListFlex } from "@/lib/line/flex/announcement-list"
+import { DEFAULT_LOCALE } from "@/lib/i18n/types"
 
-export async function announcementAction(): Promise<messagingApi.Message[]> {
+export async function announcementAction(
+  ctx: ActionContext
+): Promise<messagingApi.Message[]> {
+  const locale = ctx.locale ?? DEFAULT_LOCALE
+
   try {
     const { data, error } = await getAdminClient()
       .from("hr_announcements")
@@ -19,7 +25,8 @@ export async function announcementAction(): Promise<messagingApi.Message[]> {
             title: row.title as string,
             body: row.body as string,
             sentAt: (row.sent_at as string) ?? new Date().toISOString(),
-          }))
+          })),
+          locale
         ),
       ]
     }
@@ -27,5 +34,5 @@ export async function announcementAction(): Promise<messagingApi.Message[]> {
     console.error("announcement list failed:", err)
   }
 
-  return [announcementListFlex([])]
+  return [announcementListFlex([], locale)]
 }

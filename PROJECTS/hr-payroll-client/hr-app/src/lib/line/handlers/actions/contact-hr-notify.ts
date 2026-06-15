@@ -2,17 +2,20 @@ import type { messagingApi } from "@line/bot-sdk"
 
 import { getAdminClient } from "@/lib/auth/admin-client"
 import type { ActionContext } from "@/lib/line/handlers/actions"
+import { t } from "@/lib/i18n/translate"
 import { notifyHr } from "@/lib/line/notify-hr"
+import { DEFAULT_LOCALE } from "@/lib/i18n/types"
 
 export async function contactHrNotifyAction(
   ctx: ActionContext
 ): Promise<messagingApi.Message[]> {
+  const locale = ctx.locale ?? DEFAULT_LOCALE
   const lineUserId = ctx.lineUserId
   if (!lineUserId) {
     return [
       {
         type: "text",
-        text: "ไม่สามารถระบุบัญชี LINE ได้ กรุณาลองใหม่อีกครั้ง",
+        text: t("line.contactHrNotify.noUser", locale),
       },
     ]
   }
@@ -23,7 +26,7 @@ export async function contactHrNotifyAction(
     .eq("line_user_id", lineUserId)
     .maybeSingle()
 
-  const name = employee?.name ?? "ไม่ทราบชื่อ"
+  const name = employee?.name ?? t("line.contactHrNotify.unknownName", locale)
   const department = employee?.department ?? "—"
   const position = employee?.position ?? "—"
 
@@ -46,7 +49,7 @@ export async function contactHrNotifyAction(
     return [
       {
         type: "text",
-        text: "ขณะนี้ยังไม่ได้ตั้งค่ากลุ่ม HR — กรุณาแจ้งหัวหน้างานหรือ HR โดยตรง",
+        text: t("line.contactHrNotify.noHrGroup", locale),
       },
     ]
   }
@@ -54,7 +57,7 @@ export async function contactHrNotifyAction(
   return [
     {
       type: "text",
-      text: "ส่งคำขอถึงทีม HR แล้ว — HR จะติดต่อกลับทางแชท LINE นี้",
+      text: t("line.contactHrNotify.sent", locale),
     },
   ]
 }

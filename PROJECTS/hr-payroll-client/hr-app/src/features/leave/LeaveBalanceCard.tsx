@@ -1,3 +1,5 @@
+"use client"
+
 import {
   Card,
   CardContent,
@@ -5,7 +7,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
-import { LEAVE_TYPE_LABELS, LEAVE_TYPES } from "@/features/leave/types"
+import { useLocale } from "@/features/portal/LocaleProvider"
+import { LEAVE_TYPES, type LeaveType } from "@/features/leave/types"
 
 export type LeaveBalance = {
   leave_type: string
@@ -13,17 +16,22 @@ export type LeaveBalance = {
   used_days: number
 }
 
-// Balances come from hr_leave_balances via the caller's session (RLS
-// self-select). A type with no row means HR hasn't set a quota yet —
-// shown as "ยังไม่กำหนด", not 0, to avoid implying no days remain.
+const LEAVE_TYPE_KEYS: Record<LeaveType, "leave.type.sick" | "leave.type.personal" | "leave.type.annual" | "leave.type.other"> = {
+  sick: "leave.type.sick",
+  personal: "leave.type.personal",
+  annual: "leave.type.annual",
+  other: "leave.type.other",
+}
+
 export function LeaveBalanceCard({ balances }: { balances: LeaveBalance[] }) {
+  const { tx } = useLocale()
   const byType = new Map(balances.map((b) => [b.leave_type, b]))
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>วันลาคงเหลือ</CardTitle>
-        <CardDescription>ยอดคงเหลือต่อประเภทการลา</CardDescription>
+        <CardTitle>{tx("leave.balance.title")}</CardTitle>
+        <CardDescription>{tx("leave.balance.subtitle")}</CardDescription>
       </CardHeader>
       <CardContent>
         <dl className="grid grid-cols-2 gap-3">
@@ -35,18 +43,18 @@ export function LeaveBalanceCard({ balances }: { balances: LeaveBalance[] }) {
             return (
               <div key={type} className="rounded-lg bg-muted/50 p-3">
                 <dt className="text-xs text-muted-foreground">
-                  {LEAVE_TYPE_LABELS[type]}
+                  {tx(LEAVE_TYPE_KEYS[type])}
                 </dt>
                 <dd className="mt-1 text-lg font-medium tabular-nums">
                   {remaining === null ? (
                     <span className="text-sm font-normal text-muted-foreground">
-                      ยังไม่กำหนด
+                      {tx("leave.balance.notSet")}
                     </span>
                   ) : (
                     <>
                       {remaining}{" "}
                       <span className="text-xs font-normal text-muted-foreground">
-                        / {balance!.total_days} วัน
+                        / {balance!.total_days} {tx("leave.balance.daysUnit")}
                       </span>
                     </>
                   )}

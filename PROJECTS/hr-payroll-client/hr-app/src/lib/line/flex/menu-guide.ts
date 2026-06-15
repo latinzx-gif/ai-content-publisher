@@ -350,166 +350,190 @@ export function alreadyCheckedOutFlex(
   })
 }
 
-export function leaveGuideFlex(formUrl?: string): messagingApi.FlexMessage {
+export function leaveGuideFlex(
+  formUrl?: string,
+  locale: AppLocale = DEFAULT_LOCALE
+): messagingApi.FlexMessage {
   const hasLiff = Boolean(formUrl)
 
   return guide(
-    hasLiff ? "ขอลา — เปิดแบบฟอร์ม" : "ขอลา — เตรียมเปิดใช้งาน",
+    hasLiff
+      ? t("line.leaveGuide.altReady", locale)
+      : t("line.leaveGuide.altSoon", locale),
     {
       emoji: "📅",
-      title: "ขอลา",
-      subtitle: "ยื่นคำขอลาออนไลน์",
+      title: t("line.leaveGuide.title", locale),
+      subtitle: t("line.leaveGuide.subtitle", locale),
       accentColor: "#1E6FD9",
       description: hasLiff
-        ? "กรอกแบบฟอร์มขอลา ระบบจะแสดงวันลาคงเหลือและส่งคำขอให้ HR อนุมัติ"
-        : "แบบฟอร์มขอลากำลังเตรียมเปิดใช้งาน กรุณาติดต่อ HR ชั่วคราว",
+        ? t("line.leaveGuide.descReady", locale)
+        : t("line.leaveGuide.descSoon", locale),
       steps: hasLiff
         ? [
-            "กดปุ่ม \"เปิดแบบฟอร์มขอลา\" ด้านล่าง",
-            "เลือกประเภทลา วันที่ และเหตุผล",
-            "กดส่งคำขอ แล้วรอ HR อนุมัติ",
+            t("line.leaveGuide.step1Ready", locale),
+            t("line.leaveGuide.step2Ready", locale),
+            t("line.leaveGuide.step3Ready", locale),
           ]
         : [
-            "ติดต่อ HR ผ่านเมนู \"ติดต่อ HR\"",
-            "แจ้งวันที่และประเภทลาที่ต้องการ",
-            "รอการยืนยันจากทีม HR",
+            t("line.leaveGuide.step1Soon", locale),
+            t("line.leaveGuide.step2Soon", locale),
+            t("line.leaveGuide.step3Soon", locale),
           ],
-      tip: "แนะนำยื่นลาล่วงหน้าอย่างน้อย 1 วันทำการ",
+      tip: t("line.leaveGuide.tip", locale),
       ...(hasLiff
         ? {
             button: {
-              label: "เปิดแบบฟอร์มขอลา",
+              label: t("line.leaveGuide.button", locale),
               uri: formUrl!,
             },
           }
-        : { statusLabel: "⏳ เร็วๆ นี้" }),
+        : { statusLabel: t("line.leaveGuide.statusSoon", locale) }),
     }
   )
 }
 
-export function overtimeGuideFlex(formUrl?: string): messagingApi.FlexMessage {
+export function overtimeGuideFlex(
+  formUrl?: string,
+  locale: AppLocale = DEFAULT_LOCALE
+): messagingApi.FlexMessage {
   const hasForm = Boolean(formUrl)
 
   return guide(
-    hasForm ? "ขอ OT — เปิดแบบฟอร์ม" : "ขอ OT — เตรียมเปิดใช้งาน",
+    hasForm ? t("line.otGuide.altReady", locale) : t("line.otGuide.altSoon", locale),
     {
       emoji: "⏰",
-      title: "ขอ OT",
-      subtitle: "ยื่นคำขอทำงานล่วงเวลา",
+      title: t("line.otGuide.title", locale),
+      subtitle: t("line.otGuide.subtitle", locale),
       accentColor: "#E65100",
       description: hasForm
-        ? "กรอกวันที่ เวลา และเหตุผล — ส่งให้ HR อนุมัติ"
-        : "แบบฟอร์ม OT กำลังเตรียมเปิดใช้งาน",
+        ? t("line.otGuide.descReady", locale)
+        : t("line.otGuide.descSoon", locale),
       steps: hasForm
         ? [
-            "กดปุ่ม \"เปิดแบบฟอร์มขอ OT\" ด้านล่าง",
-            "ระบุวันที่และช่วงเวลา",
-            "รอ HR อนุมัติทาง LINE",
+            t("line.otGuide.step1Ready", locale),
+            t("line.otGuide.step2Ready", locale),
+            t("line.otGuide.step3Ready", locale),
           ]
-        : ["ติดต่อ HR ผ่านเมนู \"ติดต่อ HR\""],
-      tip: "แนะนำยื่นล่วงหน้าก่อนวันทำ OT",
+        : [
+            t("line.otGuide.step1Soon", locale),
+            t("line.otGuide.step2Soon", locale),
+            t("line.otGuide.step3Soon", locale),
+          ],
+      tip: t("line.otGuide.tip", locale),
       ...(hasForm && formUrl
-        ? { button: { label: "เปิดแบบฟอร์มขอ OT", uri: formUrl } }
-        : { statusLabel: "⏳ เร็วๆ นี้" }),
+        ? { button: { label: t("line.otGuide.button", locale), uri: formUrl } }
+        : { statusLabel: t("line.otGuide.statusSoon", locale) }),
     }
   )
 }
 
-export function documentGuideFlex(formUrl?: string): messagingApi.FlexMessage {
+export function documentGuideFlex(
+  formUrl?: string,
+  locale: AppLocale = DEFAULT_LOCALE
+): messagingApi.FlexMessage {
   const hasForm = Boolean(formUrl)
 
   return guide(
-    hasForm ? "ขอเอกสาร — เปิดแบบฟอร์ม" : "ขอเอกสาร — เตรียมเปิดใช้งาน",
+    hasForm ? t("line.docGuide.altReady", locale) : t("line.docGuide.altSoon", locale),
     {
       emoji: "📄",
-      title: "ขอเอกสาร",
-      subtitle: "หนังสือรับรอง / เอกสาร HR",
+      title: t("line.docGuide.title", locale),
+      subtitle: t("line.docGuide.subtitle", locale),
       accentColor: "#7B1FA2",
       description: hasForm
-        ? "กรอกแบบฟอร์มขอเอกสาร ระบบจะส่งคำขอให้ HR ดำเนินการ"
-        : "แบบฟอร์มขอเอกสารกำลังเตรียมเปิดใช้งาน",
+        ? t("line.docGuide.descReady", locale)
+        : t("line.docGuide.descSoon", locale),
       steps: hasForm
         ? [
-            "กดปุ่ม \"เปิดแบบฟอร์มขอเอกสาร\" ด้านล่าง",
-            "เลือกประเภท จำนวนชุด และวัตถุประสงค์",
-            "รอ HR แจ้งเมื่อเอกสารพร้อมรับ",
+            t("line.docGuide.step1Ready", locale),
+            t("line.docGuide.step2Ready", locale),
+            t("line.docGuide.step3Ready", locale),
           ]
         : [
-            "ติดต่อ HR ผ่านเมนู \"ติดต่อ HR\"",
-            "แจ้งประเภทเอกสารที่ต้องการ",
-            "รอการยืนยันจากทีม HR",
+            t("line.docGuide.step1Soon", locale),
+            t("line.docGuide.step2Soon", locale),
+            t("line.docGuide.step3Soon", locale),
           ],
-      tip: "แนะนำยื่นคำขอล่วงหน้า 3–5 วันทำการ",
+      tip: t("line.docGuide.tip", locale),
       ...(hasForm && formUrl
         ? {
-            button: { label: "เปิดแบบฟอร์มขอเอกสาร", uri: formUrl },
+            button: { label: t("line.docGuide.button", locale), uri: formUrl },
           }
-        : { statusLabel: "⏳ เร็วๆ นี้" }),
+        : { statusLabel: t("line.docGuide.statusSoon", locale) }),
     }
   )
 }
 
-export function complaintGuideFlex(formUrl?: string): messagingApi.FlexMessage {
+export function complaintGuideFlex(
+  formUrl?: string,
+  locale: AppLocale = DEFAULT_LOCALE
+): messagingApi.FlexMessage {
   const hasForm = Boolean(formUrl)
 
   return guide(
-    hasForm ? "ร้องเรียน — เปิดแบบฟอร์ม" : "ร้องเรียน — เตรียมเปิดใช้งาน",
+    hasForm
+      ? t("line.complaintGuide.altReady", locale)
+      : t("line.complaintGuide.altSoon", locale),
     {
       emoji: "📢",
-      title: "ร้องเรียน",
-      subtitle: "แจ้งปัญหาและข้อเสนอแนะ",
+      title: t("line.complaintGuide.title", locale),
+      subtitle: t("line.complaintGuide.subtitle", locale),
       accentColor: "#F57C00",
       description: hasForm
-        ? "ส่งเรื่องร้องเรียนหรือข้อเสนอแนะ — เลือกได้ว่าจะไม่เปิดเผยตัวตน"
-        : "ช่องทางแจ้งปัญหากำลังเตรียมเปิดใช้งาน",
+        ? t("line.complaintGuide.descReady", locale)
+        : t("line.complaintGuide.descSoon", locale),
       steps: hasForm
         ? [
-            "กดปุ่ม \"เปิดแบบฟอร์มร้องเรียน\" ด้านล่าง",
-            "กรอกหัวข้อและรายละเอียด",
-            "เก็บเลขที่อ้างอิงเพื่อติดตาม",
+            t("line.complaintGuide.step1Ready", locale),
+            t("line.complaintGuide.step2Ready", locale),
+            t("line.complaintGuide.step3Ready", locale),
           ]
         : [
-            "ติดต่อ HR ผ่านเมนู \"ติดต่อ HR\"",
-            "แจ้งเรื่องที่ต้องการร้องเรียน",
-            "รอการติดตามจากทีม HR",
+            t("line.complaintGuide.step1Soon", locale),
+            t("line.complaintGuide.step2Soon", locale),
+            t("line.complaintGuide.step3Soon", locale),
           ],
-      tip: "ข้อมูลจะถูกเก็บเป็นความลับ",
+      tip: t("line.complaintGuide.tip", locale),
       ...(hasForm && formUrl
         ? {
-            button: { label: "เปิดแบบฟอร์มร้องเรียน", uri: formUrl },
+            button: { label: t("line.complaintGuide.button", locale), uri: formUrl },
           }
-        : { statusLabel: "⏳ เร็วๆ นี้" }),
+        : { statusLabel: t("line.complaintGuide.statusSoon", locale) }),
     }
   )
 }
 
-export function announcementGuideFlex(): messagingApi.FlexMessage {
+export function announcementGuideFlex(
+  locale: AppLocale = DEFAULT_LOCALE
+): messagingApi.FlexMessage {
   const base = process.env.NEXT_PUBLIC_BASE_URL?.trim()
   const portalUrl = base ? `${base}/portal` : undefined
 
-  return guide("ประกาศ — จาก HR", {
+  return guide(t("line.announcementGuide.alt", locale), {
     emoji: "📣",
-    title: "ประกาศ",
-    subtitle: "ข่าวสารจาก HR",
+    title: t("line.announcementGuide.title", locale),
+    subtitle: t("line.announcementGuide.subtitle", locale),
     accentColor: "#00897B",
-    description:
-      "ประกาศสำคัญจะถูกส่งมาทางแชท LINE โดยตรงเมื่อ HR กดส่ง — ดูย้อนหลังได้ที่ Portal หน้าหลัก",
+    description: t("line.announcementGuide.desc", locale),
     steps: [
-      "รอการแจ้งจาก HR ในแชท LINE",
-      "เปิด Portal หน้าหลักเพื่อดูประกาศล่าสุด",
-      "ติดต่อ HR หากมีคำถาม",
+      t("line.announcementGuide.step1", locale),
+      t("line.announcementGuide.step2", locale),
+      t("line.announcementGuide.step3", locale),
     ],
-    tip: "ไม่มีปุ่มประกาศในเมนู OA — HR เป็นผู้ส่งประกาศ",
+    tip: t("line.announcementGuide.tip", locale),
     ...(portalUrl
-      ? { button: { label: "เปิด Portal", uri: portalUrl } }
-      : { statusLabel: "Portal" }),
+      ? { button: { label: t("line.announcementGuide.button", locale), uri: portalUrl } }
+      : { statusLabel: t("line.announcementGuide.statusPortal", locale) }),
   })
 }
 
-export function checkStockGuideFlex(options: {
-  stockUrl?: string
-  inboundUrl?: string
-}): messagingApi.FlexMessage {
+export function checkStockGuideFlex(
+  options: {
+    stockUrl?: string
+    inboundUrl?: string
+  },
+  locale: AppLocale = DEFAULT_LOCALE
+): messagingApi.FlexMessage {
   const { stockUrl, inboundUrl } = options
   const hasStock = Boolean(stockUrl)
   const hasInbound = Boolean(inboundUrl)
@@ -521,7 +545,11 @@ export function checkStockGuideFlex(options: {
       style: "primary",
       color: "#4F46E5",
       height: "sm",
-      action: { type: "uri", label: "ดูยอดสต็อก", uri: stockUrl! },
+      action: {
+        type: "uri",
+        label: t("line.stockGuide.btnStock", locale),
+        uri: stockUrl!,
+      },
     })
   }
   if (hasInbound) {
@@ -529,17 +557,23 @@ export function checkStockGuideFlex(options: {
       type: "button",
       style: "secondary",
       height: "sm",
-      action: { type: "uri", label: "สแกนรับเข้า", uri: inboundUrl! },
+      action: {
+        type: "uri",
+        label: t("line.stockGuide.btnInbound", locale),
+        uri: inboundUrl!,
+      },
     })
   }
 
   return flexMessage(
-    hasStock ? "เช็คสต็อก — ดูยอดคงเหลือ" : "เช็คสต็อก — เตรียมเปิดใช้งาน",
+    hasStock
+      ? t("line.stockGuide.altReady", locale)
+      : t("line.stockGuide.altSoon", locale),
     {
       type: "bubble",
       header: brandedTitleHeader({
-        title: "เช็คสต็อก",
-        subtitle: "ยอดคงเหลือ · รับเข้าสินค้า",
+        title: t("line.stockGuide.title", locale),
+        subtitle: t("line.stockGuide.subtitle", locale),
         accentColor: "#4F46E5",
         emoji: "📦",
       }),
@@ -547,8 +581,8 @@ export function checkStockGuideFlex(options: {
         {
           type: "text",
           text: hasStock
-            ? "ดูยอดสต็อกตาม SKU และคลัง หรือสแกน barcode รับเข้าตามใบที่ Inventory เปิดไว้"
-            : "ระบบคลังสินค้ากำลังเตรียมเปิดใช้งาน",
+            ? t("line.stockGuide.descReady", locale)
+            : t("line.stockGuide.descSoon", locale),
           wrap: true,
           size: "sm",
           color: "#4B5563",
@@ -569,30 +603,39 @@ export function checkStockGuideFlex(options: {
   )
 }
 
-export function inventoryGuideFlex(portalUrl?: string): messagingApi.FlexMessage {
+export function inventoryGuideFlex(
+  portalUrl?: string,
+  locale: AppLocale = DEFAULT_LOCALE
+): messagingApi.FlexMessage {
   const hasPortal = Boolean(portalUrl)
 
   return guide(
-    hasPortal ? "คลังสินค้า — สแกนรับเข้า" : "คลังสินค้า — เตรียมเปิดใช้งาน",
+    hasPortal
+      ? t("line.inventoryGuide.altReady", locale)
+      : t("line.inventoryGuide.altSoon", locale),
     {
       emoji: "📦",
-      title: "คลังสินค้า",
-      subtitle: "สแกน barcode รับเข้าสินค้า",
+      title: t("line.inventoryGuide.title", locale),
+      subtitle: t("line.inventoryGuide.subtitle", locale),
       accentColor: "#1565C0",
       description: hasPortal
-        ? "เลือกใบรับเข้าที่ Inventory สร้างแล้ว สแกน barcode เพิ่มรายการ"
-        : "ระบบคลังสินค้ากำลังเตรียมเปิดใช้งาน",
+        ? t("line.inventoryGuide.descReady", locale)
+        : t("line.inventoryGuide.descSoon", locale),
       steps: hasPortal
         ? [
-            "กดปุ่ม \"เปิดรายการรับเข้า\" ด้านล่าง",
-            "เลือกใบที่เปิดรับสแกน",
-            "สแกนหรือพิมพ์ barcode แล้วบันทึก — Inventory ตรวจอนุมัติทีหลัง",
+            t("line.inventoryGuide.step1Ready", locale),
+            t("line.inventoryGuide.step2Ready", locale),
+            t("line.inventoryGuide.step3Ready", locale),
           ]
-        : ["ติดต่อ HR ผ่านเมนู \"ติดต่อ HR\""],
-      tip: "Inventory สร้างใบแล้วสแกนได้ทันที — สต็อกเพิ่มเมื่อ Inventory อนุมัติ",
+        : [
+            t("line.inventoryGuide.step1Soon", locale),
+            t("line.inventoryGuide.step2Soon", locale),
+            t("line.inventoryGuide.step3Soon", locale),
+          ],
+      tip: t("line.inventoryGuide.tip", locale),
       ...(hasPortal && portalUrl
-        ? { button: { label: "เปิดรายการรับเข้า", uri: portalUrl } }
-        : { statusLabel: "⏳ เร็วๆ นี้" }),
+        ? { button: { label: t("line.inventoryGuide.button", locale), uri: portalUrl } }
+        : { statusLabel: t("line.inventoryGuide.statusSoon", locale) }),
     }
   )
 }
@@ -654,25 +697,29 @@ export function menuHintFlex(locale: AppLocale = DEFAULT_LOCALE): messagingApi.F
   })
 }
 
-export function contactHrGuideFlex(): messagingApi.FlexMessage {
+export function contactHrGuideFlex(
+  locale: AppLocale = DEFAULT_LOCALE
+): messagingApi.FlexMessage {
   const registerUrl = lineRegisterUrl()
-  return guide("ติดต่อ HR", {
+  return guide(t("line.contactHrGuide.alt", locale), {
     emoji: "🎧",
-    title: "ติดต่อ HR",
-    subtitle: "ช่องทางติดต่อทีม HR",
+    title: t("line.contactHrGuide.title", locale),
+    subtitle: t("line.contactHrGuide.subtitle", locale),
     accentColor: "#5C6BC0",
-    description:
-      "สอบถาม HR หรือลงทะเบียนพนักงานใหม่ — ระบบจะแจ้งทีม HR และติดต่อกลับผ่าน LINE OA นี้",
+    description: t("line.contactHrGuide.desc", locale),
     steps: [
-      "ยังไม่เคยลงทะเบียน? กด \"ลงทะเบียนพนักงาน\" ด้านล่าง",
-      "ต้องการคุยกับ HR? กด \"แจ้งทีม HR\"",
-      "เรื่องเร่งด่วน แจ้งหัวหน้างานโดยตรงด้วย",
+      t("line.contactHrGuide.step1", locale),
+      t("line.contactHrGuide.step2", locale),
+      t("line.contactHrGuide.step3", locale),
     ],
-    tip: "เวลาทำการ จ–ศ 09:00–18:00 น. (ยกเว้นวันหยุดนักขัตฤกษ์)",
+    tip: t("line.contactHrGuide.tip", locale),
     postbackButton: {
-      label: "แจ้งทีม HR",
+      label: t("line.contactHrGuide.notifyButton", locale),
       data: "action=contact_hr_notify",
     },
-    button: { label: "ลงทะเบียนพนักงาน", uri: registerUrl },
+    button: {
+      label: t("line.contactHrGuide.registerButton", locale),
+      uri: registerUrl,
+    },
   })
 }

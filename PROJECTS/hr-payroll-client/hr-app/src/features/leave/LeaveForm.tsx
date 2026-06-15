@@ -1,7 +1,7 @@
 "use client"
 
 import { zodResolver } from "@hookform/resolvers/zod"
-import { useState } from "react"
+import { useMemo, useState } from "react"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
 
@@ -15,35 +15,48 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form"
-import { cn } from "@/lib/utils"
+import { useLocale } from "@/features/portal/LocaleProvider"
 import { formatLeaveApiError } from "@/features/leave/balance"
-import {
-  countLeaveDays,
-  LEAVE_TYPE_LABELS,
-  LEAVE_TYPES,
-} from "@/features/leave/types"
+import { countLeaveDays, LEAVE_TYPES, type LeaveType } from "@/features/leave/types"
+import { cn } from "@/lib/utils"
 
 const MAX_FILE_BYTES = 5 * 1024 * 1024
 const ALLOWED_FILE_TYPES = ["image/jpeg", "image/png", "application/pdf"]
 
-const leaveFormSchema = z
-  .object({
-    type: z.enum(LEAVE_TYPES, "เลือกประเภทการลา"),
-    startDate: z.string().min(1, "เลือกวันเริ่มลา"),
-    endDate: z.string().min(1, "เลือกวันสิ้นสุด"),
-    reason: z.string().trim().min(5, "กรุณาระบุเหตุผลอย่างน้อย 5 ตัวอักษร"),
-  })
-  .refine((v) => countLeaveDays(v.startDate, v.endDate) !== null, {
-    path: ["endDate"],
-    message: "วันสิ้นสุดต้องไม่อยู่ก่อนวันเริ่มลา",
-  })
-
-type LeaveFormValues = z.infer<typeof leaveFormSchema>
+const LEAVE_TYPE_KEYS: Record<
+  LeaveType,
+  "leave.type.sick" | "leave.type.personal" | "leave.type.annual" | "leave.type.other"
+> = {
+  sick: "leave.type.sick",
+  personal: "leave.type.personal",
+  annual: "leave.type.annual",
+  other: "leave.type.other",
+}
 
 const inputClassName =
   "h-9 w-full rounded-lg border border-input bg-transparent px-3 text-sm outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 aria-invalid:border-destructive"
 
 export function LeaveForm() {
+  const { tx } = useLocale()
+
+  const leaveFormSchema = useMemo(
+    () =>
+      z
+        .object({
+          type: z.enum(LEAVE_TYPES, tx("leave.form.validation.type")),
+          startDate: z.string().min(1, tx("leave.form.validation.startDate")),
+          endDate: z.string().min(1, tx("leave.form.validation.endDate")),
+          reason: z.string().trim().min(5, tx("leave.form.validation.reason")),
+        })
+        .refine((v) => countLeaveDays(v.startDate, v.endDate) !== null, {
+          path: ["endDate"],
+          message: tx("leave.form.validation.endBeforeStart"),
+        }),
+    [tx]
+  )
+
+  type LeaveFormValues = z.infer<typeof leaveFormSchema>
+
   const form = useForm<LeaveFormValues>({
     resolver: zodResolver(leaveFormSchema),
     mode: "onTouched",
@@ -72,12 +85,12 @@ export function LeaveForm() {
     }
     if (!ALLOWED_FILE_TYPES.includes(selected.type)) {
       setFile(null)
-      setFileError("รองรับเฉพาะไฟล์ JPEG, PNG หรือ PDF")
+      setFileError(tx("leave.form.validation.fileType"))
       return
     }
     if (selected.size > MAX_FILE_BYTES) {
       setFile(null)
-      setFileError("ไฟล์ต้องมีขนาดไม่เกิน 5MB")
+      setFileError(tx("leave.form.validation.fileSize"))
       return
     }
     setFile(selected)
@@ -115,7 +128,9 @@ export function LeaveForm() {
       form.reset({ type: "sick", startDate: "", endDate: "", reason: "" })
       setFile(null)
     } catch (e) {
-      setSubmitError(e instanceof Error ? e.message : "ส่งใบลาไม่สำเร็จ")
+      setSubmitError(
+        e instanceof Error ? e.message : tx("leave.form.submitFailed")
+      )
     } finally {
       setSubmitting(false)
     }
@@ -133,12 +148,12 @@ export function LeaveForm() {
           name="type"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>ประเภทการลา</FormLabel>
+              <FormLabel>{tx("leave.form.typeLabel")}</FormLabel>
               <FormControl>
                 <select {...field} className={cn(inputClassName, "bg-card")}>
                   {LEAVE_TYPES.map((value) => (
                     <option key={value} value={value}>
-                      {LEAVE_TYPE_LABELS[value]}
+                      {tx(LEAVE_TYPE_KEYS[value])}
                     </option>
                   ))}
                 </select>
@@ -154,7 +169,7 @@ export function LeaveForm() {
             name="startDate"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>วันเริ่มลา</FormLabel>
+                <FormLabel>{tx("leave.form.startDate")}</FormLabel>
                 <FormControl>
                   <input type="date" {...field} className={inputClassName} />
                 </FormControl>
@@ -167,7 +182,7 @@ export function LeaveForm() {
             name="endDate"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>วันสิ้นสุด</FormLabel>
+                <FormLabel>{tx("leave.form.endDate")}</FormLabel>
                 <FormControl>
                   <input type="date" {...field} className={inputClassName} />
                 </FormControl>
@@ -179,7 +194,7 @@ export function LeaveForm() {
 
         {isSameDaySick ? (
           <FormItem>
-            <FormLabel>ชั่วโมงลาป่วย (ภายในวัน)</FormLabel>
+            <FormLabel>{tx("leave.form.sickHoursLabel")}</FormLabel>
             <FormControl>
               <input
                 type="number"
@@ -189,23 +204,21 @@ export function LeaveForm() {
                 value={leaveHours}
                 onChange={(e) => setLeaveHours(e.target.value)}
                 className={inputClassName}
-                placeholder="เช่น 2"
+                placeholder={tx("leave.form.sickHoursPlaceholder")}
               />
             </FormControl>
-            <FormDescription>
-              ลาป่วยภายในวันนับเป็นชม. — ใส่ชั่วโมงแทนจำนวนวัน
-            </FormDescription>
+            <FormDescription>{tx("leave.form.sickHoursDesc")}</FormDescription>
           </FormItem>
         ) : (
           <p className="text-sm text-muted-foreground">
-            จำนวนวันลา:{" "}
+            {tx("leave.form.daysCount")}{" "}
             <span className="font-medium text-foreground tabular-nums">
-              {days === null ? "—" : `${days} วัน`}
+              {days === null
+                ? "—"
+                : tx("leave.form.daysValue", { count: days })}
             </span>
             {type === "sick" ? (
-              <span className="block text-xs">
-                ลาป่วยย้อนหลังได้ไม่เกิน 3 วัน — ต้องแนบใบรับรองแพทย์
-              </span>
+              <span className="block text-xs">{tx("leave.form.sickRetroNote")}</span>
             ) : null}
           </p>
         )}
@@ -215,12 +228,12 @@ export function LeaveForm() {
           name="reason"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>เหตุผล</FormLabel>
+              <FormLabel>{tx("leave.form.reasonLabel")}</FormLabel>
               <FormControl>
                 <textarea
                   {...field}
                   rows={3}
-                  placeholder="ระบุเหตุผลการลา"
+                  placeholder={tx("leave.form.reasonPlaceholder")}
                   className={cn(inputClassName, "h-auto py-2")}
                 />
               </FormControl>
@@ -231,7 +244,7 @@ export function LeaveForm() {
 
         {type === "sick" ? (
           <FormItem>
-            <FormLabel>ใบรับรองแพทย์ (JPEG/PNG/PDF ไม่เกิน 5MB)</FormLabel>
+            <FormLabel>{tx("leave.form.attachmentLabel")}</FormLabel>
             <FormControl>
               <input
                 type="file"
@@ -244,21 +257,21 @@ export function LeaveForm() {
             {fileError ? (
               <p className="text-sm text-destructive">{fileError}</p>
             ) : file ? (
-              <FormDescription>เลือกไฟล์แล้ว: {file.name}</FormDescription>
+              <FormDescription>
+                {tx("leave.form.fileSelected", { name: file.name })}
+              </FormDescription>
             ) : null}
           </FormItem>
         ) : null}
 
         <div className="flex items-center gap-2 border-t pt-4">
           <Button type="submit" disabled={submitting}>
-            {submitting ? "กำลังส่ง…" : "ส่งใบลา"}
+            {submitting ? tx("liff.common.submitting") : tx("leave.form.submit")}
           </Button>
         </div>
 
         {success ? (
-          <p className="text-sm text-green-600">
-            ส่งคำขอลาแล้ว — รอ HR อนุมัติ (ภายใน 48 ชม.)
-          </p>
+          <p className="text-sm text-green-600">{tx("leave.form.success")}</p>
         ) : null}
         {submitError ? (
           <p className="text-sm text-destructive">{submitError}</p>

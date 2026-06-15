@@ -2,6 +2,8 @@ import type { messagingApi } from "@line/bot-sdk"
 
 import { formatThaiDate } from "@/lib/datetime/thailand"
 import { flexMessage, simpleBubble } from "@/lib/line/flex/base"
+import { t } from "@/lib/i18n/translate"
+import { DEFAULT_LOCALE, type AppLocale } from "@/lib/i18n/types"
 
 const LINE_BODY_MAX = 1200
 
@@ -30,16 +32,22 @@ export function announcementBroadcastFlex(options: {
 }
 
 export function announcementListFlex(
-  items: { title: string; body: string; sentAt: string }[]
+  items: { title: string; body: string; sentAt: string }[],
+  locale: AppLocale = DEFAULT_LOCALE
 ): messagingApi.FlexMessage {
   if (items.length === 0) {
     return flexMessage(
-      "ไม่มีประกาศ",
+      t("line.announcementList.altEmpty", locale),
       simpleBubble({
-        title: "ประกาศบริษัท",
+        title: t("line.announcementList.title", locale),
         accentColor: "#00897B",
-        rows: [{ label: "สถานะ", value: "ยังไม่มีประกาศล่าสุด" }],
-        footerNote: "เมื่อ HR ส่งประกาศ จะแจ้งทาง LINE นี้โดยอัตโนมัติ",
+        rows: [
+          {
+            label: t("line.announcementList.labelStatus", locale),
+            value: t("line.announcementList.statusEmpty", locale),
+          },
+        ],
+        footerNote: t("line.announcementList.footerEmpty", locale),
       })
     )
   }
@@ -52,10 +60,13 @@ export function announcementListFlex(
   })
 
   const rows = [
-    { label: "ล่าสุด", value: latest.title },
-    { label: "วันที่", value: date },
     {
-      label: "รายละเอียด",
+      label: t("line.announcementList.labelLatest", locale),
+      value: latest.title,
+    },
+    { label: t("line.announcementList.labelDate", locale), value: date },
+    {
+      label: t("line.announcementList.labelDetail", locale),
       value:
         latest.body.length > 120
           ? `${latest.body.slice(0, 117)}...`
@@ -64,16 +75,21 @@ export function announcementListFlex(
   ]
 
   if (items.length > 1) {
-    rows.push({ label: "เพิ่มเติม", value: `อีก ${items.length - 1} ประกาศ` })
+    rows.push({
+      label: t("line.announcementList.labelMore", locale),
+      value: t("line.announcementList.moreCount", locale, {
+        count: items.length - 1,
+      }),
+    })
   }
 
   return flexMessage(
-    "ประกาศล่าสุด",
+    t("line.announcementList.altLatest", locale),
     simpleBubble({
-      title: "ประกาศบริษัท",
+      title: t("line.announcementList.title", locale),
       accentColor: "#00897B",
       rows,
-      footerNote: "ดูประกาศเพิ่มเติมได้ที่ HR Admin",
+      footerNote: t("line.announcementList.footerMore", locale),
     })
   )
 }
