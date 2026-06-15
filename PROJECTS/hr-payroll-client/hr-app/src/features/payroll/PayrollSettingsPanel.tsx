@@ -9,8 +9,6 @@ import type { PayrollConfig } from "@/lib/payroll/config"
 import { salaryFieldLabel } from "@/lib/payroll/pay-type"
 import { NATIONALITY_OPTIONS, payDayLabel } from "@/lib/payroll/pay-day"
 
-const ODOO_BASE = "https://chinese-vibe2.odoo.com"
-
 type FormState = {
   monthly_std_hours: string
   ot_multiplier: string
@@ -22,6 +20,10 @@ type FormState = {
   work_entry_annual: string
   odoo_monthly_struct_name: string
   odoo_hourly_struct_name: string
+  payroll_cutoff_day: string
+  tax_enabled: string
+  tax_rate: string
+  leave_sick_deduct_enabled: string
 }
 
 function toFormState(config: PayrollConfig): FormState {
@@ -36,6 +38,10 @@ function toFormState(config: PayrollConfig): FormState {
     work_entry_annual: config.work_entry_annual,
     odoo_monthly_struct_name: config.odoo_monthly_struct_name,
     odoo_hourly_struct_name: config.odoo_hourly_struct_name,
+    payroll_cutoff_day: String(config.payroll_cutoff_day),
+    tax_enabled: config.tax_enabled ? "true" : "false",
+    tax_rate: String(config.tax_rate),
+    leave_sick_deduct_enabled: config.leave_sick_deduct_enabled ? "true" : "false",
   }
 }
 
@@ -77,7 +83,7 @@ export function PayrollSettingsPanel({ initialConfig }: { initialConfig: Payroll
     <div className="flex flex-col gap-6">
       <WidgetCard title="คู่มือเงื่อนไขเงินเดือน">
         <p className="mb-4 text-sm text-muted-foreground">
-          กำหนดประเภทการจ่ายและอัตราในโปรไฟล์พนักงาน — ระบบจะ sync ไป Odoo ตามตารางด้านล่าง
+          กำหนดประเภทการจ่ายและอัตราในโปรไฟล์พนักงาน — ระบบจะใช้ค่าดังนี้ตอนคำนวณเงินเดือน
         </p>
         <div className="overflow-x-auto rounded-xl border">
           <table className="w-full text-left text-sm">
@@ -85,26 +91,19 @@ export function PayrollSettingsPanel({ initialConfig }: { initialConfig: Payroll
               <tr>
                 <th className="px-3 py-2">pay_type</th>
                 <th className="px-3 py-2">ฟิลด์ salary</th>
-                <th className="px-3 py-2">ชม.ที่ sync</th>
-                <th className="px-3 py-2">Odoo contract</th>
+                <th className="px-3 py-2">ชม.ที่นำมาคำนวณ</th>
               </tr>
             </thead>
             <tbody>
               <tr className="border-b">
                 <td className="px-3 py-2 font-medium">monthly (Office)</td>
                 <td className="px-3 py-2">{salaryFieldLabel("monthly")}</td>
-                <td className="px-3 py-2">OT + ลา (base จาก contract)</td>
-                <td className="px-3 py-2 font-mono text-xs">
-                  wage_type=monthly, wage=salary
-                </td>
+                <td className="px-3 py-2">เงินเดือนเต็ม + OT + ลา (บันทึกชม.)</td>
               </tr>
               <tr>
                 <td className="px-3 py-2 font-medium">hourly (หน้าร้าน)</td>
                 <td className="px-3 py-2">{salaryFieldLabel("hourly")}</td>
                 <td className="px-3 py-2">ชม.จาก ledger ที่อนุมัติแล้ว</td>
-                <td className="px-3 py-2 font-mono text-xs">
-                  wage_type=hourly, hourly_wage=salary
-                </td>
               </tr>
             </tbody>
           </table>
@@ -115,8 +114,7 @@ export function PayrollSettingsPanel({ initialConfig }: { initialConfig: Payroll
             จีน → วันที่ <strong>5</strong> (จ่ายเดือนถัดไป) — ตั้งในโปรไฟล์พนักงาน
           </li>
           <li>
-            Sync Odoo จะติด tag <strong>Pay-04</strong> / <strong>Pay-05</strong> และสร้าง{" "}
-            <strong>Payslip Batch</strong> แยก 2 กลุ่มอัตโนมัติ
+            คำนวณแล้วแยก batch วันจ่าย <strong>4</strong> / <strong>5</strong> อัตโนมัติ
           </li>
           <li>
             สัญชาติที่รองรับ:{" "}
@@ -127,37 +125,18 @@ export function PayrollSettingsPanel({ initialConfig }: { initialConfig: Payroll
             <strong>monthly</strong> · สาขาอื่น → default <strong>hourly</strong>
           </li>
           <li>
-            HR ต้องสร้าง Salary Structure{" "}
-            <strong>Hourly Wage - Thailand</strong> ใน Odoo (ครั้งเดียว) — ดูเอกสาร{" "}
-            <strong>ODOO_INTEGRATION.md</strong> ใน repo
-          </li>
-          <li>
-            Odoo:{" "}
-            <a
-              href={`${ODOO_BASE}/odoo/payroll-structures`}
-              className="font-medium text-brand-red hover:underline"
-              target="_blank"
-              rel="noreferrer"
-            >
-              Salary Structures
-            </a>
-            {" · "}
-            <a
-              href={`${ODOO_BASE}/odoo/work-entry-types`}
-              className="font-medium text-brand-red hover:underline"
-              target="_blank"
-              rel="noreferrer"
-            >
-              Work Entry Types
-            </a>
+            หลัง Lock รอบ → สร้าง PDF สลิป → พนักงานดูที่{" "}
+            <Link href="/portal/payslips" className="font-medium text-brand-red hover:underline">
+              Portal → สลิปเงินเดือน
+            </Link>
           </li>
         </ul>
       </WidgetCard>
 
       <form onSubmit={onSave}>
-        <WidgetCard title="ค่าที่ sync ใช้ (แก้ไขได้)">
+        <WidgetCard title="ค่าที่ใช้คำนวณ (แก้ไขได้)">
           <p className="mb-4 text-sm text-muted-foreground">
-            ค่าเหล่านี้ใช้ตอน sync payroll ไป Odoo — เปลี่ยนแล้ว sync รอบถัดไปจะใช้ค่าใหม่
+            ค่าเหล่านี้ใช้ตอนคำนวณเงินเดือน — เปลี่ยนแล้วรอบถัดไปจะใช้ค่าใหม่
           </p>
           <div className="grid gap-4 sm:grid-cols-2">
             <label className="block text-sm">
@@ -237,29 +216,55 @@ export function PayrollSettingsPanel({ initialConfig }: { initialConfig: Payroll
                 onChange={(e) => setField("work_entry_annual", e.target.value)}
               />
             </label>
-            <label className="block text-sm sm:col-span-2">
-              <span className="text-muted-foreground">Odoo Salary Structure — monthly</span>
+            <label className="block text-sm">
+              <span className="text-muted-foreground">วันตัดรอบ default (1–31)</span>
               <input
+                type="number"
+                min="1"
+                max="31"
+                step="1"
                 className={inputClass}
-                value={form.odoo_monthly_struct_name}
-                onChange={(e) => setField("odoo_monthly_struct_name", e.target.value)}
+                value={form.payroll_cutoff_day}
+                onChange={(e) => setField("payroll_cutoff_day", e.target.value)}
               />
             </label>
-            <label className="block text-sm sm:col-span-2">
-              <span className="text-muted-foreground">Odoo Salary Structure — hourly</span>
-              <input
-                className={inputClass}
-                value={form.odoo_hourly_struct_name}
-                onChange={(e) => setField("odoo_hourly_struct_name", e.target.value)}
-              />
-            </label>
+          </div>
+          <div className="mt-6 rounded-xl border border-dashed border-muted-foreground/40 p-4 opacity-70">
+            <h4 className="text-sm font-semibold">หักภาษี (ปิดใช้งาน — Phase 5)</h4>
+            <p className="mt-1 text-xs text-muted-foreground">
+              MVP ไม่คำนวณ PIT — เก็บ config ไว้เปิดทีหลัง
+            </p>
+            <div className="mt-3 grid gap-4 sm:grid-cols-2">
+              <label className="block text-sm">
+                <span className="text-muted-foreground">tax_enabled</span>
+                <select
+                  className={inputClass}
+                  value={form.tax_enabled}
+                  disabled
+                  onChange={(e) => setField("tax_enabled", e.target.value)}
+                >
+                  <option value="false">false</option>
+                  <option value="true">true</option>
+                </select>
+              </label>
+              <label className="block text-sm">
+                <span className="text-muted-foreground">tax_rate</span>
+                <input
+                  type="number"
+                  className={inputClass}
+                  value={form.tax_rate}
+                  disabled
+                  onChange={(e) => setField("tax_rate", e.target.value)}
+                />
+              </label>
+            </div>
           </div>
           <div className="mt-4 flex flex-wrap items-center gap-3">
             <Button type="submit" disabled={saving} className="bg-brand-red hover:bg-brand-red/90">
               {saving ? "กำลังบันทึก…" : "บันทึกการตั้งค่า"}
             </Button>
-            <Link href="/admin/payroll" className="text-sm font-medium text-brand-red hover:underline">
-              กลับ Payroll Hub
+            <Link href="/admin/payroll/runs" className="text-sm font-medium text-brand-red hover:underline">
+              ไปคำนวณเงินเดือน
             </Link>
             {message ? <p className="text-sm text-emerald-600">{message}</p> : null}
             {error ? <p className="text-sm text-destructive">{error}</p> : null}

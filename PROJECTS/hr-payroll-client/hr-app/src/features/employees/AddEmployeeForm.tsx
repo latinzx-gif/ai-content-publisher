@@ -643,7 +643,7 @@ export function AddEmployeeForm({
             />
             {form.status === "active" && !form.salary ? (
               <p className="mt-1 text-[10px] text-amber-700">
-                แนะนำกรอกอัตราก่อน sync Odoo
+                แนะนำกรอกอัตราก่อนคำนวณเงินเดือน
               </p>
             ) : null}
           </FormField>

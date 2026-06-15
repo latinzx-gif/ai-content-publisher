@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils"
 
 const LINKS = [
   { href: "/admin/payroll", label: "Hub", exact: true },
-  { href: "/admin/payroll/odoo", label: "Odoo Sync" },
+  { href: "/admin/payroll/runs", label: "คำนวณเงินเดือน" },
   { href: "/admin/payroll/settings", label: "ตั้งค่าเงินเดือน" },
 ] as const
 

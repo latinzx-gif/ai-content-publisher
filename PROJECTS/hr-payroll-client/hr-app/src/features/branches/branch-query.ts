@@ -3,6 +3,7 @@ import type { SupabaseClient } from "@supabase/supabase-js"
 import type { BranchDetail } from "@/features/branches/branch-hub-data"
 import type { BranchRow } from "@/features/branches/data"
 import { branchAdminPath, isBranchUuid } from "@/lib/branches/branch-slug"
+import { isHeadOfficeBranchCode } from "@/lib/branches/head-office"
 
 type BranchCore = {
   id: string
@@ -28,10 +29,11 @@ function parseBranchRow(
   options?: { includeGeofence?: boolean }
 ): BranchCore {
   const includeGeofence = options?.includeGeofence !== false
+  const code = (row.code as string | null) ?? null
   return {
     id: row.id as string,
     name: row.name as string,
-    code: (row.code as string | null) ?? null,
+    code,
     address: (row.address as string | null) ?? null,
     latitude:
       includeGeofence && row.latitude != null && row.latitude !== ""
@@ -45,7 +47,9 @@ function parseBranchRow(
       ? ((row.geofence_radius_m as number) ?? 200)
       : 200,
     geofence_enabled: includeGeofence
-      ? ((row.geofence_enabled as boolean) ?? true)
+      ? isHeadOfficeBranchCode(code)
+        ? false
+        : ((row.geofence_enabled as boolean) ?? true)
       : true,
     manager_employee_id: (row.manager_employee_id as string | null) ?? null,
   }

@@ -363,7 +363,7 @@ export function EmployeeProfileForm({
               </select>
               {form.pay_day !== "" ? (
                 <p className="mt-1 text-xs text-muted-foreground">
-                  Odoo batch: {payDayLabel(form.pay_day)}
+                  วันจ่าย: {payDayLabel(form.pay_day)}
                 </p>
               ) : null}
             </Field>
@@ -591,7 +591,7 @@ export function EmployeeProfileForm({
                 ))}
               </select>
               <p className="mt-1 text-xs text-muted-foreground">
-                ดูเงื่อนไขและค่า Odoo ที่{" "}
+                ดูเงื่อนไขและค่าคำนวณที่{" "}
                 <Link href="/admin/payroll/settings" className="text-brand-red hover:underline">
                   ตั้งค่าเงินเดือน
                 </Link>
@@ -609,7 +609,7 @@ export function EmployeeProfileForm({
             </Field>
             {form.status === "active" && !form.salary.trim() ? (
               <p className="text-xs text-amber-700">
-                พนักงาน Active ควรมี {salaryFieldLabel(form.pay_type).toLowerCase()} ก่อน sync Odoo
+                พนักงาน Active ควรมี {salaryFieldLabel(form.pay_type).toLowerCase()} ก่อนคำนวณเงินเดือน
               </p>
             ) : null}
             <Field label="สถานะพนักงาน">

@@ -1,6 +1,12 @@
 import { NextResponse, type NextRequest } from "next/server"
 
 import { applyBranchManagerAssignment } from "@/lib/branches/assign-manager"
+import {
+  canChangeBranchCode,
+  mapBranchCodeConflict,
+  normalizeBranchCode,
+} from "@/lib/branches/branch-code"
+import { isHeadOfficeBranchCode } from "@/lib/branches/head-office"
 import { canManageHr } from "@/lib/auth/roles"
 import { getCurrentEmployee } from "@/lib/auth/session"
 import { GEOFENCE_MAX_RADIUS_M } from "@/lib/geofence/validate"
@@ -49,13 +55,15 @@ export async function PATCH(
 
   const { data: currentBranch } = await supabase
     .from("hr_branches")
-    .select("manager_employee_id")
+    .select("manager_employee_id, code")
     .eq("id", id)
     .maybeSingle()
 
   if (!currentBranch) {
     return NextResponse.json({ error: "not found" }, { status: 404 })
   }
+
+  const headOffice = isHeadOfficeBranchCode(currentBranch.code as string | null)
 
   const updates: Record<string, unknown> = {}
   if (body.name !== undefined) {
@@ -64,8 +72,21 @@ export async function PATCH(
     updates.name = name
   }
   if (body.code !== undefined) {
-    updates.code =
-      typeof body.code === "string" && body.code.trim() ? body.code.trim() : null
+    if (body.code === null || body.code === "") {
+      return NextResponse.json({ error: "รหัสสาขาจำเป็นต้องระบุ" }, { status: 400 })
+    }
+    if (typeof body.code !== "string") {
+      return NextResponse.json({ error: "code must be string" }, { status: 400 })
+    }
+    const nextCode = normalizeBranchCode(body.code)
+    const codeError = canChangeBranchCode(
+      currentBranch.code as string | null,
+      nextCode
+    )
+    if (codeError) {
+      return NextResponse.json({ error: codeError }, { status: 400 })
+    }
+    updates.code = nextCode
   }
   if (body.address !== undefined) {
     updates.address =
@@ -106,6 +127,12 @@ export async function PATCH(
   }
 
   if (body.geofence_enabled !== undefined) {
+    if (headOffice && body.geofence_enabled) {
+      return NextResponse.json(
+        { error: "Head Office (000) ไม่รองรับ Geofence" },
+        { status: 400 }
+      )
+    }
     if (typeof body.geofence_enabled !== "boolean") {
       return NextResponse.json(
         { error: "geofence_enabled must be boolean" },
@@ -159,7 +186,16 @@ export async function PATCH(
     )
     .maybeSingle()
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  if (error) {
+    const message =
+      error.code === "23505"
+        ? mapBranchCodeConflict(error.message)
+        : error.message
+    return NextResponse.json(
+      { error: message },
+      { status: error.code === "23505" ? 409 : 500 }
+    )
+  }
   if (!data) return NextResponse.json({ error: "not found" }, { status: 404 })
 
   return NextResponse.json(data)

@@ -1,6 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js"
 
 import { getAdminClient } from "@/lib/auth/admin-client"
+import { isHeadOfficeBranchCode } from "@/lib/branches/head-office"
 import {
   GEOFENCE_MAX_RADIUS_M,
   validateGeofence,
@@ -24,18 +25,22 @@ export async function loadBranchGeofence(
 ): Promise<BranchGeofenceConfig | null> {
   const { data, error } = await admin
     .from("hr_branches")
-    .select("latitude, longitude, geofence_radius_m, geofence_enabled")
+    .select("code, latitude, longitude, geofence_radius_m, geofence_enabled")
     .eq("id", branchId)
     .maybeSingle()
 
   if (error) throw error
   if (!data) return null
 
+  const headOffice = isHeadOfficeBranchCode(data.code as string | null)
+
   return {
     latitude: data.latitude != null ? Number(data.latitude) : null,
     longitude: data.longitude != null ? Number(data.longitude) : null,
     geofence_radius_m: Number(data.geofence_radius_m ?? GEOFENCE_MAX_RADIUS_M),
-    geofence_enabled: Boolean(data.geofence_enabled ?? true),
+    geofence_enabled: headOffice
+      ? false
+      : Boolean(data.geofence_enabled ?? true),
   }
 }
 
@@ -66,10 +71,12 @@ export async function assertWithinBranchGeofence({
 }
 
 export function isBranchGeofenceReady(branch: {
+  code?: string | null
   latitude: number | null
   longitude: number | null
   geofence_enabled?: boolean | null
 }): boolean {
+  if (isHeadOfficeBranchCode(branch.code)) return false
   return (
     branch.latitude != null &&
     branch.longitude != null &&

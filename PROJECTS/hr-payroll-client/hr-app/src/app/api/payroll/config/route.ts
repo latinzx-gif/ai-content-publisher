@@ -55,11 +55,16 @@ export async function PATCH(request: NextRequest) {
       (key as PayrollConfigKey) === "monthly_std_hours" ||
       (key as PayrollConfigKey) === "ot_multiplier" ||
       (key as PayrollConfigKey) === "sso_cap" ||
-      (key as PayrollConfigKey) === "sso_rate"
+      (key as PayrollConfigKey) === "sso_rate" ||
+      (key as PayrollConfigKey) === "payroll_cutoff_day" ||
+      (key as PayrollConfigKey) === "tax_rate"
     ) {
       const n = Number(trimmed)
       if (!Number.isFinite(n) || n < 0) {
         return NextResponse.json({ error: `invalid number for ${key}` }, { status: 400 })
+      }
+      if ((key as PayrollConfigKey) === "payroll_cutoff_day" && (n < 1 || n > 31)) {
+        return NextResponse.json({ error: "payroll_cutoff_day must be 1-31" }, { status: 400 })
       }
     }
 

@@ -9,6 +9,7 @@
     "start": "next start",
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
+    "test": "node --import tsx --test src/lib/payroll/*.test.ts",
     "seed:admin": "node scripts/seed-admin.mjs",
     "odoo:setup-sync": "node scripts/odoo-setup-sync.mjs",
     "odoo:ensure-rules": "node scripts/odoo-ensure-rules.mjs",
@@ -57,7 +58,9 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.2.9",
+    "pdf-lib": "^1.17.1",
     "tailwindcss": "^4",
+    "tsx": "^4.22.4",
     "typescript": "^5"
   }
 }

@@ -1,3 +1,5 @@
+import { HEAD_OFFICE_BRANCH_CODE } from "@/lib/branches/head-office"
+
 export type PayType = "monthly" | "hourly"
 
 export const PAY_TYPE_OPTIONS: Array<{ value: PayType; label: string }> = [
@@ -6,7 +8,7 @@ export const PAY_TYPE_OPTIONS: Array<{ value: PayType; label: string }> = [
 ]
 
 export function defaultPayTypeForBranchCode(code: string | null | undefined): PayType {
-  return code === "000" ? "monthly" : "hourly"
+  return code === HEAD_OFFICE_BRANCH_CODE ? "monthly" : "hourly"
 }
 
 export function salaryFieldLabel(payType: PayType): string {

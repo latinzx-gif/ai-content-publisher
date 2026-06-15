@@ -34,10 +34,10 @@ export default async function AdminPayrollPage() {
     >
       <div className="mb-4 flex flex-wrap gap-3">
         <Link
-          href="/admin/payroll/odoo"
-          className="rounded-lg border-2 border-blue-200 bg-blue-50 px-4 py-2 text-sm font-medium text-blue-900 hover:bg-blue-100"
+          href="/admin/payroll/runs"
+          className="rounded-lg border-2 border-violet-200 bg-violet-50 px-4 py-2 text-sm font-medium text-violet-900 hover:bg-violet-100"
         >
-          Odoo Integration
+          คำนวณเงินเดือน
         </Link>
         <Link
           href="/admin/payroll/settings"
@@ -47,12 +47,17 @@ export default async function AdminPayrollPage() {
         </Link>
       </div>
 
-      <div className="mb-4 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
-        <strong>Office (monthly):</strong> อ้างอิงเงินเดือนในโปรไฟล์ — sync ส่ง OT/ลา ·{" "}
-        <strong>หน้าร้าน (hourly):</strong> ชม.จาก ledger ที่อนุมัติ × อัตราชั่วโมง — ขอสลิปผ่าน{" "}
-        <Link href="/admin/documents" className="font-medium underline">
-          คำขอเอกสาร
+      <div className="mb-4 rounded-xl border border-violet-200 bg-violet-50 p-4 text-sm text-violet-900">
+        <strong>Workflow:</strong> เลือกเดือน + วันตัดรอบ → คำนวณ → Lock รอบ → สร้าง PDF สลิป ·{" "}
+        พนักงานดูสลิปที่{" "}
+        <Link href="/portal/payslips" className="font-medium underline">
+          Portal → สลิปเงินเดือน
         </Link>
+      </div>
+
+      <div className="mb-4 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
+        <strong>Office (monthly):</strong> เงินเดือนในโปรไฟล์ + OT ตามชม.ที่อนุมัติ ·{" "}
+        <strong>หน้าร้าน (hourly):</strong> ชม.จาก ledger ที่อนุมัติ × อัตราชั่วโมง
       </div>
 
       <section className="mb-6">
@@ -92,7 +97,7 @@ export default async function AdminPayrollPage() {
       </section>
 
       <section>
-        <h3 className="mb-2 text-sm font-semibold">อัตราที่บันทึก (อ้างอิง sync Odoo)</h3>
+        <h3 className="mb-2 text-sm font-semibold">อัตราที่บันทึก (ใช้คำนวณเงินเดือน)</h3>
         <div className="overflow-x-auto rounded-xl border">
           <table className="w-full text-left text-sm">
             <thead className="border-b bg-muted/40">

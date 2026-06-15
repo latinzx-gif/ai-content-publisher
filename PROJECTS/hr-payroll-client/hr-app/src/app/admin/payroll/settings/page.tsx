@@ -11,7 +11,7 @@ export default async function PayrollSettingsPage() {
   return (
     <AdminPageShell
       title="ตั้งค่าระบบเงินเดือน"
-      description="เงื่อนไขการจ่ายเงิน + ค่าที่ใช้ sync ไป Odoo"
+      description="เงื่อนไขการจ่ายเงิน + ค่าที่ใช้คำนวณเงินเดือนในระบบ"
     >
       <PayrollSettingsPanel initialConfig={config} />
     </AdminPageShell>

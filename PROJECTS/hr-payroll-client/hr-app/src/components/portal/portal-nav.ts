@@ -7,6 +7,7 @@ export const PORTAL_NAV_ITEMS: AdminNavItem[] = [
   { label: "ตารางงาน", href: "/portal/schedule", icon: "timer" },
   { label: "ขอลา", href: "/portal/leave", icon: "calendar" },
   { label: "เอกสาร", href: "/portal/documents", icon: "file-text" },
+  { label: "สลิปเงินเดือน", href: "/portal/payslips", icon: "file-text" },
   { label: "คลังสินค้า", href: "/portal/inbound", icon: "inventory" },
 ]
 
