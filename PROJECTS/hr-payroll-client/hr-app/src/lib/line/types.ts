@@ -9,6 +9,7 @@ export const RICH_MENU_ACTIONS = [
   "document",
   "complaint",
   "inventory",
+  "check_stock",
   "announcement",
   "contact_hr",
   "contact_hr_notify",

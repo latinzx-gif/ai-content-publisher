@@ -18,6 +18,11 @@ import {
 } from "@/lib/line/flex/menu-guide"
 import { buildActionMessages } from "@/lib/line/handlers/actions"
 import { isOneOnOneUserSource } from "@/lib/line/handlers/source"
+import {
+  isStockCommandEnabled,
+  parseSlashCommand,
+  stockCommandDisabledMessage,
+} from "@/lib/line/slash-commands"
 import type { RichMenuPostbackAction } from "@/lib/line/types"
 
 /** Free-text chat is off by default — Rich Menu + postback + location only. */
@@ -152,11 +157,33 @@ export async function handleMessage(
     return
   }
 
+  const text = event.message.text.trim()
+  const slashAction = parseSlashCommand(text)
+  if (slashAction) {
+    const lineUserId =
+      event.source?.type === "user" ? event.source.userId : undefined
+    if (
+      (slashAction === "check_stock" || slashAction === "inventory") &&
+      !isStockCommandEnabled()
+    ) {
+      await getLineClient().replyMessage({
+        replyToken: event.replyToken,
+        messages: [stockCommandDisabledMessage()],
+      })
+      return
+    }
+    const messages = await buildActionMessages(slashAction, { lineUserId })
+    await getLineClient().replyMessage({
+      replyToken: event.replyToken,
+      messages,
+    })
+    return
+  }
+
   if (!isUserChatEnabled()) {
     return
   }
 
-  const text = event.message.text.trim()
   const textActions: Record<string, RichMenuPostbackAction> = {
     คลังสินค้า: "inventory",
     สแกนรับเข้า: "inventory",

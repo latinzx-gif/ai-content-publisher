@@ -2,6 +2,7 @@ import type { messagingApi } from "@line/bot-sdk"
 
 import type { RichMenuPostbackAction } from "@/lib/line/types"
 import { announcementAction } from "@/lib/line/handlers/actions/announcement"
+import { checkStockAction } from "@/lib/line/handlers/actions/check-stock"
 import { checkinAction } from "@/lib/line/handlers/actions/checkin"
 import { checkinInAction } from "@/lib/line/handlers/actions/checkin-in"
 import {
@@ -35,6 +36,7 @@ const ACTION_HANDLERS: Record<
   document: documentAction,
   complaint: complaintAction,
   inventory: inventoryAction,
+  check_stock: checkStockAction,
   announcement: announcementAction,
   contact_hr: contactHrAction,
   contact_hr_notify: contactHrNotifyAction,

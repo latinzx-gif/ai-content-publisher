@@ -1,5 +1,6 @@
 // Rich menu image spec: 1200x810 PNG or JPEG, max 1MB (LINE compact size).
-// Layout: 2 rows × 3 columns — เช็คอิน | OT | เอกสาร / คลังสินค้า | ร้องเรียน | ติดต่อ HR
+// Layout: 2 rows × 3 columns — เช็คอิน | OT | เอกสาร / ขอลา | ร้องเรียน | ติดต่อ HR
+// เช็คสต็อก: พิมพ์ /stock ในแชท (LINE_STOCK_COMMAND_ENABLED=true)
 import { readFile } from "node:fs/promises"
 
 import type { messagingApi } from "@line/bot-sdk"
@@ -14,7 +15,7 @@ const ROW = H / 2
 export const HR_RICH_MENU: messagingApi.RichMenuRequest = {
   size: { width: W, height: H },
   selected: true,
-  name: "hr-main-menu-v2",
+  name: "hr-main-menu-v3",
   chatBarText: "เมนู HR",
   areas: [
     {
@@ -22,7 +23,7 @@ export const HR_RICH_MENU: messagingApi.RichMenuRequest = {
       action: {
         type: "postback",
         data: "action=checkin",
-        label: "เช็คอินเข้างาน",
+        label: "เช็คอิน-เช็คเอาท์",
       },
     },
     {
@@ -38,15 +39,15 @@ export const HR_RICH_MENU: messagingApi.RichMenuRequest = {
       action: {
         type: "postback",
         data: "action=document",
-        label: "ยื่นเอกสาร",
+        label: "ขอเอกสารสำคัญ",
       },
     },
     {
       bounds: { x: 0, y: ROW, width: COL, height: ROW },
       action: {
         type: "postback",
-        data: "action=inventory",
-        label: "คลังสินค้า",
+        data: "action=leave",
+        label: "ขอลา",
       },
     },
     {
@@ -54,7 +55,7 @@ export const HR_RICH_MENU: messagingApi.RichMenuRequest = {
       action: {
         type: "postback",
         data: "action=complaint",
-        label: "ข้อเสนอแนะ / ร้องเรียน",
+        label: "แจ้งเรื่องร้องเรียน",
       },
     },
     {

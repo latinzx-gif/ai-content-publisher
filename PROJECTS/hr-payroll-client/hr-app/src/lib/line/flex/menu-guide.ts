@@ -114,27 +114,12 @@ function menuItemRow(
   ]
 }
 
-function leavePickerAction(liffId?: string): messagingApi.Action {
-  if (liffId) {
-    return {
-      type: "uri",
-      label: "🏖️ ขอลา",
-      uri: `https://liff.line.me/${liffId}`,
-    }
-  }
-  return {
-    type: "postback",
-    label: "🏖️ ขอลา",
-    data: "action=leave",
-  }
-}
-
-export function attendancePickerFlex(liffId?: string): messagingApi.FlexMessage {
-  return flexMessage("บันทึกเวลา — เข้างาน / เลิกงาน / ขอลา", {
+export function attendancePickerFlex(_liffId?: string): messagingApi.FlexMessage {
+  return flexMessage("บันทึกเวลา — เข้างาน / เลิกงาน", {
     type: "bubble",
     header: brandedTitleHeader({
-      title: "บันทึกเวลา",
-      subtitle: "เข้างาน · เลิกงาน · ขอลา",
+      title: "เช็คอิน · เข้างาน",
+      subtitle: "เข้างาน · เลิกงาน",
       accentColor: BRAND_RED,
       emoji: "⏱️",
     }),
@@ -209,31 +194,12 @@ export function attendancePickerFlex(liffId?: string): messagingApi.FlexMessage 
           ],
         },
         {
-          type: "box",
-          layout: "vertical",
-          backgroundColor: "#FFF7ED",
-          cornerRadius: "8px",
-          paddingAll: "12px",
+          type: "text",
+          text: "ขอลาใช้ปุ่ม \"ขอลา\" บน Rich Menu · สต็อกพิมพ์ /stock (เมื่อ HR เปิดใช้)",
+          wrap: true,
+          size: "xxs",
+          color: "#9CA3AF",
           margin: "sm",
-          contents: [
-            { type: "text", text: "🏖️", size: "lg", align: "center" },
-            {
-              type: "text",
-              text: "ขอลา",
-              weight: "bold",
-              size: "sm",
-              color: "#9A3412",
-              align: "center",
-              margin: "xs",
-            },
-            {
-              type: "text",
-              text: "ยื่นคำขอลาออนไลน์",
-              size: "xxs",
-              color: "#EA580C",
-              align: "center",
-            },
-          ],
         },
     ]),
     footer: {
@@ -263,12 +229,6 @@ export function attendancePickerFlex(liffId?: string): messagingApi.FlexMessage 
             label: "🔴 เลิกงาน",
             data: "action=checkout",
           },
-        },
-        {
-          type: "button",
-          style: "secondary",
-          height: "sm",
-          action: leavePickerAction(liffId),
         },
       ],
     },
@@ -386,7 +346,13 @@ export function alreadyCheckedOutFlex(timeText: string): messagingApi.FlexMessag
 }
 
 export function leaveGuideFlex(liffId?: string): messagingApi.FlexMessage {
-  const hasLiff = Boolean(liffId)
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL?.replace(/\/$/, "")
+  const leaveUri = baseUrl
+    ? `${baseUrl}/liff/leave`
+    : liffId
+      ? `https://liff.line.me/${liffId}`
+      : undefined
+  const hasLiff = Boolean(leaveUri)
 
   return guide(
     hasLiff ? "ขอลา — เปิดแบบฟอร์ม" : "ขอลา — เตรียมเปิดใช้งาน",
@@ -414,7 +380,7 @@ export function leaveGuideFlex(liffId?: string): messagingApi.FlexMessage {
         ? {
             button: {
               label: "เปิดแบบฟอร์มขอลา",
-              uri: `https://liff.line.me/${liffId}`,
+              uri: leaveUri!,
             },
           }
         : { statusLabel: "⏳ เร็วๆ นี้" }),
@@ -539,6 +505,69 @@ export function announcementGuideFlex(): messagingApi.FlexMessage {
       ? { button: { label: "เปิด Portal", uri: portalUrl } }
       : { statusLabel: "Portal" }),
   })
+}
+
+export function checkStockGuideFlex(options: {
+  stockUrl?: string
+  inboundUrl?: string
+}): messagingApi.FlexMessage {
+  const { stockUrl, inboundUrl } = options
+  const hasStock = Boolean(stockUrl)
+  const hasInbound = Boolean(inboundUrl)
+
+  const footerButtons: messagingApi.FlexComponent[] = []
+  if (hasStock) {
+    footerButtons.push({
+      type: "button",
+      style: "primary",
+      color: "#4F46E5",
+      height: "sm",
+      action: { type: "uri", label: "ดูยอดสต็อก", uri: stockUrl! },
+    })
+  }
+  if (hasInbound) {
+    footerButtons.push({
+      type: "button",
+      style: "secondary",
+      height: "sm",
+      action: { type: "uri", label: "สแกนรับเข้า", uri: inboundUrl! },
+    })
+  }
+
+  return flexMessage(
+    hasStock ? "เช็คสต็อก — ดูยอดคงเหลือ" : "เช็คสต็อก — เตรียมเปิดใช้งาน",
+    {
+      type: "bubble",
+      header: brandedTitleHeader({
+        title: "เช็คสต็อก",
+        subtitle: "ยอดคงเหลือ · รับเข้าสินค้า",
+        accentColor: "#4F46E5",
+        emoji: "📦",
+      }),
+      body: cardBody([
+        {
+          type: "text",
+          text: hasStock
+            ? "ดูยอดสต็อกตาม SKU และคลัง หรือสแกน barcode รับเข้าตามใบที่ Inventory เปิดไว้"
+            : "ระบบคลังสินค้ากำลังเตรียมเปิดใช้งาน",
+          wrap: true,
+          size: "sm",
+          color: "#4B5563",
+        },
+      ]),
+      ...(footerButtons.length > 0
+        ? {
+            footer: {
+              type: "box",
+              layout: "vertical",
+              spacing: "sm",
+              paddingAll: "12px",
+              contents: footerButtons,
+            },
+          }
+        : {}),
+    }
+  )
 }
 
 export function inventoryGuideFlex(portalUrl?: string): messagingApi.FlexMessage {
