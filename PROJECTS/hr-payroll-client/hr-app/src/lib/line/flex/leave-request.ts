@@ -29,7 +29,7 @@ export function leaveSubmitConfirmFlex(options: {
           },
         ]
       : []),
-    { label: "สถานะ", value: "รออนุมัติ", valueColor: "#F59E0B" },
+    { label: "สถานะ", value: "รอ HR อนุมัติ", valueColor: "#F59E0B" },
   ]
   return flexMessage(
     "ส่งคำขอลาแล้ว",

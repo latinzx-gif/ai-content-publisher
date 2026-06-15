@@ -1,8 +1,10 @@
 // Check-out business logic — pure DB pipeline, no LINE SDK imports.
 // Service-role client by design (webhook has no user session, T02).
+import { finalizeAttendanceRecord } from "@/lib/attendance/finalize-attendance-record"
 import { getAdminClient } from "@/lib/auth/admin-client"
 import { ictDayRangeUtc } from "@/lib/attendance/late"
 import type { CheckInLocation } from "@/lib/attendance/check-in"
+import { ictToday } from "@/lib/datetime/thailand"
 import { assertWithinBranchGeofence } from "@/lib/geofence/branch-geofence"
 
 // Phase 1: display-only OT threshold (8h). No pay calculation.
@@ -117,6 +119,15 @@ export async function checkOut({
   if (!updated || updated.length === 0) {
     return { status: "already_checked_out", checkOutAt: now }
   }
+
+  await finalizeAttendanceRecord({
+    attendanceId: record.id as string,
+    employeeId: employee.id as string,
+    branchId: (employee.branch_id as string | null) ?? null,
+    workDate: ictToday(),
+    workHours,
+    now,
+  })
 
   return {
     status: "success",

@@ -1,5 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js"
 
+import { finalizeAttendanceRecord } from "@/lib/attendance/finalize-attendance-record"
 import { computeWorkHours, ictLocalToUtc } from "@/lib/attendance/ict-datetime"
 import { lateMinutes, ictDayRangeUtc } from "@/lib/attendance/late"
 import { getWorkStart } from "@/lib/runtime-config"
@@ -180,6 +181,15 @@ export async function saveManualAttendance(
   const supabase = await createClient()
   const shift = await resolveShift(supabase, payload.employeeId, payload.shiftId)
 
+  const { data: employeeRow, error: employeeError } = await supabase
+    .from("hr_employees")
+    .select("branch_id")
+    .eq("id", payload.employeeId)
+    .maybeSingle()
+
+  if (employeeError) throw employeeError
+  const branchId = (employeeRow?.branch_id as string | null) ?? null
+
   const { start, end } = ictDayWindow(date)
   const { data: rows, error } = await supabase
     .from("hr_attendance")
@@ -255,6 +265,17 @@ export async function saveManualAttendance(
       .single()
 
     if (insertError) throw insertError
+
+    if (finalCheckOutAt && finalWorkHours != null) {
+      await finalizeAttendanceRecord({
+        attendanceId: inserted.id as string,
+        employeeId: payload.employeeId,
+        branchId,
+        workDate: date,
+        workHours: finalWorkHours,
+      })
+    }
+
     return {
       id: inserted.id,
       status: mode === "full" ? "both_saved" : "checkin_saved",
@@ -286,6 +307,16 @@ export async function saveManualAttendance(
 
   if (updateError) {
     throw updateError
+  }
+
+  if (finalCheckOutAt && finalWorkHours != null) {
+    await finalizeAttendanceRecord({
+      attendanceId: updated.id as string,
+      employeeId: payload.employeeId,
+      branchId,
+      workDate: date,
+      workHours: finalWorkHours,
+    })
   }
 
   return {

@@ -257,7 +257,7 @@ export function LeaveForm() {
 
         {success ? (
           <p className="text-sm text-green-600">
-            ส่งคำขอลาแล้ว — รอ Branch Manager แล้ว HR อนุมัติ (ภายใน 48 ชม.)
+            ส่งคำขอลาแล้ว — รอ HR อนุมัติ (ภายใน 48 ชม.)
           </p>
         ) : null}
         {submitError ? (

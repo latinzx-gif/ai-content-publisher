@@ -36,12 +36,8 @@ export function checkoutSummaryFlex({
       ],
       footerNote:
         overtimeMinutes > 0
-          ? `เกินเวลามาตรฐาน ${formatDuration(overtimeMinutes)} — กดปุ่มด้านล่างยื่นสรุปวัน`
-          : "กดปุ่มด้านล่างเพื่อยื่นสรุปวันให้หัวหน้าสาขาอนุมัติ (ภายใน 48 ชม.)",
-      postbackButton: {
-        label: "ยื่นสรุปวัน",
-        data: "action=submit_attendance",
-      },
+          ? `เกินเวลามาตรฐาน ${formatDuration(overtimeMinutes)} — หากต้องการขอ OT ให้ใช้เมนูขอ OT`
+          : "บันทึกเวลาเข้า-ออกเรียบร้อยแล้ว ไม่ต้องรออนุมัติ",
     })
   )
 }

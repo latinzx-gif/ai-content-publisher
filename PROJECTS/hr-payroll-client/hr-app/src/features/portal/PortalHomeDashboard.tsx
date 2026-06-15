@@ -146,7 +146,7 @@ export function PortalHomeDashboard({
           </LiffLink>
           <LiffLink href="/liff/attendance">
             <Clock className="size-4 text-brand-red" />
-            ยื่นสรุปวัน
+            บันทึกเวลาเอง
           </LiffLink>
           <LiffLink href="/portal/profile">
             <QrCode className="size-4 text-brand-red" />

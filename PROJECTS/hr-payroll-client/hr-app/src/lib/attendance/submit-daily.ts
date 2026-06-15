@@ -1,6 +1,8 @@
-import { ictDayRangeUtc } from "@/lib/attendance/late"
 import { expiresAtFrom } from "@/lib/approval/types"
+import { finalizeAttendanceRecord } from "@/lib/attendance/finalize-attendance-record"
+import { ictDayRangeUtc } from "@/lib/attendance/late"
 import { getAdminClient } from "@/lib/auth/admin-client"
+import { ictToday } from "@/lib/datetime/thailand"
 
 export type SubmitDailyResult =
   | { status: "success"; expiresAt: string; employeeId: string; employeeName: string }
@@ -21,7 +23,7 @@ export async function submitDailyAttendance({
 
   const { data: row } = await admin
     .from("hr_employees")
-    .select("id, name, status")
+    .select("id, name, status, branch_id")
     .eq("line_user_id", lineUserId)
     .maybeSingle()
 
@@ -32,7 +34,7 @@ export async function submitDailyAttendance({
   const { start, end } = ictDayRangeUtc(now)
   const { data: attendance } = await admin
     .from("hr_attendance")
-    .select("id, check_out_at")
+    .select("id, check_out_at, work_hours")
     .eq("employee_id", employee.id)
     .gte("check_in_at", start.toISOString())
     .lt("check_in_at", end.toISOString())
@@ -41,42 +43,22 @@ export async function submitDailyAttendance({
   if (!attendance) return { status: "not_checked_in" }
   if (!attendance.check_out_at) return { status: "not_checked_out" }
 
-  const { data: existing } = await admin
-    .from("hr_attendance_submissions")
-    .select("approval_status")
-    .eq("attendance_id", attendance.id)
-    .maybeSingle()
+  const workHours = Number(attendance.work_hours ?? 0)
+  const workDate = ictToday()
+  const expiresAt = expiresAtFrom(now)
 
-  if (
-    existing &&
-    existing.approval_status !== "expired" &&
-    existing.approval_status !== "rejected"
-  ) {
+  const result = await finalizeAttendanceRecord({
+    attendanceId: attendance.id as string,
+    employeeId: employee.id as string,
+    branchId: (employee.branch_id as string | null) ?? null,
+    workDate,
+    workHours,
+    now,
+  })
+
+  if (result.status === "already_approved") {
     return { status: "already_submitted" }
   }
-
-  const workDate = now.toISOString().slice(0, 10)
-  const submittedAt = now
-  const expiresAt = expiresAtFrom(submittedAt)
-
-  const { error } = await admin.from("hr_attendance_submissions").upsert(
-    {
-      attendance_id: attendance.id,
-      employee_id: employee.id,
-      work_date: workDate,
-      submitted_at: submittedAt.toISOString(),
-      expires_at: expiresAt.toISOString(),
-      approval_status: "pending_hr",
-      manager_decided_by: null,
-      manager_decided_at: null,
-      hr_decided_by: null,
-      hr_decided_at: null,
-      decision_note: null,
-    },
-    { onConflict: "attendance_id" }
-  )
-
-  if (error) throw error
 
   return {
     status: "success",

@@ -292,7 +292,9 @@ async function hrApprovalNotifications(): Promise<{
       title:
         approvalStatus === "pending_manager"
           ? "ขอลารอ BM อนุมัติ"
-          : "ขอลารออนุมัติ",
+          : approvalStatus === "pending_hr"
+            ? "ขอลารอ HR อนุมัติ"
+            : "ขอลารออนุมัติ",
       summary: `${employeeName(row.hr_employees)} · ${typeLabel} ${row.start_date}–${row.end_date}`,
       href: "/admin/leaves?status=pending",
       createdAt: row.created_at as string | null,
@@ -304,7 +306,7 @@ async function hrApprovalNotifications(): Promise<{
     items.push({
       id: `attendance-${row.id}`,
       kind: "attendance",
-      title: "ส่งเวลางานรออนุมัติ",
+      title: "ส่งเวลางานรอ HR อนุมัติ",
       summary: `${employeeName(row.hr_employees)} · วันที่ ${row.work_date}`,
       href: "/admin/attendance",
       createdAt: row.submitted_at as string | null,

@@ -10,7 +10,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
-import { formatThaiDateTime } from "@/lib/datetime/thailand"
 
 const FIELD_CLASS =
   "h-9 w-full rounded-lg border border-input bg-background px-3 text-sm outline-none focus-visible:border-brand-red/40 focus-visible:ring-2 focus-visible:ring-brand-red/20"
@@ -37,8 +36,6 @@ export function AttendanceManualClient({
     "idle"
   )
   const [manualMsg, setManualMsg] = useState<SubmitMessageState | null>(null)
-  const [submitMsg, setSubmitMsg] = useState<string | null>(null)
-  const [submitError, setSubmitError] = useState<string | null>(null)
 
   const canCheckin = Boolean(date && checkInTime)
   const canCheckout = Boolean(date && checkOutTime)
@@ -109,30 +106,6 @@ export function AttendanceManualClient({
       })
     } finally {
       setBusyMode("idle")
-    }
-  }
-
-  async function submitDaily() {
-    setSubmitMsg(null)
-    setSubmitError(null)
-    try {
-      const res = await fetch("/api/attendance/submit", { method: "POST" })
-      const data = (await res.json().catch(() => null)) as {
-        error?: string
-        expiresAt?: string
-      } | null
-
-      if (!res.ok) {
-        throw new Error(data?.error ?? "ยื่นไม่สำเร็จ")
-      }
-
-      setSubmitMsg(
-        data?.expiresAt
-          ? `ยื่นสรุปวันแล้ว — หมดเขตอนุมัติ ${formatThaiDateTime(data.expiresAt)}`
-          : "ยื่นสรุปวันแล้ว"
-      )
-    } catch (e) {
-      setSubmitError(e instanceof Error ? e.message : "ยื่นไม่สำเร็จ")
     }
   }
 
@@ -216,18 +189,12 @@ export function AttendanceManualClient({
 
       <Card>
         <CardHeader>
-          <CardTitle>ยื่นสรุปวัน</CardTitle>
+          <CardTitle>บันทึกอัตโนมัติ</CardTitle>
           <CardDescription>
-            หลังเช็คเอาท์แล้ว — ส่งให้ Branch Manager อนุมัติภายใน 48 ชม.
+            เมื่อเช็คเอาท์ผ่าน LINE หรือบันทึกเวลาออกที่นี่ ระบบจะบันทึกเข้า payroll
+            ทันที ไม่ต้องยื่นสรุปวันหรือรออนุมัติ
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-3">
-          <Button onClick={submitDaily} className="w-full">
-            ยื่นสรุปวันนี้
-          </Button>
-          {submitMsg ? <p className="text-sm text-green-600">{submitMsg}</p> : null}
-          {submitError ? <p className="text-sm text-destructive">{submitError}</p> : null}
-        </CardContent>
       </Card>
     </div>
   )
