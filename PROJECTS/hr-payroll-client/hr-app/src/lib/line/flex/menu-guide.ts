@@ -12,9 +12,10 @@ import { DEFAULT_LOCALE, type AppLocale } from "@/lib/i18n/types"
 
 function guide(
   altText: string,
-  options: Parameters<typeof menuGuideBubble>[0]
+  options: Parameters<typeof menuGuideBubble>[0],
+  locale: AppLocale = DEFAULT_LOCALE
 ): messagingApi.FlexMessage {
-  return flexMessage(altText, menuGuideBubble(options))
+  return flexMessage(altText, menuGuideBubble({ ...options, locale }))
 }
 
 export function welcomeFlex(locale: AppLocale = DEFAULT_LOCALE): messagingApi.FlexMessage {
@@ -262,7 +263,7 @@ export function checkinGuideFlex(
       t("line.checkinGuide.step3", locale),
     ],
     tip: t("line.checkinGuide.tip", locale),
-  })
+  }, locale)
 }
 
 export function checkoutGuideFlex(
@@ -280,7 +281,7 @@ export function checkoutGuideFlex(
       t("line.checkoutGuide.step3", locale),
     ],
     tip: t("line.checkoutGuide.tip", locale),
-  })
+  }, locale)
 }
 
 export function outsideGeofenceFlex({
@@ -301,7 +302,7 @@ export function outsideGeofenceFlex({
     description: t("line.geofence.desc", locale, { distance: dist, limit: limitM }),
     steps: [t("line.geofence.tip", locale)],
     tip: t("line.geofence.tip", locale),
-  })
+  }, locale)
 }
 
 export function alreadyCheckedInFlex(
@@ -316,7 +317,7 @@ export function alreadyCheckedInFlex(
     description: t("line.alreadyCheckedIn.desc", locale, { time: timeText }),
     steps: [t("line.alreadyCheckedIn.desc", locale, { time: timeText })],
     tip: t("line.alreadyCheckedIn.desc", locale, { time: timeText }),
-  })
+  }, locale)
 }
 
 export function notCheckedInFlex(locale: AppLocale = DEFAULT_LOCALE): messagingApi.FlexMessage {
@@ -329,10 +330,10 @@ export function notCheckedInFlex(locale: AppLocale = DEFAULT_LOCALE): messagingA
     steps: [t("line.notCheckedIn.desc", locale)],
     tip: t("line.notCheckedIn.desc", locale),
     postbackButton: {
-      label: "🟢 Check-in",
+      label: t("line.attendancePicker.btnCheckin", locale),
       data: "action=checkin_in",
     },
-  })
+  }, locale)
 }
 
 export function alreadyCheckedOutFlex(
@@ -347,7 +348,7 @@ export function alreadyCheckedOutFlex(
     description: t("line.alreadyCheckedOut.desc", locale, { time: timeText }),
     steps: [t("line.alreadyCheckedOut.desc", locale, { time: timeText })],
     tip: t("line.alreadyCheckedOut.desc", locale, { time: timeText }),
-  })
+  }, locale)
 }
 
 export function leaveGuideFlex(
@@ -388,7 +389,8 @@ export function leaveGuideFlex(
             },
           }
         : { statusLabel: t("line.leaveGuide.statusSoon", locale) }),
-    }
+    },
+    locale
   )
 }
 
@@ -423,7 +425,8 @@ export function overtimeGuideFlex(
       ...(hasForm && formUrl
         ? { button: { label: t("line.otGuide.button", locale), uri: formUrl } }
         : { statusLabel: t("line.otGuide.statusSoon", locale) }),
-    }
+    },
+    locale
   )
 }
 
@@ -460,7 +463,8 @@ export function documentGuideFlex(
             button: { label: t("line.docGuide.button", locale), uri: formUrl },
           }
         : { statusLabel: t("line.docGuide.statusSoon", locale) }),
-    }
+    },
+    locale
   )
 }
 
@@ -499,7 +503,8 @@ export function complaintGuideFlex(
             button: { label: t("line.complaintGuide.button", locale), uri: formUrl },
           }
         : { statusLabel: t("line.complaintGuide.statusSoon", locale) }),
-    }
+    },
+    locale
   )
 }
 
@@ -507,7 +512,7 @@ export function announcementGuideFlex(
   locale: AppLocale = DEFAULT_LOCALE
 ): messagingApi.FlexMessage {
   const base = process.env.NEXT_PUBLIC_BASE_URL?.trim()
-  const portalUrl = base ? `${base}/portal` : undefined
+  const portalUrl = base ? `${base}/portal?lang=${locale}` : undefined
 
   return guide(t("line.announcementGuide.alt", locale), {
     emoji: "📣",
@@ -524,7 +529,7 @@ export function announcementGuideFlex(
     ...(portalUrl
       ? { button: { label: t("line.announcementGuide.button", locale), uri: portalUrl } }
       : { statusLabel: t("line.announcementGuide.statusPortal", locale) }),
-  })
+  }, locale)
 }
 
 export function checkStockGuideFlex(
@@ -636,7 +641,8 @@ export function inventoryGuideFlex(
       ...(hasPortal && portalUrl
         ? { button: { label: t("line.inventoryGuide.button", locale), uri: portalUrl } }
         : { statusLabel: t("line.inventoryGuide.statusSoon", locale) }),
-    }
+    },
+    locale
   )
 }
 
@@ -662,7 +668,7 @@ export function notRegisteredFlex(locale: AppLocale = DEFAULT_LOCALE): messaging
     ],
     tip: t("line.notRegistered.tip", locale),
     button: { label: t("line.notRegistered.button", locale), uri: registerUrl },
-  })
+  }, locale)
 }
 
 export function pendingApprovalFlex(locale: AppLocale = DEFAULT_LOCALE): messagingApi.FlexMessage {
@@ -678,7 +684,7 @@ export function pendingApprovalFlex(locale: AppLocale = DEFAULT_LOCALE): messagi
       t("line.pending.step3", locale),
     ],
     tip: t("line.pending.tip", locale),
-  })
+  }, locale)
 }
 
 export function menuHintFlex(locale: AppLocale = DEFAULT_LOCALE): messagingApi.FlexMessage {
@@ -694,7 +700,7 @@ export function menuHintFlex(locale: AppLocale = DEFAULT_LOCALE): messagingApi.F
       t("line.menuHint.step3", locale),
     ],
     tip: t("line.menuHint.tip", locale),
-  })
+  }, locale)
 }
 
 export function contactHrGuideFlex(
@@ -721,5 +727,5 @@ export function contactHrGuideFlex(
       label: t("line.contactHrGuide.registerButton", locale),
       uri: registerUrl,
     },
-  })
+  }, locale)
 }

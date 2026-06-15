@@ -64,7 +64,11 @@ export async function POST(request: NextRequest) {
   try {
     if (employee.line_user_id) {
       await pushToLineUser(employee.line_user_id, [
-        complaintSubmitConfirmFlex({ ticketCode, isAnonymous }),
+        complaintSubmitConfirmFlex({
+          ticketCode,
+          isAnonymous,
+          locale: employee.preferred_locale,
+        }),
       ])
     }
     await notifyHr([
@@ -73,6 +77,7 @@ export async function POST(request: NextRequest) {
         subject,
         isAnonymous,
         employeeName: isAnonymous ? undefined : employee.name,
+        locale: employee.preferred_locale,
       }),
     ])
   } catch (lineError) {

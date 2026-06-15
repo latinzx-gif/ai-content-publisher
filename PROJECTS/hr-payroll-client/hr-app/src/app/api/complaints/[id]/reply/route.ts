@@ -2,6 +2,8 @@ import { NextResponse, type NextRequest } from "next/server"
 
 import { canManageHr } from "@/lib/auth/roles"
 import { getCurrentEmployee } from "@/lib/auth/session"
+import { coerceLocale } from "@/lib/i18n/types"
+import { t } from "@/lib/i18n/translate"
 import { complaintReplyFlex } from "@/lib/line/flex/complaint-submit"
 import { pushToLineUser } from "@/lib/line/notify-hr"
 import { createClient } from "@/lib/supabase/server"
@@ -29,21 +31,11 @@ export async function POST(
   }
 
   const rawMessage = typeof body.message === "string" ? body.message.trim() : ""
-  const message =
-    rawMessage.length >= 3
-      ? rawMessage
-      : body.close
-        ? "ปิดเรื่องแล้ว"
-        : ""
-  if (message.length < 3) {
-    return NextResponse.json({ error: "message required" }, { status: 400 })
-  }
-
   const supabase = await createClient()
   const { data: complaint, error: fetchError } = await supabase
     .from("hr_complaints")
     .select(
-      "id, ticket_code, subject, is_anonymous, status, employee_id, hr_employees(line_user_id)"
+      "id, ticket_code, subject, is_anonymous, status, employee_id, hr_employees(line_user_id, preferred_locale)"
     )
     .eq("id", id)
     .maybeSingle()
@@ -53,6 +45,20 @@ export async function POST(
   }
   if (!complaint) {
     return NextResponse.json({ error: "not found" }, { status: 404 })
+  }
+
+  type EmpJoin = { line_user_id: string | null; preferred_locale?: unknown }
+  const empRaw = complaint.hr_employees as EmpJoin | EmpJoin[] | null
+  const emp = empRaw ? (Array.isArray(empRaw) ? empRaw[0] : empRaw) : null
+  const locale = coerceLocale(emp?.preferred_locale)
+  const message =
+    rawMessage.length >= 3
+      ? rawMessage
+      : body.close
+        ? t("line.complaintReply.defaultCloseMessage", locale)
+        : ""
+  if (message.length < 3) {
+    return NextResponse.json({ error: "message required" }, { status: 400 })
   }
 
   const { error: replyError } = await supabase.from("hr_complaint_replies").insert({
@@ -72,9 +78,6 @@ export async function POST(
     .eq("id", id)
 
   if (!complaint.is_anonymous && complaint.employee_id) {
-    type EmpJoin = { line_user_id: string | null }
-    const empRaw = complaint.hr_employees as EmpJoin | EmpJoin[] | null
-    const emp = empRaw ? (Array.isArray(empRaw) ? empRaw[0] : empRaw) : null
     try {
       if (emp?.line_user_id) {
         await pushToLineUser(emp.line_user_id, [
@@ -83,6 +86,7 @@ export async function POST(
             subject: complaint.subject,
             message,
             closed: body.close === true,
+            locale,
           }),
         ])
       }

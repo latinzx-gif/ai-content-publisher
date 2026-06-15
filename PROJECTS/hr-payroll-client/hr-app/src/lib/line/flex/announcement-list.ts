@@ -1,11 +1,17 @@
 import type { messagingApi } from "@line/bot-sdk"
 
-import { formatThaiDate } from "@/lib/datetime/thailand"
+import { TH_TIMEZONE } from "@/lib/datetime/thailand"
 import { flexMessage, simpleBubble } from "@/lib/line/flex/base"
 import { t } from "@/lib/i18n/translate"
 import { DEFAULT_LOCALE, type AppLocale } from "@/lib/i18n/types"
 
 const LINE_BODY_MAX = 1200
+const INTL_LOCALES: Record<AppLocale, string> = {
+  th: "th-TH",
+  en: "en-US",
+  zh: "zh-CN",
+  my: "my-MM",
+}
 
 function announcementBodyLines(body: string): string[] {
   const text =
@@ -14,18 +20,33 @@ function announcementBodyLines(body: string): string[] {
   return lines.length > 0 ? lines : [text]
 }
 
+function formatAnnouncementDate(value: string, locale: AppLocale): string {
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return "—"
+  return date.toLocaleDateString(INTL_LOCALES[locale], {
+    timeZone: TH_TIMEZONE,
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  })
+}
+
 export function announcementBroadcastFlex(options: {
   title: string
   body: string
   hasImage?: boolean
+  locale?: AppLocale
 }): messagingApi.FlexMessage {
+  const locale = options.locale ?? DEFAULT_LOCALE
   return flexMessage(
-    `ประกาศ: ${options.title}`,
+    t("line.announcementBroadcast.alt", locale, { title: options.title }),
     simpleBubble({
       title: options.title,
       accentColor: "#00897B",
       lines: announcementBodyLines(options.body),
-      footerNote: options.hasImage ? "ประกาศจาก HR (มีรูปแนบด้านล่าง)" : "ประกาศจาก HR",
+      footerNote: options.hasImage
+        ? t("line.announcementBroadcast.footerWithImage", locale)
+        : t("line.announcementBroadcast.footer", locale),
       wide: true,
     })
   )
@@ -53,11 +74,7 @@ export function announcementListFlex(
   }
 
   const latest = items[0]
-  const date = formatThaiDate(latest.sentAt, {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-  })
+  const date = formatAnnouncementDate(latest.sentAt, locale)
 
   const rows = [
     {

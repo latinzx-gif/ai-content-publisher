@@ -216,6 +216,7 @@ export async function POST(request: NextRequest) {
           startDate,
           endDate,
           balanceRemaining: balance.remaining,
+          locale: employee.preferred_locale,
         }),
       ])
     }
@@ -228,6 +229,7 @@ export async function POST(request: NextRequest) {
         startDate,
         endDate,
         reason: reason.trim(),
+        locale: employee.preferred_locale,
       }),
     ])
   } catch (lineError) {

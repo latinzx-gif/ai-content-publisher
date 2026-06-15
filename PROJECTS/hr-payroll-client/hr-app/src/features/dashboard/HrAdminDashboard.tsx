@@ -30,7 +30,7 @@ import {
 } from "@/features/dashboard/DashboardWidgetLists"
 import { AttendanceTrendBars } from "@/features/dashboard/AttendanceTrendBars"
 import { OnboardingDonut } from "@/features/dashboard/OnboardingDonut"
-import { RecruitmentDonut } from "@/features/dashboard/RecruitmentDonut"
+import { LeaveDonut } from "@/features/dashboard/LeaveDonut"
 import { getDashboardWidgets } from "@/features/dashboard/widgets-data"
 import { formatThaiMonthYear } from "@/lib/datetime/thailand"
 
@@ -217,8 +217,14 @@ export async function HrAdminDashboard({ userName }: { userName: string }) {
       </div>
 
       <div className="grid min-h-0 flex-1 gap-2 md:gap-3 min-[1024px]:grid-cols-4">
-        <WidgetCard compact title="Recruitment Snapshot" href="/admin/recruitment">
-          <RecruitmentDonut compact data={[]} />
+        <WidgetCard
+          compact
+          title="Leave Overview"
+          href="/admin/leaves"
+          footerHref="/admin/leaves"
+          footerLabel="Go to Leaves"
+        >
+          <LeaveDonut compact data={stats.leavesByStatus} />
         </WidgetCard>
 
         <WidgetCard

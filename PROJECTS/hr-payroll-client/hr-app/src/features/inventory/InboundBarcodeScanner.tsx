@@ -14,6 +14,8 @@ import {
   scanBarcodeWithLiff,
   type LiffContext,
 } from "@/lib/line/liff-client"
+import { useLocale } from "@/features/portal/LocaleProvider"
+import type { MessageKey } from "@/lib/i18n/translate"
 
 const CAMERA_FORMATS = [
   Html5QrcodeSupportedFormats.EAN_13,
@@ -24,22 +26,25 @@ const CAMERA_FORMATS = [
   Html5QrcodeSupportedFormats.QR_CODE,
 ]
 
-function formatCameraError(err: unknown): string {
-  if (!(err instanceof Error)) return "เปิดกล้องไม่สำเร็จ"
+function formatCameraError(
+  err: unknown,
+  tx: (key: MessageKey, vars?: Record<string, string | number>) => string
+): string {
+  if (!(err instanceof Error)) return tx("liff.inbound.scanner.errorCamera")
   const msg = err.message
   if (/NotAllowed|Permission/i.test(msg)) {
-    return "ไม่อนุญาตใช้กล้อง — เปิดสิทธิ์ใน Settings ของเบราว์เซอร์"
+    return tx("liff.inbound.scanner.errorPermission")
   }
   if (/NotFound|DevicesNotFound/i.test(msg)) {
-    return "ไม่พบกล้องบนอุปกรณ์นี้"
+    return tx("liff.inbound.scanner.errorNoCamera")
   }
   if (/not supported|NotSupported/i.test(msg)) {
-    return "เบราว์เซอร์นี้ไม่รองรับกล้อง — ใช้สแกน LINE หรือพิมพ์ barcode"
+    return tx("liff.inbound.scanner.errorUnsupported")
   }
   if (/element.*not found/i.test(msg)) {
-    return "เปิดกล้องไม่สำเร็จ — ลองอีกครั้ง"
+    return tx("liff.inbound.scanner.errorRetry")
   }
-  return msg || "เปิดกล้องไม่สำเร็จ"
+  return msg || tx("liff.inbound.scanner.errorCamera")
 }
 
 type BarcodeDetectorLike = {
@@ -225,6 +230,7 @@ export function InboundBarcodeScanner({
   onScanned: (barcode: string) => void
   disabled?: boolean
 }) {
+  const { tx } = useLocale()
   const readerId = useId().replace(/:/g, "")
   const scannerRef = useRef<Html5Qrcode | null>(null)
   const fileScannerRef = useRef<Html5Qrcode | null>(null)
@@ -333,7 +339,7 @@ export function InboundBarcodeScanner({
         )
       } catch (err) {
         if (!cancelled) {
-          setScanError(formatCameraError(err))
+          setScanError(formatCameraError(err, tx))
           setCameraOpen(false)
         }
       }
@@ -343,13 +349,11 @@ export function InboundBarcodeScanner({
       cancelled = true
       void stopCamera()
     }
-  }, [cameraOpen, onScanned, readerId, stopCamera])
+  }, [cameraOpen, onScanned, readerId, stopCamera, tx])
 
   function handleOpenCamera() {
     if (inLine) {
-      setScanError(
-        "ใน LINE ใช้ปุ่ม「สแกน barcode」หรือ「ถ่ายรูป barcode」"
-      )
+      setScanError(tx("liff.inbound.scanner.lineUseButtons"))
       return
     }
     setScanError(null)
@@ -363,21 +367,17 @@ export function InboundBarcodeScanner({
       const ctx = await initInboundScanLiff()
       setLiffCtx(ctx)
       if (!ctx.ready) {
-        const code = ctx.errorCode ? ` (รหัส: ${ctx.errorCode})` : ""
+        const code = ctx.errorCode ? ` (${ctx.errorCode})` : ""
         setScanError(
-          `เชื่อมต่อ LINE ไม่ได้${code} — ใช้ปุ่ม「ถ่ายรูป barcode」แทนได้เลย ถ้าพบซ้ำกรุณาแคปหน้าจอนี้แจ้งผู้ดูแล`
+          tx("liff.inbound.scanner.lineUnavailable", { code })
         )
         return
       }
 
       const value = await scanBarcodeWithLiff(ctx.liffId)
       onScanned(value)
-    } catch (err) {
-      setScanError(
-        err instanceof Error
-          ? err.message
-          : "เปิดสแกนใน LINE ไม่สำเร็จ — ถ่ายรูป barcode หรือพิมพ์เลขแทน"
-      )
+    } catch {
+      setScanError(tx("liff.inbound.scanner.errorLineScan"))
     } finally {
       setBusy(false)
     }
@@ -439,9 +439,7 @@ export function InboundBarcodeScanner({
       }
 
       if (!value) {
-        setScanError(
-          "อ่าน barcode จากรูปไม่ได้ — ถ่ายให้ชัด เลขเต็มกรอบ ไม่เอียง หรือพิมพ์ barcode ด้านล่าง"
-        )
+        setScanError(tx("liff.inbound.scanner.errorPhotoRead"))
         return
       }
       onScanned(value)
@@ -464,7 +462,9 @@ export function InboundBarcodeScanner({
             onClick={() => void handleLineScan()}
           >
             <Camera className="size-4" />
-            {busy ? "กำลังเปิดสแกน…" : "สแกน barcode"}
+            {busy
+              ? tx("liff.inbound.scanner.lineScanOpening")
+              : tx("liff.inbound.scanner.lineScan")}
           </Button>
         ) : null}
 
@@ -479,7 +479,9 @@ export function InboundBarcodeScanner({
           ].join(" ")}
         >
             <ImageUp className="size-4" />
-            {busy ? "กำลังอ่านรูป…" : "ถ่ายรูป barcode"}
+            {busy
+              ? tx("liff.inbound.scanner.photoReading")
+              : tx("liff.inbound.scanner.photo")}
         </label>
         <input
           id={photoInputId}
@@ -487,7 +489,7 @@ export function InboundBarcodeScanner({
           type="file"
           accept="image/*"
           capture="environment"
-          aria-label="ถ่ายรูป barcode"
+          aria-label={tx("liff.inbound.scanner.photo")}
           className="sr-only"
           disabled={photoPickerDisabled}
           onClick={() => setScanError(null)}
@@ -503,7 +505,7 @@ export function InboundBarcodeScanner({
             onClick={handleOpenCamera}
           >
             <Camera className="size-4" />
-            สแกนด้วยกล้อง
+            {tx("liff.inbound.scanner.cameraScan")}
           </Button>
         ) : null}
       </div>
@@ -511,7 +513,7 @@ export function InboundBarcodeScanner({
 
       {inLine && liffCtx && !liffCtx.ready && liffCtx.error ? (
         <p className="text-xs text-muted-foreground">
-          ถ้าอ่านรูปไม่ได้ ให้พิมพ์เลข barcode ด้านล่าง
+          {tx("liff.inbound.scanner.photoFallback")}
         </p>
       ) : null}
 
@@ -524,14 +526,16 @@ export function InboundBarcodeScanner({
       {cameraOpen ? (
         <div className="fixed inset-0 z-50 flex flex-col bg-black/90 p-4">
           <div className="mb-3 flex items-center justify-between text-white">
-            <p className="text-sm font-medium">เล็ง barcode ในกรอบ</p>
+            <p className="text-sm font-medium">
+              {tx("liff.inbound.scanner.aim")}
+            </p>
             <Button
               type="button"
               size="sm"
               variant="outline"
               onClick={closeCamera}
             >
-              ปิดกล้อง
+              {tx("liff.inbound.scanner.closeCamera")}
             </Button>
           </div>
           <div

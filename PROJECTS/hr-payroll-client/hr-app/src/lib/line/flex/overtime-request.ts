@@ -2,6 +2,8 @@ import type { messagingApi } from "@line/bot-sdk"
 
 import { BRAND_RED } from "@/lib/line/brand"
 import { flexMessage, simpleBubble } from "@/lib/line/flex/base"
+import { t } from "@/lib/i18n/translate"
+import { DEFAULT_LOCALE, type AppLocale } from "@/lib/i18n/types"
 
 export function overtimeSubmitConfirmFlex(options: {
   employeeName: string
@@ -9,19 +11,28 @@ export function overtimeSubmitConfirmFlex(options: {
   startTime: string
   endTime: string
   stage?: "hr"
+  locale?: AppLocale
 }): messagingApi.FlexMessage {
+  const locale = options.locale ?? DEFAULT_LOCALE
   return flexMessage(
-    "ส่งคำขอ OT แล้ว",
+    t("line.otSubmit.alt", locale),
     simpleBubble({
-      title: "ส่งคำขอ OT แล้ว",
+      title: t("line.otSubmit.title", locale),
       accentColor: "#E65100",
       rows: [
-        { label: "พนักงาน", value: options.employeeName },
-        { label: "วันที่", value: options.workDate },
-        { label: "เวลา", value: `${options.startTime} – ${options.endTime}` },
-        { label: "สถานะ", value: "รอ HR อนุมัติ", valueColor: "#F59E0B" },
+        { label: t("line.common.employee", locale), value: options.employeeName },
+        { label: t("line.common.date", locale), value: options.workDate },
+        {
+          label: t("line.common.time", locale),
+          value: `${options.startTime} – ${options.endTime}`,
+        },
+        {
+          label: t("line.common.status", locale),
+          value: t("line.status.pendingHr", locale),
+          valueColor: "#F59E0B",
+        },
       ],
-      footerNote: "HR จะแจ้งผลการอนุมัติทาง LINE",
+      footerNote: t("line.otSubmit.footer", locale),
     })
   )
 }
@@ -33,23 +44,30 @@ export function overtimeSubmitHrNotifyFlex(options: {
   startTime: string
   endTime: string
   reason: string
+  locale?: AppLocale
 }): messagingApi.FlexMessage {
+  const locale = options.locale ?? DEFAULT_LOCALE
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL
   const adminUrl = baseUrl ? `${baseUrl}/admin/overtime` : undefined
 
   return flexMessage(
-    `คำขอ OT ใหม่: ${options.employeeName}`,
+    t("line.otHr.alt", locale, { name: options.employeeName }),
     simpleBubble({
-      title: "คำขอ OT ใหม่",
+      title: t("line.otHr.title", locale),
       accentColor: BRAND_RED,
       rows: [
-        { label: "พนักงาน", value: options.employeeName },
-        { label: "แผนก", value: options.department ?? "—" },
-        { label: "วันที่", value: options.workDate },
-        { label: "เวลา", value: `${options.startTime} – ${options.endTime}` },
-        { label: "เหตุผล", value: options.reason },
+        { label: t("line.common.employee", locale), value: options.employeeName },
+        { label: t("line.common.department", locale), value: options.department ?? "—" },
+        { label: t("line.common.date", locale), value: options.workDate },
+        {
+          label: t("line.common.time", locale),
+          value: `${options.startTime} – ${options.endTime}`,
+        },
+        { label: t("line.common.reason", locale), value: options.reason },
       ],
-      button: adminUrl ? { label: "เปิดคิว OT", uri: adminUrl } : undefined,
+      button: adminUrl
+        ? { label: t("line.otHr.button", locale), uri: adminUrl }
+        : undefined,
     })
   )
 }
@@ -58,20 +76,30 @@ export function overtimeResultFlex(options: {
   workDate: string
   approved: boolean
   note?: string
+  locale?: AppLocale
 }): messagingApi.FlexMessage {
+  const locale = options.locale ?? DEFAULT_LOCALE
   return flexMessage(
-    options.approved ? "อนุมัติ OT แล้ว" : "ไม่อนุมัติ OT",
+    options.approved
+      ? t("line.otResult.approvedAlt", locale)
+      : t("line.otResult.rejectedAlt", locale),
     simpleBubble({
-      title: options.approved ? "อนุมัติ OT" : "ไม่อนุมัติ OT",
+      title: options.approved
+        ? t("line.otResult.approvedTitle", locale)
+        : t("line.otResult.rejectedTitle", locale),
       accentColor: "#E65100",
       rows: [
-        { label: "วันที่", value: options.workDate },
+        { label: t("line.common.date", locale), value: options.workDate },
         {
-          label: "ผล",
-          value: options.approved ? "อนุมัติ" : "ไม่อนุมัติ",
+          label: t("line.common.result", locale),
+          value: options.approved
+            ? t("line.status.approved", locale)
+            : t("line.status.rejected", locale),
           valueColor: options.approved ? "#16A34A" : "#DC2626",
         },
-        ...(options.note ? [{ label: "หมายเหตุ", value: options.note }] : []),
+        ...(options.note
+          ? [{ label: t("line.common.note", locale), value: options.note }]
+          : []),
       ],
     })
   )

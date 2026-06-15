@@ -11,6 +11,7 @@ import {
   overtimeSubmitConfirmFlex,
   overtimeSubmitHrNotifyFlex,
 } from "@/lib/line/flex/overtime-request"
+import { coerceLocale, type AppLocale } from "@/lib/i18n/types"
 import { notifyHr, pushToLineUser } from "@/lib/line/notify-hr"
 import { createClient } from "@/lib/supabase/server"
 
@@ -72,7 +73,8 @@ export async function POST(request: NextRequest) {
     submitterId: string,
     submitterName: string,
     submitterDepartment: string | null,
-    lineUserId: string | null
+    lineUserId: string | null,
+    submitterLocale: AppLocale
   ) {
     const { data: row, error } = await supabase
       .from("hr_overtime_requests")
@@ -107,6 +109,7 @@ export async function POST(request: NextRequest) {
             startTime: otStartTime,
             endTime: otEndTime,
             stage: "hr",
+            locale: submitterLocale,
           }),
         ])
       }
@@ -118,6 +121,7 @@ export async function POST(request: NextRequest) {
           startTime: otStartTime,
           endTime: otEndTime,
           reason,
+          locale: submitterLocale,
         }),
       ])
     } catch (lineError) {
@@ -137,7 +141,8 @@ export async function POST(request: NextRequest) {
       activeCaller.id,
       activeCaller.name,
       activeCaller.department,
-      activeCaller.line_user_id
+      activeCaller.line_user_id,
+      activeCaller.preferred_locale
     )
   }
 
@@ -161,13 +166,14 @@ export async function POST(request: NextRequest) {
 
   const { data: target } = await supabase
     .from("hr_employees")
-    .select("id, name, line_user_id, branch_id, department")
+    .select("id, name, line_user_id, branch_id, department, preferred_locale")
     .eq("id", employeeId)
     .maybeSingle()
 
   if (!target || target.branch_id !== managedBranch) {
     return NextResponse.json({ error: "พนักงานไม่อยู่ในสาขาที่ดูแล" }, { status: 403 })
   }
+  const targetLocale = coerceLocale(target.preferred_locale)
 
   const { data: row, error } = await supabase
     .from("hr_overtime_requests")
@@ -201,6 +207,7 @@ export async function POST(request: NextRequest) {
           startTime,
           endTime,
           stage: "hr",
+          locale: targetLocale,
         }),
       ])
     }
@@ -212,6 +219,7 @@ export async function POST(request: NextRequest) {
         startTime,
         endTime,
         reason,
+        locale: targetLocale,
       }),
     ])
   } catch (lineError) {

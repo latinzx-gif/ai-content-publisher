@@ -34,13 +34,13 @@ export async function contactHrNotifyAction(
     {
       type: "text",
       text: [
-        "📩 คำขอติดต่อ HR",
-        `ชื่อ: ${name}`,
-        `แผนก: ${department}`,
-        `ตำแหน่ง: ${position}`,
+        t("line.contactHrNotify.hrTitle", locale),
+        t("line.contactHrNotify.hrName", locale, { name }),
+        t("line.contactHrNotify.hrDepartment", locale, { department }),
+        t("line.contactHrNotify.hrPosition", locale, { position }),
         `LINE ID: ${lineUserId}`,
         "",
-        "กรุณาติดต่อกลับผ่าน OA",
+        t("line.contactHrNotify.hrReply", locale),
       ].join("\n"),
     },
   ])

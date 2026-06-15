@@ -1,31 +1,61 @@
 import type { messagingApi } from "@line/bot-sdk"
 
 import {
-  DOC_STATUS_LABELS,
-  DOC_TYPE_LABELS,
+  DOC_TYPES,
   type DocStatus,
   type DocType,
 } from "@/features/documents/types"
+import { t, type MessageKey } from "@/lib/i18n/translate"
+import { DEFAULT_LOCALE, type AppLocale } from "@/lib/i18n/types"
 import { BRAND_RED } from "@/lib/line/brand"
 import { flexMessage, simpleBubble } from "@/lib/line/flex/base"
+
+function docTypeLabel(type: string, locale: AppLocale): string {
+  if (!DOC_TYPES.includes(type as DocType)) return type
+  return t(`doc.type.${type}` as MessageKey, locale)
+}
+
+function docStatusLabel(status: DocStatus, locale: AppLocale): string {
+  const keys: Record<DocStatus, MessageKey> = {
+    pending: "line.status.pendingProcessing",
+    on_hold: "line.status.onHold",
+    processing: "line.status.processing",
+    ready: "line.status.ready",
+    completed: "line.status.completed",
+    rejected: "line.status.rejected",
+  }
+  return t(keys[status], locale)
+}
 
 export function documentSubmitConfirmFlex(options: {
   employeeName: string
   docType: DocType
   copies: number
+  locale?: AppLocale
 }): messagingApi.FlexMessage {
+  const locale = options.locale ?? DEFAULT_LOCALE
   return flexMessage(
-    "ส่งคำขอเอกสารแล้ว",
+    t("line.docSubmit.alt", locale),
     simpleBubble({
-      title: "ส่งคำขอเอกสารแล้ว",
+      title: t("line.docSubmit.title", locale),
       accentColor: "#7B1FA2",
       rows: [
-        { label: "พนักงาน", value: options.employeeName },
-        { label: "ประเภท", value: DOC_TYPE_LABELS[options.docType] },
-        { label: "จำนวนชุด", value: `${options.copies} ชุด` },
-        { label: "สถานะ", value: "รอดำเนินการ", valueColor: "#F59E0B" },
+        { label: t("line.common.employee", locale), value: options.employeeName },
+        {
+          label: t("line.common.type", locale),
+          value: docTypeLabel(options.docType, locale),
+        },
+        {
+          label: t("line.common.copies", locale),
+          value: `${options.copies} ${t("line.common.copyUnit", locale)}`,
+        },
+        {
+          label: t("line.common.status", locale),
+          value: t("line.status.pendingProcessing", locale),
+          valueColor: "#F59E0B",
+        },
       ],
-      footerNote: "HR จะแจ้งเมื่อเอกสารพร้อมรับ",
+      footerNote: t("line.docSubmit.footer", locale),
     })
   )
 }
@@ -37,25 +67,33 @@ export function documentSubmitHrNotifyFlex(options: {
   copies: number
   purpose: string
   adminUrl?: string
+  locale?: AppLocale
 }): messagingApi.FlexMessage {
+  const locale = options.locale ?? DEFAULT_LOCALE
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL
   const adminUrl =
     options.adminUrl ?? (baseUrl ? `${baseUrl}/admin/documents` : undefined)
 
   return flexMessage(
-    `คำขอเอกสารใหม่: ${options.employeeName}`,
+    t("line.docHr.alt", locale, { name: options.employeeName }),
     simpleBubble({
-      title: "คำขอเอกสารใหม่",
+      title: t("line.docHr.title", locale),
       accentColor: BRAND_RED,
       rows: [
-        { label: "พนักงาน", value: options.employeeName },
-        { label: "แผนก", value: options.department ?? "—" },
-        { label: "ประเภท", value: DOC_TYPE_LABELS[options.docType] },
-        { label: "จำนวน", value: `${options.copies} ชุด` },
-        { label: "วัตถุประสงค์", value: options.purpose },
+        { label: t("line.common.employee", locale), value: options.employeeName },
+        { label: t("line.common.department", locale), value: options.department ?? "—" },
+        {
+          label: t("line.common.type", locale),
+          value: docTypeLabel(options.docType, locale),
+        },
+        {
+          label: t("line.common.copiesShort", locale),
+          value: `${options.copies} ${t("line.common.copyUnit", locale)}`,
+        },
+        { label: t("line.common.purpose", locale), value: options.purpose },
       ],
       button: adminUrl
-        ? { label: "เปิดคิวเอกสาร", uri: adminUrl }
+        ? { label: t("line.docHr.button", locale), uri: adminUrl }
         : undefined,
     })
   )
@@ -65,24 +103,27 @@ export function documentStatusFlex(options: {
   docType: string
   status: DocStatus
   note?: string
+  locale?: AppLocale
 }): messagingApi.FlexMessage {
-  const typeLabel =
-    DOC_TYPE_LABELS[options.docType as DocType] ?? options.docType
-  const statusLabel = DOC_STATUS_LABELS[options.status]
+  const locale = options.locale ?? DEFAULT_LOCALE
+  const typeLabel = docTypeLabel(options.docType, locale)
+  const statusLabel = docStatusLabel(options.status, locale)
 
   return flexMessage(
-    `อัปเดตคำขอเอกสาร: ${statusLabel}`,
+    t("line.docStatus.alt", locale, { status: statusLabel }),
     simpleBubble({
-      title: "อัปเดตคำขอเอกสาร",
+      title: t("line.docStatus.title", locale),
       accentColor: "#7B1FA2",
       rows: [
-        { label: "ประเภท", value: typeLabel },
-        { label: "สถานะ", value: statusLabel },
-        ...(options.note ? [{ label: "หมายเหตุ", value: options.note }] : []),
+        { label: t("line.common.type", locale), value: typeLabel },
+        { label: t("line.common.status", locale), value: statusLabel },
+        ...(options.note
+          ? [{ label: t("line.common.note", locale), value: options.note }]
+          : []),
       ],
       footerNote:
         options.status === "ready"
-          ? "กรุณาติดต่อ HR เพื่อรับเอกสาร"
+          ? t("line.docStatus.readyFooter", locale)
           : undefined,
     })
   )

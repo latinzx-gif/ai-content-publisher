@@ -10,6 +10,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
+import { useLocale } from "@/features/portal/LocaleProvider"
 
 const FIELD_CLASS =
   "h-9 w-full rounded-lg border border-input bg-background px-3 text-sm outline-none focus-visible:border-brand-red/40 focus-visible:ring-2 focus-visible:ring-brand-red/20"
@@ -28,8 +29,9 @@ export function AttendanceManualClient({
   defaultDate: string
   defaultTime: string
 }) {
+  const { tx } = useLocale()
   const [date, setDate] = useState(defaultDate)
-  const [shiftId, setShiftId] = useState("")
+  const [shiftId] = useState("")
   const [checkInTime, setCheckInTime] = useState(defaultTime)
   const [checkOutTime, setCheckOutTime] = useState("")
   const [busyMode, setBusyMode] = useState<"idle" | "checkin" | "checkout" | "both">(
@@ -76,15 +78,15 @@ export function AttendanceManualClient({
         error?: string
       } | null
       if (!res.ok) {
-        throw new Error(data?.error ?? "บันทึกไม่สำเร็จ")
+        throw new Error(data?.error ?? tx("liff.attendance.saveFailed"))
       }
 
       const title =
         mode === "full"
-          ? "บันทึกทั้งเข้า/ออกเรียบร้อย"
+          ? tx("liff.attendance.successBoth")
           : mode === "checkin"
-            ? "บันทึกเข้าเรียบร้อย"
-            : "บันทึกออกเรียบร้อย"
+            ? tx("liff.attendance.successCheckin")
+            : tx("liff.attendance.successCheckout")
 
       setManualMsg({
         mode:
@@ -95,14 +97,14 @@ export function AttendanceManualClient({
               : "checkout",
         ok: true,
         title,
-        message: data?.message ?? "สำเร็จ",
+        message: data?.message ?? tx("liff.attendance.success"),
       })
     } catch (e) {
       setManualMsg({
         mode: mode === "full" ? "both" : mode,
         ok: false,
-        title: "ไม่สามารถบันทึกได้",
-        message: e instanceof Error ? e.message : "บันทึกไม่สำเร็จ",
+        title: tx("liff.attendance.errorTitle"),
+        message: e instanceof Error ? e.message : tx("liff.attendance.saveFailed"),
       })
     } finally {
       setBusyMode("idle")
@@ -113,14 +115,14 @@ export function AttendanceManualClient({
     <div className="mx-auto flex min-h-screen w-full max-w-md flex-col gap-4 p-4">
       <Card>
         <CardHeader>
-          <CardTitle>บันทึกเวลาเอง</CardTitle>
+          <CardTitle>{tx("liff.attendance.pageTitle")}</CardTitle>
           <CardDescription>
-            เลือกกะและกรอกเวลาเข้า/ออกตามจริงของคุณเอง
+            {tx("liff.attendance.pageDesc")}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-3">
           <label className="grid gap-1 text-sm">
-            <span className="font-medium">วันที่</span>
+            <span className="font-medium">{tx("liff.attendance.date")}</span>
             <input
               type="date"
               className={FIELD_CLASS}
@@ -130,7 +132,7 @@ export function AttendanceManualClient({
           </label>
           <div className="grid grid-cols-2 gap-3">
             <label className="grid gap-1 text-sm">
-              <span className="font-medium">เวลาเข้า</span>
+              <span className="font-medium">{tx("liff.attendance.checkinTime")}</span>
               <input
                 type="time"
                 className={FIELD_CLASS}
@@ -139,7 +141,7 @@ export function AttendanceManualClient({
               />
             </label>
             <label className="grid gap-1 text-sm">
-              <span className="font-medium">เวลาออก</span>
+              <span className="font-medium">{tx("liff.attendance.checkoutTime")}</span>
               <input
                 type="time"
                 className={FIELD_CLASS}
@@ -155,14 +157,18 @@ export function AttendanceManualClient({
               disabled={busyMode !== "idle" || !canCheckin}
               className="w-full bg-[#06C755] hover:bg-[#06C755]/80"
             >
-              {busyMode === "checkin" ? "กำลังบันทึกเวลาเข้า…" : "บันทึกเวลาเข้า"}
+              {busyMode === "checkin"
+                ? tx("liff.attendance.savingCheckin")
+                : tx("liff.attendance.saveCheckin")}
             </Button>
             <Button
               onClick={() => submitManual("checkout")}
               disabled={busyMode !== "idle" || !canCheckout}
               variant="outline"
             >
-              {busyMode === "checkout" ? "กำลังบันทึกเวลาออก…" : "บันทึกเวลาออก"}
+              {busyMode === "checkout"
+                ? tx("liff.attendance.savingCheckout")
+                : tx("liff.attendance.saveCheckout")}
             </Button>
             <Button
               onClick={() => submitManual("full")}
@@ -170,8 +176,8 @@ export function AttendanceManualClient({
               variant="secondary"
             >
               {busyMode === "both"
-                ? "กำลังบันทึกทั้งเข้า/ออก…"
-                : "บันทึกทั้งเข้าและออก"}
+                ? tx("liff.attendance.savingBoth")
+                : tx("liff.attendance.saveBoth")}
             </Button>
           </div>
 
@@ -189,10 +195,9 @@ export function AttendanceManualClient({
 
       <Card>
         <CardHeader>
-          <CardTitle>บันทึกอัตโนมัติ</CardTitle>
+          <CardTitle>{tx("liff.attendance.autoTitle")}</CardTitle>
           <CardDescription>
-            เมื่อเช็คเอาท์ผ่าน LINE หรือบันทึกเวลาออกที่นี่ ระบบจะบันทึกเข้า payroll
-            ทันที ไม่ต้องยื่นสรุปวันหรือรออนุมัติ
+            {tx("liff.attendance.autoDesc")}
           </CardDescription>
         </CardHeader>
       </Card>

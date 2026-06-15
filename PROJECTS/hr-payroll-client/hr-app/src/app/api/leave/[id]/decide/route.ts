@@ -10,6 +10,7 @@ import {
   leaveApprovedFlex,
   leaveRejectedFlex,
 } from "@/lib/line/flex/leave-result"
+import { coerceLocale } from "@/lib/i18n/types"
 import { pushToLineUser } from "@/lib/line/notify-hr"
 import { createClient } from "@/lib/supabase/server"
 
@@ -46,7 +47,7 @@ export async function POST(
   const { data: leave, error: fetchError } = await supabase
     .from("hr_leaves")
     .select(
-      "id, employee_id, type, start_date, end_date, reason, status, approval_status, leave_unit, leave_hours, hr_employees!employee_id(line_user_id, name, department, branch_id)"
+      "id, employee_id, type, start_date, end_date, reason, status, approval_status, leave_unit, leave_hours, hr_employees!employee_id(line_user_id, name, department, branch_id, preferred_locale)"
     )
     .eq("id", id)
     .maybeSingle()
@@ -62,6 +63,9 @@ export async function POST(
     : leave.hr_employees
   const lineUserId = employeeJoin?.line_user_id as string | null | undefined
   const branchId = (employeeJoin as { branch_id?: string })?.branch_id ?? null
+  const locale = coerceLocale(
+    (employeeJoin as { preferred_locale?: unknown })?.preferred_locale
+  )
   const leaveType = leave.type as LeaveType
   const days = countLeaveDays(leave.start_date, leave.end_date) ?? 0
 
@@ -123,6 +127,7 @@ export async function POST(
             endDate: leave.end_date,
             remainingDays,
             note: note || null,
+            locale,
           }),
         ])
       } catch (lineError) {
@@ -162,6 +167,7 @@ export async function POST(
             startDate: leave.start_date,
             endDate: leave.end_date,
             reason: note,
+            locale,
           }),
         ])
       } catch (lineError) {

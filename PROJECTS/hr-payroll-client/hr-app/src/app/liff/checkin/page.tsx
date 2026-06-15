@@ -11,6 +11,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
+import { useLocale } from "@/features/portal/LocaleProvider"
+import type { MessageKey } from "@/lib/i18n/translate"
 
 type CheckinState =
   | { phase: "idle" }
@@ -20,23 +22,22 @@ type CheckinState =
 
 function describeError(
   status: number,
-  data: { error?: string; message?: string; distanceM?: number; limitM?: number }
+  data: { error?: string; message?: string; distanceM?: number; limitM?: number },
+  tx: (key: MessageKey, vars?: Record<string, string | number>) => string
 ): string {
-  if (data.error === "outside_geofence" && data.message) {
-    return data.message
-  }
-  if (status === 410) return "QR นี้หมดอายุแล้ว (ใช้ได้เฉพาะวันที่ออก) กรุณาขอ QR ใหม่จาก HR"
-  if (status === 401) return "QR ไม่ถูกต้อง กรุณาขอ QR ใหม่จาก HR"
+  if (status === 410) return tx("liff.checkin.expired")
+  if (status === 401) return tx("liff.checkin.invalidQr")
   if (status === 403 && data.error === "outside_geofence") {
     const dist = Math.round(data.distanceM ?? 0)
     const limit = data.limitM ?? 200
-    return `คุณอยู่นอกพื้นที่สาขา (${dist} เมตร จากจุดศูนย์ จำกัด ${limit}m) กรุณาเข้าใกล้สาขาแล้วลองใหม่`
+    return tx("liff.checkin.outside", { distance: dist, limit })
   }
-  if (status === 404) return "ไม่พบข้อมูลพนักงาน กรุณาติดต่อ HR"
-  return data.error ?? data.message ?? "เกิดข้อผิดพลาด กรุณาลองใหม่"
+  if (status === 404) return tx("liff.checkin.notFound")
+  return data.message ?? data.error ?? tx("liff.checkin.error")
 }
 
 function CheckinForm() {
+  const { tx } = useLocale()
   const token = useSearchParams().get("token")
   const [state, setState] = useState<CheckinState>({ phase: "idle" })
 
@@ -53,25 +54,32 @@ function CheckinForm() {
       setState({
         phase: "done",
         ok: true,
-        title: "เช็คอินสำเร็จ",
+        title: tx("liff.checkin.successTitle"),
         detail:
           data.lateMinutes > 0
-            ? `${data.employeeName} — ${data.timeText} น. (สาย ${data.lateMinutes} นาที)`
-            : `${data.employeeName} — ${data.timeText} น. ตรงเวลา`,
+            ? tx("liff.checkin.successLate", {
+                name: data.employeeName,
+                time: data.timeText,
+                minutes: data.lateMinutes,
+              })
+            : tx("liff.checkin.successOnTime", {
+                name: data.employeeName,
+                time: data.timeText,
+              }),
       })
     } else if (response.ok && data.status === "already_checked_in") {
       setState({
         phase: "done",
         ok: true,
-        title: "เช็คอินแล้ว",
-        detail: `คุณเช็คอินวันนี้แล้วเมื่อ ${data.timeText} น.`,
+        title: tx("liff.checkin.alreadyTitle"),
+        detail: tx("liff.checkin.alreadyDetail", { time: data.timeText }),
       })
     } else {
       setState({
         phase: "done",
         ok: false,
-        title: "เช็คอินไม่สำเร็จ",
-        detail: describeError(response.status, data),
+        title: tx("liff.checkin.failTitle"),
+        detail: describeError(response.status, data, tx),
       })
     }
   }
@@ -81,8 +89,8 @@ function CheckinForm() {
       setState({
         phase: "done",
         ok: false,
-        title: "เช็คอินไม่สำเร็จ",
-        detail: "อุปกรณ์นี้ไม่รองรับการระบุตำแหน่ง",
+        title: tx("liff.checkin.failTitle"),
+        detail: tx("liff.checkin.unsupportedGeo"),
       })
       return
     }
@@ -93,8 +101,8 @@ function CheckinForm() {
         setState({
           phase: "done",
           ok: false,
-          title: "ต้องอนุญาตการระบุตำแหน่ง",
-          detail: "กรุณาอนุญาตให้เข้าถึงตำแหน่ง แล้วลองใหม่อีกครั้ง",
+          title: tx("liff.checkin.permissionTitle"),
+          detail: tx("liff.checkin.permissionDetail"),
         }),
       { enableHighAccuracy: true, timeout: 15000 }
     )
@@ -103,7 +111,7 @@ function CheckinForm() {
   if (!token) {
     return (
       <CardContent className="text-sm text-muted-foreground">
-        ไม่พบ QR token — กรุณาสแกน QR จาก HR อีกครั้ง
+        {tx("liff.checkin.noToken")}
       </CardContent>
     )
   }
@@ -121,7 +129,7 @@ function CheckinForm() {
       ) : (
         <>
           <p className="text-sm text-muted-foreground">
-            ระบบจะขอตำแหน่งของคุณเพื่อบันทึกการเช็คอิน
+            {tx("liff.checkin.intro")}
           </p>
           <Button
             onClick={start}
@@ -129,10 +137,10 @@ function CheckinForm() {
             className="w-full bg-[#06C755] hover:bg-[#06C755]/80"
           >
             {state.phase === "locating"
-              ? "กำลังระบุตำแหน่ง..."
+              ? tx("liff.checkin.locating")
               : state.phase === "submitting"
-                ? "กำลังเช็คอิน..."
-                : "เช็คอินตอนนี้"}
+                ? tx("liff.checkin.submitting")
+                : tx("liff.checkin.button")}
           </Button>
         </>
       )}
@@ -141,12 +149,13 @@ function CheckinForm() {
 }
 
 export default function CheckinLiffPage() {
+  const { tx } = useLocale()
   return (
     <main className="flex min-h-screen items-center justify-center p-4">
       <Card className="w-full max-w-md">
         <CardHeader>
-          <CardTitle>เช็คอินด้วย QR</CardTitle>
-          <CardDescription>สแกนจาก QR ประจำวันของคุณ</CardDescription>
+          <CardTitle>{tx("liff.checkin.pageTitle")}</CardTitle>
+          <CardDescription>{tx("liff.checkin.pageDesc")}</CardDescription>
         </CardHeader>
         <Suspense>
           <CheckinForm />

@@ -64,6 +64,7 @@ export async function POST(request: NextRequest) {
           employeeName: employee.name,
           docType: docType as DocType,
           copies,
+          locale: employee.preferred_locale,
         }),
       ])
     }
@@ -74,6 +75,7 @@ export async function POST(request: NextRequest) {
         docType: docType as DocType,
         copies,
         purpose,
+        locale: employee.preferred_locale,
       }),
     ])
   } catch (lineError) {

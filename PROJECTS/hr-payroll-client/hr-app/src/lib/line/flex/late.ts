@@ -1,5 +1,7 @@
 import type { messagingApi } from "@line/bot-sdk"
 
+import { t } from "@/lib/i18n/translate"
+import { DEFAULT_LOCALE, type AppLocale } from "@/lib/i18n/types"
 import { flexMessage, simpleBubble } from "@/lib/line/flex/base"
 
 // Standalone late notice (T09). No caller yet — the T10 morning cron and
@@ -8,25 +10,27 @@ export function lateReminderFlex({
   name,
   lateMinutes,
   dateText,
+  locale = DEFAULT_LOCALE,
 }: {
   name: string
   lateMinutes: number
   dateText?: string
+  locale?: AppLocale
 }): messagingApi.FlexMessage {
   const rows = [
-    { label: "พนักงาน", value: name },
+    { label: t("line.common.employee", locale), value: name },
     {
-      label: "สถานะ",
-      value: `สาย ${lateMinutes} นาที`,
+      label: t("line.common.status", locale),
+      value: t("line.late.status", locale, { minutes: lateMinutes }),
       valueColor: "#F39C12",
     },
-    ...(dateText ? [{ label: "วันที่", value: dateText }] : []),
+    ...(dateText ? [{ label: t("line.common.date", locale), value: dateText }] : []),
   ]
 
   return flexMessage(
-    `แจ้งเตือนมาสาย ${lateMinutes} นาที`,
+    t("line.late.alt", locale, { minutes: lateMinutes }),
     simpleBubble({
-      title: "แจ้งเตือนมาสาย",
+      title: t("line.late.title", locale),
       accentColor: "#F39C12",
       rows,
     })

@@ -2,6 +2,8 @@ import { NextResponse, type NextRequest } from "next/server"
 
 import { canManageHr } from "@/lib/auth/roles"
 import { getCurrentEmployee } from "@/lib/auth/session"
+import { coerceLocale } from "@/lib/i18n/types"
+import { t } from "@/lib/i18n/translate"
 import { documentStatusFlex } from "@/lib/line/flex/document-request"
 import { pushToLineUser } from "@/lib/line/notify-hr"
 import { createClient } from "@/lib/supabase/server"
@@ -32,7 +34,7 @@ export async function POST(
   const supabase = await createClient()
   const { data: doc, error: fetchError } = await supabase
     .from("hr_document_requests")
-    .select("id, doc_type, employee_id, hr_employees(line_user_id)")
+    .select("id, doc_type, employee_id, hr_employees(line_user_id, preferred_locale)")
     .eq("id", id)
     .maybeSingle()
 
@@ -62,9 +64,10 @@ export async function POST(
     .update({ result_file_url: path, status: "ready" })
     .eq("id", id)
 
-  type Emp = { line_user_id: string | null }
+  type Emp = { line_user_id: string | null; preferred_locale?: unknown }
   const empRaw = doc.hr_employees as Emp | Emp[]
   const emp = Array.isArray(empRaw) ? empRaw[0] : empRaw
+  const locale = coerceLocale(emp?.preferred_locale)
 
   try {
     if (emp?.line_user_id) {
@@ -72,7 +75,8 @@ export async function POST(
         documentStatusFlex({
           docType: doc.doc_type as string,
           status: "ready",
-          note: `ดาวน์โหลด: ${signed.signedUrl}`,
+          note: t("line.docStatus.downloadNote", locale, { url: signed.signedUrl }),
+          locale,
         }),
       ])
     }

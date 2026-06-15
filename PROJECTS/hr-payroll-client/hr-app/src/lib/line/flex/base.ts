@@ -1,5 +1,7 @@
 import type { messagingApi } from "@line/bot-sdk"
 
+import { t } from "@/lib/i18n/translate"
+import { DEFAULT_LOCALE, type AppLocale } from "@/lib/i18n/types"
 import { BRAND_RED } from "@/lib/line/brand"
 
 const LABEL_COLOR = "#6B7280"
@@ -263,6 +265,7 @@ export type MenuGuideOptions = {
   description: string
   steps: string[]
   tip?: string
+  locale?: AppLocale
   statusLabel?: string
   button?: { label: string; uri: string }
   postbackButton?: { label: string; data: string }
@@ -320,6 +323,7 @@ export function menuGuideBubble({
   description,
   steps,
   tip,
+  locale = DEFAULT_LOCALE,
   statusLabel,
   button,
   postbackButton,
@@ -335,7 +339,7 @@ export function menuGuideBubble({
     { type: "separator", margin: "lg" },
     {
       type: "text",
-      text: "วิธีใช้งาน",
+      text: t("line.common.howTo", locale),
       weight: "bold",
       size: "sm",
       color: "#111827",

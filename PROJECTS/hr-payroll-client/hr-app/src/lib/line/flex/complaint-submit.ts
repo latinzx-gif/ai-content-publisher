@@ -1,26 +1,36 @@
 import type { messagingApi } from "@line/bot-sdk"
 
+import { t } from "@/lib/i18n/translate"
+import { DEFAULT_LOCALE, type AppLocale } from "@/lib/i18n/types"
 import { BRAND_RED } from "@/lib/line/brand"
 import { flexMessage, simpleBubble } from "@/lib/line/flex/base"
 
 export function complaintSubmitConfirmFlex(options: {
   ticketCode: string
   isAnonymous: boolean
+  locale?: AppLocale
 }): messagingApi.FlexMessage {
+  const locale = options.locale ?? DEFAULT_LOCALE
   return flexMessage(
-    "รับเรื่องร้องเรียนแล้ว",
+    t("line.complaintSubmit.alt", locale),
     simpleBubble({
-      title: "รับเรื่องร้องเรียนแล้ว",
+      title: t("line.complaintSubmit.title", locale),
       accentColor: "#F57C00",
       rows: [
-        { label: "เลขที่", value: options.ticketCode },
+        { label: t("line.common.ticket", locale), value: options.ticketCode },
         {
-          label: "โหมด",
-          value: options.isAnonymous ? "ไม่เปิดเผยตัวตน" : "ระบุตัวตน",
+          label: t("line.common.mode", locale),
+          value: options.isAnonymous
+            ? t("line.status.anonymous", locale)
+            : t("line.status.identified", locale),
         },
-        { label: "สถานะ", value: "เปิดเรื่อง", valueColor: "#F59E0B" },
+        {
+          label: t("line.common.status", locale),
+          value: t("line.status.open", locale),
+          valueColor: "#F59E0B",
+        },
       ],
-      footerNote: "เก็บเลขที่ไว้สำหรับติดตาม — HR จะตอบกลับทาง LINE",
+      footerNote: t("line.complaintSubmit.footer", locale),
     })
   )
 }
@@ -31,28 +41,30 @@ export function complaintSubmitHrNotifyFlex(options: {
   isAnonymous: boolean
   employeeName?: string
   adminUrl?: string
+  locale?: AppLocale
 }): messagingApi.FlexMessage {
+  const locale = options.locale ?? DEFAULT_LOCALE
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL
   const adminUrl =
     options.adminUrl ?? (baseUrl ? `${baseUrl}/admin/complaints` : undefined)
 
   return flexMessage(
-    `เรื่องร้องเรียนใหม่: ${options.ticketCode}`,
+    t("line.complaintHr.alt", locale, { ticketCode: options.ticketCode }),
     simpleBubble({
-      title: "เรื่องร้องเรียนใหม่",
+      title: t("line.complaintHr.title", locale),
       accentColor: BRAND_RED,
       rows: [
-        { label: "เลขที่", value: options.ticketCode },
-        { label: "หัวข้อ", value: options.subject },
+        { label: t("line.common.ticket", locale), value: options.ticketCode },
+        { label: t("line.common.subject", locale), value: options.subject },
         {
-          label: "ผู้แจ้ง",
+          label: t("line.common.reporter", locale),
           value: options.isAnonymous
-            ? "ไม่เปิดเผยตัวตน"
+            ? t("line.status.anonymous", locale)
             : (options.employeeName ?? "—"),
         },
       ],
       button: adminUrl
-        ? { label: "เปิดคิวร้องเรียน", uri: adminUrl }
+        ? { label: t("line.complaintHr.button", locale), uri: adminUrl }
         : undefined,
     })
   )
@@ -63,19 +75,23 @@ export function complaintReplyFlex(options: {
   subject: string
   message: string
   closed: boolean
+  locale?: AppLocale
 }): messagingApi.FlexMessage {
+  const locale = options.locale ?? DEFAULT_LOCALE
   return flexMessage(
-    `ตอบกลับเรื่อง ${options.ticketCode}`,
+    t("line.complaintReply.alt", locale, { ticketCode: options.ticketCode }),
     simpleBubble({
-      title: "ตอบกลับจาก HR",
+      title: t("line.complaintReply.title", locale),
       accentColor: "#F57C00",
       rows: [
-        { label: "เลขที่", value: options.ticketCode },
-        { label: "หัวข้อ", value: options.subject },
-        { label: "ข้อความ", value: options.message },
+        { label: t("line.common.ticket", locale), value: options.ticketCode },
+        { label: t("line.common.subject", locale), value: options.subject },
+        { label: t("line.common.message", locale), value: options.message },
         {
-          label: "สถานะ",
-          value: options.closed ? "ปิดเรื่อง" : "ตอบแล้ว",
+          label: t("line.common.status", locale),
+          value: options.closed
+            ? t("line.status.closed", locale)
+            : t("line.status.replied", locale),
         },
       ],
     })

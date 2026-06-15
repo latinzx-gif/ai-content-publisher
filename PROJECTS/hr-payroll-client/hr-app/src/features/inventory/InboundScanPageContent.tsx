@@ -34,6 +34,7 @@ import {
   isLikelyLineBrowser,
 } from "@/lib/line/liff-client"
 import { readInboundOrderId } from "@/lib/line/inbound-order-id"
+import { useLocale } from "@/features/portal/LocaleProvider"
 import { cn } from "@/lib/utils"
 
 type LookupUnit = {
@@ -138,6 +139,7 @@ export function InboundScanPageContent({
 }: {
   pathOrderId?: string
 }) {
+  const { tx } = useLocale()
   const searchParams = useSearchParams()
   const { orderId, resolving } = useInboundOrderId(pathOrderId)
   const quantityRef = useRef<HTMLInputElement | null>(null)
@@ -166,14 +168,14 @@ export function InboundScanPageContent({
       if (result.success) {
         setItems(result.items ?? [])
       } else {
-        setItemsError(result.error ?? "โหลดรายการไม่สำเร็จ")
+        setItemsError(result.error ?? tx("liff.inbound.errorLoad"))
       }
     } catch {
-      setItemsError("เชื่อมต่อไม่สำเร็จ — โหลดรายการไม่สำเร็จ")
+      setItemsError(tx("liff.inbound.errorLoadConnection"))
     } finally {
       setLoadingItems(false)
     }
-  }, [orderId])
+  }, [orderId, tx])
 
   const showMessage = useCallback((text: string) => {
     setMessage(text)
@@ -190,12 +192,12 @@ export function InboundScanPageContent({
     try {
       result = await getInvSkuUnitOptionsByBarcode({ barcode: trimmed })
     } catch {
-      setError("เชื่อมต่อไม่สำเร็จ — ตรวจอินเทอร์เน็ตแล้วกดค้นหาอีกครั้ง")
+      setError(tx("liff.inbound.errorSearchConnection"))
       return null
     }
 
     if (!result.success || !result.sku) {
-      setError(result.error ?? "ไม่พบ SKU")
+      setError(result.error ?? tx("liff.inbound.errorSkuNotFound"))
       return null
     }
 
@@ -230,7 +232,7 @@ export function InboundScanPageContent({
         ""
     )
     return sku
-  }, [])
+  }, [tx])
 
   useEffect(() => {
     const timeout = window.setTimeout(() => {
@@ -265,7 +267,7 @@ export function InboundScanPageContent({
       setError(null)
 
       if (!orderId) {
-        setError("ไม่พบรหัสใบรับเข้า (order)")
+        setError(tx("liff.inbound.errorNoOrder"))
         return
       }
 
@@ -273,7 +275,7 @@ export function InboundScanPageContent({
       const nextQuantity = override?.quantity ?? quantity
       const qty = Number(nextQuantity)
       if (!Number.isFinite(qty) || qty <= 0) {
-        setError("จำนวนไม่ถูกต้อง")
+        setError(tx("liff.inbound.errorInvalidQuantity"))
         return
       }
 
@@ -291,13 +293,15 @@ export function InboundScanPageContent({
           } as Parameters<typeof scanInvInboundItem>[0] & { unit_id?: string }
           result = await scanInvInboundItem(payload)
         } catch {
-          setError("เชื่อมต่อไม่สำเร็จ — ตรวจอินเทอร์เน็ตแล้วกดบันทึกอีกครั้ง")
+          setError(tx("liff.inbound.errorSaveConnection"))
           return
         }
 
         if (result.success) {
           showMessage(
-            `บันทึก ${override?.skuCode ?? lookup?.code ?? nextBarcode} แล้ว`
+            tx("liff.inbound.saved", {
+              skuCode: override?.skuCode ?? lookup?.code ?? nextBarcode,
+            })
           )
           setBarcode("")
           setQuantity("1")
@@ -307,7 +311,7 @@ export function InboundScanPageContent({
           setLookup(null)
           await loadItems()
         } else {
-          setError(result.error ?? "บันทึกไม่สำเร็จ")
+          setError(result.error ?? tx("liff.inbound.errorSave"))
         }
       })
     },
@@ -321,6 +325,7 @@ export function InboundScanPageContent({
       quantity,
       selectedUnitId,
       showMessage,
+      tx,
     ]
   )
 
@@ -369,7 +374,14 @@ export function InboundScanPageContent({
   const selectedFactor = selectedUnit ? factorToBase(selectedUnit) : 1
 
   async function deleteItem(item: InvInboundItemRow) {
-    if (!window.confirm(`ลบรายการ ${item.sku_code} จำนวน ${item.quantity}?`)) {
+    if (
+      !window.confirm(
+        tx("liff.inbound.confirmDelete", {
+          skuCode: item.sku_code,
+          quantity: item.quantity,
+        })
+      )
+    ) {
       return
     }
 
@@ -380,13 +392,13 @@ export function InboundScanPageContent({
     try {
       const result = await deleteMobileInvInboundItem(item.id, orderId)
       if (result.success) {
-        showMessage(`ลบ ${item.sku_code} แล้ว`)
+        showMessage(tx("liff.inbound.deleted", { skuCode: item.sku_code }))
         await loadItems()
       } else {
-        setError(result.error ?? "ลบรายการไม่สำเร็จ")
+        setError(result.error ?? tx("liff.inbound.errorDelete"))
       }
     } catch {
-      setError("เชื่อมต่อไม่สำเร็จ — ลบรายการไม่สำเร็จ")
+      setError(tx("liff.inbound.errorDeleteConnection"))
     } finally {
       setDeletingId(null)
     }
@@ -396,7 +408,7 @@ export function InboundScanPageContent({
     return (
       <Card className="w-full">
         <CardContent className="py-8 text-sm text-muted-foreground">
-          กำลังโหลดใบรับเข้า…
+          {tx("liff.inbound.loadingOrder")}
         </CardContent>
       </Card>
     )
@@ -406,11 +418,9 @@ export function InboundScanPageContent({
     return (
       <Card className="w-full">
         <CardHeader>
-          <CardTitle>สแกนรับเข้า</CardTitle>
+          <CardTitle>{tx("liff.inbound.missingTitle")}</CardTitle>
           <CardDescription className="leading-relaxed">
-            เปิดจากเมนู <span className="font-medium">คลังสินค้า</span> แล้วกด{" "}
-            <span className="font-medium">สแกน</span> ที่ใบรับเข้า — ไม่พบรหัสใบ
-            (order)
+            {tx("liff.inbound.missingDesc")}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -418,7 +428,7 @@ export function InboundScanPageContent({
             href="/portal/inbound"
             className={cn(buttonVariants({ variant: "outline" }), "w-full")}
           >
-            ไปหน้าคลังสินค้า
+            {tx("liff.inbound.goInventory")}
           </Link>
         </CardContent>
       </Card>
@@ -430,10 +440,11 @@ export function InboundScanPageContent({
       <CardHeader>
         <CardTitle className="flex w-full min-w-0 items-center gap-2">
           <Barcode className="size-5 text-brand-red" />
-          สแกนรับเข้าสินค้า
+          {tx("liff.inbound.title")}
         </CardTitle>
         <CardDescription>
-          ใบรับเข้า: <span className="font-mono text-xs">{orderId.slice(0, 8)}…</span>
+          {tx("liff.inbound.orderLabel")}{" "}
+          <span className="font-mono text-xs">{orderId.slice(0, 8)}…</span>
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -456,13 +467,13 @@ export function InboundScanPageContent({
               value="scan"
               className="inline-flex h-9 items-center justify-center rounded-md px-3 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground data-[active]:bg-background data-[active]:text-foreground data-[active]:shadow-sm"
             >
-              สแกน
+              {tx("liff.inbound.scanTab")}
             </Tabs.Tab>
             <Tabs.Tab
               value="items"
               className="inline-flex h-9 items-center justify-center gap-2 rounded-md px-3 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground data-[active]:bg-background data-[active]:text-foreground data-[active]:shadow-sm"
             >
-              รายการ
+              {tx("liff.inbound.itemsTab")}
               <Badge variant="secondary">{items.length}</Badge>
             </Tabs.Tab>
           </Tabs.List>
@@ -477,12 +488,12 @@ export function InboundScanPageContent({
                 checked={quickSave}
                 onChange={(event) => setQuickSave(event.target.checked)}
               />
-              บันทึกทันทีที่สแกน (จำนวน 1)
+              {tx("liff.inbound.quickSave")}
             </label>
 
             <div className="space-y-2">
               <label className="text-sm font-medium" htmlFor="barcode">
-                Barcode
+                {tx("liff.inbound.barcodeLabel")}
               </label>
               <div className="flex gap-2">
                 <input
@@ -491,7 +502,7 @@ export function InboundScanPageContent({
                   value={barcode}
                   onChange={(event) => setBarcode(event.target.value)}
                   onBlur={() => void lookupBarcode()}
-                  placeholder="สแกนหรือพิมพ์ barcode"
+                  placeholder={tx("liff.inbound.barcodePlaceholder")}
                   autoComplete="off"
                 />
                 <Button
@@ -499,7 +510,7 @@ export function InboundScanPageContent({
                   variant="outline"
                   onClick={() => void lookupBarcode()}
                 >
-                  ค้นหา
+                  {tx("liff.inbound.search")}
                 </Button>
               </div>
               {lookup ? (
@@ -512,7 +523,7 @@ export function InboundScanPageContent({
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1">
                 <label className="text-sm font-medium" htmlFor="qty">
-                  จำนวน
+                  {tx("liff.inbound.quantity")}
                 </label>
                 <input
                   id="qty"
@@ -528,7 +539,7 @@ export function InboundScanPageContent({
               {lookupUnitOptions.length > 0 ? (
                 <div className="space-y-1">
                   <label className="text-sm font-medium" htmlFor="unit_id">
-                    หน่วย
+                    {tx("liff.inbound.unit")}
                   </label>
                   <select
                     id="unit_id"
@@ -550,7 +561,7 @@ export function InboundScanPageContent({
                     </p>
                   ) : baseUnit ? (
                     <p className="text-xs text-muted-foreground">
-                      หน่วยฐาน: {unitLabel(baseUnit)}
+                      {tx("liff.inbound.baseUnit", { unit: unitLabel(baseUnit) })}
                     </p>
                   ) : null}
                 </div>
@@ -573,7 +584,7 @@ export function InboundScanPageContent({
 
             <div className="space-y-1">
               <label className="text-sm font-medium" htmlFor="expiry">
-                วันหมดอายุ
+                {tx("liff.inbound.expiry")}
               </label>
               <input
                 id="expiry"
@@ -585,16 +596,16 @@ export function InboundScanPageContent({
             </div>
 
             <Button className="w-full" disabled={pending} onClick={() => submit()}>
-              {pending ? "กำลังบันทึก…" : "บันทึกรายการ"}
+              {pending ? tx("liff.inbound.saving") : tx("liff.inbound.save")}
             </Button>
           </Tabs.Panel>
 
           <Tabs.Panel value="items" keepMounted className="space-y-3">
             <div className="flex items-center justify-between gap-3">
               <div>
-                <p className="text-sm font-medium">รายการที่บันทึกแล้ว</p>
+                <p className="text-sm font-medium">{tx("liff.inbound.itemsTitle")}</p>
                 <p className="text-xs text-muted-foreground">
-                  ลบได้ก่อน Inventory อนุมัติ
+                  {tx("liff.inbound.itemsDesc")}
                 </p>
               </div>
               <Button
@@ -604,7 +615,7 @@ export function InboundScanPageContent({
                 disabled={loadingItems}
                 onClick={() => void loadItems()}
               >
-                รีเฟรช
+                {tx("liff.inbound.refresh")}
               </Button>
             </div>
 
@@ -612,11 +623,13 @@ export function InboundScanPageContent({
               <p className="text-sm text-destructive">{itemsError}</p>
             ) : null}
             {loadingItems && items.length === 0 ? (
-              <p className="text-sm text-muted-foreground">กำลังโหลดรายการ…</p>
+              <p className="text-sm text-muted-foreground">
+                {tx("liff.inbound.loadingItems")}
+              </p>
             ) : null}
             {!loadingItems && items.length === 0 && !itemsError ? (
               <p className="text-sm text-muted-foreground">
-                ยังไม่มีรายการ — ถ่ายรูป barcode แล้วบันทึกได้เลย
+                {tx("liff.inbound.emptyItems")}
               </p>
             ) : null}
 
@@ -632,7 +645,9 @@ export function InboundScanPageContent({
                         {item.sku_code} — {item.sku_name}
                       </p>
                       <p className="text-xs text-muted-foreground">
-                        จำนวน {item.quantity}
+                        {tx("liff.inbound.itemQuantity", {
+                          quantity: item.quantity,
+                        })}
                         {item.lot_number ? ` · Lot ${item.lot_number}` : ""}
                         {item.expiry_date ? ` · Exp ${item.expiry_date}` : ""}
                       </p>
@@ -646,7 +661,7 @@ export function InboundScanPageContent({
                       onClick={() => void deleteItem(item)}
                     >
                       <Trash2 className="size-4" />
-                      ลบ
+                      {tx("liff.inbound.delete")}
                     </Button>
                   </li>
                 ))}

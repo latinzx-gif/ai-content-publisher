@@ -7,6 +7,7 @@ import {
   CardContent,
 } from "@/components/ui/card"
 import { InboundScanPageContent } from "@/features/inventory/InboundScanPageContent"
+import { useLocale } from "@/features/portal/LocaleProvider"
 
 function InboundScanByOrder({
   params,
@@ -22,13 +23,14 @@ export default function InboundScanOrderPage({
 }: {
   params: Promise<{ orderId: string }>
 }) {
+  const { tx } = useLocale()
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-md flex-col gap-4 bg-background p-4">
       <Suspense
         fallback={
           <Card className="w-full">
             <CardContent className="py-8 text-sm text-muted-foreground">
-              กำลังโหลด…
+              {tx("liff.inbound.loading")}
             </CardContent>
           </Card>
         }

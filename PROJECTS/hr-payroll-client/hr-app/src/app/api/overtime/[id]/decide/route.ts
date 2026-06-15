@@ -5,6 +5,7 @@ import {
   getCurrentEmployeeWithBranch,
   canApproveHrRequests,
 } from "@/lib/auth/branch"
+import { coerceLocale } from "@/lib/i18n/types"
 import { overtimeResultFlex } from "@/lib/line/flex/overtime-request"
 import { pushToLineUser } from "@/lib/line/notify-hr"
 import { createClient } from "@/lib/supabase/server"
@@ -48,7 +49,7 @@ export async function POST(
   const { data: ot, error: fetchError } = await supabase
     .from("hr_overtime_requests")
     .select(
-      "id, work_date, start_time, end_time, reason, status, approval_status, employee_id, hr_employees!employee_id(line_user_id, name, branch_id, department)"
+      "id, work_date, start_time, end_time, reason, status, approval_status, employee_id, hr_employees!employee_id(line_user_id, name, branch_id, department, preferred_locale)"
     )
     .eq("id", id)
     .maybeSingle()
@@ -64,11 +65,13 @@ export async function POST(
     name: string
     branch_id: string | null
     department: string | null
+    preferred_locale?: unknown
   }
   const empRaw = ot.hr_employees as Emp | Emp[]
   const emp = Array.isArray(empRaw) ? empRaw[0] : empRaw
   const lineUserId = emp?.line_user_id
   const branchId = emp?.branch_id ?? null
+  const locale = coerceLocale(emp?.preferred_locale)
 
   const notifyEmployee = async (approved: boolean) => {
     if (!lineUserId) return
@@ -78,6 +81,7 @@ export async function POST(
           workDate: ot.work_date as string,
           approved,
           note: note || undefined,
+          locale,
         }),
       ])
     } catch (lineError) {

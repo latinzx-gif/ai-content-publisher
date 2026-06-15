@@ -1,5 +1,7 @@
 import type { messagingApi } from "@line/bot-sdk"
 
+import { t } from "@/lib/i18n/translate"
+import { DEFAULT_LOCALE, type AppLocale } from "@/lib/i18n/types"
 import { BRAND_RED, cardBody, brandedTitleHeader } from "@/lib/line/flex/base"
 
 export type RegistrationNotifyPayload = {
@@ -38,34 +40,35 @@ function detailRow(label: string, value: string): messagingApi.FlexComponent {
 }
 
 export function registrationPendingFlex(
-  payload: RegistrationNotifyPayload
+  payload: RegistrationNotifyPayload,
+  locale: AppLocale = DEFAULT_LOCALE
 ): messagingApi.FlexMessage {
   const { employeeId, employeeCode, name, phone, branchName, department, position } =
     payload
 
   return {
     type: "flex",
-    altText: `พนักงานใหม่ลงทะเบียน: ${name}`,
+    altText: t("line.registrationPending.alt", locale, { name }),
     contents: {
       type: "bubble",
       size: "mega",
       header: brandedTitleHeader({
-        title: "พนักงานใหม่ลงทะเบียน",
-        subtitle: "รอ HR อนุมัติเข้าใช้งาน",
+        title: t("line.registrationPending.title", locale),
+        subtitle: t("line.registrationPending.subtitle", locale),
         accentColor: BRAND_RED,
         emoji: "📝",
-        statusLabel: "รออนุมัติ",
+        statusLabel: t("line.registrationPending.status", locale),
       }),
       body: cardBody([
-        detailRow("รหัสพนักงาน", employeeCode ?? "—"),
-        detailRow("ชื่อ", name),
-        detailRow("เบอร์", phone ?? "—"),
-        detailRow("สาขา", branchName ?? "—"),
-        ...(department ? [detailRow("แผนก", department)] : []),
-        ...(position ? [detailRow("ตำแหน่ง", position)] : []),
+        detailRow(t("line.registrationPending.employeeCode", locale), employeeCode ?? "—"),
+        detailRow(t("line.registrationPending.name", locale), name),
+        detailRow(t("line.registrationPending.phone", locale), phone ?? "—"),
+        detailRow(t("line.registrationPending.branch", locale), branchName ?? "—"),
+        ...(department ? [detailRow(t("line.common.department", locale), department)] : []),
+        ...(position ? [detailRow(t("line.common.position", locale), position)] : []),
         {
           type: "text",
-          text: "กดอนุมัติหรือปฏิเสธได้จาก LINE โดยตรง",
+          text: t("line.registrationPending.help", locale),
           size: "xs",
           color: "#6B7280",
           margin: "lg",
@@ -85,9 +88,9 @@ export function registrationPendingFlex(
               flex: 1,
               action: {
                 type: "postback",
-                label: "อนุมัติ",
+                label: t("line.registrationPending.approve", locale),
                 data: `action=approve_registration&emp_id=${employeeId}`,
-                displayText: "อนุมัติการลงทะเบียน",
+                displayText: t("line.registrationPending.approveDisplay", locale),
               },
             },
             {
@@ -97,9 +100,9 @@ export function registrationPendingFlex(
               flex: 1,
               action: {
                 type: "postback",
-                label: "ปฏิเสธ",
+                label: t("line.registrationPending.reject", locale),
                 data: `action=reject_registration&emp_id=${employeeId}`,
-                displayText: "ปฏิเสธการลงทะเบียน",
+                displayText: t("line.registrationPending.rejectDisplay", locale),
               },
             },
           ],

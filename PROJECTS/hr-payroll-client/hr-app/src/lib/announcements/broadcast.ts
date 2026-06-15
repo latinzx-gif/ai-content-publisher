@@ -2,6 +2,7 @@ import type { messagingApi } from "@line/bot-sdk"
 import type { SupabaseClient } from "@supabase/supabase-js"
 
 import { announcementImagePublicUrl } from "@/lib/announcements/image"
+import { coerceLocale, type AppLocale } from "@/lib/i18n/types"
 import { announcementBroadcastFlex } from "@/lib/line/flex/announcement-list"
 import { getLineClient } from "@/lib/line/client"
 
@@ -49,7 +50,11 @@ async function imageUrlReachable(url: string): Promise<boolean> {
   }
 }
 
-function buildMessages(options: AnnouncementBroadcastOptions, includeImage: boolean) {
+function buildMessages(
+  options: AnnouncementBroadcastOptions,
+  includeImage: boolean,
+  locale: AppLocale
+) {
   const imageUrl = includeImage ? announcementImagePublicUrl(options.imagePath) : null
   const messages: messagingApi.Message[] = []
 
@@ -58,6 +63,7 @@ function buildMessages(options: AnnouncementBroadcastOptions, includeImage: bool
       title: options.title,
       body: options.body,
       hasImage: Boolean(imageUrl),
+      locale,
     })
   )
 
@@ -89,7 +95,7 @@ export async function broadcastAnnouncement(
 ): Promise<AnnouncementBroadcastResult> {
   let query = admin
     .from("hr_employees")
-    .select("line_user_id")
+    .select("line_user_id, preferred_locale")
     .eq("status", "active")
     .not("line_user_id", "is", null)
 
@@ -100,7 +106,14 @@ export async function broadcastAnnouncement(
   const { data: rows, error } = await query
   if (error) throw new Error(error.message)
 
-  const targets = (rows ?? []).map((r) => r.line_user_id as string)
+  const targetsByLocale = new Map<AppLocale, string[]>()
+  for (const row of rows ?? []) {
+    const lineUserId = row.line_user_id as string | null
+    if (!lineUserId) continue
+    const locale = coerceLocale(row.preferred_locale)
+    targetsByLocale.set(locale, [...(targetsByLocale.get(locale) ?? []), lineUserId])
+  }
+  const targets = Array.from(targetsByLocale.values()).flat()
   if (targets.length === 0) {
     return { recipientCount: 0, imageSentOnLine: false }
   }
@@ -108,22 +121,30 @@ export async function broadcastAnnouncement(
   const line = getLineClient()
   const imageUrl = announcementImagePublicUrl(options.imagePath)
   const canTryImage = imageUrl ? await imageUrlReachable(imageUrl) : false
-  const withImage = canTryImage ? buildMessages(options, true) : buildMessages(options, false)
-  const textOnly = buildMessages(options, false)
+  const buildLocaleMessages = (locale: AppLocale, includeImage: boolean) =>
+    buildMessages(options, includeImage, locale)
 
   try {
-    await multicastChunk(line, targets, withImage)
+    for (const [locale, localeTargets] of targetsByLocale) {
+      await multicastChunk(
+        line,
+        localeTargets,
+        buildLocaleMessages(locale, canTryImage)
+      )
+    }
     return {
       recipientCount: targets.length,
       imageSentOnLine: canTryImage,
     }
   } catch (firstError) {
-    if (!canTryImage || withImage.length === textOnly.length) {
+    if (!canTryImage) {
       throw new Error(lineErrorMessage(firstError))
     }
 
     try {
-      await multicastChunk(line, targets, textOnly)
+      for (const [locale, localeTargets] of targetsByLocale) {
+        await multicastChunk(line, localeTargets, buildLocaleMessages(locale, false))
+      }
       return {
         recipientCount: targets.length,
         imageSentOnLine: false,
