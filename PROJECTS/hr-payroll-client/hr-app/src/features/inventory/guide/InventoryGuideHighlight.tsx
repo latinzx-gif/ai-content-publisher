@@ -62,7 +62,7 @@ export function InventoryGuideHighlight() {
     >
       <div
         className={cn(
-          "absolute rounded-xl border-2 border-brand-red shadow-[0_0_0_9999px_rgba(0,0,0,0.45)]",
+          "absolute rounded-xl border-2 border-brand-red",
           "animate-pulse ring-2 ring-brand-red/40"
         )}
         style={{
@@ -71,6 +71,7 @@ export function InventoryGuideHighlight() {
           width: rect.width,
           height: rect.height,
           position: "fixed",
+          boxShadow: "0 0 0 9999px rgba(0,0,0,0.45)",
         }}
       />
     </div>,

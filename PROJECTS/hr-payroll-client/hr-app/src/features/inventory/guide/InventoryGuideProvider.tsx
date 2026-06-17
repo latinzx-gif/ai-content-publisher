@@ -13,7 +13,6 @@ import {
 import {
   INVENTORY_GUIDE_STEPS,
   filterGuideSteps,
-  stepIndexForPath,
   type InventoryGuideStep,
 } from "@/features/inventory/guide/inventory-guide-steps"
 
@@ -102,18 +101,6 @@ export function InventoryGuideProvider({
     return () => window.cancelAnimationFrame(frame)
   }, [steps.length])
 
-  useEffect(() => {
-    if (!hydrated || !enabled || completed) return
-    const pathStep = stepIndexForPath(steps, pathname)
-    if (pathStep < 0 || pathStep === stepIndex) return
-
-    const frame = window.requestAnimationFrame(() => {
-      persistStep(pathStep)
-    })
-
-    return () => window.cancelAnimationFrame(frame)
-  }, [completed, enabled, hydrated, pathname, persistStep, steps, stepIndex])
-
   const setEnabled = useCallback((value: boolean) => {
     setEnabledState(value)
     window.localStorage.setItem(ENABLED_KEY, String(value))
@@ -137,14 +124,26 @@ export function InventoryGuideProvider({
   )
 
   const goNext = useCallback(() => {
-    if (stepIndex >= steps.length - 1) {
-      setCompleted(true)
-      window.localStorage.setItem(COMPLETED_KEY, "true")
-      setOpen(false)
-      return
-    }
-    navigateToStep(stepIndex + 1)
-  }, [navigateToStep, stepIndex, steps.length])
+    setStepIndex((current) => {
+      if (current >= steps.length - 1) {
+        setCompleted(true)
+        window.localStorage.setItem(COMPLETED_KEY, "true")
+        setOpen(false)
+        return current
+      }
+      const next = current + 1
+      window.localStorage.setItem(STEP_KEY, String(next))
+      const target = steps[next]
+      if (
+        target &&
+        pathname !== target.href &&
+        !pathname.startsWith(`${target.href}/`)
+      ) {
+        router.push(target.href)
+      }
+      return next
+    })
+  }, [pathname, router, steps])
 
   const goPrev = useCallback(() => {
     navigateToStep(stepIndex - 1)

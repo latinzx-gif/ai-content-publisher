@@ -25,7 +25,7 @@ export function InventoryGuidePanel() {
 
   if (completed && !open) {
     return (
-      <div className="fixed bottom-4 right-4 z-[70]">
+      <div className="fixed bottom-4 right-4 z-[100]">
         <Button
           type="button"
           size="sm"
@@ -48,7 +48,7 @@ export function InventoryGuidePanel() {
   return (
     <div
       className={cn(
-        "fixed bottom-4 right-4 z-[70] w-[min(100vw-2rem,24rem)]",
+        "fixed bottom-4 right-4 z-[100] w-[min(100vw-2rem,24rem)]",
         "rounded-xl border border-border/80 bg-card p-4 shadow-xl"
       )}
       role="dialog"
