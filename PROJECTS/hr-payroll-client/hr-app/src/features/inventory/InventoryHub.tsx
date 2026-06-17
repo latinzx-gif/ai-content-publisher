@@ -6,6 +6,7 @@ import {
   Bell,
   Building2,
   ClipboardList,
+  ExternalLink,
   LayoutDashboard,
   Package,
   PackagePlus,
@@ -186,14 +187,16 @@ function HubSection({
   hint,
   items,
   columnsClass,
+  sectionGuideId,
 }: {
   label: string
   hint?: string
   items: HubItem[]
   columnsClass: string
+  sectionGuideId?: string
 }) {
   return (
-    <section className="space-y-3">
+    <section className="space-y-3" data-inventory-guide={sectionGuideId}>
       <div className="flex flex-wrap items-end justify-between gap-2 border-b border-border/60 pb-2">
         <div>
           <h2 className="text-sm font-semibold text-foreground">{label}</h2>
@@ -211,6 +214,38 @@ function HubSection({
         ))}
       </div>
     </section>
+  )
+}
+
+function DocQuickLink({
+  href,
+  icon: Icon,
+  label,
+  external = false,
+  imageSrc,
+}: {
+  href: string
+  icon?: LucideIcon
+  label: string
+  external?: boolean
+  imageSrc?: string
+}) {
+  return (
+    <a
+      href={href}
+      target={external ? "_blank" : undefined}
+      rel={external ? "noopener noreferrer" : undefined}
+      className="inline-flex items-center gap-2 rounded-lg border border-border/70 bg-card px-3 py-2 text-sm font-medium transition-colors hover:border-brand-red/30 hover:bg-muted/30"
+    >
+      {imageSrc ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={imageSrc} alt="" className="size-5 shrink-0 rounded" width={20} height={20} />
+      ) : Icon ? (
+        <Icon className="size-4 shrink-0 text-brand-red" aria-hidden />
+      ) : null}
+      <span>{label}</span>
+      {external ? <ExternalLink className="size-3.5 text-muted-foreground" aria-hidden /> : null}
+    </a>
   )
 }
 
@@ -250,7 +285,10 @@ export function InventoryHub({
 }) {
   return (
     <div className="space-y-8">
-      <div className="flex flex-col gap-4 rounded-xl border border-border/60 bg-gradient-to-br from-muted/30 via-card to-card p-4 sm:flex-row sm:items-center sm:justify-between">
+      <div
+        data-inventory-guide="hub-intro"
+        className="flex flex-col gap-4 rounded-xl border border-border/60 bg-gradient-to-br from-muted/30 via-card to-card p-4 sm:flex-row sm:items-center sm:justify-between"
+      >
         <div className="min-w-0">
           <p className="text-sm font-medium text-foreground">ศูนย์ควบคุมคลังสินค้า</p>
           <p className="mt-1 max-w-xl text-xs leading-relaxed text-muted-foreground">
@@ -258,6 +296,12 @@ export function InventoryHub({
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
+          <DocQuickLink
+            href="/docs/INVENTORY_HANDOFF.html"
+            imageSrc="/brand/mascot.svg"
+            label="คู่มือ & Checklist UAT"
+            external
+          />
           <QuickLink
             href="/admin/inventory/dashboard"
             icon={LayoutDashboard}
@@ -277,6 +321,7 @@ export function InventoryHub({
         hint="รับเข้า · สต็อก · เบิก · โอน · ตรวจนับ · ใช้จริง · เสียหาย"
         items={OPERATIONAL_ITEMS}
         columnsClass="grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+        sectionGuideId="hub-operations"
       />
 
       {!staffMode ? (
@@ -285,6 +330,7 @@ export function InventoryHub({
           hint="ตั้งค่าก่อนเริ่มใช้งานคลัง — แยกจากข้อมูลสาขา HR"
           items={MASTER_DATA_ITEMS}
           columnsClass="grid-cols-1 sm:grid-cols-2 xl:grid-cols-4"
+          sectionGuideId="hub-master-data"
         />
       ) : null}
     </div>

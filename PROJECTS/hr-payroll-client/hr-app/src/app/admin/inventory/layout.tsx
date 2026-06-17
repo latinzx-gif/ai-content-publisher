@@ -1,4 +1,4 @@
-import { InventorySubNav } from "@/features/inventory/InventorySubNav"
+import { InventoryGuideShell } from "@/features/inventory/guide/InventoryGuideShell"
 import { getInventoryAlertCount } from "@/features/inventory/expansion-data"
 import {
   canManageHr,
@@ -24,13 +24,12 @@ export default async function InventoryLayout({
   const alertCount = await getInventoryAlertCount().catch(() => 0)
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col gap-3">
-      <InventorySubNav
-        staffMode={staffMode}
-        showMasterData={showMasterData}
-        alertCount={alertCount}
-      />
+    <InventoryGuideShell
+      staffMode={staffMode}
+      showMasterData={showMasterData}
+      alertCount={alertCount}
+    >
       {children}
-    </div>
+    </InventoryGuideShell>
   )
 }
