@@ -11,7 +11,7 @@ const th: MessageCatalog = {
   "lang.my": "မြန်မာ",
   "lang.label": "ภาษา",
 
-  "auth.login.title": "CNV WorkHub",
+  "auth.login.title": "เข้าสู่ระบบ",
   "auth.login.subtitle": "เข้าสู่ระบบด้วยรหัสพนักงานและสาขาที่ HR แจ้งให้",
   "auth.login.officerSubtitle": "แผนก Officer — กรุณายืนยันรหัสผ่านเพื่อเข้า Dashboard",
   "auth.login.dashboard": "เข้าสู่ Dashboard",
@@ -53,6 +53,19 @@ const th: MessageCatalog = {
   "auth.login.form.submitSetup": "ตั้งรหัสผ่านและเข้าสู่ระบบ",
   "auth.login.form.error.passwordRequired": "กรุณากรอกรหัสผ่าน",
   "auth.login.form.error.passwordMismatch": "รหัสผ่านและยืนยันรหัสผ่านไม่ตรงกัน",
+  "auth.login.lineButton": "เข้าสู่ระบบด้วย LINE",
+  "auth.login.orDivider": "หรือ",
+  "auth.login.forgot.link": "ลืมรหัสผ่าน?",
+  "auth.login.forgot.intro":
+    "ยืนยันรหัสพนักงานและสาขา — ระบบจะรีเซ็ตรหัสผ่าน Officer แล้วให้ตั้งรหัสใหม่เมื่อ login",
+  "auth.login.forgot.submit": "รีเซ็ตรหัสผ่าน",
+  "auth.login.forgot.submitting": "กำลังรีเซ็ต…",
+  "auth.login.forgot.back": "กลับหน้าเข้าสู่ระบบ",
+  "auth.login.forgot.success":
+    "รีเซ็ตรหัสผ่านแล้ว — เข้าสู่ระบบอีกครั้งเพื่อตั้งรหัสผ่านใหม่",
+  "auth.login.forgot.error": "รีเซ็ตรหัสผ่านไม่สำเร็จ",
+  "auth.login.officerForgotHint": "ลืมรหัสผ่าน?",
+  "auth.login.officerForgotAction": "ออกจากระบบแล้วใช้ลืมรหัสผ่าน",
   "auth.register.title": "ลงทะเบียนพนักงาน",
   "auth.register.intro":
     "กรอกข้อมูลให้ครบ ระบบจะผูกบัญชี LINE (ถ้ามี) แล้วส่งให้ HR อนุมัติ",
@@ -848,7 +861,7 @@ const en: MessageCatalog = {
   "lang.my": "မြန်မာ",
   "lang.label": "Language",
 
-  "auth.login.title": "CNV WorkHub",
+  "auth.login.title": "Sign in",
   "auth.login.subtitle": "Sign in with the employee code and branch provided by HR",
   "auth.login.officerSubtitle":
     "Officer department — confirm your password to access the dashboard",
@@ -889,6 +902,19 @@ const en: MessageCatalog = {
   "auth.login.form.submitSetup": "Set password and sign in",
   "auth.login.form.error.passwordRequired": "Please enter your password",
   "auth.login.form.error.passwordMismatch": "Passwords do not match",
+  "auth.login.lineButton": "Sign in with LINE",
+  "auth.login.orDivider": "or",
+  "auth.login.forgot.link": "Forgot password?",
+  "auth.login.forgot.intro":
+    "Confirm your employee code and branch — the system will reset your Officer password so you can set a new one at sign-in",
+  "auth.login.forgot.submit": "Reset password",
+  "auth.login.forgot.submitting": "Resetting…",
+  "auth.login.forgot.back": "Back to sign in",
+  "auth.login.forgot.success":
+    "Password reset — sign in again to set a new password",
+  "auth.login.forgot.error": "Password reset failed",
+  "auth.login.officerForgotHint": "Forgot password?",
+  "auth.login.officerForgotAction": "Sign out and use forgot password",
   "auth.register.title": "Employee registration",
   "auth.register.intro":
     "Complete all fields. Your LINE account (if any) will be linked and sent to HR for approval.",

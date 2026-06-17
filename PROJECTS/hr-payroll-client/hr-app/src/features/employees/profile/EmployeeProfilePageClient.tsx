@@ -8,6 +8,7 @@ import { EmployeeDangerZone } from "@/features/employees/profile/EmployeeDangerZ
 import { EmployeeProfileForm } from "@/features/employees/profile/EmployeeProfileForm"
 import { EmployeeProfileView } from "@/features/employees/profile/EmployeeProfileView"
 import { LifecyclePanel } from "@/features/employees/profile/LifecyclePanel"
+import { OfficerPortalPasswordPanel } from "@/features/employees/profile/OfficerPortalPasswordPanel"
 import { PendingRegistrationApproval } from "@/features/employees/profile/PendingRegistrationApproval"
 import type { EmployeeProfile } from "@/features/employees/profile/data"
 
@@ -16,6 +17,7 @@ import type {
   OrgDepartment,
   OrgPosition,
 } from "@/features/organization/master-data"
+import type { WorkShiftSummary } from "@/features/shifts/types"
 
 type ComplianceNote = {
   id: string
@@ -30,14 +32,18 @@ export function EmployeeProfilePageClient({
   branches,
   departments,
   positions,
+  workShifts,
   readOnly = false,
+  canViewSalary = false,
 }: {
   profile: EmployeeProfile
   notes: ComplianceNote[]
   branches: BranchRow[]
   departments: OrgDepartment[]
   positions: OrgPosition[]
+  workShifts: WorkShiftSummary[]
   readOnly?: boolean
+  canViewSalary?: boolean
 }) {
   const isPendingRegistration =
     profile.status === "inactive" && profile.role === "employee"
@@ -65,6 +71,8 @@ export function EmployeeProfilePageClient({
             branches={branches}
             departments={departments}
             positions={positions}
+            workShifts={workShifts}
+            canViewSalary={canViewSalary}
           />
         </div>
       </div>
@@ -78,6 +86,7 @@ export function EmployeeProfilePageClient({
       ) : null}
       <EmployeeProfileView
         profile={profile}
+        canViewSalary={canViewSalary}
         actions={
           readOnly ? null : (
             <Button
@@ -97,6 +106,12 @@ export function EmployeeProfilePageClient({
         <h2 className="mb-3 text-sm font-semibold">วงจรพนักงาน</h2>
         <LifecyclePanel profile={profile} notes={notes} />
       </section>
+      {!readOnly ? (
+        <OfficerPortalPasswordPanel
+          employeeId={profile.id}
+          department={profile.department}
+        />
+      ) : null}
       {!readOnly ? <EmployeeDangerZone profile={profile} /> : null}
     </div>
   )

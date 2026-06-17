@@ -1,23 +1,48 @@
 "use client"
 
 import { useRouter } from "next/navigation"
-import { useEffect, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 
 import { Button } from "@/components/ui/button"
+import { ForgotPortalPasswordForm } from "@/features/auth/ForgotPortalPasswordForm"
+import { useLocale } from "@/features/portal/LocaleProvider"
 
 const inputClassName =
   "mt-1 h-10 w-full rounded-lg border border-input bg-transparent px-3 text-sm outline-none transition-colors focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/50"
 
 type BranchOption = { id: string; name: string; code: string | null }
 
+type PasswordRequirements = {
+  requiresPassword: boolean
+  needsSetup: boolean
+}
+
 export function EmployeeCodeLoginForm() {
   const router = useRouter()
+  const { tx } = useLocale()
   const [employeeCode, setEmployeeCode] = useState("")
   const [branchId, setBranchId] = useState("")
+  const [password, setPassword] = useState("")
+  const [passwordConfirm, setPasswordConfirm] = useState("")
+  const [requirementsByKey, setRequirementsByKey] = useState<
+    Record<string, PasswordRequirements>
+  >({})
+  const [loadingKey, setLoadingKey] = useState<string | null>(null)
   const [branches, setBranches] = useState<BranchOption[]>([])
   const [branchesLoading, setBranchesLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [showForgot, setShowForgot] = useState(false)
+
+  const lookupKey = useMemo(() => {
+    const code = employeeCode.trim()
+    return code && branchId ? `${code}:${branchId}` : ""
+  }, [employeeCode, branchId])
+
+  const passwordRequirements = lookupKey
+    ? (requirementsByKey[lookupKey] ?? null)
+    : null
+  const requirementsLoading = loadingKey === lookupKey
 
   useEffect(() => {
     let cancelled = false
@@ -37,14 +62,60 @@ export function EmployeeCodeLoginForm() {
     }
   }, [])
 
+  useEffect(() => {
+    if (!lookupKey) return
+
+    let cancelled = false
+    const timer = window.setTimeout(async () => {
+      setLoadingKey(lookupKey)
+      try {
+        const [code, branch] = lookupKey.split(":")
+        const res = await fetch("/api/auth/portal/login-requirements", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({
+            employee_code: code,
+            branch_id: branch,
+          }),
+        })
+        const data = (await res.json().catch(() => null)) as
+          | PasswordRequirements
+          | null
+        if (!cancelled && res.ok && data) {
+          setRequirementsByKey((current) => ({ ...current, [lookupKey]: data }))
+        }
+      } finally {
+        if (!cancelled) {
+          setLoadingKey((current) => (current === lookupKey ? null : current))
+        }
+      }
+    }, 350)
+
+    return () => {
+      cancelled = true
+      window.clearTimeout(timer)
+    }
+  }, [lookupKey])
+
+  const needsPassword = passwordRequirements?.requiresPassword ?? false
+  const needsSetup = passwordRequirements?.needsSetup ?? false
+
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (!employeeCode.trim()) {
-      setError("กรุณากรอกรหัสพนักงาน")
+      setError(tx("auth.login.form.error.employeeCodeRequired"))
       return
     }
     if (!branchId) {
-      setError("กรุณาเลือกสาขา")
+      setError(tx("auth.login.form.error.branchRequired"))
+      return
+    }
+    if (needsPassword && !password) {
+      setError(tx("auth.login.form.error.passwordRequired"))
+      return
+    }
+    if (needsSetup && password !== passwordConfirm) {
+      setError(tx("auth.login.form.error.passwordMismatch"))
       return
     }
 
@@ -58,6 +129,12 @@ export function EmployeeCodeLoginForm() {
         body: JSON.stringify({
           employee_code: employeeCode.trim(),
           branch_id: branchId,
+          ...(needsPassword
+            ? {
+                password,
+                ...(needsSetup ? { password_confirm: passwordConfirm } : {}),
+              }
+            : {}),
         }),
       })
       const data = (await res.json().catch(() => null)) as {
@@ -65,7 +142,7 @@ export function EmployeeCodeLoginForm() {
         error?: string
       } | null
       if (!res.ok) {
-        throw new Error(data?.error ?? "เข้าสู่ระบบไม่สำเร็จ")
+        throw new Error(data?.error ?? tx("auth.login.form.error.loginFailed"))
       }
       if (data?.redirect) {
         router.push(data.redirect)
@@ -74,28 +151,44 @@ export function EmployeeCodeLoginForm() {
       }
       router.refresh()
     } catch (err) {
-      setError(err instanceof Error ? err.message : "เข้าสู่ระบบไม่สำเร็จ")
+      setError(
+        err instanceof Error
+          ? err.message
+          : tx("auth.login.form.error.loginFailed")
+      )
     } finally {
       setSubmitting(false)
     }
   }
 
+  if (showForgot) {
+    return (
+      <ForgotPortalPasswordForm
+        initialEmployeeCode={employeeCode}
+        initialBranchId={branchId}
+        onCancel={() => setShowForgot(false)}
+      />
+    )
+  }
+
   return (
     <form onSubmit={onSubmit} className="flex flex-col gap-4">
       <label className="block text-sm">
-        <span className="text-muted-foreground">รหัสพนักงาน *</span>
+        <span className="text-muted-foreground">
+          {tx("auth.login.form.employeeCode")}
+        </span>
         <input
           className={inputClassName}
           value={employeeCode}
           onChange={(e) => setEmployeeCode(e.target.value)}
-          placeholder="เช่น 000 (dev), CHV001"
+          placeholder={tx("auth.login.form.employeeCodePlaceholder")}
           required
           autoComplete="username"
         />
       </label>
 
       <label className="block text-sm">
-        <span className="text-muted-foreground">สาขา *</span>
+        <span className="text-muted-foreground">{tx("auth.login.form.branch")}</span>
         <select
           className={inputClassName}
           value={branchId}
@@ -104,7 +197,9 @@ export function EmployeeCodeLoginForm() {
           disabled={branchesLoading}
         >
           <option value="">
-            {branchesLoading ? "กำลังโหลดสาขา…" : "— เลือกสาขา —"}
+            {branchesLoading
+              ? tx("auth.login.form.branchLoading")
+              : tx("auth.login.form.branchPlaceholder")}
           </option>
           {branches.map((b) => (
             <option key={b.id} value={b.id}>
@@ -115,6 +210,61 @@ export function EmployeeCodeLoginForm() {
         </select>
       </label>
 
+      {needsPassword ? (
+        <div key={lookupKey} className="flex flex-col gap-4">
+          {needsSetup ? (
+            <p className="rounded-lg bg-muted/50 px-3 py-2 text-xs text-muted-foreground">
+              {tx("auth.login.form.passwordSetupHint")}
+            </p>
+          ) : null}
+          <label className="block text-sm">
+            <span className="text-muted-foreground">
+              {needsSetup
+                ? tx("auth.login.form.setPassword")
+                : tx("auth.login.form.password")}
+            </span>
+            <input
+              className={inputClassName}
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder={tx("auth.login.form.passwordPlaceholder")}
+              required
+              autoComplete={needsSetup ? "new-password" : "current-password"}
+              minLength={6}
+              disabled={requirementsLoading}
+            />
+          </label>
+          {needsSetup ? (
+            <label className="block text-sm">
+              <span className="text-muted-foreground">
+                {tx("auth.login.form.confirmPassword")}
+              </span>
+              <input
+                className={inputClassName}
+                type="password"
+                value={passwordConfirm}
+                onChange={(e) => setPasswordConfirm(e.target.value)}
+                placeholder={tx("auth.login.form.confirmPasswordPlaceholder")}
+                required
+                autoComplete="new-password"
+                minLength={6}
+                disabled={requirementsLoading}
+              />
+            </label>
+          ) : null}
+          {!needsSetup ? (
+            <button
+              type="button"
+              className="text-xs text-brand-red underline-offset-2 hover:underline"
+              onClick={() => setShowForgot(true)}
+            >
+              {tx("auth.login.forgot.link")}
+            </button>
+          ) : null}
+        </div>
+      ) : null}
+
       {error ? (
         <p className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">
           {error}
@@ -123,10 +273,14 @@ export function EmployeeCodeLoginForm() {
 
       <Button
         type="submit"
-        disabled={submitting || branchesLoading}
+        disabled={submitting || branchesLoading || requirementsLoading}
         className="w-full bg-brand-red text-white hover:bg-brand-red/90"
       >
-        {submitting ? "กำลังเข้าสู่ระบบ…" : "เข้าสู่ระบบ"}
+        {submitting
+          ? tx("auth.login.form.submitting")
+          : needsSetup
+            ? tx("auth.login.form.submitSetup")
+            : tx("auth.login.form.submit")}
       </Button>
     </form>
   )
