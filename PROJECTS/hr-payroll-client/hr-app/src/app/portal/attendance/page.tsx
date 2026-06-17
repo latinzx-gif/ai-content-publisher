@@ -4,11 +4,27 @@ import { AdminPageShell } from "@/components/brand/AdminPageShell"
 import { AttendancePagination } from "@/features/attendance/AttendancePagination"
 import { AttendanceSummaryCard } from "@/features/attendance/AttendanceSummary"
 import {
+  AttendanceCalendar,
+  AttendanceCorrectableBanner,
+  RetroQuotaBadge,
+} from "@/features/attendance/AttendanceCalendar"
+import {
+  getCorrectableDays,
+  getEmployeeAttendanceCalendar,
+} from "@/features/attendance/calendar"
+import {
   getAttendanceRecords,
   normalizeAttendanceParams,
 } from "@/features/attendance/data"
 import { EmployeeAttendanceTable } from "@/features/portal/EmployeeAttendanceTable"
+import { getRetroUsage } from "@/lib/attendance/retro-limit"
 import { getCurrentEmployee } from "@/lib/auth/session"
+import { createClient } from "@/lib/supabase/server"
+
+function currentMonth(now = new Date()): string {
+  const shifted = new Date(now.getTime() + 7 * 60 * 60 * 1000)
+  return `${shifted.getUTCFullYear()}-${String(shifted.getUTCMonth() + 1).padStart(2, "0")}`
+}
 
 export default async function PortalAttendancePage({
   searchParams,
@@ -19,18 +35,42 @@ export default async function PortalAttendancePage({
   if (!employee) return null
 
   const raw = await searchParams
+  const month =
+    typeof raw.month === "string" && /^\d{4}-\d{2}$/.test(raw.month)
+      ? raw.month
+      : currentMonth()
+
   const params = normalizeAttendanceParams({
     ...raw,
     employee: employee.id,
   })
-  const { rows, total, summary } = await getAttendanceRecords(params)
+
+  const supabase = await createClient()
+  const now = new Date()
+
+  const [{ rows, total, summary }, calendar, correctable, retroUsage] =
+    await Promise.all([
+      getAttendanceRecords(params),
+      getEmployeeAttendanceCalendar(employee.id, month, now),
+      getCorrectableDays(employee.id, now),
+      getRetroUsage(supabase, employee.id, now),
+    ])
 
   return (
     <AdminPageShell
       title="การเข้างาน"
-      description="ประวัติเช็คอิน-เช็คเอาท์ของคุณ"
+      description="ปฏิทินและประวัติเช็คอิน-เช็คเอาท์ของคุณ"
     >
       <div className="flex flex-col gap-4">
+        <RetroQuotaBadge used={retroUsage.used} limit={retroUsage.limit} />
+        <AttendanceCorrectableBanner items={correctable} />
+        <div className="rounded-xl border border-border/80 bg-card p-4 shadow-sm">
+          <AttendanceCalendar
+            month={month}
+            days={calendar.days}
+            basePath="/portal/attendance"
+          />
+        </div>
         <AttendanceSummaryCard summary={summary} />
         <EmployeeAttendanceTable rows={rows} />
         <Suspense>
