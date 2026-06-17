@@ -1,16 +1,14 @@
 import { AdminPageShell } from "@/components/brand/AdminPageShell"
+import { MorningPushSettingsPanel } from "@/features/settings/MorningPushSettingsPanel"
 import { SettingsPanel } from "@/features/settings/SettingsPanel"
-import { listWorkShifts } from "@/features/shifts/data"
-import { WorkShiftsPanel } from "@/features/shifts/WorkShiftsPanel"
 import { getAdminClient } from "@/lib/auth/admin-client"
 import { getWorkStart } from "@/lib/runtime-config"
 
 export default async function AdminSettingsPage() {
   const admin = getAdminClient()
-  const [{ data: configRows }, workStart, workShifts] = await Promise.all([
+  const [{ data: configRows }, workStart] = await Promise.all([
     admin.from("hr_runtime_config").select("key, value, updated_at"),
     getWorkStart(),
-    listWorkShifts(),
   ])
 
   const groupId =
@@ -26,13 +24,14 @@ export default async function AdminSettingsPage() {
   ]
 
   return (
-    <AdminPageShell title="Settings" description="สถานะการตั้งค่าระบบและ LINE OA">
+    <AdminPageShell title="Settings" description="สถานะการตั้งค่าระบบและ CNV WorkHub">
       <div className="grid gap-4">
         <SettingsPanel
           rows={configRows ?? []}
           envWorkHour={String(workStart.hour)}
           envWorkMinute={String(workStart.minute)}
         />
+        <MorningPushSettingsPanel rows={configRows ?? []} />
         <div className="grid gap-4 md:grid-cols-2">
           <section className="rounded-xl border p-4">
             <h3 className="mb-3 text-sm font-semibold">เวลาทำงาน (effective)</h3>
@@ -58,7 +57,6 @@ export default async function AdminSettingsPage() {
             </ul>
           </section>
         </div>
-        <WorkShiftsPanel shifts={workShifts} />
       </div>
     </AdminPageShell>
   )

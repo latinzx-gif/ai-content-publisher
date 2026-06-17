@@ -20,6 +20,7 @@ type RuntimeConfigRow = {
 type MorningPushGroupConfig = {
   enabled: boolean;
   fallbackTime: string;
+  fallbackTime2: string;
   remindAfterMin: number;
   days: number[];
 };
@@ -56,12 +57,14 @@ const MORNING_PUSH_DEFAULTS: Record<MorningPushGroup, MorningPushGroupConfig> = 
   employee: {
     enabled: true,
     fallbackTime: "09:00",
+    fallbackTime2: "11:00",
     remindAfterMin: 0,
     days: [1, 2, 3, 4, 5],
   },
   officer: {
     enabled: true,
     fallbackTime: "09:00",
+    fallbackTime2: "11:00",
     remindAfterMin: 0,
     days: [1, 2, 3, 4, 5],
   },
@@ -143,6 +146,10 @@ function parseMorningPushFromRows(
         map.get(`${prefix}fallback_time`),
         defaults.fallbackTime,
       ),
+      fallbackTime2: parseTime(
+        map.get(`${prefix}fallback_time_2`),
+        defaults.fallbackTime2,
+      ),
       remindAfterMin: parseRemindMinutes(
         map.get(`${prefix}remind_after_min`),
         defaults.remindAfterMin,
@@ -166,11 +173,14 @@ function wrapWeekday(day: number): number {
   return ((day - 1 + 7) % 7) + 1;
 }
 
-function resolveDueSchedule(config: MorningPushGroupConfig): {
+function resolveDueSchedule(
+  config: MorningPushGroupConfig,
+  fallbackTime: string,
+): {
   effectiveDays: number[];
   dueMinute: number;
 } {
-  const rawDueMinute = parseMinuteOfDay(config.fallbackTime) + config.remindAfterMin;
+  const rawDueMinute = parseMinuteOfDay(fallbackTime) + config.remindAfterMin;
   const overflowDays = Math.floor(rawDueMinute / 1440);
   const dueMinute = ((rawDueMinute % 1440) + 1440) % 1440;
   const effectiveDays = [
@@ -179,8 +189,9 @@ function resolveDueSchedule(config: MorningPushGroupConfig): {
   return { effectiveDays, dueMinute };
 }
 
-function isDueNow(
+function isDueNowForFallback(
   config: MorningPushGroupConfig,
+  fallbackTime: string,
   weekday: number,
   minuteOfDay: number,
 ): {
@@ -190,7 +201,7 @@ function isDueNow(
   slotMinute: number;
   reason: string | null;
 } {
-  const { effectiveDays, dueMinute } = resolveDueSchedule(config);
+  const { effectiveDays, dueMinute } = resolveDueSchedule(config, fallbackTime);
   const slotMinute = Math.floor(minuteOfDay / SLOT_MINUTES) * SLOT_MINUTES;
 
   if (!config.enabled) {
@@ -230,6 +241,46 @@ function isDueNow(
     slotMinute,
     reason: null,
   };
+}
+
+function getDueShiftSlots(
+  config: MorningPushGroupConfig,
+  weekday: number,
+  minuteOfDay: number,
+): number[] {
+  const slots: number[] = [];
+  if (
+    isDueNowForFallback(config, config.fallbackTime, weekday, minuteOfDay).dueNow
+  ) {
+    slots.push(0);
+  }
+  if (
+    isDueNowForFallback(config, config.fallbackTime2, weekday, minuteOfDay).dueNow
+  ) {
+    slots.push(1);
+  }
+  return slots;
+}
+
+function buildShiftSlotById(shifts: WorkShiftRow[]): Map<string, number> {
+  const sorted = [...shifts].sort((a, b) => {
+    const aStart = a.start_hour * 60 + a.start_minute;
+    const bStart = b.start_hour * 60 + b.start_minute;
+    return aStart - bStart;
+  });
+  const map = new Map<string, number>();
+  for (let i = 0; i < Math.min(sorted.length, 2); i++) {
+    map.set(sorted[i]!.id, i);
+  }
+  return map;
+}
+
+function employeeShiftSlot(
+  employee: EmployeeRow,
+  shiftSlotById: Map<string, number>,
+): number {
+  if (!employee.work_shift_id) return 0;
+  return shiftSlotById.get(employee.work_shift_id) ?? 0;
 }
 
 function isOfficerEmployee(
@@ -285,19 +336,27 @@ async function pushLineTargets(
 
 function emptyGroupResult(
   config: MorningPushGroupConfig,
-  state: ReturnType<typeof isDueNow>,
+  dueSlots: number[],
+  weekday: number,
+  minuteOfDay: number,
 ): GroupResult {
+  const primaryState = isDueNowForFallback(
+    config,
+    config.fallbackTime,
+    weekday,
+    minuteOfDay,
+  );
   return {
     enabled: config.enabled,
-    dueNow: state.dueNow,
+    dueNow: dueSlots.length > 0,
     configuredDays: config.days,
-    effectiveDays: state.effectiveDays,
-    dueTime: config.fallbackTime,
-    dueMinute: state.dueMinute,
-    slotMinute: state.slotMinute,
+    effectiveDays: primaryState.effectiveDays,
+    dueTime: `${config.fallbackTime}, ${config.fallbackTime2}`,
+    dueMinute: primaryState.dueMinute,
+    slotMinute: primaryState.slotMinute,
     targets: 0,
     pushed: 0,
-    reason: state.reason,
+    reason: dueSlots.length > 0 ? null : primaryState.reason,
   };
 }
 
@@ -534,10 +593,12 @@ const handler = {
     const runtimeKeys = [
       "morning_push_employee_enabled",
       "morning_push_employee_fallback_time",
+      "morning_push_employee_fallback_time_2",
       "morning_push_employee_remind_after_min",
       "morning_push_employee_days",
       "morning_push_officer_enabled",
       "morning_push_officer_fallback_time",
+      "morning_push_officer_fallback_time_2",
       "morning_push_officer_remind_after_min",
       "morning_push_officer_days",
     ];
@@ -546,6 +607,7 @@ const handler = {
       runtimeConfigResult,
       employeesResult,
       attendanceResult,
+      shiftsResult,
     ] = await Promise.all([
       admin
         .from("hr_runtime_config")
@@ -561,14 +623,34 @@ const handler = {
         .select("employee_id")
         .gte("check_in_at", start.toISOString())
         .lt("check_in_at", end.toISOString()),
+      admin
+        .from("hr_work_shifts")
+        .select(
+          "id, start_hour, start_minute, end_hour, end_minute, crosses_midnight, grace_minutes",
+        )
+        .eq("is_active", true),
     ]);
 
     if (runtimeConfigResult.error) throw runtimeConfigResult.error;
     if (employeesResult.error) throw employeesResult.error;
     if (attendanceResult.error) throw attendanceResult.error;
+    if (shiftsResult.error) throw shiftsResult.error;
 
     const configs = parseMorningPushFromRows(
       (runtimeConfigResult.data ?? []) as RuntimeConfigRow[],
+    );
+    const shiftSlotById = buildShiftSlotById(
+      (shiftsResult.data ?? []) as WorkShiftRow[],
+    );
+    const employeeDueSlots = getDueShiftSlots(
+      configs.employee,
+      ictClock.weekday,
+      ictClock.minuteOfDay,
+    );
+    const officerDueSlots = getDueShiftSlots(
+      configs.officer,
+      ictClock.weekday,
+      ictClock.minuteOfDay,
     );
 
     const branchIds = [
@@ -608,33 +690,37 @@ const handler = {
       const group: MorningPushGroup = isOfficerEmployee(employee, branchCode)
         ? "officer"
         : "employee";
+      const dueSlots = group === "employee" ? employeeDueSlots : officerDueSlots;
+      const slot = employeeShiftSlot(employee, shiftSlotById);
+      if (!dueSlots.includes(slot)) continue;
       groupedTargets[group].push(employee.line_user_id);
     }
 
-    const employeeState = isDueNow(
-      configs.employee,
-      ictClock.weekday,
-      ictClock.minuteOfDay,
-    );
-    const officerState = isDueNow(
-      configs.officer,
-      ictClock.weekday,
-      ictClock.minuteOfDay,
-    );
-
     const result: Record<MorningPushGroup, GroupResult> = {
-      employee: emptyGroupResult(configs.employee, employeeState),
-      officer: emptyGroupResult(configs.officer, officerState),
+      employee: emptyGroupResult(
+        configs.employee,
+        employeeDueSlots,
+        ictClock.weekday,
+        ictClock.minuteOfDay,
+      ),
+      officer: emptyGroupResult(
+        configs.officer,
+        officerDueSlots,
+        ictClock.weekday,
+        ictClock.minuteOfDay,
+      ),
     };
 
     const lineApiBase = Deno.env.get("LINE_API_BASE") ?? "https://api.line.me";
-    const shouldPushEmployee = employeeState.dueNow && groupedTargets.employee.length > 0;
-    const shouldPushOfficer = officerState.dueNow && groupedTargets.officer.length > 0;
-    const lineToken = shouldPushEmployee || shouldPushOfficer || employeeState.dueNow
+    const shouldPushEmployee =
+      employeeDueSlots.length > 0 && groupedTargets.employee.length > 0;
+    const shouldPushOfficer =
+      officerDueSlots.length > 0 && groupedTargets.officer.length > 0;
+    const lineToken = shouldPushEmployee || shouldPushOfficer || employeeDueSlots.length > 0
       ? requireEnv("LINE_CHANNEL_ACCESS_TOKEN")
       : null;
 
-    if (employeeState.dueNow) {
+    if (employeeDueSlots.length > 0) {
       result.employee.targets = groupedTargets.employee.length;
       result.employee.reason = groupedTargets.employee.length > 0
         ? null
@@ -648,7 +734,7 @@ const handler = {
       }
     }
 
-    if (officerState.dueNow) {
+    if (officerDueSlots.length > 0) {
       result.officer.targets = groupedTargets.officer.length;
       result.officer.reason = groupedTargets.officer.length > 0
         ? null
@@ -663,7 +749,7 @@ const handler = {
     }
 
     let retroPushed = 0;
-    if (employeeState.dueNow && lineToken) {
+    if (employeeDueSlots.length > 0 && lineToken) {
       retroPushed = await pushRetroReminders(
         admin,
         (employeesResult.data ?? []) as EmployeeRow[],
