@@ -1,4 +1,9 @@
-import { ictDayRangeUtc, formatIctTime } from "@/lib/attendance/late"
+import {
+  effectiveAttendanceIsLate,
+  formatIctTime,
+  ictDayRangeUtc,
+  type ShiftLateSchedule,
+} from "@/lib/attendance/late"
 import { createClient } from "@/lib/supabase/server"
 import type {
   AttendanceLocationReviewStatus,
@@ -80,6 +85,92 @@ function deriveStatus(
   return isLate ? "late" : "normal"
 }
 
+const EMPLOYEE_SCHEDULE_EMBED =
+  "default_check_in_time, hr_work_shifts(start_hour, start_minute, grace_minutes, crosses_midnight)"
+
+type WorkShiftJoin = {
+  start_hour: number
+  start_minute: number
+  grace_minutes: number
+  crosses_midnight: boolean
+}
+
+function shiftFromJoin(
+  joined: WorkShiftJoin | WorkShiftJoin[] | null | undefined
+): ShiftLateSchedule | null {
+  if (!joined) return null
+  const shift = Array.isArray(joined) ? joined[0] : joined
+  if (!shift) return null
+  return {
+    start_hour: shift.start_hour,
+    start_minute: shift.start_minute,
+    grace_minutes: shift.grace_minutes,
+    crosses_midnight: shift.crosses_midnight,
+  }
+}
+
+function scheduleFromJoin(
+  joined:
+    | {
+        default_check_in_time?: string | null
+        hr_work_shifts?: WorkShiftJoin | WorkShiftJoin[] | null
+      }
+    | Array<{
+        default_check_in_time?: string | null
+        hr_work_shifts?: WorkShiftJoin | WorkShiftJoin[] | null
+      }>
+): {
+  defaultCheckInTime: string | null
+  shift: ShiftLateSchedule | null
+} {
+  const emp = Array.isArray(joined) ? joined[0] : joined
+  return {
+    defaultCheckInTime: emp?.default_check_in_time ?? null,
+    shift: shiftFromJoin(emp?.hr_work_shifts),
+  }
+}
+
+function employeeJoin(
+  joined:
+    | {
+        name: string
+        department: string | null
+        branch_id: string | null
+        default_check_in_time?: string | null
+        hr_work_shifts?: WorkShiftJoin | WorkShiftJoin[] | null
+        hr_branches: { name: string } | Array<{ name: string }> | null
+      }
+    | Array<{
+        name: string
+        department: string | null
+        branch_id: string | null
+        default_check_in_time?: string | null
+        hr_work_shifts?: WorkShiftJoin | WorkShiftJoin[] | null
+        hr_branches: { name: string } | Array<{ name: string }> | null
+      }>
+): {
+  name: string
+  department: string | null
+  branchName: string | null
+  defaultCheckInTime: string | null
+  shift: ShiftLateSchedule | null
+} {
+  const emp = Array.isArray(joined) ? joined[0] : joined
+  const branchRaw = emp.hr_branches
+  const branchName = branchRaw
+    ? Array.isArray(branchRaw)
+      ? (branchRaw[0]?.name ?? null)
+      : branchRaw.name
+    : null
+  return {
+    name: emp.name,
+    department: emp.department,
+    branchName,
+    defaultCheckInTime: emp.default_check_in_time ?? null,
+    shift: shiftFromJoin(emp.hr_work_shifts),
+  }
+}
+
 export async function getAttendanceDepartments(): Promise<string[]> {
   const supabase = await createClient()
   const { data, error } = await supabase
@@ -142,7 +233,7 @@ export async function getAttendanceRecords(params: Required<AttendanceListParams
   let query = supabase
     .from("hr_attendance")
     .select(
-      `id, employee_id, check_in_at, check_out_at, is_late, work_hours, location_review_status, location_review_flags, location_review_note, ${EMPLOYEE_VIA_ATTENDANCE}!inner(name, department, branch_id, ${BRANCH_VIA_EMPLOYEE}(name))`,
+      `id, employee_id, check_in_at, check_out_at, is_late, work_hours, location_review_status, location_review_flags, location_review_note, ${EMPLOYEE_VIA_ATTENDANCE}!inner(name, department, branch_id, ${EMPLOYEE_SCHEDULE_EMBED}, ${BRANCH_VIA_EMPLOYEE}(name))`,
       { count: "exact" }
     )
     .gte("check_in_at", rangeStart.toISOString())
@@ -174,40 +265,29 @@ export async function getAttendanceRecords(params: Required<AttendanceListParams
           name: string
           department: string | null
           branch_id: string | null
+          default_check_in_time?: string | null
+          hr_work_shifts?: WorkShiftJoin | WorkShiftJoin[] | null
           hr_branches: { name: string } | Array<{ name: string }> | null
         }
       | Array<{
           name: string
           department: string | null
           branch_id: string | null
+          default_check_in_time?: string | null
+          hr_work_shifts?: WorkShiftJoin | WorkShiftJoin[] | null
           hr_branches: { name: string } | Array<{ name: string }> | null
         }>
   }
 
-  function employeeJoin(
-    joined: RawRow["hr_employees"]
-  ): {
-    name: string
-    department: string | null
-    branchName: string | null
-  } {
-    const emp = Array.isArray(joined) ? joined[0] : joined
-    const branchRaw = emp.hr_branches
-    const branchName = branchRaw
-      ? Array.isArray(branchRaw)
-        ? (branchRaw[0]?.name ?? null)
-        : branchRaw.name
-      : null
-    return {
-      name: emp.name,
-      department: emp.department,
-      branchName,
-    }
-  }
-
   const rows: AttendanceRow[] = ((data ?? []) as RawRow[]).map((row) => {
     const emp = employeeJoin(row.hr_employees)
-    const status = deriveStatus(row.is_late, row.check_out_at, row.check_in_at)
+    const isLate = effectiveAttendanceIsLate(
+      row.check_in_at,
+      emp.shift,
+      row.is_late,
+      emp.defaultCheckInTime
+    )
+    const status = deriveStatus(isLate, row.check_out_at, row.check_in_at)
     return {
       id: row.id,
       employeeId: row.employee_id,
@@ -232,7 +312,9 @@ export async function getAttendanceRecords(params: Required<AttendanceListParams
   // Monthly summary for the filtered range (all matching rows, not just page).
   let summaryQuery = supabase
     .from("hr_attendance")
-    .select("is_late, work_hours, employee_id")
+    .select(
+      `check_in_at, is_late, work_hours, employee_id, ${EMPLOYEE_VIA_ATTENDANCE}!inner(${EMPLOYEE_SCHEDULE_EMBED})`
+    )
     .gte("check_in_at", rangeStart.toISOString())
     .lt("check_in_at", rangeEnd.toISOString())
 
@@ -243,13 +325,36 @@ export async function getAttendanceRecords(params: Required<AttendanceListParams
   const { data: summaryRows, error: summaryError } = await summaryQuery
   if (summaryError) throw summaryError
 
+  type SummaryRow = {
+    check_in_at: string
+    is_late: boolean
+    work_hours: number | null
+    hr_employees:
+      | {
+          default_check_in_time?: string | null
+          hr_work_shifts?: WorkShiftJoin | WorkShiftJoin[] | null
+        }
+      | Array<{
+          default_check_in_time?: string | null
+          hr_work_shifts?: WorkShiftJoin | WorkShiftJoin[] | null
+        }>
+  }
+
   const summary: AttendanceSummary = {
     workDays: (summaryRows ?? []).length,
     totalHours: (summaryRows ?? []).reduce(
       (sum, r) => sum + (Number(r.work_hours) || 0),
       0
     ),
-    lateCount: (summaryRows ?? []).filter((r) => r.is_late).length,
+    lateCount: ((summaryRows ?? []) as SummaryRow[]).filter((row) => {
+      const schedule = scheduleFromJoin(row.hr_employees)
+      return effectiveAttendanceIsLate(
+        row.check_in_at,
+        schedule.shift,
+        row.is_late,
+        schedule.defaultCheckInTime
+      )
+    }).length,
   }
 
   return { rows, total: count ?? 0, summary }
