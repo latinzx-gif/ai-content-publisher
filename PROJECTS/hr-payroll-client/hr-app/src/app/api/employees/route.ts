@@ -18,6 +18,7 @@ import {
   isValidNationality,
   isValidPayDay,
 } from "@/lib/payroll/pay-day"
+import { parseOffDays, serializeOffDays } from "@/lib/employees/off-days"
 import { createClient } from "@/lib/supabase/server"
 import { isValidTimeHHMM, timeForApi } from "@/lib/datetime/time-input"
 
@@ -51,6 +52,7 @@ type CreateBody = {
   work_shift_id?: string | null
   default_check_in_time?: string | null
   default_check_out_time?: string | null
+  off_days?: number[] | null
   nationality?: string | null
   pay_day?: number | null
 }
@@ -167,35 +169,51 @@ export async function POST(request: Request) {
     payDay = defaultPayDayForNationality(nationality)
   }
 
+  let offDays: number[] | undefined
+  if (body.off_days !== undefined) {
+    if (body.off_days === null) {
+      offDays = []
+    } else if (!Array.isArray(body.off_days)) {
+      return NextResponse.json({ error: "invalid off_days" }, { status: 400 })
+    } else {
+      offDays = serializeOffDays(parseOffDays(body.off_days))
+    }
+  }
+
+  const insertPayload: Record<string, unknown> = {
+    name,
+    employee_code: employeeCode,
+    line_user_id: body.line_user_id?.trim() || null,
+    date_of_birth: body.date_of_birth || null,
+    phone: body.phone?.trim() || null,
+    email: body.email?.trim() || null,
+    position: body.position?.trim() || null,
+    department: body.department?.trim() || null,
+    branch_id: body.branch_id || null,
+    pay_type: payType,
+    salary: body.salary ?? null,
+    housing_allowance: body.housing_allowance ?? null,
+    contract_start: body.contract_start || null,
+    contract_type: body.contract_type ?? null,
+    probation_end: body.probation_end || null,
+    visa_expiry: body.visa_expiry || null,
+    work_permit_expiry: body.work_permit_expiry || null,
+    status: body.status === "inactive" ? "inactive" : "active",
+    role,
+    work_shift_id: workShiftId,
+    default_check_in_time: timeForApi(body.default_check_in_time),
+    default_check_out_time: timeForApi(body.default_check_out_time),
+    nationality,
+    pay_day: payDay,
+    ...bank.updates,
+  }
+  if (offDays !== undefined) {
+    insertPayload.off_days = offDays
+  }
+
   const { data, error } = await supabase
     .from("hr_employees")
-    .insert({
-      name,
-      employee_code: employeeCode,
-      line_user_id: body.line_user_id?.trim() || null,
-      date_of_birth: body.date_of_birth || null,
-      phone: body.phone?.trim() || null,
-      email: body.email?.trim() || null,
-      position: body.position?.trim() || null,
-      department: body.department?.trim() || null,
-      branch_id: body.branch_id || null,
-      pay_type: payType,
-      salary: body.salary ?? null,
-      housing_allowance: body.housing_allowance ?? null,
-      contract_start: body.contract_start || null,
-      contract_type: body.contract_type ?? null,
-      probation_end: body.probation_end || null,
-      visa_expiry: body.visa_expiry || null,
-      work_permit_expiry: body.work_permit_expiry || null,
-      status: body.status === "inactive" ? "inactive" : "active",
-      role,
-      work_shift_id: workShiftId,
-      default_check_in_time: timeForApi(body.default_check_in_time),
-      default_check_out_time: timeForApi(body.default_check_out_time),
-      nationality,
-      pay_day: payDay,
-      ...bank.updates,
-    })
+    .insert(insertPayload)
     .select("id")
     .single()
 

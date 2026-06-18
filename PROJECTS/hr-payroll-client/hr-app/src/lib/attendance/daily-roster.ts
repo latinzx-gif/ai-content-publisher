@@ -448,37 +448,61 @@ export function buildDailyRosterSnapshot(
   }
 }
 
+const ROSTER_EMPLOYEE_SELECT_BASE =
+  "id, employee_code, name, position, department, branch_id, line_user_id, work_shift_id, default_check_in_time, default_check_out_time"
+
+const ROSTER_EMPLOYEE_SELECT_ATTEMPTS = [
+  `${ROSTER_EMPLOYEE_SELECT_BASE}, off_days, ${BRANCH_VIA_EMPLOYEE}(name)`,
+  `${ROSTER_EMPLOYEE_SELECT_BASE}, ${BRANCH_VIA_EMPLOYEE}(name)`,
+]
+
+async function loadRosterEmployees(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  filters: DailyRosterFilters
+): Promise<RosterEmployeeRow[]> {
+  let lastError: { message?: string } | null = null
+
+  for (const select of ROSTER_EMPLOYEE_SELECT_ATTEMPTS) {
+    let employeeQuery = supabase
+      .from("hr_employees")
+      .select(select)
+      .eq("status", "active")
+      .order("name")
+
+    if (filters.branch_id === "__none__") {
+      employeeQuery = employeeQuery.is("branch_id", null)
+    } else if (filters.branch_id) {
+      employeeQuery = employeeQuery.eq("branch_id", filters.branch_id)
+    }
+    if (filters.dept) {
+      employeeQuery = employeeQuery.eq("department", filters.dept)
+    }
+    if (filters.shift_id === UNASSIGNED_SHIFT_ID) {
+      employeeQuery = employeeQuery.is("work_shift_id", null)
+    } else if (filters.shift_id) {
+      employeeQuery = employeeQuery.eq("work_shift_id", filters.shift_id)
+    }
+
+    const { data, error } = await employeeQuery
+
+    if (!error) {
+      return ((data ?? []) as unknown as RosterEmployeeRow[]).filter(Boolean)
+    }
+
+    lastError = error
+    if (!error.message?.includes("does not exist")) break
+  }
+
+  if (lastError) throw lastError
+  return []
+}
+
 export async function getDailyRoster(filters: DailyRosterFilters): Promise<DailyRoster> {
   const supabase = await createClient()
   const now = filters.now ?? new Date()
   const { start, end } = ictDayRange(filters.date)
 
-  let employeeQuery = supabase
-    .from("hr_employees")
-    .select(
-      `id, employee_code, name, position, department, branch_id, line_user_id, work_shift_id, default_check_in_time, default_check_out_time, off_days, ${BRANCH_VIA_EMPLOYEE}(name)`
-    )
-    .eq("status", "active")
-    .order("name")
-
-  if (filters.branch_id === "__none__") {
-    employeeQuery = employeeQuery.is("branch_id", null)
-  } else if (filters.branch_id) {
-    employeeQuery = employeeQuery.eq("branch_id", filters.branch_id)
-  }
-  if (filters.dept) {
-    employeeQuery = employeeQuery.eq("department", filters.dept)
-  }
-  if (filters.shift_id === UNASSIGNED_SHIFT_ID) {
-    employeeQuery = employeeQuery.is("work_shift_id", null)
-  } else if (filters.shift_id) {
-    employeeQuery = employeeQuery.eq("work_shift_id", filters.shift_id)
-  }
-
-  const { data: employees, error: employeeError } = await employeeQuery
-  if (employeeError) throw employeeError
-
-  const employeeRows = ((employees ?? []) as RosterEmployeeRow[]).filter(Boolean)
+  const employeeRows = await loadRosterEmployees(supabase, filters)
   const employeeIds = employeeRows.map((employee) => employee.id)
   const shiftIds = [...new Set(employeeRows.map((employee) => employee.work_shift_id).filter(Boolean))]
 
