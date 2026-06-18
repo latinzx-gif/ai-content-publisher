@@ -138,6 +138,59 @@ describe("buildDailyRosterSnapshot", () => {
     assert.equal(unassignedGroup.employees[0]?.status, "unassigned")
   })
 
+  it("ignores stale is_late when Branch Night check-in is before 14:00", () => {
+    const branchNight = {
+      id: "shift-night",
+      code: "BRANCH_NIGHT",
+      name: "Branch Night",
+      start_hour: 14,
+      start_minute: 0,
+      end_hour: 2,
+      end_minute: 0,
+      crosses_midnight: true,
+      grace_minutes: 10,
+      standard_hours: 10,
+      is_active: true,
+    }
+    const roster = buildDailyRosterSnapshot(
+      {
+        date: "2026-06-18",
+        now: new Date("2026-06-18T08:00:00.000Z"),
+        goLiveDate: "2026-06-18",
+        employees: [
+          {
+            id: "emp-night",
+            employee_code: "CNV022",
+            name: "HninNu Swe",
+            position: "Staff",
+            department: "Ops",
+            branch_id: "branch-1",
+            line_user_id: null,
+            work_shift_id: "shift-night",
+            default_check_in_time: null,
+            default_check_out_time: null,
+            hr_branches: { name: "Branch" },
+          },
+        ],
+        shifts: [branchNight],
+      },
+      [
+        {
+          employee_id: "emp-night",
+          check_in_at: "2026-06-18T06:55:00.000Z",
+          check_out_at: null,
+          is_late: true,
+          shift_date: "2026-06-18",
+        },
+      ],
+      []
+    )
+
+    const employee = roster.groups[0]?.employees[0]
+    assert.equal(employee?.status, "present")
+    assert.equal(roster.totals.late, 0)
+  })
+
   it("marks no-show employees absent after grace time passes", () => {
     const roster = buildDailyRosterSnapshot(
       {

@@ -140,6 +140,31 @@ function ictTimeText(date: Date): string {
   return `${pad2(Math.floor(minutesOfDay / 60))}:${pad2(minutesOfDay % 60)}`;
 }
 
+function ictDayStartUtc(date: Date): Date {
+  const ictMs = date.getTime() + ICT_OFFSET_MS;
+  const ictDayStartMs = Math.floor(ictMs / DAY_MS) * DAY_MS;
+  return new Date(ictDayStartMs - ICT_OFFSET_MS);
+}
+
+function lateMinutesForShift(checkInAt: Date, shift: ShiftRow): number {
+  const dayStart = ictDayStartUtc(checkInAt);
+  const shiftStartMinutes = shift.start_hour * 60 + shift.start_minute;
+  const checkInMinutes = Math.floor(
+    ((checkInAt.getTime() - dayStart.getTime()) / 60_000 + 24 * 60) % (24 * 60),
+  );
+  if (checkInMinutes < shiftStartMinutes) return 0;
+  return Math.max(0, checkInMinutes - shift.grace_minutes - shiftStartMinutes);
+}
+
+function effectiveAttendanceIsLate(
+  checkInAt: string,
+  shift: ShiftRow | null,
+  storedIsLate: boolean,
+): boolean {
+  if (shift) return lateMinutesForShift(new Date(checkInAt), shift) > 0;
+  return storedIsLate;
+}
+
 function branchNameFromJoin(
   joined: EmployeeRow["hr_branches"],
 ): string | null {
@@ -513,6 +538,12 @@ export async function buildDailyRoster(
       ? (shiftById.get(employee.work_shift_id) ?? null)
       : null;
     const record = attendanceByEmployee.get(employee.id) ?? null;
+    const effectiveIsLate = record
+      ? effectiveAttendanceIsLate(record.check_in_at, shift, record.is_late)
+      : false;
+    const effectiveRecord = record
+      ? { ...record, is_late: effectiveIsLate }
+      : null;
     const onLeave = leaveSet.has(employee.id);
     const status = employeeStatusFromDayStatus(
       deriveDayStatus(
@@ -521,11 +552,11 @@ export async function buildDailyRoster(
         now,
         shift,
         onLeave,
-        record,
+        effectiveRecord,
         (config?.value as string | null) ?? null,
       ),
       group.state,
-      record,
+      effectiveRecord,
     );
     const rosterEmployee: DailyRosterEmployee = {
       id: employee.id,
@@ -536,11 +567,11 @@ export async function buildDailyRoster(
       branchName: branchNameFromJoin(employee.hr_branches),
       status,
       statusLabel: employeeStatusLabel(status),
-      note: buildEmployeeNote(status, record, group.state),
-      workTimeText: buildRosterWorkTimeText(employee, shift, record),
+      note: buildEmployeeNote(status, effectiveRecord, group.state),
+      workTimeText: buildRosterWorkTimeText(employee, shift, effectiveRecord),
       checkedInAt: record?.check_in_at ?? null,
       checkedOutAt: record?.check_out_at ?? null,
-      isLate: Boolean(record?.is_late),
+      isLate: effectiveIsLate,
     };
 
     group.employees.push(rosterEmployee);

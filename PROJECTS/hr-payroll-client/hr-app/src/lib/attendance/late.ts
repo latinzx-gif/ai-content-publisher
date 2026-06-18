@@ -72,6 +72,18 @@ export function lateMinutesAtCheckIn(
   return lateMinutes(checkInAt, fallbackStart.hour, fallbackStart.minute)
 }
 
+/** Prefer shift-aware recompute so stale DB is_late flags do not leak into roster UI. */
+export function effectiveAttendanceIsLate(
+  checkInAt: string,
+  shift: ShiftLateSchedule | null,
+  storedIsLate: boolean
+): boolean {
+  if (shift) {
+    return lateMinutesForShift(new Date(checkInAt), shift) > 0
+  }
+  return storedIsLate
+}
+
 // "HH:mm" in ICT for user-facing messages.
 export function formatIctTime(date: Date): string {
   const ictMs = date.getTime() + ICT_OFFSET_MS

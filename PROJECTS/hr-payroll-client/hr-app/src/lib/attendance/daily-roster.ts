@@ -9,6 +9,7 @@ import { formatShiftTimeRange } from "@/features/shifts/format"
 import type { ShiftSchedule } from "@/lib/attendance/retro-limit"
 import { getShiftStartUtc } from "@/lib/attendance/retro-limit"
 import { ictDateFromUtc } from "@/lib/attendance/ict-datetime"
+import { effectiveAttendanceIsLate } from "@/lib/attendance/late"
 
 const ICT_OFFSET_MS = 7 * 60 * 60 * 1000
 const DAY_MS = 24 * 60 * 60 * 1000
@@ -348,6 +349,16 @@ export function buildDailyRosterSnapshot(
       ? (shiftById.get(employee.work_shift_id) ?? null)
       : null
     const record = attendanceByEmployee.get(employee.id) ?? null
+    const effectiveIsLate = record
+      ? effectiveAttendanceIsLate(
+          record.check_in_at,
+          shift,
+          record.is_late
+        )
+      : false
+    const effectiveRecord = record
+      ? { ...record, is_late: effectiveIsLate }
+      : null
     const onLeave = leaveSet.has(employee.id)
     const dayStatus = deriveAttendanceDayStatus(
       input.date,
@@ -355,10 +366,10 @@ export function buildDailyRosterSnapshot(
       input.now,
       shift ? scheduleFromShift(shift) : null,
       onLeave,
-      record,
+      effectiveRecord,
       input.goLiveDate
     )
-    const status = employeeStatusFromDayStatus(dayStatus, group.state, record)
+    const status = employeeStatusFromDayStatus(dayStatus, group.state, effectiveRecord)
     const rosterEmployee: DailyRosterEmployee = {
       id: employee.id,
       employeeCode: formatEmployeeCode(employee),
@@ -369,11 +380,11 @@ export function buildDailyRosterSnapshot(
       employeeHref: `/admin/employees/${employee.id}/attendance`,
       status,
       statusLabel: employeeStatusLabel(status),
-      note: buildEmployeeNote(status, record, group.state),
-      workTimeText: buildRosterWorkTimeText(employee, shift, record),
+      note: buildEmployeeNote(status, effectiveRecord, group.state),
+      workTimeText: buildRosterWorkTimeText(employee, shift, effectiveRecord),
       checkedInAt: record?.check_in_at ?? null,
       checkedOutAt: record?.check_out_at ?? null,
-      isLate: Boolean(record?.is_late),
+      isLate: effectiveIsLate,
     }
 
     group.employees.push(rosterEmployee)
