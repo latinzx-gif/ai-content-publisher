@@ -147,21 +147,91 @@ function ictDayStartUtc(date: Date): Date {
 }
 
 function lateMinutesForShift(checkInAt: Date, shift: ShiftRow): number {
+  return lateMinutesWithGrace(
+    checkInAt,
+    shift.start_hour,
+    shift.start_minute,
+    shift.grace_minutes,
+  );
+}
+
+const DEFAULT_LATE_GRACE_MINUTES = 10;
+
+function normalizeTimeToHHMM(value: string | null | undefined): string {
+  if (!value) return "";
+  const trimmed = value.trim();
+  const match = /^(\d{1,2}):(\d{2})(?::\d{2})?/.exec(trimmed);
+  if (!match) return trimmed;
+  const hour = Number.parseInt(match[1], 10);
+  const minute = match[2];
+  if (hour < 0 || hour > 23) return trimmed;
+  return `${String(hour).padStart(2, "0")}:${minute}`;
+}
+
+function parseEmployeeCheckInTime(
+  value: string | null | undefined,
+): { hour: number; minute: number } | null {
+  const normalized = normalizeTimeToHHMM(value);
+  if (!normalized) return null;
+  const [hour, minute] = normalized.split(":").map(Number);
+  return { hour, minute };
+}
+
+function lateMinutesWithGrace(
+  checkInAt: Date,
+  startHour: number,
+  startMinute: number,
+  graceMinutes: number,
+): number {
   const dayStart = ictDayStartUtc(checkInAt);
-  const shiftStartMinutes = shift.start_hour * 60 + shift.start_minute;
+  const startMinutes = startHour * 60 + startMinute;
   const checkInMinutes = Math.floor(
     ((checkInAt.getTime() - dayStart.getTime()) / 60_000 + 24 * 60) % (24 * 60),
   );
-  if (checkInMinutes < shiftStartMinutes) return 0;
-  return Math.max(0, checkInMinutes - shift.grace_minutes - shiftStartMinutes);
+  if (checkInMinutes < startMinutes) return 0;
+  return Math.max(0, checkInMinutes - graceMinutes - startMinutes);
+}
+
+function lateMinutesAtCheckIn(
+  checkInAt: Date,
+  shift: ShiftRow | null,
+  fallbackStart: { hour: number; minute: number },
+  defaultCheckInTime?: string | null,
+): number {
+  const employeeStart = parseEmployeeCheckInTime(defaultCheckInTime);
+  if (employeeStart) {
+    const grace = shift?.grace_minutes ?? DEFAULT_LATE_GRACE_MINUTES;
+    return lateMinutesWithGrace(
+      checkInAt,
+      employeeStart.hour,
+      employeeStart.minute,
+      grace,
+    );
+  }
+  if (shift) return lateMinutesForShift(checkInAt, shift);
+  const dayStart = ictDayStartUtc(checkInAt);
+  const workStartMs =
+    dayStart.getTime() +
+    (fallbackStart.hour * 60 + fallbackStart.minute) * 60_000;
+  return Math.max(0, Math.floor((checkInAt.getTime() - workStartMs) / 60_000));
 }
 
 function effectiveAttendanceIsLate(
   checkInAt: string,
   shift: ShiftRow | null,
   storedIsLate: boolean,
+  defaultCheckInTime?: string | null,
 ): boolean {
-  if (shift) return lateMinutesForShift(new Date(checkInAt), shift) > 0;
+  if (defaultCheckInTime || shift) {
+    return (
+      lateMinutesAtCheckIn(
+        new Date(checkInAt),
+        shift,
+        { hour: 9, minute: 0 },
+        defaultCheckInTime,
+      ) > 0
+    );
+  }
   return storedIsLate;
 }
 
@@ -539,7 +609,12 @@ export async function buildDailyRoster(
       : null;
     const record = attendanceByEmployee.get(employee.id) ?? null;
     const effectiveIsLate = record
-      ? effectiveAttendanceIsLate(record.check_in_at, shift, record.is_late)
+      ? effectiveAttendanceIsLate(
+          record.check_in_at,
+          shift,
+          record.is_late,
+          employee.default_check_in_time,
+        )
       : false;
     const effectiveRecord = record
       ? { ...record, is_late: effectiveIsLate }
