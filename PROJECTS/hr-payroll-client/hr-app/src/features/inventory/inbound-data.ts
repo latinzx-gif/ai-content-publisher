@@ -175,3 +175,23 @@ export async function lookupSkuByBarcode(
     name: data.name as string,
   }
 }
+
+/** Returns a user-facing error when barcode exists but SKU is inactive */
+export async function inactiveSkuBarcodeMessage(
+  barcode: string
+): Promise<string | null> {
+  const trimmed = barcode.trim()
+  if (!trimmed) return null
+
+  const supabase = await createClient()
+  const { data, error } = await supabase
+    .from("inv_skus")
+    .select("code, name")
+    .eq("barcode", trimmed)
+    .eq("is_active", false)
+    .maybeSingle()
+
+  if (error || !data) return null
+  const code = data.code as string
+  return `พบ SKU ${code} แต่ถูกปิดใช้งาน — เปิด「ใช้งาน」ที่เมนู SKU ก่อนสแกน`
+}
