@@ -22,6 +22,7 @@ import { createClient } from "@/lib/supabase/server"
 const DAY_MS = 86_400_000
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 import { isValidTimeHHMM, timeForApi } from "@/lib/datetime/time-input"
+import { parseOffDays, serializeOffDays } from "@/lib/employees/off-days"
 
 function addDays(date: string, days: number): string {
   const t = Date.parse(`${date}T00:00:00Z`) + days * DAY_MS
@@ -57,6 +58,7 @@ type PatchBody = {
   work_shift_id?: string | null
   default_check_in_time?: string | null
   default_check_out_time?: string | null
+  off_days?: number[] | null
   nationality?: string | null
   pay_day?: number | null
 }
@@ -237,6 +239,16 @@ export async function PATCH(
         return NextResponse.json({ error: "invalid default_check_out_time format (HH:MM)" }, { status: 400 })
       }
       updates.default_check_out_time = timeForApi(body.default_check_out_time)
+    }
+
+    if (body.off_days !== undefined) {
+      if (body.off_days === null) {
+        updates.off_days = []
+      } else if (!Array.isArray(body.off_days)) {
+        return NextResponse.json({ error: "invalid off_days" }, { status: 400 })
+      } else {
+        updates.off_days = serializeOffDays(parseOffDays(body.off_days))
+      }
     }
 
     const bank = normalizeBankFields(body)

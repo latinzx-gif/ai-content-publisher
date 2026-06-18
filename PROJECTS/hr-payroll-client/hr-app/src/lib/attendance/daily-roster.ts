@@ -10,6 +10,7 @@ import type { ShiftSchedule } from "@/lib/attendance/retro-limit"
 import { getShiftStartUtc } from "@/lib/attendance/retro-limit"
 import { ictDateFromUtc } from "@/lib/attendance/ict-datetime"
 import { effectiveAttendanceIsLate } from "@/lib/attendance/late"
+import { isEmployeeOffOnDate, parseOffDays } from "@/lib/employees/off-days"
 
 const ICT_OFFSET_MS = 7 * 60 * 60 * 1000
 const DAY_MS = 24 * 60 * 60 * 1000
@@ -26,6 +27,7 @@ type RosterEmployeeRow = {
   work_shift_id: string | null
   default_check_in_time: string | null
   default_check_out_time: string | null
+  off_days?: number[] | null
   hr_branches: { name: string } | Array<{ name: string }> | null
 }
 
@@ -348,6 +350,31 @@ export function buildDailyRosterSnapshot(
     const shift = employee.work_shift_id
       ? (shiftById.get(employee.work_shift_id) ?? null)
       : null
+    const onLeave = leaveSet.has(employee.id)
+    const offDays = parseOffDays(employee.off_days)
+    if (!onLeave && isEmployeeOffOnDate(input.date, offDays)) {
+      const rosterEmployee: DailyRosterEmployee = {
+        id: employee.id,
+        employeeCode: formatEmployeeCode(employee),
+        name: employee.name,
+        position: employee.position,
+        department: employee.department,
+        branchName: branchNameFromJoin(employee.hr_branches),
+        employeeHref: `/admin/employees/${employee.id}/attendance`,
+        status: "off",
+        statusLabel: employeeStatusLabel("off"),
+        note: buildEmployeeNote("off", null, group.state),
+        workTimeText: buildRosterWorkTimeText(employee, shift, null),
+        checkedInAt: null,
+        checkedOutAt: null,
+        isLate: false,
+      }
+      group.employees.push(rosterEmployee)
+      pushCount(group.totals, "off")
+      pushCount(rosterTotals, "off")
+      continue
+    }
+
     const record = attendanceByEmployee.get(employee.id) ?? null
     const effectiveIsLate = record
       ? effectiveAttendanceIsLate(
@@ -359,7 +386,6 @@ export function buildDailyRosterSnapshot(
     const effectiveRecord = record
       ? { ...record, is_late: effectiveIsLate }
       : null
-    const onLeave = leaveSet.has(employee.id)
     const dayStatus = deriveAttendanceDayStatus(
       input.date,
       today,
@@ -430,7 +456,7 @@ export async function getDailyRoster(filters: DailyRosterFilters): Promise<Daily
   let employeeQuery = supabase
     .from("hr_employees")
     .select(
-      `id, employee_code, name, position, department, branch_id, line_user_id, work_shift_id, default_check_in_time, default_check_out_time, ${BRANCH_VIA_EMPLOYEE}(name)`
+      `id, employee_code, name, position, department, branch_id, line_user_id, work_shift_id, default_check_in_time, default_check_out_time, off_days, ${BRANCH_VIA_EMPLOYEE}(name)`
     )
     .eq("status", "active")
     .order("name")
