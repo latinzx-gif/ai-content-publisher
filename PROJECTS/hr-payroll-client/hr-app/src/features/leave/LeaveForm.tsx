@@ -18,19 +18,18 @@ import {
 import { useLocale } from "@/features/portal/LocaleProvider"
 import { formatLeaveApiError } from "@/features/leave/balance"
 import { countLeaveDays, LEAVE_TYPES, type LeaveType } from "@/features/leave/types"
+import type { MessageKey } from "@/lib/i18n/messages"
 import { cn } from "@/lib/utils"
 
 const MAX_FILE_BYTES = 5 * 1024 * 1024
 const ALLOWED_FILE_TYPES = ["image/jpeg", "image/png", "application/pdf"]
 
-const LEAVE_TYPE_KEYS: Record<
-  LeaveType,
-  "leave.type.sick" | "leave.type.personal" | "leave.type.annual" | "leave.type.other"
-> = {
-  sick: "leave.type.sick",
-  personal: "leave.type.personal",
-  annual: "leave.type.annual",
-  other: "leave.type.other",
+function leaveTypeKey(type: LeaveType): MessageKey {
+  return `leave.type.${type}` as MessageKey
+}
+
+function leaveAdvanceKey(type: LeaveType): MessageKey {
+  return `leave.advance.${type}` as MessageKey
 }
 
 const inputClassName =
@@ -102,6 +101,12 @@ export function LeaveForm() {
     setSubmitError(null)
     setSuccess(false)
 
+    if (isSameDaySick && leaveHours.trim() && !file) {
+      setSubmitError(tx("leave.form.validation.medicalRequired"))
+      setSubmitting(false)
+      return
+    }
+
     const formData = new FormData()
     formData.append("type", values.type)
     formData.append("startDate", values.startDate)
@@ -151,13 +156,14 @@ export function LeaveForm() {
               <FormLabel>{tx("leave.form.typeLabel")}</FormLabel>
               <FormControl>
                 <select {...field} className={cn(inputClassName, "bg-card")}>
-                  {LEAVE_TYPES.map((value) => (
+                  {LEAVE_TYPES.filter((value) => value !== "other").map((value) => (
                     <option key={value} value={value}>
-                      {tx(LEAVE_TYPE_KEYS[value])}
+                      {tx(leaveTypeKey(value))}
                     </option>
                   ))}
                 </select>
               </FormControl>
+              <FormDescription>{tx(leaveAdvanceKey(type))}</FormDescription>
               <FormMessage />
             </FormItem>
           )}
@@ -244,7 +250,10 @@ export function LeaveForm() {
 
         {type === "sick" ? (
           <FormItem>
-            <FormLabel>{tx("leave.form.attachmentLabel")}</FormLabel>
+            <FormLabel>
+              {tx("leave.form.attachmentLabel")}
+              {isSameDaySick && leaveHours.trim() ? " *" : null}
+            </FormLabel>
             <FormControl>
               <input
                 type="file"

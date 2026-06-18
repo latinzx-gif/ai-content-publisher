@@ -6,6 +6,7 @@ import { CountBadge } from "@/components/brand/CountBadge"
 import { buttonVariants } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import {
+  getBranchesForFilter,
   getDepartments,
   getEmployees,
   getOnboardingPendingCount,
@@ -28,10 +29,11 @@ export default async function AdminEmployeesPage({
     normalizeParams(await searchParams),
   ])
   const readOnly = employee ? isCeo(employee.role) && !isDev(employee.role) : false
-  const [{ employees, total }, departments, onboardingPending] =
+  const [{ employees, total }, departments, branches, onboardingPending] =
     await Promise.all([
       getEmployees(params),
       getDepartments(),
+      getBranchesForFilter(),
       getOnboardingPendingCount(),
     ])
 
@@ -40,7 +42,7 @@ export default async function AdminEmployeesPage({
       <AdminPageShell
         fill
         title="รายชื่อพนักงาน"
-        description="ค้นหา กรอง และเปิดโปรไฟล์พนักงาน"
+        description="ค้นหา กรอง และเปิดโปรไฟล์ — เงินเดือนดูที่เมนู Payroll"
         badge={
           <div className="flex flex-wrap items-center gap-2">
             <CountBadge count={total} label="คน" />
@@ -70,7 +72,7 @@ export default async function AdminEmployeesPage({
         }
       >
         <div className="flex h-full min-h-0 flex-col gap-3 overflow-hidden">
-          <EmployeeFilters departments={departments} />
+          <EmployeeFilters departments={departments} branches={branches} />
           <div className="min-h-0 flex-1 overflow-hidden">
             <EmployeeTable employees={employees} scrollable />
           </div>

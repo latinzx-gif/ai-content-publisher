@@ -122,6 +122,7 @@ export type Database = {
           department: string | null
           email: string | null
           employee_code: string | null
+          housing_allowance: number | null
           id: string
           line_user_id: string | null
           name: string
@@ -144,6 +145,7 @@ export type Database = {
           department?: string | null
           email?: string | null
           employee_code?: string | null
+          housing_allowance?: number | null
           id?: string
           line_user_id?: string | null
           name: string
@@ -166,6 +168,7 @@ export type Database = {
           department?: string | null
           email?: string | null
           employee_code?: string | null
+          housing_allowance?: number | null
           id?: string
           line_user_id?: string | null
           name?: string
@@ -231,6 +234,24 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      hr_leave_policy_defaults: {
+        Row: {
+          annual_days: number
+          leave_type: string
+          updated_at: string
+        }
+        Insert: {
+          annual_days?: number
+          leave_type: string
+          updated_at?: string
+        }
+        Update: {
+          annual_days?: number
+          leave_type?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       hr_leaves: {
         Row: {
@@ -432,4 +453,3 @@ export const Constants = {
     Enums: {},
   },
 } as const
-

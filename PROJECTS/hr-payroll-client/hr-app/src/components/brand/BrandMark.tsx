@@ -1,6 +1,8 @@
+import { PRODUCT_NAME } from "@/lib/brand/product"
+import { BRAND_LOGIN_HERO } from "@/lib/brand/assets"
 import { cn } from "@/lib/utils"
 
-const MASCOT = "/brand/mascot-hd.png"
+const SIDEBAR_MASCOT = "/brand/mascot-hd.png"
 
 function MascotImage({
   width,
@@ -14,8 +16,8 @@ function MascotImage({
   return (
     // eslint-disable-next-line @next/next/no-img-element
     <img
-      src={MASCOT}
-      alt="中国名堂 mascot"
+      src={SIDEBAR_MASCOT}
+      alt={`${PRODUCT_NAME} mascot`}
       width={width}
       height={height}
       className={className}
@@ -27,10 +29,10 @@ function MascotImage({
 export function BrandMark({
   variant = "sidebar",
   className,
-  onDark = false,
 }: {
   variant?: "sidebar" | "login" | "hero"
   className?: string
+  /** @deprecated Hero/login assets no longer need dark-mode text */
   onDark?: boolean
 }) {
   if (variant === "hero") {
@@ -46,28 +48,15 @@ export function BrandMark({
   if (variant === "login") {
     return (
       <div className={cn("flex flex-col items-center", className)}>
-        <MascotImage
-          width={160}
-          height={192}
-          className="h-auto w-40 object-contain drop-shadow-2xl"
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={BRAND_LOGIN_HERO}
+          alt={`${PRODUCT_NAME} — HR & Payroll`}
+          width={320}
+          height={240}
+          className="h-auto w-full max-w-[280px] object-contain drop-shadow-2xl"
+          decoding="async"
         />
-        <p
-          className={cn(
-            "mt-3 text-2xl font-bold tracking-tight",
-            onDark ? "text-white" : "text-foreground"
-          )}
-          style={{ fontFamily: "var(--font-noto-sc), sans-serif" }}
-        >
-          中国名堂
-        </p>
-        <p
-          className={cn(
-            "mt-0.5 text-[10px] font-medium uppercase tracking-[0.35em]",
-            onDark ? "text-white/80" : "text-muted-foreground"
-          )}
-        >
-          Zhongguo Mingtang
-        </p>
       </div>
     )
   }
@@ -84,10 +73,10 @@ export function BrandMark({
           className="text-[22px] font-bold leading-none text-foreground"
           style={{ fontFamily: "var(--font-noto-sc), sans-serif" }}
         >
-          中国名堂
+          {PRODUCT_NAME}
         </p>
         <p className="mt-1.5 text-xs font-semibold uppercase tracking-[0.18em] text-foreground/65">
-          Zhongguomingtang
+          HR &amp; Payroll
         </p>
       </div>
     </div>

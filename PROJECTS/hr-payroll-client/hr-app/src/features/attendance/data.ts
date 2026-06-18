@@ -1,12 +1,15 @@
 import { ictDayRangeUtc, formatIctTime } from "@/lib/attendance/late"
 import { createClient } from "@/lib/supabase/server"
 import type {
+  AttendanceLocationReviewStatus,
   AttendanceRow,
   AttendanceStatus,
   AttendanceSummary,
 } from "@/features/attendance/types"
 
 import { ATTENDANCE_PAGE_SIZE } from "@/features/attendance/types"
+import { EMPLOYEE_VIA_ATTENDANCE } from "@/lib/supabase/employee-embeds"
+import { BRANCH_VIA_EMPLOYEE } from "@/lib/supabase/branch-embeds"
 
 export { ATTENDANCE_PAGE_SIZE } from "@/features/attendance/types"
 export type { AttendanceRow, AttendanceSummary } from "@/features/attendance/types"
@@ -16,6 +19,7 @@ export type AttendanceListParams = {
   to?: string
   dept?: string
   employee?: string
+  branch_id?: string
   page?: number
 }
 
@@ -23,6 +27,13 @@ const STATUS_LABEL: Record<AttendanceStatus, string> = {
   normal: "ปกติ",
   late: "สาย",
   in_progress: "กำลังทำงาน",
+}
+
+const LOCATION_REVIEW_LABEL: Record<AttendanceLocationReviewStatus, string> = {
+  clear: "ตำแหน่งปกติ",
+  pending_hr: "รอ HR ตรวจพิกัด",
+  approved: "HR อนุมัติพิกัด",
+  rejected: "พิกัดถูกปฏิเสธ",
 }
 
 function ictDateFromIso(iso: string): string {
@@ -51,6 +62,7 @@ export function normalizeAttendanceParams(raw: {
     to: get("to") || defaults.to,
     dept: get("dept"),
     employee: get("employee"),
+    branch_id: get("branch_id"),
     page,
   }
 }
@@ -78,15 +90,21 @@ export async function getAttendanceDepartments(): Promise<string[]> {
   return [...new Set((data ?? []).map((r) => r.department as string))].sort()
 }
 
-export async function getAttendanceEmployees(): Promise<
-  Array<{ id: string; name: string }>
-> {
+export async function getAttendanceEmployees(
+  branchId = ""
+): Promise<Array<{ id: string; name: string }>> {
   const supabase = await createClient()
-  const { data, error } = await supabase
+  let query = supabase
     .from("hr_employees")
     .select("id, name")
     .eq("status", "active")
     .order("name")
+  if (branchId === "__none__") {
+    query = query.is("branch_id", null)
+  } else if (branchId) {
+    query = query.eq("branch_id", branchId)
+  }
+  const { data, error } = await query
   if (error) throw error
   return (data ?? []) as Array<{ id: string; name: string }>
 }
@@ -100,10 +118,15 @@ export async function getAttendanceRecords(params: Required<AttendanceListParams
   )
 
   let employeeIds: string[] | null = null
-  if (params.dept || params.employee) {
+  if (params.dept || params.employee || params.branch_id) {
     let empQuery = supabase.from("hr_employees").select("id")
     if (params.dept) empQuery = empQuery.eq("department", params.dept)
     if (params.employee) empQuery = empQuery.eq("id", params.employee)
+    if (params.branch_id === "__none__") {
+      empQuery = empQuery.is("branch_id", null)
+    } else if (params.branch_id) {
+      empQuery = empQuery.eq("branch_id", params.branch_id)
+    }
     const { data: emps, error: empError } = await empQuery
     if (empError) throw empError
     employeeIds = (emps ?? []).map((e) => e.id)
@@ -119,7 +142,7 @@ export async function getAttendanceRecords(params: Required<AttendanceListParams
   let query = supabase
     .from("hr_attendance")
     .select(
-      "id, employee_id, check_in_at, check_out_at, is_late, work_hours, hr_employees!inner(name, department)",
+      `id, employee_id, check_in_at, check_out_at, is_late, work_hours, location_review_status, location_review_flags, location_review_note, ${EMPLOYEE_VIA_ATTENDANCE}!inner(name, department, branch_id, ${BRANCH_VIA_EMPLOYEE}(name))`,
       { count: "exact" }
     )
     .gte("check_in_at", rangeStart.toISOString())
@@ -143,15 +166,43 @@ export async function getAttendanceRecords(params: Required<AttendanceListParams
     check_out_at: string | null
     is_late: boolean
     work_hours: number | null
+    location_review_status: AttendanceLocationReviewStatus | null
+    location_review_flags: string[] | null
+    location_review_note: string | null
     hr_employees:
-      | { name: string; department: string | null }
-      | Array<{ name: string; department: string | null }>
+      | {
+          name: string
+          department: string | null
+          branch_id: string | null
+          hr_branches: { name: string } | Array<{ name: string }> | null
+        }
+      | Array<{
+          name: string
+          department: string | null
+          branch_id: string | null
+          hr_branches: { name: string } | Array<{ name: string }> | null
+        }>
   }
 
   function employeeJoin(
     joined: RawRow["hr_employees"]
-  ): { name: string; department: string | null } {
-    return Array.isArray(joined) ? joined[0] : joined
+  ): {
+    name: string
+    department: string | null
+    branchName: string | null
+  } {
+    const emp = Array.isArray(joined) ? joined[0] : joined
+    const branchRaw = emp.hr_branches
+    const branchName = branchRaw
+      ? Array.isArray(branchRaw)
+        ? (branchRaw[0]?.name ?? null)
+        : branchRaw.name
+      : null
+    return {
+      name: emp.name,
+      department: emp.department,
+      branchName,
+    }
   }
 
   const rows: AttendanceRow[] = ((data ?? []) as RawRow[]).map((row) => {
@@ -162,6 +213,7 @@ export async function getAttendanceRecords(params: Required<AttendanceListParams
       employeeId: row.employee_id,
       employeeName: emp.name,
       department: emp.department,
+      branchName: emp.branchName,
       date: ictDateFromIso(row.check_in_at),
       checkInAt: row.check_in_at,
       checkOutAt: row.check_out_at,
@@ -170,6 +222,10 @@ export async function getAttendanceRecords(params: Required<AttendanceListParams
       workHours: row.work_hours,
       status,
       statusLabel: STATUS_LABEL[status],
+      locationReviewStatus: row.location_review_status ?? "clear",
+      locationReviewLabel: LOCATION_REVIEW_LABEL[row.location_review_status ?? "clear"],
+      locationReviewFlags: row.location_review_flags ?? [],
+      locationReviewNote: row.location_review_note ?? null,
     }
   })
 

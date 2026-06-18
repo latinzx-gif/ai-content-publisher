@@ -24,23 +24,28 @@ const LocaleContext = createContext<LocaleContextValue | null>(null)
 export function LocaleProvider({
   initialLocale,
   children,
+  persistEndpoint = "/api/portal/locale",
 }: {
   initialLocale: AppLocale
   children: React.ReactNode
+  persistEndpoint?: string
 }) {
   const [locale, setLocaleState] = useState<AppLocale>(initialLocale)
   const [pending, startTransition] = useTransition()
 
-  const setLocale = useCallback((next: AppLocale) => {
-    startTransition(async () => {
+  const setLocale = useCallback(
+    (next: AppLocale) => {
       setLocaleState(next)
-      await fetch("/api/portal/locale", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ locale: next }),
+      startTransition(() => {
+        void fetch(persistEndpoint, {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ locale: next }),
+        })
       })
-    })
-  }, [])
+    },
+    [persistEndpoint]
+  )
 
   const value = useMemo<LocaleContextValue>(
     () => ({

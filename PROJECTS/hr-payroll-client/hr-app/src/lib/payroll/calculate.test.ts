@@ -30,6 +30,7 @@ describe("calculatePayslip", () => {
       pay_type: "hourly",
       pay_day: 4,
       salary: 100,
+      housing_allowance: 0,
       worked_hours: 160,
       overtime_hours: 10,
       sick_leave_hours: 0,
@@ -48,6 +49,7 @@ describe("calculatePayslip", () => {
       pay_type: "monthly",
       pay_day: 4,
       salary: 22000,
+      housing_allowance: 1500,
       worked_hours: 0,
       overtime_hours: 8,
       sick_leave_hours: 0,
@@ -55,7 +57,8 @@ describe("calculatePayslip", () => {
     }
     const result = calculatePayslip(summary, baseConfig)!
     const otPay = (22000 / 176) * 1.5 * 8
-    assert.equal(result.gross_amount, Math.round((22000 + otPay) * 100) / 100)
+    assert.equal(result.gross_amount, Math.round((22000 + 1500 + otPay) * 100) / 100)
+    assert.equal(result.lines.find((line) => line.code === "HOUSING")?.amount, 1500)
     assert.equal(result.tax_deduction, 0)
   })
 
@@ -66,6 +69,7 @@ describe("calculatePayslip", () => {
       pay_type: "monthly",
       pay_day: 5,
       salary: 10000,
+      housing_allowance: 0,
       worked_hours: 0,
       overtime_hours: 0,
       sick_leave_hours: 0,

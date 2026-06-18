@@ -17,14 +17,28 @@ import { checkoutSummaryFlex } from "@/lib/line/flex/checkout"
 import {
   alreadyCheckedInFlex,
   alreadyCheckedOutFlex,
-  menuHintFlex,
   notCheckedInFlex,
   notRegisteredFlex,
   outsideGeofenceFlex,
   pendingApprovalFlex,
 } from "@/lib/line/flex/menu-guide"
 import { buildActionMessages } from "@/lib/line/handlers/actions"
-import { isOneOnOneUserSource } from "@/lib/line/handlers/source"
+import {
+  buildPendingQueueMessages,
+  isPendingQueueCommand,
+} from "@/lib/line/handlers/actions/pending-queue"
+import {
+  handleHrGroupTextCommand,
+  isKnownHrGroup,
+} from "@/lib/line/handlers/group-hr-commands"
+import { handlePendingActionText } from "@/lib/line/handlers/pending-action-text"
+import { getActivePendingAction } from "@/lib/line/approval/pending-actions"
+import {
+  isOneOnOneUserSource,
+  resolveLineUserIdFromSource,
+} from "@/lib/line/handlers/source"
+import { buildLineAutoReplyMessages, shouldSendLineAutoReply } from "@/lib/line/auto-reply"
+import { tryAutoLinkFromEmployeeCode } from "@/lib/line/auto-link-line-user"
 import {
   isStockCommandEnabled,
   parseSlashCommand,
@@ -71,6 +85,14 @@ function checkInMessages(
           locale,
         }),
       ]
+    case "suspicious_location":
+      return [
+        pendingApprovalFlex(locale),
+        {
+          type: "text",
+          text: result.message,
+        },
+      ]
     case "pending_approval":
       return [pendingApprovalFlex(locale)]
     case "not_registered":
@@ -104,6 +126,14 @@ function checkOutMessages(
           locale,
         }),
       ]
+    case "suspicious_location":
+      return [
+        pendingApprovalFlex(locale),
+        {
+          type: "text",
+          text: result.message,
+        },
+      ]
     case "not_checked_in":
       return [notCheckedInFlex(locale)]
     case "pending_approval":
@@ -134,11 +164,27 @@ async function locationMessages(
     case "not_registered":
       return [notRegisteredFlex(locale)]
     case "none": {
-      const result = await checkIn({ lineUserId, location, now })
+      const result = await checkIn({
+        lineUserId,
+        location: {
+          ...location,
+          source: "line_location_message",
+          captured_at: now.toISOString(),
+        },
+        now,
+      })
       return checkInMessages(result, locale)
     }
     case "checked_in": {
-      const result = await checkOut({ lineUserId, location, now })
+      const result = await checkOut({
+        lineUserId,
+        location: {
+          ...location,
+          source: "line_location_message",
+          captured_at: now.toISOString(),
+        },
+        now,
+      })
       if (result.status === "not_checked_in") {
         return [alreadyCheckedInFlex(formatIctTime(today.checkInAt), locale)]
       }
@@ -152,7 +198,33 @@ async function locationMessages(
 export async function handleMessage(
   event: webhook.MessageEvent
 ): Promise<void> {
-  if (!event.replyToken || !isOneOnOneUserSource(event.source)) {
+  if (!event.replyToken) {
+    return
+  }
+
+  const groupId =
+    event.source?.type === "group"
+      ? event.source.groupId
+      : event.source?.type === "room"
+        ? event.source.roomId
+        : undefined
+
+  if (groupId && event.message.type === "text") {
+    if (!(await isKnownHrGroup(groupId))) {
+      return
+    }
+    const lineUserId = resolveLineUserIdFromSource(event.source)
+    const messages = await handleHrGroupTextCommand(event.message.text, lineUserId)
+    if (messages.length > 0) {
+      await getLineClient().replyMessage({
+        replyToken: event.replyToken,
+        messages,
+      })
+    }
+    return
+  }
+
+  if (!isOneOnOneUserSource(event.source)) {
     return
   }
 
@@ -179,6 +251,38 @@ export async function handleMessage(
   const locale = lineUserId
     ? await resolveLocaleForLineUser(lineUserId)
     : DEFAULT_LOCALE
+
+  const linkMessages = await tryAutoLinkFromEmployeeCode(lineUserId, text)
+  if (linkMessages) {
+    await getLineClient().replyMessage({
+      replyToken: event.replyToken,
+      messages: linkMessages,
+    })
+    return
+  }
+
+  if (lineUserId) {
+    const pending = await getActivePendingAction(lineUserId)
+    if (pending) {
+      const messages = await handlePendingActionText(lineUserId, text)
+      if (messages) {
+        await getLineClient().replyMessage({
+          replyToken: event.replyToken,
+          messages,
+        })
+        return
+      }
+    }
+  }
+
+  if (isPendingQueueCommand(text)) {
+    const messages = await buildPendingQueueMessages(lineUserId)
+    await getLineClient().replyMessage({
+      replyToken: event.replyToken,
+      messages,
+    })
+    return
+  }
 
   const localeCommand = parseLocaleSlashCommand(text)
   if (localeCommand) {
@@ -210,38 +314,38 @@ export async function handleMessage(
     return
   }
 
-  if (!isUserChatEnabled()) {
-    return
+  if (isUserChatEnabled()) {
+    const textActions: Record<string, RichMenuPostbackAction> = {
+      คลังสินค้า: "inventory",
+      สแกนรับเข้า: "inventory",
+      รับเข้า: "inventory",
+      ประกาศ: "announcement",
+      ขอเอกสาร: "document",
+      เอกสาร: "document",
+      ร้องเรียน: "complaint",
+      ลา: "leave",
+      ot: "overtime",
+      ขอot: "overtime",
+      เช็คอิน: "checkin",
+      "ติดต่อ hr": "contact_hr",
+      ติดต่อhr: "contact_hr",
+    }
+    const action = textActions[text.toLowerCase()] ?? textActions[text]
+
+    if (action) {
+      const messages = await buildActionMessages(action, { lineUserId, locale })
+      await getLineClient().replyMessage({
+        replyToken: event.replyToken,
+        messages,
+      })
+      return
+    }
   }
 
-  const textActions: Record<string, RichMenuPostbackAction> = {
-    คลังสินค้า: "inventory",
-    สแกนรับเข้า: "inventory",
-    รับเข้า: "inventory",
-    ประกาศ: "announcement",
-    ขอเอกสาร: "document",
-    เอกสาร: "document",
-    ร้องเรียน: "complaint",
-    ลา: "leave",
-    ot: "overtime",
-    ขอot: "overtime",
-    เช็คอิน: "checkin",
-    "ติดต่อ hr": "contact_hr",
-    ติดต่อhr: "contact_hr",
-  }
-  const action = textActions[text.toLowerCase()] ?? textActions[text]
-
-  if (action) {
-    const messages = await buildActionMessages(action, { lineUserId, locale })
+  if (shouldSendLineAutoReply(text)) {
     await getLineClient().replyMessage({
       replyToken: event.replyToken,
-      messages,
+      messages: await buildLineAutoReplyMessages(locale),
     })
-    return
   }
-
-  await getLineClient().replyMessage({
-    replyToken: event.replyToken,
-    messages: [menuHintFlex(locale)],
-  })
 }

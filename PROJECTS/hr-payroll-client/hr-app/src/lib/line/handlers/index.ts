@@ -3,25 +3,27 @@ import type { webhook } from "@line/bot-sdk"
 import { resolveLocaleForLineUser } from "@/lib/i18n/employee-locale"
 import { DEFAULT_LOCALE } from "@/lib/i18n/types"
 import { getLineClient } from "@/lib/line/client"
-import { welcomeFlex } from "@/lib/line/flex/menu-guide"
 import { handleMessage } from "@/lib/line/handlers/message"
 import { handlePostback } from "@/lib/line/handlers/postback"
-import { shouldHandleInteractiveEvent } from "@/lib/line/handlers/source"
+import {
+  resolveLineUserIdFromSource,
+  shouldHandleInteractiveEvent,
+} from "@/lib/line/handlers/source"
+import { buildWelcomeFollowMessages } from "@/lib/line/welcome-messages"
 
 async function handleFollow(event: webhook.FollowEvent): Promise<void> {
   if (!event.replyToken) {
     return
   }
 
-  const lineUserId =
-    event.source?.type === "user" ? event.source.userId : undefined
+  const lineUserId = resolveLineUserIdFromSource(event.source)
   const locale = lineUserId
     ? await resolveLocaleForLineUser(lineUserId)
     : DEFAULT_LOCALE
 
   await getLineClient().replyMessage({
     replyToken: event.replyToken,
-    messages: [welcomeFlex(locale)],
+    messages: buildWelcomeFollowMessages(locale),
   })
 }
 
@@ -36,7 +38,7 @@ async function handleEvent(event: webhook.Event): Promise<void> {
     return handleJoin(event)
   }
 
-  // Never auto-reply in group/room — HR group is push-only (reports).
+  // Group/room: only postbacks (HR approval buttons). Text messages stay ignored.
   if (!shouldHandleInteractiveEvent(event)) {
     return
   }

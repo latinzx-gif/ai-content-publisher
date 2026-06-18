@@ -10,6 +10,7 @@ export interface PayrollSummary {
   pay_type: PayType
   pay_day: PayDay
   salary: number | null
+  housing_allowance: number
   worked_hours: number
   overtime_hours: number
   sick_leave_hours: number

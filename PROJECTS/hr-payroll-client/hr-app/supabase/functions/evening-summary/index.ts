@@ -4,6 +4,8 @@
 import "@supabase/functions-js/edge-runtime.d.ts";
 import { withSupabase } from "@supabase/server";
 
+import { buildDailyRoster, formatNameList } from "../_shared/daily-roster.ts";
+
 const ICT_OFFSET_MS = 7 * 60 * 60 * 1000;
 const MULTICAST_LIMIT = 500;
 
@@ -72,6 +74,7 @@ const handler = {
     const { start, end } = ictDayRangeUtc(now);
     const today = ictDateString(now);
     const admin = ctx.supabaseAdmin;
+    const roster = await buildDailyRoster(admin, { date: today, now });
 
     const { data: employees, error: empError } = await admin
       .from("hr_employees")
@@ -86,37 +89,12 @@ const handler = {
       .lt("check_in_at", end.toISOString());
     if (attError) throw attError;
 
-    const { data: onLeave, error: leaveError } = await admin
-      .from("hr_leaves")
-      .select("employee_id")
-      .eq("status", "approved")
-      .lte("start_date", today)
-      .gte("end_date", today);
-    if (leaveError) throw leaveError;
-
     const attByEmployee = new Map<string, Attendance>();
     for (const row of (attendance ?? []) as Attendance[]) {
       attByEmployee.set(row.employee_id, row);
     }
-    const onLeaveSet = new Set((onLeave ?? []).map((r) => r.employee_id as string));
 
     const activeList = (employees ?? []) as Employee[];
-    let checkedIn = 0;
-    let late = 0;
-    let absent = 0;
-    let leaveCount = 0;
-
-    for (const e of activeList) {
-      const att = attByEmployee.get(e.id);
-      if (onLeaveSet.has(e.id)) leaveCount += 1;
-      if (att) {
-        checkedIn += 1;
-        if (att.is_late) late += 1;
-      } else if (!onLeaveSet.has(e.id)) {
-        absent += 1;
-      }
-    }
-
     const lineApiBase = Deno.env.get("LINE_API_BASE") ?? "https://api.line.me";
     const lineToken = requireEnv("LINE_CHANNEL_ACCESS_TOKEN");
     const lineHeaders = {
@@ -156,15 +134,28 @@ const handler = {
       }
     }
 
+    const lateEmployees = roster.groups.flatMap((group) =>
+      group.employees.filter((employee) => employee.status === "late")
+    );
+    const absentEmployees = roster.groups.flatMap((group) =>
+      group.employees.filter((employee) => employee.status === "absent")
+    );
+    const leaveEmployees = roster.groups.flatMap((group) =>
+      group.employees.filter((employee) => employee.status === "on_leave")
+    );
+
     const hrMessage = {
       type: "text",
       text: [
         `สรุปภาพรวมการทำงาน ${today}`,
-        `มาแล้ว: ${checkedIn} คน`,
-        `ขาด: ${absent} คน`,
-        `มาสาย: ${late} คน`,
-        `ลา: ${leaveCount} คน`,
-        `พนักงาน active: ${activeList.length} คน`,
+        `มาแล้ว: ${roster.totals.checkedIn} คน`,
+        `ขาด: ${roster.totals.absent} คน`,
+        `มาสาย: ${roster.totals.late} คน`,
+        `ลา: ${roster.totals.onLeave} คน`,
+        `พนักงาน active: ${roster.totals.total} คน`,
+        `รายชื่อมาสาย: ${formatNameList(lateEmployees)}`,
+        `รายชื่อขาด: ${formatNameList(absentEmployees)}`,
+        `รายชื่อลา: ${formatNameList(leaveEmployees)}`,
       ].join("\n"),
     };
 
@@ -186,7 +177,7 @@ const handler = {
       const { data: hrRows, error: hrError } = await admin
         .from("hr_employees")
         .select("line_user_id")
-        .in("role", ["hr", "admin"])
+        .in("role", ["hr"])
         .eq("status", "active")
         .not("line_user_id", "is", null);
       if (hrError) throw hrError;
@@ -216,7 +207,12 @@ const handler = {
       employees: activeList.length,
       employeePushed,
       hrPushed,
-      stats: { checkedIn, absent, late, leaveCount },
+      stats: {
+        checkedIn: roster.totals.checkedIn,
+        absent: roster.totals.absent,
+        late: roster.totals.late,
+        leaveCount: roster.totals.onLeave,
+      },
     });
   }),
 };

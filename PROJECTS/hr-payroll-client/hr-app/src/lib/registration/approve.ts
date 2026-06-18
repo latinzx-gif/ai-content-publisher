@@ -1,13 +1,18 @@
 import { getAdminClient } from "@/lib/auth/admin-client"
-import { canManageHr } from "@/lib/auth/roles"
-import { pushToLineUser } from "@/lib/line/notify-hr"
+import {
+  getApproverDisplayName,
+  notifyDecisionParties,
+} from "@/lib/line/notify-approval-decision"
+
+export { assertHrLineApprover } from "@/lib/line/approval/approver"
 
 export type RegistrationDecisionResult =
   | { ok: true; employeeName: string; lineUserId: string | null }
   | { ok: false; error: string; status: 403 | 404 | 400 }
 
 export async function approveEmployeeRegistration(
-  employeeId: string
+  employeeId: string,
+  approverId?: string
 ): Promise<RegistrationDecisionResult> {
   const admin = getAdminClient()
 
@@ -44,28 +49,39 @@ export async function approveEmployeeRegistration(
   }
 
   const lineUserId = row.line_user_id as string | null
-  if (lineUserId) {
-    try {
-      await pushToLineUser(lineUserId, [
-        {
-          type: "text",
-          text: "✅ อนุมัติเข้าใช้งานแล้ว\n\nคุณสามารถใช้เมนู HR ใน LINE ได้แล้ว (เช็คอิน · ขอลา · OT ฯลฯ)",
-        },
-      ])
-    } catch (e) {
-      console.error("approve registration notify employee failed:", e)
-    }
-  }
+  const employeeName = row.name as string
+  const approverName = approverId
+    ? await getApproverDisplayName(approverId)
+    : "HR"
+
+  await notifyDecisionParties({
+    employeeLineUserId: lineUserId,
+    employeeMessages: lineUserId
+      ? [
+          {
+            type: "text",
+            text: "✅ อนุมัติเข้าใช้งานแล้ว\n\nคุณสามารถใช้เมนู HR ใน LINE ได้แล้ว (เช็คอิน · ขอลา · OT ฯลฯ)",
+          },
+        ]
+      : undefined,
+    hrGroupText: [
+      "✅ อนุมัติลงทะเบียนพนักงานแล้ว",
+      `ชื่อ: ${employeeName}`,
+      `โดย: ${approverName}`,
+    ].join("\n"),
+  })
 
   return {
     ok: true,
-    employeeName: row.name as string,
+    employeeName,
     lineUserId,
   }
 }
 
 export async function rejectEmployeeRegistration(
-  employeeId: string
+  employeeId: string,
+  note?: string,
+  approverId?: string
 ): Promise<RegistrationDecisionResult> {
   const admin = getAdminClient()
 
@@ -86,40 +102,36 @@ export async function rejectEmployeeRegistration(
   }
 
   const lineUserId = row.line_user_id as string | null
-  if (lineUserId) {
-    try {
-      await pushToLineUser(lineUserId, [
-        {
-          type: "text",
-          text: "❌ คำขอลงทะเบียนยังไม่ได้รับการอนุมัติ\n\nกรุณาติดต่อ HR หรือลองลงทะเบียนใหม่ภายหลัง",
-        },
-      ])
-    } catch (e) {
-      console.error("reject registration notify employee failed:", e)
-    }
-  }
+  const employeeName = row.name as string
+  const reasonLine =
+    note && note.trim().length >= 3 ? `\n\nเหตุผล: ${note.trim()}` : ""
+  const approverName = approverId
+    ? await getApproverDisplayName(approverId)
+    : "HR"
+
+  await notifyDecisionParties({
+    employeeLineUserId: lineUserId,
+    employeeMessages: lineUserId
+      ? [
+          {
+            type: "text",
+            text: `❌ คำขอลงทะเบียนยังไม่ได้รับการอนุมัติ${reasonLine}\n\nกรุณาติดต่อ HR หรือลองลงทะเบียนใหม่ภายหลัง`,
+          },
+        ]
+      : undefined,
+    hrGroupText: [
+      "❌ ปฏิเสธการลงทะเบียน",
+      `ชื่อ: ${employeeName}`,
+      note && note.trim().length >= 3 ? `เหตุผล: ${note.trim()}` : null,
+      `โดย: ${approverName}`,
+    ]
+      .filter(Boolean)
+      .join("\n"),
+  })
 
   return {
     ok: true,
-    employeeName: row.name as string,
+    employeeName,
     lineUserId,
   }
-}
-
-export async function assertHrLineApprover(
-  lineUserId: string | undefined
-): Promise<{ id: string; name: string } | null> {
-  if (!lineUserId) return null
-
-  const admin = getAdminClient()
-  const { data } = await admin
-    .from("hr_employees")
-    .select("id, name, role, status")
-    .eq("line_user_id", lineUserId)
-    .maybeSingle()
-
-  if (!data || data.status !== "active") return null
-  if (!canManageHr(data.role as Parameters<typeof canManageHr>[0])) return null
-
-  return { id: data.id as string, name: data.name as string }
 }

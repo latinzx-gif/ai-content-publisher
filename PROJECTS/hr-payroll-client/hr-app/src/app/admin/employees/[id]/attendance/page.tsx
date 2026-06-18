@@ -94,34 +94,44 @@ export default async function EmployeeAttendancePage({
           </div>
         }
       >
-        <div className="flex h-full min-h-0 flex-col gap-4 overflow-hidden">
-          <div className="shrink-0 rounded-xl border border-border/80 bg-card p-4 shadow-sm">
+        <div className="grid h-full min-h-0 gap-4 overflow-hidden lg:grid-cols-[minmax(280px,36%)_minmax(0,1fr)]">
+          <div className="min-h-0 overflow-y-auto border-border/60 lg:border-r lg:pr-4">
             <AttendanceCalendar
               month={month}
               days={calendar.days}
               basePath={basePath}
               selectedDate={highlightDate}
+              compact
             />
           </div>
-          <Suspense fallback={null}>
-            <AttendanceFilters
-              departments={departments}
-              employees={employees}
-              values={{
-                from: listParams.from,
-                to: listParams.to,
-                dept: listParams.dept,
-                employee: id,
-              }}
-            />
-          </Suspense>
-          <AttendanceSummaryCard summary={summary} />
-          <div className="min-h-0 flex-1 overflow-auto">
-            <AttendanceTable rows={rows} canManage={canManage} />
+
+          <div className="flex min-h-0 flex-col gap-2.5 overflow-hidden lg:gap-3">
+            <Suspense fallback={null}>
+              <AttendanceFilters
+                mode="employee"
+                departments={departments}
+                employees={employees}
+                values={{
+                  from: listParams.from,
+                  to: listParams.to,
+                  dept: listParams.dept,
+                  employee: id,
+                  branch_id: listParams.branch_id,
+                }}
+              />
+            </Suspense>
+            <AttendanceSummaryCard summary={summary} compact />
+            <div className="min-h-0 flex-1 overflow-auto rounded-lg border border-border/60 bg-muted/10">
+              <AttendanceTable
+                rows={rows}
+                canManage={canManage}
+                employeeView
+              />
+            </div>
+            <Suspense fallback={null}>
+              <AttendancePagination page={listParams.page} total={total} />
+            </Suspense>
           </div>
-          <Suspense fallback={null}>
-            <AttendancePagination page={listParams.page} total={total} />
-          </Suspense>
         </div>
       </AdminPageShell>
     </div>

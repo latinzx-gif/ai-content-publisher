@@ -10,8 +10,9 @@ import {
   type AdminNavItem,
 } from "@/components/admin/admin-nav"
 import { AdminNavIcon } from "@/components/admin/admin-nav-icons"
+import { useAdminNotificationsOptional } from "@/components/admin/AdminNotificationProvider"
 import { isBranchNavActive } from "@/components/admin/branch-nav"
-import { isInventoryNavActive } from "@/components/admin/inventory-nav"
+import { isInventoryManagerNavActive, isInventoryNavActive } from "@/components/admin/inventory-nav"
 import { isDevNavActive } from "@/lib/auth/dev-view"
 import { ADMIN_SIDEBAR_WIDTH_CLASS } from "@/components/admin/admin-layout"
 import { BrandMark } from "@/components/brand/BrandMark"
@@ -50,6 +51,7 @@ export function AdminNavLinks({
   items,
   branchMode = false,
   inventoryMode = false,
+  inventoryManagerMode = false,
   devAllMode = false,
   onNavigate,
 }: {
@@ -57,17 +59,20 @@ export function AdminNavLinks({
   items?: AdminNavItem[]
   branchMode?: boolean
   inventoryMode?: boolean
+  inventoryManagerMode?: boolean
   devAllMode?: boolean
   onNavigate?: () => void
 }) {
   const pathname = usePathname()
   const isActive = devAllMode
     ? isDevNavActive
-    : inventoryMode
-      ? isInventoryNavActive
-      : branchMode
-        ? isBranchNavActive
-        : isAdminNavActive
+    : inventoryManagerMode
+      ? isInventoryManagerNavActive
+      : inventoryMode
+        ? isInventoryNavActive
+        : branchMode
+          ? isBranchNavActive
+          : isAdminNavActive
 
   if (groups && groups.length > 0) {
     return (
@@ -171,18 +176,23 @@ function AdminNavLink({
 }
 
 export function AdminSidebar({
-  groups,
+  groups: groupsProp,
   items,
   branchMode = false,
   inventoryMode = false,
+  inventoryManagerMode = false,
   devAllMode = false,
 }: {
   groups?: AdminNavGroup[]
   items?: AdminNavItem[]
   branchMode?: boolean
   inventoryMode?: boolean
+  inventoryManagerMode?: boolean
   devAllMode?: boolean
 }) {
+  const live = useAdminNotificationsOptional()
+  const groups = live?.navGroups ?? groupsProp
+
   return (
     <aside
       className={cn(
@@ -199,6 +209,7 @@ export function AdminSidebar({
           items={items}
           branchMode={branchMode}
           inventoryMode={inventoryMode}
+          inventoryManagerMode={inventoryManagerMode}
           devAllMode={devAllMode}
         />
       </div>

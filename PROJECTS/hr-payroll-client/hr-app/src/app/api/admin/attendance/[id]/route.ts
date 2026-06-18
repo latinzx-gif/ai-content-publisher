@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server"
 
+import { decideAttendanceLocation } from "@/lib/approval/attendance-location-decide"
 import {
   deleteAttendanceByHr,
   updateAttendanceByHr,
@@ -13,6 +14,11 @@ type PatchBody = {
   checkOutTime?: string | null
   workHours?: number | null
   workShiftId?: string | null
+}
+
+type ReviewBody = {
+  action?: "approve" | "reject"
+  note?: string
 }
 
 export async function PATCH(
@@ -75,4 +81,39 @@ export async function DELETE(
     const message = e instanceof Error ? e.message : "ลบไม่สำเร็จ"
     return NextResponse.json({ error: message }, { status: 400 })
   }
+}
+
+export async function POST(
+  request: NextRequest,
+  context: { params: Promise<{ id: string }> }
+) {
+  const caller = await getCurrentEmployee()
+  if (!caller || !canManageHr(caller.role)) {
+    return NextResponse.json({ error: "forbidden" }, { status: 403 })
+  }
+
+  const { id } = await context.params
+  let body: ReviewBody
+  try {
+    body = await request.json()
+  } catch {
+    return NextResponse.json({ error: "invalid body" }, { status: 400 })
+  }
+
+  if (body.action !== "approve" && body.action !== "reject") {
+    return NextResponse.json({ error: "invalid action" }, { status: 400 })
+  }
+
+  const result = await decideAttendanceLocation({
+    attendanceId: id,
+    action: body.action,
+    approverId: caller.id,
+    note: body.note,
+  })
+
+  if (!result.ok) {
+    return NextResponse.json({ error: result.error }, { status: result.status })
+  }
+
+  return NextResponse.json({ ok: true, status: result.status })
 }

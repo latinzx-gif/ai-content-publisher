@@ -19,6 +19,9 @@ import type { ContractType, EmployeeProfile } from "@/features/employees/profile
 import { EmployeeAvatarUpload } from "@/features/employees/profile/EmployeeAvatarUpload"
 import { EmployeeContractUpload } from "@/features/employees/profile/EmployeeContractUpload"
 import { PendingRegistrationApproval } from "@/features/employees/profile/PendingRegistrationApproval"
+import { SalarySensitiveSection } from "@/features/employees/profile/SalarySensitiveSection"
+import type { WorkShiftSummary } from "@/features/shifts/types"
+import { formatShiftTimeRange } from "@/features/shifts/format"
 import {
   PAYMENT_METHOD_OPTIONS,
   type SalaryPaymentMethod,
@@ -47,6 +50,7 @@ import {
   type PayDay,
 } from "@/lib/payroll/pay-day"
 import { cn } from "@/lib/utils"
+import { normalizeTimeToHHMM } from "@/lib/datetime/time-input"
 
 const inputBase =
   "mt-1 h-9 rounded-lg border border-input bg-transparent px-3 text-sm outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
@@ -59,15 +63,17 @@ const inputClassNameCompact = cn(inputBase, "w-full max-w-[11rem]")
 
 const PROBATION_LABEL: Record<EmployeeProfile["probationStatus"], string> = {
   pending: "รอประเมิน",
+  overdue: "ครบกำหนด รอบันทึกผล",
   passed: "ผ่านแล้ว",
   not_applicable: "ไม่มีช่วงทดลองงาน",
 }
 
 const PROBATION_VARIANT: Record<
   EmployeeProfile["probationStatus"],
-  "pending" | "approved" | "neutral"
+  "pending" | "approved" | "neutral" | "warning"
 > = {
   pending: "pending",
+  overdue: "warning",
   passed: "approved",
   not_applicable: "neutral",
 }
@@ -89,7 +95,9 @@ type FormState = {
   position: string
   department: string
   salary: string
+  housing_allowance: string
   contract_start: string
+  contract_end: string
   contract_type: ContractType
   probation_end: string
   visa_expiry: string
@@ -120,7 +128,9 @@ function toFormState(profile: EmployeeProfile): FormState {
     position: profile.position ?? "",
     department: profile.department ?? "",
     salary: profile.salary?.toString() ?? "",
+    housing_allowance: profile.housing_allowance?.toString() ?? "",
     contract_start: profile.contract_start ?? "",
+    contract_end: profile.contract_end ?? "",
     contract_type: profile.contract_type,
     probation_end: profile.probation_end ?? "",
     visa_expiry: profile.visa_expiry ?? "",
@@ -140,8 +150,8 @@ function toFormState(profile: EmployeeProfile): FormState {
     bank_account_number: profile.bank_account_number ?? "",
     bank_branch: profile.bank_branch ?? "",
     work_shift_id: profile.work_shift_id ?? "",
-    default_check_in_time: profile.default_check_in_time ?? "",
-    default_check_out_time: profile.default_check_out_time ?? "",
+    default_check_in_time: normalizeTimeToHHMM(profile.default_check_in_time),
+    default_check_out_time: normalizeTimeToHHMM(profile.default_check_out_time),
   }
 }
 
@@ -165,14 +175,19 @@ export function EmployeeProfileForm({
   branches,
   departments,
   positions,
+  workShifts,
+  canViewSalary,
 }: {
   profile: EmployeeProfile
   branches: BranchRow[]
   departments: OrgDepartment[]
   positions: OrgPosition[]
+  workShifts: WorkShiftSummary[]
+  canViewSalary: boolean
 }) {
   const router = useRouter()
   const [form, setForm] = useState<FormState>(() => toFormState(profile))
+  const [salaryRevealed, setSalaryRevealed] = useState(false)
   const [saving, setSaving] = useState(false)
   const [probationBusy, setProbationBusy] = useState(false)
   const [message, setMessage] = useState<string | null>(null)
@@ -195,9 +210,9 @@ export function EmployeeProfileForm({
   }, [branchDepartments, form.department])
 
   const roleOptions = useMemo(() => {
-    const allowed = allowedRolesForDepartment(form.department)
+    const allowed = allowedRolesForDepartment(form.department, form.position)
     return ASSIGNABLE_ROLES.filter((role) => allowed.includes(role))
-  }, [form.department])
+  }, [form.department, form.position])
 
   const departmentPositions = useMemo(() => {
     if (!selectedDepartmentId) {
@@ -216,7 +231,11 @@ export function EmployeeProfileForm({
       const res = await fetch(`/api/employees/${profile.id}`, {
         method: "PATCH",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify(buildProfilePatchBody(form)),
+        body: JSON.stringify(
+          buildProfilePatchBody(form, {
+            includeSalaryFields: canViewSalary && salaryRevealed,
+          })
+        ),
       })
       if (!res.ok) {
         const body = (await res.json().catch(() => null)) as { error?: string } | null
@@ -227,7 +246,7 @@ export function EmployeeProfileForm({
       }
       router.refresh()
     },
-    [form, profile.id, router]
+    [form, profile.id, router, canViewSalary, salaryRevealed]
   )
 
   const { status: autoSaveStatus, error: autoSaveError, markSaved } =
@@ -301,6 +320,12 @@ export function EmployeeProfileForm({
       {isPendingRegistration ? (
         <PendingRegistrationApproval employeeId={profile.id} />
       ) : null}
+      {canViewSalary && !salaryRevealed ? (
+        <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-2.5 text-sm text-amber-950">
+          ข้อมูลเงินเดือนถูกซ่อน — เลื่อนลงไปที่การ์ด「ข้อมูลเงินเดือนและการจ่าย」แล้วกด
+          「แสดงข้อมูลเงินเดือน」ก่อนแก้ไข
+        </div>
+      ) : null}
       <div className="grid gap-4 lg:grid-cols-2">
         <WidgetCard title="ข้อมูลส่วนตัว">
           <div className="flex flex-col gap-3">
@@ -345,28 +370,6 @@ export function EmployeeProfileForm({
                 ))}
               </select>
             </Field>
-            <Field label="วันจ่ายเงินเดือน">
-              <select
-                className={inputClassNameCompact}
-                value={form.pay_day === "" ? "" : String(form.pay_day)}
-                onChange={(e) => {
-                  const v = e.target.value
-                  setField("pay_day", v === "" ? "" : (Number(v) as PayDay))
-                }}
-              >
-                <option value="">— ตามสัญชาติ —</option>
-                {PAY_DAY_OPTIONS.map((opt) => (
-                  <option key={opt.value} value={opt.value}>
-                    {opt.label}
-                  </option>
-                ))}
-              </select>
-              {form.pay_day !== "" ? (
-                <p className="mt-1 text-xs text-muted-foreground">
-                  วันจ่าย: {payDayLabel(form.pay_day)}
-                </p>
-              ) : null}
-            </Field>
             <Field label="เบอร์โทร">
               <input
                 type="tel"
@@ -397,8 +400,14 @@ export function EmployeeProfileForm({
                           branchDepartments.find((d) => d.name === nextDept)?.id ===
                             p.department_id)
                     )
-                    const nextRole = defaultRoleForDepartment(nextDept)
-                    const allowed = allowedRolesForDepartment(nextDept)
+                    const nextRole = defaultRoleForDepartment(
+                      nextDept,
+                      stillValid ? prev.position : ""
+                    )
+                    const allowed = allowedRolesForDepartment(
+                      nextDept,
+                      stillValid ? prev.position : ""
+                    )
                     const role = allowed.includes(prev.role) ? prev.role : nextRole
                     return {
                       ...prev,
@@ -431,7 +440,21 @@ export function EmployeeProfileForm({
               <select
                 className={inputClassName}
                 value={form.position}
-                onChange={(e) => setField("position", e.target.value)}
+                onChange={(e) => {
+                  const nextPosition = e.target.value
+                  setForm((prev) => {
+                    const nextRole = defaultRoleForDepartment(
+                      prev.department,
+                      nextPosition
+                    )
+                    const allowed = allowedRolesForDepartment(
+                      prev.department,
+                      nextPosition
+                    )
+                    const role = allowed.includes(prev.role) ? prev.role : nextRole
+                    return { ...prev, position: nextPosition, role }
+                  })
+                }}
                 disabled={!form.department && departmentPositions.length === 0}
               >
                 <option value="">— เลือกตำแหน่ง —</option>
@@ -480,9 +503,11 @@ export function EmployeeProfileForm({
               </Field>
             </div>
             <p className="text-xs text-muted-foreground">
-              จับคู่แนะนำ: Management → CEO/Admin · HR Officer → HR · IT →
+              จับคู่แนะนำ: Management → CEO/Admin · HR Officer / Officer+HR Officer →
+              HR · Inventory+Inventory Manager → Employee (คลังสินค้า) · IT →
               Developers · Admin → Admin/HR · Accounting/Inventory → Admin ·
-              สาขาอื่น → Employee/Branch Manager · Developers = สิทธิ์เต็มทุกข้อมูล
+              สาขาอื่น → Employee/Branch Manager · Developers =
+              สิทธิ์เต็มทุกข้อมูล
             </p>
             <Field label="สาขา">
               <select
@@ -539,6 +564,20 @@ export function EmployeeProfileForm({
                 เวลาเลิกงานปกติของพนักงานคนนี้
               </p>
             </Field>
+            <Field label="กะทำงาน">
+              <select
+                className={inputClassName}
+                value={form.work_shift_id}
+                onChange={(e) => setField("work_shift_id", e.target.value)}
+              >
+                <option value="">— ใช้ Settings fallback —</option>
+                {workShifts.map((shift) => (
+                  <option key={shift.id} value={shift.id}>
+                    {shift.name} · {formatShiftTimeRange(shift)} · {shift.standard_hours}h
+                  </option>
+                ))}
+              </select>
+            </Field>
             <p className="rounded-lg bg-muted/40 px-3 py-2 text-xs text-muted-foreground">
               LINE ID:{" "}
               <span className="font-mono text-foreground">
@@ -576,6 +615,41 @@ export function EmployeeProfileForm({
                 ))}
               </select>
             </Field>
+            <Field label="วันสิ้นสุดสัญญา">
+              <input
+                type="date"
+                className={inputClassNameCompact}
+                value={form.contract_end}
+                onChange={(e) => setField("contract_end", e.target.value)}
+              />
+            </Field>
+            <Field label="สถานะพนักงาน">
+              <select
+                className={inputClassNameCompact}
+                value={form.status}
+                onChange={(e) =>
+                  setField("status", e.target.value as "active" | "inactive")
+                }
+              >
+                <option value="active">Active</option>
+                <option value="inactive">Inactive</option>
+              </select>
+            </Field>
+            <EmployeeContractUpload
+              employeeId={profile.id}
+              contractFileName={profile.contract_file_name}
+              contractUploadedAt={profile.contract_uploaded_at}
+            />
+          </div>
+        </WidgetCard>
+
+        <SalarySensitiveSection
+          canAccess={canViewSalary}
+          className="lg:col-span-2"
+          revealed={salaryRevealed}
+          onRevealedChange={setSalaryRevealed}
+        >
+          <div className="grid gap-3 sm:grid-cols-2">
             <Field label="ประเภทการจ่าย">
               <select
                 className={inputClassName}
@@ -607,33 +681,47 @@ export function EmployeeProfileForm({
                 onChange={(e) => setField("salary", e.target.value)}
               />
             </Field>
+            <Field label="Add-on ค่าที่พัก (บาท/เดือน)">
+              <input
+                type="number"
+                min="0"
+                step="0.01"
+                className={inputClassNameCompact}
+                value={form.housing_allowance}
+                onChange={(e) => setField("housing_allowance", e.target.value)}
+              />
+            </Field>
+            <Field label="วันจ่ายเงินเดือน">
+              <select
+                className={inputClassNameCompact}
+                value={form.pay_day === "" ? "" : String(form.pay_day)}
+                onChange={(e) => {
+                  const v = e.target.value
+                  setField("pay_day", v === "" ? "" : (Number(v) as PayDay))
+                }}
+              >
+                <option value="">— ตามสัญชาติ —</option>
+                {PAY_DAY_OPTIONS.map((opt) => (
+                  <option key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </option>
+                ))}
+              </select>
+              {form.pay_day !== "" ? (
+                <p className="mt-1 text-xs text-muted-foreground">
+                  วันจ่าย: {payDayLabel(form.pay_day)}
+                </p>
+              ) : null}
+            </Field>
             {form.status === "active" && !form.salary.trim() ? (
-              <p className="text-xs text-amber-700">
+              <p className="text-xs text-amber-700 sm:col-span-2">
                 พนักงาน Active ควรมี {salaryFieldLabel(form.pay_type).toLowerCase()} ก่อนคำนวณเงินเดือน
               </p>
             ) : null}
-            <Field label="สถานะพนักงาน">
-              <select
-                className={inputClassNameCompact}
-                value={form.status}
-                onChange={(e) =>
-                  setField("status", e.target.value as "active" | "inactive")
-                }
-              >
-                <option value="active">Active</option>
-                <option value="inactive">Inactive</option>
-              </select>
-            </Field>
-            <EmployeeContractUpload
-              employeeId={profile.id}
-              contractFileName={profile.contract_file_name}
-              contractUploadedAt={profile.contract_uploaded_at}
-            />
           </div>
-        </WidgetCard>
 
-        <WidgetCard title="บัญชีธนาคาร / การรับเงินเดือน">
-          <div className="flex flex-col gap-3">
+          <div className="mt-4 flex flex-col gap-3 border-t border-border/60 pt-4">
+            <p className="text-sm font-medium">บัญชีธนาคาร / การรับเงินเดือน</p>
             <Field label="วิธีรับเงินเดือน">
               <select
                 className={inputClassName}
@@ -706,7 +794,7 @@ export function EmployeeProfileForm({
               </>
             ) : null}
           </div>
-        </WidgetCard>
+        </SalarySensitiveSection>
 
         <WidgetCard title="ทดลองงาน">
           <div className="flex flex-col gap-3">
@@ -724,7 +812,8 @@ export function EmployeeProfileForm({
                 onChange={(e) => setField("probation_end", e.target.value)}
               />
             </Field>
-            {profile.probationStatus === "pending" ? (
+            {(profile.probationStatus === "pending" ||
+              profile.probationStatus === "overdue") ? (
               <div className="flex flex-wrap gap-2 pt-1">
                 <Button
                   type="button"
@@ -816,7 +905,7 @@ export function EmployeeProfileForm({
           ดาวน์โหลด QR เช็คอิน
         </a>
         <a
-          href={`/admin/attendance?employee=${profile.id}`}
+          href={`/admin/employees/${profile.id}/attendance`}
           className="text-sm font-medium text-brand-red hover:underline"
         >
           ดูประวัติการเข้างาน

@@ -1,89 +1,118 @@
-# CURRENT TASK: T151 — Burmese (my) i18n catalog + LINE OA manual update
+# CURRENT TASK: ATT-ROSTER-001 — Attendance Roster + LINE Shift Summary
 
 ## Phase
 
-EXECUTE
+REVIEW COMPLETE — 🟡 APPROVED WITH CAVEATS
 
 ## Status
 
-Ready for **Codex** — handoff from Cursor 2026-06-15
+**Review:** 2026-06-17 — test/build/typecheck pass; lint pre-existing FEFO blocker  
+**Report:** `hr-app/_agent/archive/ATT-ROSTER-001/CURSOR_REVIEW_VERDICT.md`  
+**Next:** db push migration → deploy edge → smoke → commit/deploy  
+**Plan file:** `.cursor/plans/attendance_roster_+_line_ba810253.plan.md`  
+**Agent:** Codex (GPT-5.5)  
+**Orchestrator:** Cursor only — no source edits
 
-## Primary Agent
-
-Codex (GPT-5.5)
-
-## Context
-
-Cursor completed **Simplified Chinese (`/zh`)** i18n for all employee LINE/LIFF flows:
-- `zh-employee.ts` (560 keys), deploy `73ca158` → https://hr-app-two-iota.vercel.app
-- Handoff doc: `hr-app/reports/CURSOR_HANDOFF_2026-06-15.md`
-- Codex prompt: `hr-app/_agent/CODEX_PROMPT.md`
-
-**Gap:** Burmese (`/my`) still mostly English (`my` spreads `en` with ~15 overrides).
+**Previous:** PERF-ADMIN-001 — 🟡 APPROVED WITH CAVEATS (not yet deployed)
 
 ## Goal
 
-1. Create `my-employee.ts` with full Burmese translations (same keys as `zh-employee.ts`)
-2. Wire into `messages.ts`
-3. Update LINE OA employee manual + work log with language-switch instructions
+HR เปิด `/admin/attendance` เห็น roster **วันนี้** (ใครมา/สาย/ขาด/ลา แยกกะ) + LINE HR Group ได้สรุปหลัง grace แต่ละกะ + EOD 18:00 พร้อมรายชื่อ
 
-## Allowed Files
+**App root:** `/Users/jakarinosk/HEAD-OFFICE/PROJECTS/hr-payroll-client/hr-app/`
+
+**User choices:**
+- LINE: push หลัง `start + grace` 1 ครั้ง/กะ/วัน + evening-summary 18:00 มีรายชื่อ
+- Web: ทุกสาขา default, filter สาขา/แผนก/กะ
+
+---
+
+## Task breakdown (implement in order)
+
+### Phase 1 — Shared roster engine
+- `src/lib/attendance/daily-roster.ts` — `buildDailyRoster()`
+- Reuse `deriveAttendanceDayStatus` from `day-status.ts`
+- Bulk queries (employees, shifts, attendance today, leaves today)
+- `supabase/functions/_shared/daily-roster.ts` — Deno copy for edge
+- `daily-roster.test.ts` — minimal self-check
+
+### Phase 2 — Web UI
+- `page.tsx` — tabs `?view=today` (default) / `?view=history`
+- `AttendanceTodayRoster.tsx` — KPI + accordion per shift + name lists
+- `AttendanceTodayFilters.tsx` — date, branch, dept, shift (URL query)
+- Tab ประวัติ = existing table/CSV unchanged
+
+### Phase 3 — LINE shift summary edge
+- `supabase/functions/shift-attendance-summary/index.ts`
+- Cron `*/15 * * * 1-5`; due slot `[start+grace, start+grace+15min)`
+- Dedupe via `hr_runtime_config` key `shift_summary_last_push_{shiftId}_{date}`
+- Migration for pg_cron job
+
+### Phase 4 — Extend evening-summary
+- Add name lists (late/absent/on leave) + truncate if > ~3500 chars
+- Keep existing aggregate numbers
+
+### Phase 5 — Verify
+- `npm run build && npm run typecheck && npm run lint`
+- Update `docs/CRON_RUNBOOK.md`
+- Note manual smoke steps in TASK_RESULT.md
+
+---
+
+## Allowed files
 
 ```
-hr-app/src/lib/i18n/my-employee.ts                    (CREATE)
-hr-app/src/lib/i18n/messages.ts                       (EDIT)
-hr-app/scripts/generate-line-oa-employee-manual.py    (EDIT)
-hr-app/reports/LINE_OA_WORK_LOG.md                    (EDIT)
-hr-app/reports/LINE_OA_Employee_Manual_ZH.md          (OPTIONAL CREATE)
-hr-app/_agent/TASK_RESULT.md                          (OUTPUT)
-hr-app/_agent/CURSOR_REVIEW_REQUEST.md                (OUTPUT)
+hr-app/src/lib/attendance/daily-roster.ts
+hr-app/src/lib/attendance/daily-roster.test.ts
+hr-app/src/features/attendance/AttendanceTodayRoster.tsx
+hr-app/src/features/attendance/AttendanceTodayFilters.tsx
+hr-app/src/features/attendance/data.ts
+hr-app/src/app/admin/attendance/page.tsx
+hr-app/supabase/functions/_shared/daily-roster.ts
+hr-app/supabase/functions/shift-attendance-summary/**
+hr-app/supabase/functions/evening-summary/index.ts
+hr-app/supabase/migrations/*shift*summary*.sql
+hr-app/docs/CRON_RUNBOOK.md
+hr-app/_agent/**
+```
+
+Optional (only if needed for absent consistency):
+```
+hr-app/src/features/dashboard/data.ts
 ```
 
 ## Forbidden
 
-- Rich Menu LINE API changes (→ T152 Claude Code)
-- Webhook / handler logic changes
-- New npm dependencies
-- Commit / push / deploy by agent
+- LIFF / LINE webhook / Rich Menu / morning-push behavior changes
+- Payroll / inventory / FEFO
+- `supabase db push` / Vercel deploy / git commit (orchestrator after review)
+- Import `src/` from edge functions (use `_shared` copy only)
 
-## Acceptance Criteria
+---
 
-- [ ] `my-employee.ts` key count matches `zh-employee.ts` (~560)
-- [ ] Placeholders `{name}`, `{time}`, `{count}`, etc. preserved
-- [ ] `messages.ts`: `const my = { ...en, ...myEmployee }`
-- [ ] Manual script includes `/th` `/en` `/zh` `/my` section
-- [ ] `LINE_OA_WORK_LOG.md` documents i18n deploy (73ca158)
-- [ ] `npm run typecheck` + `npm run lint` pass (0 errors)
+## Acceptance criteria
+
+- [ ] `/admin/attendance` default tab วันนี้ — KPI + รายชื่อ สาย/ขาด/ลา
+- [ ] Sections per `hr_work_shifts`; shows next shift snapshot
+- [ ] Filters: branch / dept / shift on today tab
+- [ ] History tab unchanged (log table, CSV, HR edit)
+- [ ] `shift-attendance-summary` pushes LINE group once per shift/day after grace
+- [ ] `evening-summary` 18:00 includes numbers + name lists
+- [ ] build + typecheck + lint pass
+
+---
 
 ## Skills to Load
 
-Codex: read `hr-app/_agent/CODEX_PROMPT.md` (full prompt included)
+- `05-claude-execute` (EXECUTE — plan pre-approved)
+- `12-supabase-migration` (cron migration)
 
-Reference:
-- `src/lib/i18n/zh-employee.ts` — template for key set
-- `src/lib/i18n/translate.ts` — my fallback: en → th
+## Recommended Model
 
-## Workflow
+Codex GPT-5.5
 
-1. Codex reads CODEX_PROMPT + handoff doc
-2. Implement allowed files
-3. Quality gates
-4. Write `_agent/TASK_RESULT.md` + `_agent/CURSOR_REVIEW_REQUEST.md` → **STOP**
-5. Cursor review → APPROVE → commit + deploy
+## Prod (reference)
 
-## Queue (after T151)
-
-| ID | Task | Agent |
-|----|------|-------|
-| T152 | Rich Menu labels per locale (LINE API swap on `/zh`) | Claude Code |
-| T153 | HR admin LINE notify i18n (registration, branch manager) | Claude Code |
-| T150 | Employee default check-in/out time backend (was blocked) | Claude Code |
-
-## Linear
-
-Not tracked (ad-hoc i18n continuation)
-
-## Notes
-
-- Rich Menu **bottom buttons stay Thai** until T152 — document in manual
-- Supabase prod: `oouswalwqhojpzqwwdvs`
+- Supabase: `oouswalwqhojpzqwwdvs`
+- LINE group: `hr_line_group_id` in Settings / `HR_LINE_GROUP_ID`
+- Shifts: Branch Day 10:00, Branch Manager 10:00, Office 11:00 (grace 10 min)

@@ -1,8 +1,8 @@
 // Dashboard aggregation — read-only through the caller's session client so
 // RLS (hr_is_hr_admin) is the authorization layer. No service role here.
 import { ictDayRangeUtc } from "@/lib/attendance/late"
-import { getPayrollHourReport } from "@/features/payroll/data"
 import { createClient } from "@/lib/supabase/server"
+import { probationNeedsComplianceAlert } from "@/lib/employees/probation-compliance"
 
 const DAY_MS = 86_400_000
 const ICT_OFFSET_MS = 7 * 60 * 60 * 1000
@@ -15,14 +15,17 @@ export type DashboardStats = {
   absentToday: number
   pendingLeaves: number
   expiring: {
+    total: number
+    expired: number
     probation: number
     visa: number
     workPermit: number
   }
   attendanceByDay: Array<{ day: string; count: number }>
   leavesByStatus: Array<{ status: string; count: number }>
-  payrollEmployeeCount: number
-  payrollTotalHours: number
+  pendingApprovalCount: number
+  pendingDocumentCount: number
+  openComplaintCount: number
 }
 
 // "YYYY-MM-DD" of the ICT day containing `instant`, for date-column compares.
@@ -50,10 +53,20 @@ export async function getDashboardStats(
     new Date(now.getTime() + EXPIRY_WINDOW_DAYS * DAY_MS)
   )
 
-  const payrollYear = now.getFullYear()
-  const payrollMonth = now.getMonth() + 1
-
-  const [activeRes, weekRes, pendingRes, leavesRes, expiryRes, payrollReport] =
+  const [
+    activeRes,
+    weekRes,
+    pendingRes,
+    leavesRes,
+    expiryRes,
+    registrationCountRes,
+    onboardingCountRes,
+    attSubmissionCountRes,
+    otCountRes,
+    locationReviewCountRes,
+    pendingDocCountRes,
+    complaintCountRes,
+  ] =
     await Promise.all([
       supabase
         .from("hr_employees")
@@ -71,9 +84,39 @@ export async function getDashboardStats(
       supabase.from("hr_leaves").select("status"),
       supabase
         .from("hr_employees")
-        .select("probation_end, visa_expiry, work_permit_expiry")
+        .select("probation_end, probation_outcome, visa_expiry, work_permit_expiry")
         .eq("status", "active"),
-      getPayrollHourReport(payrollYear, payrollMonth),
+      supabase
+        .from("hr_employees")
+        .select("id", { count: "exact", head: true })
+        .eq("status", "inactive")
+        .eq("role", "employee"),
+      supabase
+        .from("hr_employees")
+        .select("id", { count: "exact", head: true })
+        .eq("status", "active")
+        .eq("role", "employee")
+        .is("branch_id", null),
+      supabase
+        .from("hr_attendance_submissions")
+        .select("id", { count: "exact", head: true })
+        .eq("approval_status", "pending_hr"),
+      supabase
+        .from("hr_overtime_requests")
+        .select("id", { count: "exact", head: true })
+        .eq("approval_status", "pending_hr"),
+      supabase
+        .from("hr_attendance")
+        .select("id", { count: "exact", head: true })
+        .eq("location_review_status", "pending_hr"),
+      supabase
+        .from("hr_document_requests")
+        .select("id", { count: "exact", head: true })
+        .eq("status", "pending"),
+      supabase
+        .from("hr_complaints")
+        .select("id", { count: "exact", head: true })
+        .eq("status", "open"),
     ])
 
   const totalActiveEmployees = activeRes.count ?? 0
@@ -116,22 +159,43 @@ export async function getDashboardStats(
 
   // Date columns are "YYYY-MM-DD" strings — string compare is date compare.
   const withinWindow = (date: string | null): boolean =>
-    date !== null && date >= todayIct && date <= expiryLimit
-  const expiring = { probation: 0, visa: 0, workPermit: 0 }
+    date !== null && (date < todayIct || (date >= todayIct && date <= expiryLimit))
+  const expiring = { total: 0, expired: 0, probation: 0, visa: 0, workPermit: 0 }
   for (const row of (expiryRes.data ?? []) as Array<{
     probation_end: string | null
+    probation_outcome: string | null
     visa_expiry: string | null
     work_permit_expiry: string | null
   }>) {
-    if (withinWindow(row.probation_end)) expiring.probation += 1
-    if (withinWindow(row.visa_expiry)) expiring.visa += 1
-    if (withinWindow(row.work_permit_expiry)) expiring.workPermit += 1
+    if (
+      probationNeedsComplianceAlert({
+        probationEnd: row.probation_end,
+        probationOutcome: row.probation_outcome,
+      }) &&
+      withinWindow(row.probation_end)
+    ) {
+      expiring.probation += 1
+      expiring.total += 1
+      if ((row.probation_end as string) < todayIct) expiring.expired += 1
+    }
+    if (withinWindow(row.visa_expiry)) {
+      expiring.visa += 1
+      expiring.total += 1
+      if ((row.visa_expiry as string) < todayIct) expiring.expired += 1
+    }
+    if (withinWindow(row.work_permit_expiry)) {
+      expiring.workPermit += 1
+      expiring.total += 1
+      if ((row.work_permit_expiry as string) < todayIct) expiring.expired += 1
+    }
   }
-
-  let payrollTotalHours = 0
-  for (const row of payrollReport) {
-    payrollTotalHours += row.regular + row.overtime + row.sick
-  }
+  const pendingApprovalCount =
+    (registrationCountRes.count ?? 0) +
+    (onboardingCountRes.count ?? 0) +
+    pendingLeaves +
+    (attSubmissionCountRes.count ?? 0) +
+    (otCountRes.count ?? 0) +
+    (locationReviewCountRes.count ?? 0)
 
   return {
     totalActiveEmployees,
@@ -142,7 +206,8 @@ export async function getDashboardStats(
     expiring,
     attendanceByDay: buckets,
     leavesByStatus,
-    payrollEmployeeCount: payrollReport.length,
-    payrollTotalHours: Math.round(payrollTotalHours * 10) / 10,
+    pendingApprovalCount,
+    pendingDocumentCount: pendingDocCountRes.count ?? 0,
+    openComplaintCount: complaintCountRes.count ?? 0,
   }
 }

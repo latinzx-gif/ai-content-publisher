@@ -28,6 +28,8 @@ import {
 } from "@/features/inventory/InventoryDashboardWidgets"
 import type { InventoryDashboardSummary } from "@/features/inventory/report-data"
 
+import { formatPayrollHours, roundPayrollHours } from "@/lib/payroll/format-hours"
+
 import type { CeoDashboardData } from "./data"
 
 const LEAVE_STATUS_VARIANT = {
@@ -51,8 +53,9 @@ export function CeoDashboard({
   subtitle?: string
   exportHref?: string
 }) {
-  const totalPayrollHours =
+  const totalPayrollHours = roundPayrollHours(
     data.regularHoursMonth + data.otHoursMonth + data.sickHoursMonth
+  )
 
   return (
     <div className="flex h-full min-h-0 flex-col gap-2 overflow-hidden md:gap-2.5 [@media(max-height:800px)]:gap-1.5">
@@ -104,7 +107,7 @@ export function CeoDashboard({
           compact
           iconSize="lg"
           label="Payroll Hours"
-          value={`${totalPayrollHours}h`}
+          value={`${formatPayrollHours(totalPayrollHours)}h`}
           detail={
             data.payrollHoursChangePct !== null
               ? `${data.payrollPeriodLabel} · ${data.payrollHoursChangePct >= 0 ? "+" : ""}${data.payrollHoursChangePct}% MoM`

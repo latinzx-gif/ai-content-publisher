@@ -7,6 +7,7 @@ Edge functions ถูกเรียกผ่าน **pg_cron + pg_net** โด�
 | Job | Cron (UTC) | ICT | Function |
 |-----|------------|-----|----------|
 | morning-push | `0 2 * * 1-5` | 09:00 Mon–Fri | `morning-push` |
+| shift-attendance-summary | `*/15 * * * 1-5` | ทุก 15 นาที Mon–Fri | `shift-attendance-summary` |
 | probation-alert | `30 2 * * *` | 09:30 daily | `probation-alert` |
 | visa-alert | (see migration) | morning | `visa-alert` |
 | evening-summary | `0 11 * * 1-5` | 18:00 Mon–Fri | `evening-summary` |
@@ -31,6 +32,7 @@ curl -X POST "$SUPABASE_URL/functions/v1/weekly-summary" \
 ## Rollback
 
 ```sql
+select cron.unschedule('shift-attendance-summary');
 select cron.unschedule('weekly-summary');
 select cron.unschedule('monthly-summary');
 select cron.unschedule('announcement-scheduler');

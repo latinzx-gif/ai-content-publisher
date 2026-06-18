@@ -5,7 +5,8 @@ import { EmployeeProfilePageClient } from "@/features/employees/profile/Employee
 import { getComplianceNotes, getEmployeeProfile } from "@/features/employees/profile/data"
 import { listBranches } from "@/features/branches/data"
 import { getOrganizationMasterData } from "@/features/organization/master-data"
-import { canEditEmployeeRecord } from "@/lib/auth/roles"
+import { listWorkShifts } from "@/features/shifts/data"
+import { canEditEmployeeRecord, canViewSalaryData } from "@/lib/auth/roles"
 import { getCurrentEmployee } from "@/lib/auth/session"
 
 export default async function EmployeeProfilePage({
@@ -16,12 +17,17 @@ export default async function EmployeeProfilePage({
   const { id } = await params
   const caller = await getCurrentEmployee()
   const readOnly = caller ? !canEditEmployeeRecord(caller.role) : true
+  const canViewSalary = caller ? canViewSalaryData(caller.role) : false
 
-  const [profile, notes, branches, organization] = await Promise.all([
-    getEmployeeProfile(id),
-    getComplianceNotes(id),
-    listBranches({ forForms: true }),
-    getOrganizationMasterData(),
+  const [profile, notes, branches, organization, workShifts] = await Promise.all([
+    getEmployeeProfile(id).catch(() => null),
+    getComplianceNotes(id).catch(() => []),
+    listBranches({ forForms: true }).catch(() => []),
+    getOrganizationMasterData().catch(() => ({
+      departments: [],
+      positions: [],
+    })),
+    listWorkShifts().catch(() => []),
   ])
   if (!profile) notFound()
 
@@ -38,7 +44,9 @@ export default async function EmployeeProfilePage({
         branches={branches}
         departments={organization.departments}
         positions={organization.positions}
+        workShifts={workShifts}
         readOnly={readOnly}
+        canViewSalary={canViewSalary}
       />
     </div>
   )

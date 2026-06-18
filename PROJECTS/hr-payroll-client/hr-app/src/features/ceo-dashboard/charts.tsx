@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 
+import { formatPayrollHours } from "@/lib/payroll/format-hours"
 import { cn } from "@/lib/utils"
 import {
   Cell,
@@ -92,7 +93,9 @@ function CompactDonutLegend({
             />
             <span className="min-w-0 flex-1 truncate font-medium">{entry.name}</span>
             <span className="shrink-0 tabular-nums text-muted-foreground">
-              {entry.value}
+              {valueSuffix === "h"
+                ? formatPayrollHours(entry.value)
+                : entry.value}
               {valueSuffix} ({pct}%)
             </span>
           </li>
@@ -164,7 +167,9 @@ function CompactDonut({
             <Tooltip
               contentStyle={TOOLTIP_STYLE}
               formatter={(value, name) => [
-                `${value ?? 0}${valueSuffix}`,
+                valueSuffix === "h"
+                  ? `${formatPayrollHours(Number(value ?? 0))}${valueSuffix}`
+                  : `${value ?? 0}${valueSuffix}`,
                 String(name),
               ]}
             />
@@ -219,7 +224,7 @@ export function CeoPayrollDonut({
     <CompactDonut
       data={data}
       colors={PAYROLL_COLORS}
-      centerValue={`${totalHours}h`}
+      centerValue={`${formatPayrollHours(totalHours)}h`}
       centerLabel="Total hours"
       valueSuffix="h"
       emptyMessage="No payroll hours this period"

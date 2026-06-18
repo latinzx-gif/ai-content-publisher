@@ -115,6 +115,7 @@ export function AddEmployeeForm({
     contract_start: "",
     probation_end: "",
     salary: "",
+    housing_allowance: "",
     salary_payment_method: "" as "" | Exclude<SalaryPaymentMethod, null>,
     bank_name: "",
     bank_account_name: "",
@@ -140,9 +141,9 @@ export function AddEmployeeForm({
   }
 
   const roleOptions = useMemo(() => {
-    const allowed = allowedRolesForDepartment(form.department)
+    const allowed = allowedRolesForDepartment(form.department, form.position)
     return ASSIGNABLE_ROLES.filter((role) => allowed.includes(role))
-  }, [form.department])
+  }, [form.department, form.position])
 
   const selectedDepartmentId = useMemo(() => {
     return departments.find((d) => d.name === form.department)?.id ?? null
@@ -490,8 +491,14 @@ export function AddEmployeeForm({
                       departments.find((d) => d.name === nextDept)?.id ===
                         p.department_id
                   )
-                  const nextRole = defaultRoleForDepartment(nextDept)
-                  const allowed = allowedRolesForDepartment(nextDept)
+                  const nextRole = defaultRoleForDepartment(
+                    nextDept,
+                    stillValid ? prev.position : ""
+                  )
+                  const allowed = allowedRolesForDepartment(
+                    nextDept,
+                    stillValid ? prev.position : ""
+                  )
                   const role = allowed.includes(prev.role) ? prev.role : nextRole
                   return {
                     ...prev,
@@ -520,7 +527,21 @@ export function AddEmployeeForm({
             <select
               className={inputClassName}
               value={form.position}
-              onChange={(e) => setField("position", e.target.value)}
+              onChange={(e) => {
+                const nextPosition = e.target.value
+                setForm((prev) => {
+                  const nextRole = defaultRoleForDepartment(
+                    prev.department,
+                    nextPosition
+                  )
+                  const allowed = allowedRolesForDepartment(
+                    prev.department,
+                    nextPosition
+                  )
+                  const role = allowed.includes(prev.role) ? prev.role : nextRole
+                  return { ...prev, position: nextPosition, role }
+                })
+              }}
               disabled={!form.department}
             >
               <option value="">
@@ -646,6 +667,16 @@ export function AddEmployeeForm({
                 แนะนำกรอกอัตราก่อนคำนวณเงินเดือน
               </p>
             ) : null}
+          </FormField>
+          <FormField label="Add-on ค่าที่พัก (บาท/เดือน)">
+            <input
+              type="number"
+              min="0"
+              step="0.01"
+              className={inputClassName}
+              value={form.housing_allowance}
+              onChange={(e) => setField("housing_allowance", e.target.value)}
+            />
           </FormField>
           <FormField label="Status">
             <select

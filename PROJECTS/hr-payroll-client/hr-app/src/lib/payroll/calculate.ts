@@ -17,6 +17,7 @@ export function calculatePayslip(
   options: CalculatePayslipOptions = {}
 ): PayslipCalculation | null {
   const salary = summary.salary
+  const housingAllowance = summary.housing_allowance > 0 ? summary.housing_allowance : 0
   if (!salary || salary <= 0) return null
 
   const taxEnabled = options.taxEnabled ?? false
@@ -44,9 +45,17 @@ export function calculatePayslip(
     const hourlyRate = salary / config.monthly_std_hours
     baseRate = round2(hourlyRate)
     const otPay = round2(hourlyRate * config.ot_multiplier * summary.overtime_hours)
-    gross = round2(salary + otPay)
+    gross = round2(salary + housingAllowance + otPay)
 
     lines.push({ code: "BASIC", label: "เงินเดือน", amount: salary, sort_order: 10 })
+    if (housingAllowance > 0) {
+      lines.push({
+        code: "HOUSING",
+        label: "Add-on ค่าที่พัก",
+        amount: housingAllowance,
+        sort_order: 15,
+      })
+    }
     if (otPay > 0) {
       lines.push({ code: "OT", label: "ค่าล่วงเวลา", amount: otPay, sort_order: 20 })
     }

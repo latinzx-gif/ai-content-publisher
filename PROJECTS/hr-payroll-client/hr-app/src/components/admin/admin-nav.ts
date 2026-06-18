@@ -9,7 +9,6 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
     items: [
       { label: "แดชบอร์ด", href: "/admin", icon: "layout-dashboard" },
       { label: "พนักงาน", href: "/admin/employees", icon: "users" },
-      { label: "อนุมัติ", href: "/admin/manager", icon: "list-checks" },
       { label: "การเข้างาน", href: "/admin/attendance", icon: "clock" },
       { label: "จัดการลา", href: "/admin/leaves", icon: "calendar" },
       { label: "OT", href: "/admin/overtime", icon: "timer" },

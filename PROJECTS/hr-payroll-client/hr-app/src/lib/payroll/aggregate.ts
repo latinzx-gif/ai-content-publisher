@@ -13,6 +13,7 @@ type EmployeeRow = {
   id: string
   name: string
   salary: number | null
+  housing_allowance: number | null
   pay_type: PayType
   nationality: string | null
   pay_day: number | null
@@ -38,7 +39,7 @@ export async function aggregatePayrollPeriod(
 
   const { data: employees, error: employeesError } = await supabase
     .from("hr_employees")
-    .select("id, name, salary, pay_type, nationality, pay_day")
+    .select("id, name, salary, housing_allowance, pay_type, nationality, pay_day")
     .eq("status", "active")
 
   let employeeRows: EmployeeRow[] = (employees as EmployeeRow[] | null) ?? []
@@ -46,7 +47,7 @@ export async function aggregatePayrollPeriod(
   if (employeesError?.message?.includes("nationality") || employeesError?.message?.includes("pay_day")) {
     const { data: fallback, error: fallbackError } = await supabase
       .from("hr_employees")
-      .select("id, name, salary, pay_type")
+      .select("id, name, salary, housing_allowance, pay_type")
       .eq("status", "active")
     if (fallbackError) {
       throw new Error(`Failed to fetch employees: ${fallbackError.message}`)
@@ -103,6 +104,7 @@ export async function aggregatePayrollPeriod(
       pay_type: (emp.pay_type as PayType) ?? "hourly",
       pay_day: payDay,
       salary: emp.salary != null ? Number(emp.salary) : null,
+      housing_allowance: emp.housing_allowance != null ? Number(emp.housing_allowance) : 0,
       worked_hours: 0,
       overtime_hours: 0,
       sick_leave_hours: 0,

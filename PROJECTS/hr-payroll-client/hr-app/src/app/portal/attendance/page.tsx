@@ -64,18 +64,27 @@ export default async function PortalAttendancePage({
       <div className="flex flex-col gap-4">
         <RetroQuotaBadge used={retroUsage.used} limit={retroUsage.limit} />
         <AttendanceCorrectableBanner items={correctable} />
-        <div className="rounded-xl border border-border/80 bg-card p-4 shadow-sm">
-          <AttendanceCalendar
-            month={month}
-            days={calendar.days}
-            basePath="/portal/attendance"
-          />
+
+        <div className="grid gap-4 lg:grid-cols-[minmax(280px,38%)_minmax(0,1fr)] lg:items-start lg:gap-4">
+          <div className="rounded-xl border border-border/80 bg-card p-4 shadow-sm sm:p-5 lg:sticky lg:top-4 lg:max-h-[calc(100vh-12rem)] lg:overflow-y-auto">
+            <AttendanceCalendar
+              month={month}
+              days={calendar.days}
+              basePath="/portal/attendance"
+              compact
+            />
+          </div>
+
+          <div className="flex min-h-0 flex-col gap-4">
+            <AttendanceSummaryCard summary={summary} compact />
+            <div className="overflow-auto rounded-xl border border-border/80 bg-card shadow-sm">
+              <EmployeeAttendanceTable rows={rows} />
+            </div>
+            <Suspense>
+              <AttendancePagination page={params.page} total={total} />
+            </Suspense>
+          </div>
         </div>
-        <AttendanceSummaryCard summary={summary} />
-        <EmployeeAttendanceTable rows={rows} />
-        <Suspense>
-          <AttendancePagination page={params.page} total={total} />
-        </Suspense>
       </div>
     </AdminPageShell>
   )

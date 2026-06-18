@@ -65,8 +65,8 @@ function canApproveDamageRole(employee: Awaited<ReturnType<typeof assertActiveIn
   return canManageHr(employee.role) || isDev(employee.role) || canAccessInventoryPortal(employee)
 }
 
-function canApproveAdminDamageRole(role: Parameters<typeof canManageHr>[0]) {
-  return role === "admin" || isDev(role)
+function canApproveInventoryDamageRole(role: Parameters<typeof canManageHr>[0]) {
+  return role === "inventory" || isDev(role)
 }
 
 async function assertActiveInventoryEmployee() {
@@ -204,6 +204,7 @@ function mapDamage(row: Record<string, unknown>): InvDamage {
     branch_id: row.branch_id as string,
     warehouse_id: row.warehouse_id as string,
     sku_id: row.sku_id as string,
+    lot_id: (row.lot_id as string | null) ?? null,
     qty: Number(row.qty),
     damage_type: row.damage_type as InvDamage["damage_type"],
     reason: row.reason as string,
@@ -335,7 +336,7 @@ export async function getDamageReportDetail(
 
 function approvalRoleForCost(costValue: number) {
   if (costValue <= 500) return "auto" as const
-  if (costValue > 5000) return "admin" as const
+  if (costValue > 5000) return "inventory" as const
   return "hr" as const
 }
 
@@ -364,6 +365,7 @@ export async function createDamageReport(
         damage_type: item.damage_type,
         reason: item.reason,
         photo_url: item.photo_url ?? null,
+        lot_id: item.lot_id ?? null,
         status: "pending",
         cost_value: costValue,
         approval_required_role: approvalRole,
@@ -384,7 +386,7 @@ export async function createDamageReport(
 
     const insertedRows = (inserted ?? []) as Array<{
       id: string
-      approval_required_role: "auto" | "hr" | "admin"
+      approval_required_role: "auto" | "hr" | "inventory"
     }>
     for (const row of insertedRows) {
       if (row.approval_required_role !== "auto") continue
@@ -431,8 +433,8 @@ export async function approveDamage(
     const detail = await getDamageReportDetail(payload.id)
     if (!detail) return { success: false, error: "ไม่พบรายงานความเสียหาย" }
     if (
-      detail.approval_required_role === "admin" &&
-      !canApproveAdminDamageRole(employee.role)
+      detail.approval_required_role === "inventory" &&
+      !canApproveInventoryDamageRole(employee.role)
     ) {
       return { success: false, error: "ต้องใช้สิทธิ์ Admin เพื่ออนุมัติรายการนี้" }
     }
@@ -462,8 +464,8 @@ export async function rejectDamage(
     const detail = await getDamageReportDetail(payload.id)
     if (!detail) return { success: false, error: "ไม่พบรายงานความเสียหาย" }
     if (
-      detail.approval_required_role === "admin" &&
-      !canApproveAdminDamageRole(employee.role)
+      detail.approval_required_role === "inventory" &&
+      !canApproveInventoryDamageRole(employee.role)
     ) {
       return { success: false, error: "ต้องใช้สิทธิ์ Admin เพื่อปฏิเสธรายการนี้" }
     }

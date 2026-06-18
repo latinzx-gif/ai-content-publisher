@@ -1,6 +1,5 @@
 import {
   Building2,
-  CreditCard,
   FileText,
   Heart,
   Mail,
@@ -10,6 +9,7 @@ import Link from "next/link"
 
 import { EmployeeAvatar } from "@/components/brand/EmployeeAvatar"
 import { StatusPill } from "@/components/brand/StatusPill"
+import { buttonVariants } from "@/components/ui/button"
 import { formatShiftTimeRange } from "@/features/shifts/format"
 import type { EmployeeProfile } from "@/features/employees/profile/data"
 import { paymentMethodLabel } from "@/features/employees/profile/payment-method"
@@ -17,7 +17,16 @@ import {
   ProfileField,
   ProfileSectionCard,
 } from "@/features/employees/profile/ProfileSectionCard"
+import { SalarySensitiveView } from "@/features/employees/profile/SalarySensitiveSection"
 import { formatThaiDateOnly } from "@/lib/datetime/thailand"
+import { payDayLabel, nationalityLabel } from "@/lib/payroll/pay-day"
+import { PAY_TYPE_OPTIONS } from "@/lib/payroll/pay-type"
+import { cn } from "@/lib/utils"
+
+const profileActionLinkClass = cn(
+  buttonVariants({ size: "sm", variant: "outline" }),
+  "border-white/40 bg-white/10 text-white hover:bg-white/20 hover:text-white"
+)
 
 const CONTRACT_LABEL: Record<string, string> = {
   full_time: "Full-time",
@@ -32,9 +41,11 @@ function formatDate(value: string | null): string {
 export function EmployeeProfileView({
   profile,
   actions,
+  canViewSalary = false,
 }: {
   profile: EmployeeProfile
   actions?: React.ReactNode
+  canViewSalary?: boolean
 }) {
   const employeeCode =
     profile.employee_code?.trim() || profile.id.slice(0, 8).toUpperCase()
@@ -44,13 +55,13 @@ export function EmployeeProfileView({
       <div className="shrink-0 overflow-hidden rounded-xl border border-border/80 bg-card shadow-sm">
         <div className="relative bg-brand-red px-4 py-4 text-white md:px-5">
           <div
-            className="pointer-events-none absolute inset-0 opacity-20"
+            className="pointer-events-none absolute inset-0 z-0 opacity-20"
             style={{
               backgroundImage:
                 "radial-gradient(circle at 20% 30%, #fff 0, transparent 45%), radial-gradient(circle at 80% 70%, #fff 0, transparent 40%)",
             }}
           />
-          <div className="relative flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="relative z-10 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center gap-3">
               <EmployeeAvatar
                 name={profile.name}
@@ -81,18 +92,19 @@ export function EmployeeProfileView({
                 </p>
               </div>
             </div>
-            <div className="flex flex-wrap items-center gap-2">
+            <div className="relative z-10 flex flex-wrap items-center gap-2">
               {actions}
               <Link
                 href={`/api/checkin/qr?emp_id=${profile.id}`}
                 target="_blank"
-                className="rounded-lg border border-white/40 bg-white/10 px-3 py-1.5 text-xs font-medium hover:bg-white/20"
+                rel="noreferrer"
+                className={profileActionLinkClass}
               >
                 Download QR
               </Link>
               <Link
-                href={`/admin/attendance?employee=${profile.id}`}
-                className="rounded-lg border border-white/40 bg-white/10 px-3 py-1.5 text-xs font-medium hover:bg-white/20"
+                href={`/admin/employees/${profile.id}/attendance`}
+                className={profileActionLinkClass}
               >
                 Attendance
               </Link>
@@ -120,7 +132,10 @@ export function EmployeeProfileView({
           <ProfileField label="Full Name" value={profile.name} />
           <ProfileField label="Date of Birth" value={formatDate(profile.date_of_birth)} />
           <ProfileField label="Gender" value="—" />
-          <ProfileField label="Nationality" value="—" />
+          <ProfileField
+            label="Nationality"
+            value={nationalityLabel(profile.nationality)}
+          />
           <ProfileField label="รหัสพนักงาน" value={profile.employee_code} />
           <ProfileField label="LINE User ID" value={profile.line_user_id} />
         </ProfileSectionCard>
@@ -145,7 +160,6 @@ export function EmployeeProfileView({
                 : "— ใช้ Settings fallback —"
             }
           />
-          <ProfileField label="Salary (THB)" value={profile.salary?.toLocaleString() ?? "—"} />
           <ProfileField label="Status" value={profile.status} />
           <ProfileField
             label="สัญญาจ้าง (ไฟล์)"
@@ -167,29 +181,50 @@ export function EmployeeProfileView({
           />
         </ProfileSectionCard>
 
-        <ProfileSectionCard title="Bank Account" icon={CreditCard}>
-          <ProfileField
-            label="Payment Method"
-            value={
-              profile.salary_payment_method
-                ? paymentMethodLabel(profile.salary_payment_method)
-                : profile.bank_account_number
-                  ? paymentMethodLabel("bank")
-                  : "—"
-            }
-          />
-          {profile.salary_payment_method === "cash" ? (
-            <ProfileField label="Note" value="รับเงินเดือนเป็นเงินสด" />
-          ) : profile.salary_payment_method === "bank" ||
-            profile.bank_account_number ? (
-            <>
-              <ProfileField label="Bank Name" value={profile.bank_name} />
-              <ProfileField label="Account Name" value={profile.bank_account_name} />
-              <ProfileField label="Account Number" value={profile.bank_account_number} />
-              <ProfileField label="Branch" value={profile.bank_branch} />
-            </>
-          ) : null}
-        </ProfileSectionCard>
+        <SalarySensitiveView canAccess={canViewSalary}>
+          <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-3">
+            <ProfileField
+              label="ประเภทการจ่าย"
+              value={
+                PAY_TYPE_OPTIONS.find((o) => o.value === profile.pay_type)?.label ??
+                profile.pay_type
+              }
+            />
+            <ProfileField
+              label="Salary (THB)"
+              value={profile.salary?.toLocaleString() ?? "—"}
+            />
+            <ProfileField
+              label="Add-on ค่าที่พัก"
+              value={profile.housing_allowance?.toLocaleString() ?? "—"}
+            />
+            <ProfileField
+              label="วันจ่ายเงินเดือน"
+              value={profile.pay_day ? payDayLabel(profile.pay_day) : "—"}
+            />
+            <ProfileField
+              label="Payment Method"
+              value={
+                profile.salary_payment_method
+                  ? paymentMethodLabel(profile.salary_payment_method)
+                  : profile.bank_account_number
+                    ? paymentMethodLabel("bank")
+                    : "—"
+              }
+            />
+            {profile.salary_payment_method === "cash" ? (
+              <ProfileField label="Note" value="รับเงินเดือนเป็นเงินสด" />
+            ) : profile.salary_payment_method === "bank" ||
+              profile.bank_account_number ? (
+              <>
+                <ProfileField label="Bank Name" value={profile.bank_name} />
+                <ProfileField label="Account Name" value={profile.bank_account_name} />
+                <ProfileField label="Account Number" value={profile.bank_account_number} />
+                <ProfileField label="Branch" value={profile.bank_branch} />
+              </>
+            ) : null}
+          </div>
+        </SalarySensitiveView>
 
         <ProfileSectionCard title="Tax & Social Security" icon={FileText}>
           <ProfileField label="Visa Expiry" value={formatDate(profile.visa_expiry)} />

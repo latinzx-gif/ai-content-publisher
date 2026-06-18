@@ -1,4 +1,5 @@
 import { LEAVE_TYPE_LABELS, LEAVE_TYPES, type LeaveType } from "@/features/leave/types"
+import { type LeavePolicyRow } from "@/features/leaves/policy"
 import { createClient } from "@/lib/supabase/server"
 
 const DAY_MS = 86_400_000
@@ -27,6 +28,44 @@ export type EmployeeBalanceRow = {
     used: number
     remaining: number
   }>
+}
+
+export async function getLeavePolicies(): Promise<LeavePolicyRow[]> {
+  const supabase = await createClient()
+
+  const { data: current, error } = await supabase
+    .from("hr_leave_policy_defaults")
+    .select("leave_type, annual_days")
+
+  if (error) throw error
+
+  const existing = new Set((current ?? []).map((row) => row.leave_type))
+  const missing = LEAVE_TYPES.filter((leaveType) => !existing.has(leaveType))
+
+  if (missing.length > 0) {
+    const { error: upsertError } = await supabase
+      .from("hr_leave_policy_defaults")
+      .upsert(
+        missing.map((leaveType) => ({
+          leave_type: leaveType,
+          annual_days: 0,
+        }))
+      )
+
+    if (upsertError) throw upsertError
+  }
+
+  const map = new Map(
+    [...(current ?? []), ...missing.map((leaveType) => ({ leave_type: leaveType, annual_days: 0 }))].map(
+      (row) => [row.leave_type as LeaveType, Number(row.annual_days)]
+    )
+  )
+
+  return LEAVE_TYPES.map((leaveType) => ({
+    leaveType,
+    label: LEAVE_TYPE_LABELS[leaveType],
+    annualDays: map.get(leaveType) ?? 0,
+  }))
 }
 
 function monthRange(month: string): { start: string; end: string } {

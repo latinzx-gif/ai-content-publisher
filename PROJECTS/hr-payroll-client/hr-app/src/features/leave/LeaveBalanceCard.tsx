@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/card"
 import { useLocale } from "@/features/portal/LocaleProvider"
 import { LEAVE_TYPES, type LeaveType } from "@/features/leave/types"
+import type { MessageKey } from "@/lib/i18n/messages"
 
 export type LeaveBalance = {
   leave_type: string
@@ -16,12 +17,11 @@ export type LeaveBalance = {
   used_days: number
 }
 
-const LEAVE_TYPE_KEYS: Record<LeaveType, "leave.type.sick" | "leave.type.personal" | "leave.type.annual" | "leave.type.other"> = {
-  sick: "leave.type.sick",
-  personal: "leave.type.personal",
-  annual: "leave.type.annual",
-  other: "leave.type.other",
+function leaveTypeKey(type: LeaveType): MessageKey {
+  return `leave.type.${type}` as MessageKey
 }
+
+const DISPLAY_LEAVE_TYPES = LEAVE_TYPES.filter((type) => type !== "other")
 
 export function LeaveBalanceCard({ balances }: { balances: LeaveBalance[] }) {
   const { tx } = useLocale()
@@ -34,8 +34,8 @@ export function LeaveBalanceCard({ balances }: { balances: LeaveBalance[] }) {
         <CardDescription>{tx("leave.balance.subtitle")}</CardDescription>
       </CardHeader>
       <CardContent>
-        <dl className="grid grid-cols-2 gap-3">
-          {LEAVE_TYPES.map((type) => {
+        <dl className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+          {DISPLAY_LEAVE_TYPES.map((type) => {
             const balance = byType.get(type)
             const remaining = balance
               ? balance.total_days - balance.used_days
@@ -43,7 +43,7 @@ export function LeaveBalanceCard({ balances }: { balances: LeaveBalance[] }) {
             return (
               <div key={type} className="rounded-lg bg-muted/50 p-3">
                 <dt className="text-xs text-muted-foreground">
-                  {tx(LEAVE_TYPE_KEYS[type])}
+                  {tx(leaveTypeKey(type))}
                 </dt>
                 <dd className="mt-1 text-lg font-medium tabular-nums">
                   {remaining === null ? (

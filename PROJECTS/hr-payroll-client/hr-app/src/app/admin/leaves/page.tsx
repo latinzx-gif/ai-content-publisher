@@ -3,6 +3,7 @@ import { CountBadge } from "@/components/brand/CountBadge"
 import {
   getLeaveBalances,
   getLeaveCalendar,
+  getLeavePolicies,
   getLeaveReport,
   normalizeLeaveView,
 } from "@/features/leaves/insights"
@@ -74,6 +75,6 @@ async function ReportView({ month }: { month: string }) {
 }
 
 async function BalancesView() {
-  const rows = await getLeaveBalances()
-  return <LeaveBalancesTable rows={rows} />
+  const [rows, policies] = await Promise.all([getLeaveBalances(), getLeavePolicies()])
+  return <LeaveBalancesTable rows={rows} policies={policies} />
 }

@@ -6,8 +6,9 @@ import type { Employee } from "@/lib/auth/session"
 export function validateEmployeeDepartmentRole(
   department: string | null | undefined,
   role: AssignableRole,
-  caller: Employee | null
+  caller: Employee | null,
+  position?: string | null
 ): string | null {
   if (caller && isDev(caller.role)) return null
-  return departmentRoleMismatchMessage(department, role)
+  return departmentRoleMismatchMessage(department, role, position)
 }

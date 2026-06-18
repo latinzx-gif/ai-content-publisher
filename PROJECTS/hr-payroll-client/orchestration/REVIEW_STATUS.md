@@ -2,9 +2,125 @@
 
 **Batch:** T77–T108  
 **Status:** ✅ **APPROVED**  
-**Active:** **T138** — Kitchen Requisition Web Admin — 🔄 **IN PROGRESS** (Office-Style)  
-**Date:** 2026-06-13  
-**Reviewed:** 2026-06-13 (Cursor orchestrator)
+**Active:** **ATT-ROSTER-001** — 🟡 **APPROVED WITH CAVEATS** (2026-06-17)  
+**Previous:** **PERF-ADMIN-001** — 🟡 **APPROVED WITH CAVEATS** (2026-06-17)  
+**Previous:** **FEFO-001–FEFO-014** — 🟡 **APPROVED WITH CAVEATS** (2026-06-17)  
+**Previous:** T141 Stock Count Web — 🔄 EXECUTE (paused for FEFO)  
+**Previous:** T155-A Morning Push Edge — ✅ **APPROVED** (2026-06-15, commit `d6a18a0`, edge+cron deployed)  
+**Previous:** T143–T149 Inventory Expansion — ✅ **APPROVED** (2026-06-15, commit `49bda1c`)  
+**Previous:** T155-B Morning Push HR settings UI — ✅ **APPROVED** (2026-06-15)  
+**Previous:** T151 Burmese i18n — ⏸ paused  
+**Previous:** Leave Policy Defaults — ✅ **APPROVED** (2026-06-15)  
+**Date:** 2026-06-17  
+**Team:** Cursor + Codex only — Claude Code ⏸ paused  
+**Reviewed:** Cursor orchestrator
+
+## Latest Review — ATT-ROSTER-001 Attendance Roster + LINE (APPROVED WITH CAVEATS 2026-06-17)
+
+**Agent:** Codex  
+**Scope:** Today roster web, shift-attendance-summary edge, evening-summary names, cron migration
+
+**Gates:** test ✅ 22/22 · build ✅ · typecheck ✅ · lint ❌ (pre-existing `InventoryLotPicker.tsx` — FEFO)
+
+**Verdict:** 🟡 APPROVED WITH CAVEATS — `hr-app/_agent/archive/ATT-ROSTER-001/CURSOR_REVIEW_VERDICT.md`
+
+**Pending:** db push cron migration · deploy edge functions · LINE smoke · commit/deploy
+
+---
+
+## Previous Review — PERF-ADMIN-001 Admin Performance (APPROVED WITH CAVEATS 2026-06-17)
+
+**Agent:** Codex  
+**Scope:** Admin loading skeleton, Suspense dashboard, batch attendance issues, layout notification badges-only, defer payroll from stats
+
+**Gates:** build ✅ · typecheck ✅ · lint ❌ (pre-existing `InventoryLotPicker.tsx` — FEFO, outside scope)
+
+**Verdict:** 🟡 APPROVED WITH CAVEATS — `hr-app/_agent/CURSOR_REVIEW_VERDICT.md`
+
+**Pending before deploy:** Manual smoke `/admin` + notification bell; commit PERF files when ready
+
+---
+
+## Previous Review — FEFO-001–FEFO-014 (APPROVED WITH CAVEATS 2026-06-17)
+
+**Agent:** Cursor (direct implement — sub-agents failed)  
+**Scope:** Lot inventory + FEFO allocator + wire issue/consume/transfer/damage/count
+
+**Gates:** build ✅ · typecheck ✅ · lint ✅ (0 errors) · test ✅ 20/20
+
+**Verdict:** 🟡 APPROVED WITH CAVEATS — `hr-app/_agent/CURSOR_REVIEW_VERDICT.md`
+
+**Blocker:** Migrations not applied to Supabase yet — user must `db push` before prod
+
+---
+
+**Agent:** Codex  
+**Scope:** `morning-push` edge + cron migration (`*/15`)
+
+**Gates:** build ✅ · typecheck ✅ · lint ✅ (0 errors)
+
+**Verdict:** ✅ APPROVED — `hr-app/_agent/archive/T155-A/CURSOR_REVIEW_VERDICT.md`
+
+**Deploy:** `d6a18a0` — migration applied (`--include-all`) + `supabase functions deploy morning-push`
+
+**Archive:** `hr-app/_agent/archive/T155-A/`
+
+---
+
+## Active — T141 Stock Count Web (EXECUTE)
+
+**Plan:** ✅ APPROVED 2026-06-15 — `hr-app/_agent/PLAN_APPROVAL.md`  
+**Agent:** Codex  
+**Depends:** T136 schema ✅ · transfer patterns (T143) ✅  
+**See:** `orchestration/CURRENT_TASK.md`  
+**_agent cleanup:** 2026-06-16 — stale files archived; active plan files kept at `_agent/` root
+
+---
+
+## Latest Review — T143–T149 Inventory Expansion (APPROVED 2026-06-15)
+
+**Agent:** Codex  
+**Scope:** Transfer, Alerts, Dashboard, Reports, LIFF mobile + follow-up (cancel + filters + lint)
+
+**Gates:** build ✅ · typecheck ✅ · lint ✅ (0 errors)
+
+**Verdict:** ✅ APPROVED — `hr-app/_agent/archive/T143-T149/CURSOR_REVIEW_VERDICT.md`
+
+**Deploy:** `49bda1c` → https://hr-app-two-iota.vercel.app
+
+**Archive:** `hr-app/_agent/archive/T143-T149/` ✅
+
+---
+
+## Latest Review — T155-B Morning Push HR Settings UI (APPROVED 2026-06-15)
+
+**Agent:** Codex  
+**Scope:** `MorningPushSettingsPanel`, `morning-push-config.ts`, `/api/settings/runtime` (8 keys)
+
+**Gates:** typecheck ✅ · lint ✅ (0 errors) · build ✅
+
+**Archive:** `hr-app/_agent/archive/T155-B/`
+
+---
+
+## Latest Review — Leave Policy Defaults + HR Balance Override (APPROVED 2026-06-15)
+
+**Agent:** Codex  
+**Scope:** `hr_leave_policy_defaults` migration, `/api/leave/policy`, `/api/leave/balances`, `/admin/leaves?view=balances` UI
+
+**Gates:** build ✅ · typecheck ✅ · lint ✅ (0 errors, 10 pre-existing warnings)
+
+**Pending after approve (user/Cursor):**
+1. `cd hr-app && supabase db push` on `oouswalwqhojpzqwwdvs`
+2. git commit (leave-policy files only — exclude junk `FINAL_MIGRATION_*.sql`)
+3. `npx vercel --prod --yes`
+
+**Archive:** `hr-app/_agent/archive/leave-policy-defaults/`
+
+---
+
+**Previous active:** T138 — Kitchen Requisition Web Admin — 🔄 IN PROGRESS (Office-Style)  
+**Previous date:** 2026-06-13
 
 ## Taskmaster
 
@@ -117,6 +233,8 @@ T136–T149 → **Todo** (T136 → **In Progress** — 2026-06-13)
   - ไฟล์ที่แก้ lint สะอาด 0 errors
 
 **Verdict:** ✅ APPROVED — diagnostic logging ครบถ้วน, UX Option B implemented, ไม่ regression
+
+**Archive:** `hr-app/_agent/archive/debug/LIFF_DEBUG_FINDINGS.md`
 
 **Next Steps:**
 1. Deploy to production

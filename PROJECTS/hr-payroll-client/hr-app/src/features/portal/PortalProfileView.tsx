@@ -110,6 +110,10 @@ export function PortalProfileView({ profile }: { profile: EmployeeProfile }) {
                 : "—"
             }
           />
+          <ProfileField
+            label="Housing Allowance"
+            value={profile.housing_allowance?.toLocaleString() ?? "—"}
+          />
           <ProfileField label="Status" value={profile.status} />
         </ProfileSectionCard>
 

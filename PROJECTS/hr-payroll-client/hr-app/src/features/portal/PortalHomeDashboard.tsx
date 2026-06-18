@@ -51,7 +51,7 @@ export function PortalHomeDashboard({
 }) {
   const { tx } = useLocale()
   const byType = new Map(balances.map((b) => [b.leave_type, b]))
-  const topBalances = LEAVE_TYPES.slice(0, 4)
+  const topBalances = LEAVE_TYPES.filter((type) => type !== "other")
 
   return (
     <div className="flex flex-col gap-4">
@@ -102,7 +102,7 @@ export function PortalHomeDashboard({
         </WidgetCard>
 
         <WidgetCard compact title={tx("portal.home.leaveBalance")} href="/portal/leave">
-          <dl className="grid grid-cols-2 gap-2">
+          <dl className="grid grid-cols-2 gap-2 sm:grid-cols-3">
             {topBalances.map((type) => {
               const balance = byType.get(type)
               const remaining = balance

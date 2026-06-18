@@ -1,16 +1,15 @@
 import type {
   AttendanceCalendarResult,
   AttendanceDayCell,
-  AttendanceDayStatus,
 } from "@/features/attendance/calendar-types"
+import { deriveAttendanceDayStatus } from "@/features/attendance/day-status"
 import { ictLocalToUtc } from "@/lib/attendance/ict-datetime"
 import {
   getRetroDeadline,
-  isPastShiftEnd,
-  isPastShiftStart,
   isWithinRetroWindow,
   type ShiftSchedule,
 } from "@/lib/attendance/retro-limit"
+import { getAttendanceGoLiveDate } from "@/lib/runtime-config"
 import { createClient } from "@/lib/supabase/server"
 
 export type {
@@ -115,37 +114,6 @@ function attendanceByDate(
   return map
 }
 
-function deriveDayStatus(
-  date: string,
-  today: string,
-  now: Date,
-  shift: ShiftSchedule | null,
-  onLeave: boolean,
-  record: {
-    check_in_at: string
-    check_out_at: string | null
-    is_late: boolean
-  } | null
-): AttendanceDayStatus {
-  if (date > today) return "future"
-  if (onLeave) return "on_leave"
-  if (!shift) return "no_shift"
-
-  if (!record) {
-    if (date === today && !isPastShiftStart(date, shift, now)) return "future"
-    if (date === today && !isPastShiftEnd(date, shift, now)) return "in_progress"
-    if (!isPastShiftStart(date, shift, now)) return "future"
-    return "missing_checkin"
-  }
-
-  if (!record.check_out_at) {
-    if (date === today && !isPastShiftEnd(date, shift, now)) return "in_progress"
-    return "missing_checkout"
-  }
-
-  return record.is_late ? "late" : "complete"
-}
-
 export async function getEmployeeAttendanceCalendar(
   employeeId: string,
   month: string,
@@ -158,7 +126,7 @@ export async function getEmployeeAttendanceCalendar(
   const rangeStart = ictLocalToUtc(start, "00:00")
   const rangeEnd = new Date(ictLocalToUtc(end, "00:00").getTime() + DAY_MS)
 
-  const [shift, leaveDates, attendanceRes] = await Promise.all([
+  const [shift, leaveDates, attendanceRes, goLiveDate] = await Promise.all([
     loadShift(supabase, employeeId),
     loadLeaveDates(supabase, employeeId, start, end),
     supabase
@@ -167,6 +135,7 @@ export async function getEmployeeAttendanceCalendar(
       .eq("employee_id", employeeId)
       .gte("check_in_at", rangeStart.toISOString())
       .lt("check_in_at", rangeEnd.toISOString()),
+    getAttendanceGoLiveDate(),
   ])
 
   if (attendanceRes.error) throw attendanceRes.error
@@ -175,7 +144,15 @@ export async function getEmployeeAttendanceCalendar(
   const cells: AttendanceDayCell[] = days.map((date) => {
     const record = byDate.get(date) ?? null
     const onLeave = leaveDates.has(date)
-    const status = deriveDayStatus(date, today, now, shift, onLeave, record)
+    const status = deriveAttendanceDayStatus(
+      date,
+      today,
+      now,
+      shift,
+      onLeave,
+      record,
+      goLiveDate
+    )
     const withinRetro =
       shift !== null &&
       status !== "on_leave" &&

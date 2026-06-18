@@ -1,9 +1,24 @@
 import type { messagingApi } from "@line/bot-sdk"
 
+import type { ComplaintThreadEntry } from "@/features/complaints/thread"
+import { trimThreadForLine } from "@/features/complaints/thread"
 import { t } from "@/lib/i18n/translate"
 import { DEFAULT_LOCALE, type AppLocale } from "@/lib/i18n/types"
 import { BRAND_RED } from "@/lib/line/brand"
 import { flexMessage, simpleBubble } from "@/lib/line/flex/base"
+import {
+  approvalButtonFooter,
+  buildApprovalPostbackData,
+  type PostbackButtonSpec,
+} from "@/lib/line/approval/flex-buttons"
+
+function formatThreadLine(entry: ComplaintThreadEntry, locale: AppLocale): string {
+  const label =
+    entry.role === "employee"
+      ? entry.authorName ?? t("line.complaintReply.fromEmployee", locale)
+      : entry.authorName ?? t("line.complaintReply.fromHr", locale)
+  return `[${label}] ${entry.message}`
+}
 
 export function complaintSubmitConfirmFlex(options: {
   ticketCode: string
@@ -36,6 +51,7 @@ export function complaintSubmitConfirmFlex(options: {
 }
 
 export function complaintSubmitHrNotifyFlex(options: {
+  complaintId: string
   ticketCode: string
   subject: string
   isAnonymous: boolean
@@ -48,25 +64,53 @@ export function complaintSubmitHrNotifyFlex(options: {
   const adminUrl =
     options.adminUrl ?? (baseUrl ? `${baseUrl}/admin/complaints` : undefined)
 
+  const buttons: PostbackButtonSpec[] = [
+    {
+      label: t("line.approval.complaintReply", locale),
+      data: buildApprovalPostbackData(
+        "complaint_reply",
+        "complaint_id",
+        options.complaintId
+      ),
+      style: "primary",
+      color: BRAND_RED,
+      displayText: t("line.approval.complaintReplyDisplay", locale),
+    },
+    {
+      label: t("line.approval.complaintClose", locale),
+      data: buildApprovalPostbackData(
+        "complaint_close",
+        "complaint_id",
+        options.complaintId
+      ),
+      style: "secondary",
+      displayText: t("line.approval.complaintCloseDisplay", locale),
+    },
+  ]
+
+  const bubble = simpleBubble({
+    title: t("line.complaintHr.title", locale),
+    accentColor: BRAND_RED,
+    rows: [
+      { label: t("line.common.ticket", locale), value: options.ticketCode },
+      { label: t("line.common.subject", locale), value: options.subject },
+      {
+        label: t("line.common.reporter", locale),
+        value: options.isAnonymous
+          ? t("line.status.anonymous", locale)
+          : (options.employeeName ?? "—"),
+      },
+    ],
+    button: adminUrl
+      ? { label: t("line.complaintHr.button", locale), uri: adminUrl }
+      : undefined,
+  })
+
+  bubble.footer = approvalButtonFooter(buttons, locale)
+
   return flexMessage(
     t("line.complaintHr.alt", locale, { ticketCode: options.ticketCode }),
-    simpleBubble({
-      title: t("line.complaintHr.title", locale),
-      accentColor: BRAND_RED,
-      rows: [
-        { label: t("line.common.ticket", locale), value: options.ticketCode },
-        { label: t("line.common.subject", locale), value: options.subject },
-        {
-          label: t("line.common.reporter", locale),
-          value: options.isAnonymous
-            ? t("line.status.anonymous", locale)
-            : (options.employeeName ?? "—"),
-        },
-      ],
-      button: adminUrl
-        ? { label: t("line.complaintHr.button", locale), uri: adminUrl }
-        : undefined,
-    })
+    bubble
   )
 }
 
@@ -75,9 +119,13 @@ export function complaintReplyFlex(options: {
   subject: string
   message: string
   closed: boolean
+  thread: ComplaintThreadEntry[]
   locale?: AppLocale
 }): messagingApi.FlexMessage {
   const locale = options.locale ?? DEFAULT_LOCALE
+  const trimmed = trimThreadForLine(options.thread)
+  const threadLines = trimmed.map((entry) => formatThreadLine(entry, locale))
+
   return flexMessage(
     t("line.complaintReply.alt", locale, { ticketCode: options.ticketCode }),
     simpleBubble({
@@ -86,7 +134,10 @@ export function complaintReplyFlex(options: {
       rows: [
         { label: t("line.common.ticket", locale), value: options.ticketCode },
         { label: t("line.common.subject", locale), value: options.subject },
-        { label: t("line.common.message", locale), value: options.message },
+        {
+          label: t("line.complaintReply.latest", locale),
+          value: options.message,
+        },
         {
           label: t("line.common.status", locale),
           value: options.closed
@@ -94,6 +145,13 @@ export function complaintReplyFlex(options: {
             : t("line.status.replied", locale),
         },
       ],
+      lines: [
+        t("line.complaintReply.threadTitle", locale),
+        ...threadLines,
+      ],
+      footerNote: options.closed
+        ? t("line.complaintReply.defaultCloseMessage", locale)
+        : undefined,
     })
   )
 }

@@ -16,7 +16,7 @@ export type ComplaintRow = {
   department: string | null
   status: ComplaintStatus
   createdAt: string
-  replies: { message: string; createdAt: string }[]
+  replies: { message: string; createdAt: string; authorName: string | null }[]
 }
 
 export type ComplaintListParams = {
@@ -44,7 +44,7 @@ export async function getComplaints(params: Required<ComplaintListParams>) {
   let query = supabase
     .from("hr_complaints")
     .select(
-      "id, ticket_code, subject, body, is_anonymous, status, created_at, employee_id, hr_employees(name, department), hr_complaint_replies(message, created_at)",
+      "id, ticket_code, subject, body, is_anonymous, status, created_at, employee_id, hr_employees(name, department), hr_complaint_replies(message, created_at, hr_employees!author_employee_id(name))",
       { count: "exact" }
     )
     .order("created_at", { ascending: false })
@@ -72,7 +72,11 @@ export async function getComplaints(params: Required<ComplaintListParams>) {
       | { name: string; department: string | null }
       | Array<{ name: string; department: string | null }>
       | null
-    hr_complaint_replies: { message: string; created_at: string }[]
+    hr_complaint_replies: {
+      message: string
+      created_at: string
+      hr_employees: { name: string } | Array<{ name: string }> | null
+    }[]
   }
 
   const rows: ComplaintRow[] = ((data ?? []) as RawRow[]).map((row) => {
@@ -92,7 +96,18 @@ export async function getComplaints(params: Required<ComplaintListParams>) {
       status: row.status as ComplaintStatus,
       createdAt: row.created_at,
       replies: (row.hr_complaint_replies ?? [])
-        .map((r) => ({ message: r.message, createdAt: r.created_at }))
+        .map((r) => {
+          const author = r.hr_employees
+            ? Array.isArray(r.hr_employees)
+              ? r.hr_employees[0]
+              : r.hr_employees
+            : null
+          return {
+            message: r.message,
+            createdAt: r.created_at,
+            authorName: author?.name ?? "HR",
+          }
+        })
         .sort(
           (a, b) =>
             new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()

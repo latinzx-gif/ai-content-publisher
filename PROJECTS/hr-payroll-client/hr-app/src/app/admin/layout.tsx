@@ -2,6 +2,7 @@ import { cookies, headers } from "next/headers"
 import { redirect } from "next/navigation"
 
 import { AdminShell } from "@/components/admin/AdminShell"
+import { AdminNotificationProvider } from "@/components/admin/AdminNotificationProvider"
 import {
   getNavGroupsForEmployee,
   isBranchPortalPath,
@@ -9,7 +10,7 @@ import {
 import { isInventoryPortalPath } from "@/components/admin/inventory-nav"
 import { withNavGroupAlertBadges } from "@/features/notifications/nav-badges"
 import {
-  getNotificationInbox,
+  getNotificationNavBadges,
   resolveNotificationScope,
 } from "@/features/notifications/data"
 import {
@@ -18,13 +19,19 @@ import {
   getDevNavMode,
   parseDevViewAs,
 } from "@/lib/auth/dev-view"
+import { requiresOfficerPortalPassword } from "@/lib/auth/department-access"
+import {
+  OFFICER_PORTAL_VERIFIED_COOKIE,
+  isOfficerPasswordVerified,
+} from "@/lib/auth/officer-password-session"
 import {
   canEmployeeAccessAdminPortal,
   isBranchManager,
-  isInventoryPortalUser,
+  isRestrictedInventoryPortalUser,
   hasFullDataAccess,
   isDev,
 } from "@/lib/auth/roles"
+import { isInventoryManagerStaff } from "@/lib/auth/department-access"
 import { getCurrentEmployee } from "@/lib/auth/session"
 
 export default async function AdminLayout({
@@ -38,10 +45,27 @@ export default async function AdminLayout({
     redirect("/login?error=forbidden")
   }
 
+  if (
+    !isDev(employee.role) &&
+    requiresOfficerPortalPassword(employee.department)
+  ) {
+    const cookieStore = await cookies()
+    const verified = isOfficerPasswordVerified(
+      cookieStore.get(OFFICER_PORTAL_VERIFIED_COOKIE)?.value,
+      employee.id
+    )
+    if (!verified) {
+      redirect("/login?error=password_required")
+    }
+  }
+
   const pathname = (await headers()).get("x-pathname") ?? ""
   const dev = isDev(employee.role)
   const branchManager = !dev && isBranchManager(employee.role)
-  const inventoryPortal = !dev && isInventoryPortalUser(employee)
+  const inventoryManager =
+    !dev && isInventoryManagerStaff(employee.department, employee.position)
+  const restrictedInventory =
+    !dev && isRestrictedInventoryPortalUser(employee)
 
   if (!dev) {
     if (
@@ -52,7 +76,7 @@ export default async function AdminLayout({
       redirect("/admin/branch")
     }
     if (
-      inventoryPortal &&
+      restrictedInventory &&
       pathname.startsWith("/admin") &&
       !isInventoryPortalPath(pathname)
     ) {
@@ -65,49 +89,53 @@ export default async function AdminLayout({
     : null
   const navMode = dev && devView ? getDevNavMode(devView) : null
 
-  const notificationScope = resolveNotificationScope(employee, devView)
-  const notificationInbox = notificationScope
-    ? await getNotificationInbox(employee, notificationScope)
-    : {
-        items: [],
-        total: 0,
-        approvalTotal: 0,
-        complianceTotal: 0,
-        navBadges: {},
-      }
-  const alertBadge = notificationInbox.total
-  const approvalBadge = notificationInbox.approvalTotal
-  let navGroups =
+  const baseNavGroups =
     dev && devView
       ? getDevNavGroups(devView)
       : getNavGroupsForEmployee(employee)
 
-  if (Object.keys(notificationInbox.navBadges).length > 0) {
-    navGroups = withNavGroupAlertBadges(navGroups, notificationInbox.navBadges)
+  const notificationScope = resolveNotificationScope(employee, devView)
+  const notificationCounts = notificationScope
+    ? await getNotificationNavBadges(employee, notificationScope)
+    : { navBadges: {}, approvalTotal: 0, complianceTotal: 0 }
+  const notificationInbox = {
+    items: [],
+    total: notificationCounts.approvalTotal + notificationCounts.complianceTotal,
+    approvalTotal: notificationCounts.approvalTotal,
+    complianceTotal: notificationCounts.complianceTotal,
+    navBadges: notificationCounts.navBadges,
   }
+  const navGroups =
+    Object.keys(notificationInbox.navBadges).length > 0
+      ? withNavGroupAlertBadges(baseNavGroups, notificationInbox.navBadges)
+      : baseNavGroups
 
   return (
-    <AdminShell
-      alertBadge={alertBadge}
-      approvalBadge={approvalBadge}
-      notificationItems={notificationInbox.items}
-      showComplianceLink={
-        (notificationScope === "hr" || hasFullDataAccess(employee.role)) &&
-        !inventoryPortal
-      }
-      branchMode={navMode?.branchMode ?? branchManager}
-      inventoryMode={inventoryPortal}
-      devAllMode={navMode?.devAllMode ?? false}
-      devView={devView}
-      navGroups={navGroups}
-      user={{
-        name: employee.name,
-        role: employee.role,
-        position: employee.position,
-        avatarUrl: employee.avatarUrl,
-      }}
+    <AdminNotificationProvider
+      initialInbox={notificationInbox}
+      baseNavGroups={baseNavGroups}
     >
-      {children}
-    </AdminShell>
+      <AdminShell
+        showComplianceLink={
+          (notificationScope === "hr" || hasFullDataAccess(employee.role)) &&
+          !restrictedInventory &&
+          !inventoryManager
+        }
+        branchMode={navMode?.branchMode ?? branchManager}
+        inventoryMode={restrictedInventory}
+        inventoryManagerMode={inventoryManager}
+        devAllMode={navMode?.devAllMode ?? false}
+        devView={devView}
+        navGroups={navGroups}
+        user={{
+          name: employee.name,
+          role: employee.role,
+          position: employee.position,
+          avatarUrl: employee.avatarUrl,
+        }}
+      >
+        {children}
+      </AdminShell>
+    </AdminNotificationProvider>
   )
 }

@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from "next/server"
 
 import { getAdminClient } from "@/lib/auth/admin-client"
 import { PENDING_REGISTRATION_PATH } from "@/lib/auth/employee-access"
+import { requiresOfficerPortalPassword } from "@/lib/auth/department-access"
 import { syncLocaleFromLineApp } from "@/lib/i18n/employee-locale"
 import { mintLineUserSession } from "@/lib/auth/line-session"
 import { adminLoginPath } from "@/lib/auth/roles"
@@ -48,7 +49,7 @@ export async function GET(request: NextRequest) {
 
   const { data: employee } = await admin
     .from("hr_employees")
-    .select("id, role, status, department, locale_source")
+    .select("id, role, status, department, position, locale_source")
     .eq("line_user_id", lineUserId)
     .maybeSingle()
 
@@ -73,9 +74,13 @@ export async function GET(request: NextRequest) {
   const role = employee.role as Parameters<typeof adminLoginPath>[0]
   const department =
     typeof employee.department === "string" ? employee.department : null
+  const position =
+    typeof employee.position === "string" ? employee.position : null
   const destination =
     employee.status === "active"
-      ? adminLoginPath(role, "active", department)
+      ? requiresOfficerPortalPassword(department)
+        ? "/login"
+        : adminLoginPath(role, "active", department, position)
       : PENDING_REGISTRATION_PATH
 
   const response = NextResponse.redirect(new URL(destination, origin))
