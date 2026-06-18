@@ -79,7 +79,7 @@ export async function checkIn({
 
   const { data: row, error: employeeError } = await admin
     .from("hr_employees")
-    .select("id, name, status, branch_id")
+    .select("id, name, status, branch_id, default_check_in_time")
     .eq("line_user_id", lineUserId)
     .maybeSingle()
 
@@ -131,7 +131,12 @@ export async function checkIn({
 
   const { hour, minute } = await getWorkStart()
   const shift = await loadEmployeeWorkShift(admin, employee.id as string)
-  const late = lateMinutesAtCheckIn(now, shift, { hour, minute })
+  const late = lateMinutesAtCheckIn(
+    now,
+    shift,
+    { hour, minute },
+    employee.default_check_in_time as string | null
+  )
   const suspicious = locationDecision.status === "suspicious_location"
 
   const { data: inserted, error: insertError } = await admin.from("hr_attendance").insert({

@@ -112,9 +112,20 @@ async function resolveShift(
   return (data as ActiveShift | null) ?? null
 }
 
-async function isLate(checkInAt: Date, shift: ActiveShift | null): Promise<boolean> {
+async function isLate(
+  checkInAt: Date,
+  shift: ActiveShift | null,
+  defaultCheckInTime: string | null
+): Promise<boolean> {
   const { hour, minute } = await getWorkStart()
-  return lateMinutesAtCheckIn(checkInAt, shift, { hour, minute }) > 0
+  return (
+    lateMinutesAtCheckIn(
+      checkInAt,
+      shift,
+      { hour, minute },
+      defaultCheckInTime
+    ) > 0
+  )
 }
 
 function resolveFinalCheckOut(
@@ -173,12 +184,14 @@ export async function saveManualAttendance(
 
   const { data: employeeRow, error: employeeError } = await supabase
     .from("hr_employees")
-    .select("branch_id")
+    .select("branch_id, default_check_in_time")
     .eq("id", payload.employeeId)
     .maybeSingle()
 
   if (employeeError) throw employeeError
   const branchId = (employeeRow?.branch_id as string | null) ?? null
+  const defaultCheckInTime =
+    (employeeRow?.default_check_in_time as string | null) ?? null
 
   const { start, end } = ictDayWindow(date)
   const { data: rows, error } = await supabase
@@ -246,7 +259,7 @@ export async function saveManualAttendance(
         : null
       : null
 
-  const isLateNow = await isLate(finalCheckInAt, shift)
+  const isLateNow = await isLate(finalCheckInAt, shift, defaultCheckInTime)
 
   if (!existing) {
     const { data: inserted, error: insertError } = await supabase

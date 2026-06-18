@@ -380,7 +380,8 @@ export function buildDailyRosterSnapshot(
       ? effectiveAttendanceIsLate(
           record.check_in_at,
           shift,
-          record.is_late
+          record.is_late,
+          employee.default_check_in_time
         )
       : false
     const effectiveRecord = record

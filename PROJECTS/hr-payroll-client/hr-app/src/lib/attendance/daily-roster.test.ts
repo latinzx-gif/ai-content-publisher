@@ -138,6 +138,46 @@ describe("buildDailyRosterSnapshot", () => {
     assert.equal(unassignedGroup.employees[0]?.status, "unassigned")
   })
 
+  it("uses employee default_check_in_time over shift for late status", () => {
+    const roster = buildDailyRosterSnapshot(
+      {
+        date: "2026-06-18",
+        now: new Date("2026-06-18T04:00:00.000Z"),
+        goLiveDate: "2026-06-18",
+        employees: [
+          {
+            id: "emp-late-default",
+            employee_code: "EMP-010",
+            name: "Eve",
+            position: "Staff",
+            department: "Ops",
+            branch_id: "branch-1",
+            line_user_id: null,
+            work_shift_id: "shift-a",
+            default_check_in_time: "11:00:00",
+            default_check_out_time: "20:00:00",
+            hr_branches: { name: "HQ" },
+          },
+        ],
+        shifts,
+      },
+      [
+        {
+          employee_id: "emp-late-default",
+          check_in_at: "2026-06-18T03:05:00.000Z",
+          check_out_at: null,
+          is_late: true,
+          shift_date: "2026-06-18",
+        },
+      ],
+      []
+    )
+
+    const employee = roster.groups[0]?.employees[0]
+    assert.equal(employee?.status, "present")
+    assert.equal(roster.totals.late, 0)
+  })
+
   it("ignores stale is_late when Branch Night check-in is before 14:00", () => {
     const branchNight = {
       id: "shift-night",

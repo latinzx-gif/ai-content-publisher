@@ -30,13 +30,46 @@ function ictDayStartUtc(date) {
 }
 
 function lateMinutesForShift(checkInAt, shift) {
+  return lateMinutesWithGrace(
+    checkInAt,
+    shift.start_hour,
+    shift.start_minute,
+    shift.grace_minutes
+  )
+}
+
+const DEFAULT_LATE_GRACE_MINUTES = 10
+
+function normalizeTimeToHHMM(value) {
+  if (!value) return ""
+  const trimmed = String(value).trim()
+  const match = /^(\d{1,2}):(\d{2})(?::\d{2})?/.exec(trimmed)
+  if (!match) return trimmed
+  const hour = Number.parseInt(match[1], 10)
+  const minute = match[2]
+  if (hour < 0 || hour > 23) return trimmed
+  return `${String(hour).padStart(2, "0")}:${minute}`
+}
+
+function lateMinutesWithGrace(checkInAt, startHour, startMinute, graceMinutes) {
   const dayStart = ictDayStartUtc(checkInAt)
-  const shiftStartMinutes = shift.start_hour * 60 + shift.start_minute
+  const startMinutes = startHour * 60 + startMinute
   const checkInMinutes = Math.floor(
     ((checkInAt.getTime() - dayStart.getTime()) / 60_000 + 24 * 60) % (24 * 60)
   )
-  if (checkInMinutes < shiftStartMinutes) return 0
-  return Math.max(0, checkInMinutes - shift.grace_minutes - shiftStartMinutes)
+  if (checkInMinutes < startMinutes) return 0
+  return Math.max(0, checkInMinutes - graceMinutes - startMinutes)
+}
+
+function lateMinutesAtCheckIn(checkInAt, shift, defaultCheckInTime) {
+  const normalized = normalizeTimeToHHMM(defaultCheckInTime)
+  if (normalized) {
+    const [hour, minute] = normalized.split(":").map(Number)
+    const grace = shift?.grace_minutes ?? DEFAULT_LATE_GRACE_MINUTES
+    return lateMinutesWithGrace(checkInAt, hour, minute, grace)
+  }
+  if (shift) return lateMinutesForShift(checkInAt, shift)
+  return 0
 }
 
 const url = process.env.NEXT_PUBLIC_SUPABASE_URL
@@ -70,7 +103,7 @@ async function rest(path, options = {}) {
 }
 
 const select =
-  "id,employee_id,check_in_at,is_late,hr_employees!hr_attendance_employee_id_fkey!inner(work_shift_id,hr_work_shifts(start_hour,start_minute,grace_minutes,crosses_midnight))"
+  "id,employee_id,check_in_at,is_late,hr_employees!hr_attendance_employee_id_fkey!inner(default_check_in_time,work_shift_id,hr_work_shifts(start_hour,start_minute,grace_minutes,crosses_midnight))"
 const rows = await rest(
   `hr_attendance?select=${encodeURIComponent(select)}&check_in_at=gte.${encodeURIComponent(start.toISOString())}&check_in_at=lt.${encodeURIComponent(end.toISOString())}`
 )
@@ -81,8 +114,13 @@ let checked = 0
 for (const row of rows ?? []) {
   checked += 1
   const shift = row.hr_employees?.hr_work_shifts
-  if (!shift) continue
-  const shouldBeLate = lateMinutesForShift(new Date(row.check_in_at), shift) > 0
+  const shouldBeLate =
+    lateMinutesAtCheckIn(
+      new Date(row.check_in_at),
+      shift ?? null,
+      row.hr_employees?.default_check_in_time ?? null
+    ) > 0
+  if (!shift && !row.hr_employees?.default_check_in_time) continue
   if (row.is_late === shouldBeLate) continue
   fixed += 1
   console.log(

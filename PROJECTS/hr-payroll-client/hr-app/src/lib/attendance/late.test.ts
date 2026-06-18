@@ -2,9 +2,12 @@ import assert from "node:assert/strict"
 import { describe, it } from "node:test"
 
 import {
+  DEFAULT_LATE_GRACE_MINUTES,
+  effectiveAttendanceIsLate,
   lateMinutes,
   lateMinutesAtCheckIn,
   lateMinutesForShift,
+  lateMinutesWithGrace,
   type ShiftLateSchedule,
 } from "@/lib/attendance/late"
 
@@ -45,6 +48,42 @@ describe("lateMinutesForShift", () => {
     assert.equal(
       lateMinutesAtCheckIn(at10, BRANCH_NIGHT, { hour: 9, minute: 0 }),
       0
+    )
+  })
+
+  it("employee default_check_in_time overrides shift start", () => {
+    const at10 = ictUtc("2026-06-18", "10:00")
+    assert.equal(
+      lateMinutesAtCheckIn(at10, BRANCH_NIGHT, { hour: 9, minute: 0 }, "11:00"),
+      0
+    )
+    const at1111 = ictUtc("2026-06-18", "11:11")
+    assert.equal(
+      lateMinutesAtCheckIn(
+        at1111,
+        BRANCH_NIGHT,
+        { hour: 9, minute: 0 },
+        "11:00"
+      ),
+      1
+    )
+  })
+
+  it("employee default without shift uses default grace", () => {
+    const at911 = ictUtc("2026-06-18", "09:11")
+    assert.equal(
+      lateMinutesAtCheckIn(at911, null, { hour: 9, minute: 0 }, "09:00"),
+      1
+    )
+    assert.equal(DEFAULT_LATE_GRACE_MINUTES, 10)
+    assert.equal(lateMinutesWithGrace(at911, 9, 0, 10), 1)
+  })
+
+  it("effectiveAttendanceIsLate recomputes from employee default time", () => {
+    const checkInAt = ictUtc("2026-06-18", "10:00").toISOString()
+    assert.equal(
+      effectiveAttendanceIsLate(checkInAt, BRANCH_NIGHT, true, "11:00"),
+      false
     )
   })
 })
