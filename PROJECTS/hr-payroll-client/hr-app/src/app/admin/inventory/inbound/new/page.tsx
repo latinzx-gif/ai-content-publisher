@@ -8,7 +8,6 @@ import { getInvWarehousesWithBranch } from "@/features/inventory/actions/warehou
 import {
   InventoryFormField,
   InventorySelect,
-  InventoryTextInput,
 } from "@/features/inventory/InventoryFormFields"
 import { invInputClass } from "@/features/inventory/form-styles"
 import { requireInventoryPortal } from "@/lib/auth/require-inventory-portal"
