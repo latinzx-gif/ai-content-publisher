@@ -6,6 +6,8 @@ import type {
 } from "@/features/inventory/types"
 import { createClient } from "@/lib/supabase/server"
 
+const NO_SUPPLIER_LABEL = "ไม่ระบุผู้จำหน่าย"
+
 function relationName(value: unknown): string {
   if (!value) return "—"
   if (Array.isArray(value)) {
@@ -13,6 +15,14 @@ function relationName(value: unknown): string {
     return first?.name ?? "—"
   }
   return (value as { name?: string }).name ?? "—"
+}
+
+function inboundSupplierName(
+  supplierId: string | null,
+  joined: unknown
+): string {
+  if (!supplierId) return NO_SUPPLIER_LABEL
+  return relationName(joined)
 }
 
 export const INBOUND_STATUS_LABELS: Record<InvInboundStatus, string> = {
@@ -56,7 +66,10 @@ export async function listInvInboundOrders(options?: {
       created_by: row.created_by as string | null,
       created_at: row.created_at as string,
       updated_at: row.updated_at as string,
-      supplier_name: relationName(row.inv_suppliers),
+      supplier_name: inboundSupplierName(
+        row.supplier_id as string | null,
+        row.inv_suppliers
+      ),
       warehouse_name: relationName(row.inv_warehouses),
       item_count: Number(countJoined ?? 0),
     }
@@ -130,7 +143,10 @@ export async function getInvInboundOrderDetail(id: string): Promise<{
       created_at: order.created_at as string,
       updated_at: order.updated_at as string,
     },
-    supplier_name: relationName(order.inv_suppliers),
+    supplier_name: inboundSupplierName(
+      order.supplier_id as string | null,
+      order.inv_suppliers
+    ),
     warehouse_name: relationName(order.inv_warehouses),
     items: itemRows,
   }

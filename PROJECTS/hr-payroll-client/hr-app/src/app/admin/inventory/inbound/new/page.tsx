@@ -50,11 +50,9 @@ export default async function NewInboundOrderPage() {
       }
     >
       <form action={createInvInboundOrderAndRedirect} className="mx-auto max-w-lg space-y-4">
-        <InventoryFormField label="Supplier" htmlFor="supplier_id">
-          <InventorySelect id="supplier_id" name="supplier_id" required defaultValue="">
-            <option value="" disabled>
-              เลือก Supplier
-            </option>
+        <InventoryFormField label="ผู้จำหน่าย" htmlFor="supplier_id">
+          <InventorySelect id="supplier_id" name="supplier_id" defaultValue="">
+            <option value="">ไม่ระบุผู้จำหน่าย</option>
             {activeSuppliers.map((s) => (
               <option key={s.id} value={s.id}>
                 {s.code} — {s.name}

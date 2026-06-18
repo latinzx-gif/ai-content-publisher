@@ -64,7 +64,9 @@ export async function createInvInboundOrder(
     const { data, error } = await supabase
       .from("inv_inbound_orders")
       .insert({
-        ...payload,
+        supplier_id: payload.supplier_id ?? null,
+        warehouse_id: payload.warehouse_id,
+        notes: payload.notes ?? null,
         status: "pending",
         created_by: employee.id,
       })
