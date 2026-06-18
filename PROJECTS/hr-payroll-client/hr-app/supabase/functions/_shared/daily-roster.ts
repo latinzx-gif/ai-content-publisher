@@ -4,10 +4,14 @@ export const UNASSIGNED_SHIFT_ID = "__unassigned__";
 
 type EmployeeRow = {
   id: string;
+  employee_code: string | null;
   name: string;
+  position: string | null;
   department: string | null;
   branch_id: string | null;
   work_shift_id: string | null;
+  default_check_in_time: string | null;
+  default_check_out_time: string | null;
   hr_branches: { name: string } | Array<{ name: string }> | null;
 };
 
@@ -38,6 +42,7 @@ export type DailyRosterEmployeeStatus =
   | "late"
   | "on_leave"
   | "absent"
+  | "off"
   | "pending"
   | "upcoming"
   | "unassigned";
@@ -46,12 +51,15 @@ export type DailyRosterGroupState = "closed" | "grace" | "upcoming" | "unassigne
 
 export type DailyRosterEmployee = {
   id: string;
+  employeeCode: string;
   name: string;
+  position: string | null;
   department: string | null;
   branchName: string | null;
   status: DailyRosterEmployeeStatus;
   statusLabel: string;
   note: string;
+  workTimeText: string;
   checkedInAt: string | null;
   checkedOutAt: string | null;
   isLate: boolean;
@@ -148,6 +156,45 @@ function formatShiftTimeRange(
   return `${pad2(shift.start_hour)}:${pad2(shift.start_minute)}–${pad2(shift.end_hour)}:${pad2(shift.end_minute)}`;
 }
 
+function normalizeTimeToHHMM(value: string | null | undefined): string {
+  if (!value) return "";
+  const trimmed = value.trim();
+  const match = /^(\d{1,2}):(\d{2})(?::\d{2})?/.exec(trimmed);
+  if (!match) return trimmed;
+  const hour = Number.parseInt(match[1], 10);
+  const minute = match[2];
+  if (hour < 0 || hour > 23) return trimmed;
+  return `${String(hour).padStart(2, "0")}:${minute}`;
+}
+
+function formatEmployeeCode(input: {
+  employee_code: string | null;
+  id: string;
+}): string {
+  return input.employee_code?.trim() || input.id.slice(0, 8).toUpperCase();
+}
+
+function formatEmployeeWorkTimeText(input: {
+  default_check_in_time: string | null;
+  default_check_out_time: string | null;
+  workShift:
+    | Pick<
+      ShiftRow,
+      "start_hour" | "start_minute" | "end_hour" | "end_minute"
+    >
+    | null;
+}): string {
+  const checkIn = normalizeTimeToHHMM(input.default_check_in_time);
+  const checkOut = normalizeTimeToHHMM(input.default_check_out_time);
+  if (checkIn && checkOut) {
+    return `${checkIn} – ${checkOut}`;
+  }
+  if (input.workShift) {
+    return formatShiftTimeRange(input.workShift).replace("–", " – ");
+  }
+  return "—";
+}
+
 function getShiftStartUtc(workDate: string, shift: ShiftRow): Date {
   const [year, month, day] = workDate.split("-").map(Number);
   const ictMs = Date.UTC(
@@ -237,6 +284,7 @@ function employeeStatusLabel(status: DailyRosterEmployeeStatus): string {
   if (status === "present") return "มาแล้ว";
   if (status === "late") return "มาสาย";
   if (status === "on_leave") return "ลา";
+  if (status === "off") return "วันหยุด";
   if (status === "pending") return "รอก่อนครบ grace";
   if (status === "upcoming") return "ยังไม่ถึงเวลา";
   if (status === "unassigned") return "ไม่มีกะ";
@@ -278,10 +326,33 @@ function buildEmployeeNote(
     return `เข้า ${inText}${record.check_out_at ? ` • ออก ${outText}` : ` • ${outText}`}`;
   }
   if (status === "on_leave") return "อนุมัติลาแล้ว";
+  if (status === "off") return "วันหยุดประจำสัปดาห์";
   if (status === "pending") return "พ้นเวลาเข้างานแล้ว แต่ยังอยู่ในช่วง grace";
   if (status === "upcoming") return "ยังไม่ถึงเวลาเริ่มกะ";
   if (shiftState === "unassigned") return "ยังไม่ได้กำหนด work shift";
   return "ยังไม่มีการเช็คอิน";
+}
+
+function buildRosterWorkTimeText(
+  employee: Pick<
+    EmployeeRow,
+    "default_check_in_time" | "default_check_out_time" | "employee_code" | "id"
+  >,
+  shift: ShiftRow | null,
+  record: AttendanceRow | null,
+): string {
+  if (record?.check_in_at) {
+    const inText = ictTimeText(new Date(record.check_in_at));
+    const outText = record.check_out_at
+      ? ictTimeText(new Date(record.check_out_at))
+      : "—";
+    return `${inText} – ${outText}`;
+  }
+  return formatEmployeeWorkTimeText({
+    default_check_in_time: employee.default_check_in_time,
+    default_check_out_time: employee.default_check_out_time,
+    workShift: shift,
+  });
 }
 
 function pushCount(
@@ -318,7 +389,7 @@ export async function buildDailyRoster(
     await Promise.all([
       admin
         .from("hr_employees")
-        .select("id, name, department, branch_id, work_shift_id, hr_branches(name)")
+        .select("id, employee_code, name, position, department, branch_id, work_shift_id, default_check_in_time, default_check_out_time, hr_branches(name)")
         .eq("status", "active")
         .order("name"),
       admin
@@ -458,12 +529,15 @@ export async function buildDailyRoster(
     );
     const rosterEmployee: DailyRosterEmployee = {
       id: employee.id,
+      employeeCode: formatEmployeeCode(employee),
       name: employee.name,
+      position: employee.position,
       department: employee.department,
       branchName: branchNameFromJoin(employee.hr_branches),
       status,
       statusLabel: employeeStatusLabel(status),
       note: buildEmployeeNote(status, record, group.state),
+      workTimeText: buildRosterWorkTimeText(employee, shift, record),
       checkedInAt: record?.check_in_at ?? null,
       checkedOutAt: record?.check_out_at ?? null,
       isLate: Boolean(record?.is_late),

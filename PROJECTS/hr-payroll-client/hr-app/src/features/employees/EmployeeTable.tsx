@@ -91,6 +91,9 @@ function EmployeeTableRow({ employee: e }: { employee: EmployeeRow }) {
       <TableCell className="max-w-[9rem] truncate text-sm">
         {e.position ?? "—"}
       </TableCell>
+      <TableCell className="whitespace-nowrap text-sm tabular-nums">
+        {e.work_time_text}
+      </TableCell>
       <TableCell className="whitespace-nowrap">
         {e.branch_name ? (
           <span
@@ -214,6 +217,7 @@ export function EmployeeTable({
             <TableHead className="min-w-[10rem]">ชื่อ-นามสกุล</TableHead>
             <TableHead>แผนก</TableHead>
             <TableHead>ตำแหน่ง</TableHead>
+            <TableHead>เวลาเข้า-ออก</TableHead>
             <TableHead>สาขา</TableHead>
             <TableHead>สถานะ</TableHead>
             <TableHead>ประเภทจ้าง</TableHead>

@@ -1,4 +1,8 @@
 import { BRANCH_VIA_EMPLOYEE } from "@/lib/supabase/branch-embeds"
+import {
+  formatEmployeeCode,
+  formatEmployeeWorkTimeText,
+} from "@/features/employees/data"
 import { createClient } from "@/lib/supabase/server"
 import { deriveAttendanceDayStatus } from "@/features/attendance/day-status"
 import { formatShiftTimeRange } from "@/features/shifts/format"
@@ -12,11 +16,15 @@ const UNASSIGNED_SHIFT_ID = "__unassigned__"
 
 type RosterEmployeeRow = {
   id: string
+  employee_code: string | null
   name: string
+  position: string | null
   department: string | null
   branch_id: string | null
   line_user_id: string | null
   work_shift_id: string | null
+  default_check_in_time: string | null
+  default_check_out_time: string | null
   hr_branches: { name: string } | Array<{ name: string }> | null
 }
 
@@ -59,6 +67,7 @@ export type DailyRosterEmployeeStatus =
   | "late"
   | "on_leave"
   | "absent"
+  | "off"
   | "pending"
   | "upcoming"
   | "unassigned"
@@ -67,13 +76,16 @@ export type DailyRosterGroupState = "closed" | "grace" | "upcoming" | "unassigne
 
 export type DailyRosterEmployee = {
   id: string
+  employeeCode: string
   name: string
+  position: string | null
   department: string | null
   branchName: string | null
   employeeHref: string
   status: DailyRosterEmployeeStatus
   statusLabel: string
   note: string
+  workTimeText: string
   checkedInAt: string | null
   checkedOutAt: string | null
   isLate: boolean
@@ -185,6 +197,7 @@ function employeeStatusLabel(status: DailyRosterEmployeeStatus): string {
   if (status === "present") return "มาแล้ว"
   if (status === "late") return "มาสาย"
   if (status === "on_leave") return "ลา"
+  if (status === "off") return "วันหยุด"
   if (status === "pending") return "รอก่อนครบ grace"
   if (status === "upcoming") return "ยังไม่ถึงเวลา"
   if (status === "unassigned") return "ไม่มีกะ"
@@ -226,10 +239,33 @@ function buildEmployeeNote(
     return `เข้า ${inText}${record.check_out_at ? ` • ออก ${outText}` : ` • ${outText}`}`
   }
   if (status === "on_leave") return "อนุมัติลาแล้ว"
+  if (status === "off") return "วันหยุดประจำสัปดาห์"
   if (status === "pending") return "พ้นเวลาเข้างานแล้ว แต่ยังอยู่ในช่วง grace"
   if (status === "upcoming") return "ยังไม่ถึงเวลาเริ่มกะ"
   if (shiftState === "unassigned") return "ยังไม่ได้กำหนด work shift"
   return "ยังไม่มีการเช็คอิน"
+}
+
+function buildRosterWorkTimeText(
+  employee: Pick<
+    RosterEmployeeRow,
+    "default_check_in_time" | "default_check_out_time" | "employee_code" | "id"
+  >,
+  shift: RosterShiftRow | null,
+  record: RosterAttendanceRow | null
+): string {
+  if (record?.check_in_at) {
+    const inText = ictTimeText(new Date(record.check_in_at))
+    const outText = record.check_out_at
+      ? ictTimeText(new Date(record.check_out_at))
+      : "—"
+    return `${inText} – ${outText}`
+  }
+  return formatEmployeeWorkTimeText({
+    default_check_in_time: employee.default_check_in_time,
+    default_check_out_time: employee.default_check_out_time,
+    workShift: shift,
+  })
 }
 
 function pushCount(
@@ -325,13 +361,16 @@ export function buildDailyRosterSnapshot(
     const status = employeeStatusFromDayStatus(dayStatus, group.state, record)
     const rosterEmployee: DailyRosterEmployee = {
       id: employee.id,
+      employeeCode: formatEmployeeCode(employee),
       name: employee.name,
+      position: employee.position,
       department: employee.department,
       branchName: branchNameFromJoin(employee.hr_branches),
       employeeHref: `/admin/employees/${employee.id}/attendance`,
       status,
       statusLabel: employeeStatusLabel(status),
       note: buildEmployeeNote(status, record, group.state),
+      workTimeText: buildRosterWorkTimeText(employee, shift, record),
       checkedInAt: record?.check_in_at ?? null,
       checkedOutAt: record?.check_out_at ?? null,
       isLate: Boolean(record?.is_late),
@@ -380,7 +419,7 @@ export async function getDailyRoster(filters: DailyRosterFilters): Promise<Daily
   let employeeQuery = supabase
     .from("hr_employees")
     .select(
-      `id, name, department, branch_id, line_user_id, work_shift_id, ${BRANCH_VIA_EMPLOYEE}(name)`
+      `id, employee_code, name, position, department, branch_id, line_user_id, work_shift_id, default_check_in_time, default_check_out_time, ${BRANCH_VIA_EMPLOYEE}(name)`
     )
     .eq("status", "active")
     .order("name")

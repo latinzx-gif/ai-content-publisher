@@ -2,7 +2,7 @@ import type { SupabaseClient } from "@supabase/supabase-js"
 
 import { finalizeAttendanceRecord } from "@/lib/attendance/finalize-attendance-record"
 import { computeWorkHours, ictLocalToUtc } from "@/lib/attendance/ict-datetime"
-import { lateMinutes, ictDayRangeUtc } from "@/lib/attendance/late"
+import { lateMinutesAtCheckIn } from "@/lib/attendance/late"
 import {
   assertRetroAllowance,
   assertRetroWindow,
@@ -113,24 +113,8 @@ async function resolveShift(
 }
 
 async function isLate(checkInAt: Date, shift: ActiveShift | null): Promise<boolean> {
-  if (!shift) {
-    const { hour, minute } = await getWorkStart()
-    return lateMinutes(checkInAt, hour, minute) > 0
-  }
-
-  const dayStart = ictDayRangeUtc(checkInAt).start
-  const shiftStartMinutes = shift.start_hour * 60 + shift.start_minute
-  const checkInMinutes = Math.floor(
-    ((checkInAt.getTime() - dayStart.getTime()) / 60_000 + 24 * 60) % (24 * 60)
-  )
-
-  let lateStartMinutes = shiftStartMinutes
-  if (shift.crosses_midnight && checkInMinutes < shiftStartMinutes) {
-    lateStartMinutes -= 24 * 60
-  }
-
-  const late = checkInMinutes - shift.grace_minutes - lateStartMinutes
-  return Math.max(0, late) > 0
+  const { hour, minute } = await getWorkStart()
+  return lateMinutesAtCheckIn(checkInAt, shift, { hour, minute }) > 0
 }
 
 function resolveFinalCheckOut(

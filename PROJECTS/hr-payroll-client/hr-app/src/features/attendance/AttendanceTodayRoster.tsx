@@ -63,19 +63,25 @@ export function AttendanceTodayRoster({ roster }: { roster: DailyRoster }) {
                       <Link
                         key={employee.id}
                         href={employee.employeeHref}
-                        className="rounded-xl border border-border/70 bg-background px-3 py-3 transition hover:border-brand-red/30 hover:bg-brand-red/5"
+                        className="rounded-xl border border-border/70 bg-background px-3 py-2.5 transition hover:border-brand-red/30 hover:bg-brand-red/5"
                       >
-                        <div className="flex items-start justify-between gap-3">
+                        <div className="flex items-start justify-between gap-2">
                           <div className="min-w-0">
-                            <p className="truncate font-medium">{employee.name}</p>
-                            <p className="mt-1 text-xs text-muted-foreground">
-                              {[employee.department, employee.branchName].filter(Boolean).join(" • ") || "—"}
+                            <p className="truncate font-medium">
+                              {employee.name}{" "}
+                              <span className="text-xs font-normal tabular-nums text-muted-foreground">
+                                ({employee.employeeCode})
+                              </span>
+                            </p>
+                            <p className="mt-0.5 text-xs text-muted-foreground">
+                              {[employee.position, employee.branchName].filter(Boolean).join(" • ") || "—"}
                             </p>
                           </div>
                           <Badge
                             variant={badgeVariant(employee.status)}
                             className={cn(
                               employee.status === "present" && "border-emerald-200 text-emerald-700",
+                              employee.status === "off" && "border-slate-200 text-slate-700",
                               employee.status === "pending" && "border-amber-200 text-amber-700",
                               employee.status === "upcoming" && "border-sky-200 text-sky-700"
                             )}
@@ -83,7 +89,10 @@ export function AttendanceTodayRoster({ roster }: { roster: DailyRoster }) {
                             {employee.statusLabel}
                           </Badge>
                         </div>
-                        <p className="mt-3 text-sm text-muted-foreground">{employee.note}</p>
+                        <p className="mt-2 text-sm tabular-nums text-muted-foreground">
+                          เข้า-ออก {employee.workTimeText}
+                        </p>
+                        <p className="mt-0.5 text-xs text-muted-foreground">{employee.note}</p>
                       </Link>
                     ))}
                   </div>

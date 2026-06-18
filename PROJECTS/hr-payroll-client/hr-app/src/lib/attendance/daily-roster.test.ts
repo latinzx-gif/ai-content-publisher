@@ -26,38 +26,54 @@ describe("buildDailyRosterSnapshot", () => {
   const employees = [
     {
       id: "emp-1",
+      employee_code: "EMP-001",
       name: "Alice",
+      position: "HR",
       department: "HR",
       branch_id: "branch-1",
       line_user_id: null,
       work_shift_id: "shift-a",
+      default_check_in_time: "09:00:00",
+      default_check_out_time: "18:00:00",
       hr_branches: { name: "HQ" },
     },
     {
       id: "emp-2",
+      employee_code: "EMP-002",
       name: "Bob",
+      position: "Ops Lead",
       department: "Ops",
       branch_id: "branch-1",
       line_user_id: null,
       work_shift_id: "shift-a",
+      default_check_in_time: null,
+      default_check_out_time: null,
       hr_branches: { name: "HQ" },
     },
     {
       id: "emp-3",
+      employee_code: null,
       name: "Cara",
+      position: "Ops",
       department: "Ops",
       branch_id: "branch-1",
       line_user_id: null,
       work_shift_id: "shift-a",
+      default_check_in_time: null,
+      default_check_out_time: null,
       hr_branches: { name: "HQ" },
     },
     {
       id: "emp-4",
+      employee_code: null,
       name: "Dan",
+      position: null,
       department: "Ops",
       branch_id: null,
       line_user_id: null,
       work_shift_id: null,
+      default_check_in_time: null,
+      default_check_out_time: null,
       hr_branches: null,
     },
   ]
@@ -103,6 +119,18 @@ describe("buildDailyRosterSnapshot", () => {
     assert.equal(
       officeGroup.employees.find((employee) => employee.id === "emp-2")?.status,
       "late"
+    )
+    assert.equal(
+      officeGroup.employees.find((employee) => employee.id === "emp-1")?.employeeCode,
+      "EMP-001"
+    )
+    assert.equal(
+      officeGroup.employees.find((employee) => employee.id === "emp-2")?.position,
+      "Ops Lead"
+    )
+    assert.equal(
+      officeGroup.employees.find((employee) => employee.id === "emp-1")?.workTimeText,
+      "08:58 – —"
     )
 
     const unassignedGroup = roster.groups.find((group) => group.id === UNASSIGNED_SHIFT_ID)
