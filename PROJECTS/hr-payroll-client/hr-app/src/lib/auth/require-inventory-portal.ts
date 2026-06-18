@@ -2,6 +2,7 @@ import { redirect } from "next/navigation"
 
 import {
   canAccessInventoryPortal,
+  canManageInventory,
   hasHrInventoryAccess,
   isCeo,
   isDev,
@@ -46,7 +47,7 @@ export async function requireInventoryMasterData(): Promise<Employee> {
 export function canManageInventoryMasterData(employee: Employee): boolean {
   return (
     isDev(employee.role) ||
-    hasHrInventoryAccess(employee) ||
+    canManageInventory(employee) ||
     isCeo(employee.role)
   )
 }

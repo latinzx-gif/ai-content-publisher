@@ -1,11 +1,11 @@
 import { InventoryGuideShell } from "@/features/inventory/guide/InventoryGuideShell"
 import { getInventoryAlertCount } from "@/features/inventory/expansion-data"
 import {
-  canManageHr,
   isCeo,
   isDev,
   isInventoryPortalUser,
   isInventoryRole,
+  hasHrInventoryAccess,
 } from "@/lib/auth/roles"
 import { requireInventoryPortal } from "@/lib/auth/require-inventory-portal"
 
@@ -18,7 +18,7 @@ export default async function InventoryLayout({
   const staffMode = isInventoryPortalUser(employee)
   const showMasterData =
     isDev(employee.role) ||
-    canManageHr(employee.role) ||
+    hasHrInventoryAccess(employee) ||
     isCeo(employee.role) ||
     isInventoryRole(employee.role)
   const alertCount = await getInventoryAlertCount().catch(() => 0)

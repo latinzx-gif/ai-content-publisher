@@ -86,6 +86,15 @@ export function hasHrInventoryAccess(employee: Employee): boolean {
   return isHrOfficerStaff(employee.department, employee.position)
 }
 
+/** Inventory master data + ops (HR, inventory staff, dev) */
+export function canManageInventory(employee: Employee): boolean {
+  return (
+    isDev(employee.role) ||
+    hasHrInventoryAccess(employee) ||
+    isInventoryRole(employee.role)
+  )
+}
+
 /** Inventory portal + HR/CEO/Dev full inventory access */
 export function canAccessInventoryPortal(employee: Employee): boolean {
   if (isDev(employee.role) || isCeo(employee.role) || hasHrInventoryAccess(employee)) {
