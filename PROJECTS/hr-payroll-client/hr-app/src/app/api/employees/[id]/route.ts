@@ -18,6 +18,7 @@ import {
   isValidPayDay,
 } from "@/lib/payroll/pay-day"
 import { createClient } from "@/lib/supabase/server"
+import { applyEmployeeUpdates } from "@/lib/employees/apply-employee-updates"
 
 const DAY_MS = 86_400_000
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
@@ -311,12 +312,10 @@ export async function PATCH(
     }
   }
 
-  const { data, error } = await supabase
-    .from("hr_employees")
-    .update(updates)
-    .eq("id", id)
-    .select("probation_end, status")
-    .maybeSingle()
+  const { data, error, offDaysSkipped } = await applyEmployeeUpdates<{
+    probation_end: string | null
+    status: string
+  }>(supabase, id, updates, "probation_end, status")
 
   if (error) {
     const msg =
@@ -329,7 +328,15 @@ export async function PATCH(
     return NextResponse.json({ error: "not found" }, { status: 404 })
   }
 
-  return NextResponse.json(data)
+  return NextResponse.json({
+    ...data,
+    ...(offDaysSkipped
+      ? {
+          warning:
+            "บันทึกข้อมูลหลักแล้ว แต่วันหยุดประจำสัปดาห์ยังไม่ถูกบันทึก — ลองติ๊กวันหยุดอีกครั้งใน 1–2 นาที",
+        }
+      : {}),
+  })
 }
 
 export async function DELETE(

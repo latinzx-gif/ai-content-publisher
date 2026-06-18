@@ -241,12 +241,14 @@ export function EmployeeProfileForm({
           })
         ),
       })
+      const body = (await res.json().catch(() => null)) as
+        | { error?: string; warning?: string }
+        | null
       if (!res.ok) {
-        const body = (await res.json().catch(() => null)) as { error?: string } | null
         throw new Error(body?.error ?? "บันทึกไม่สำเร็จ")
       }
       if (!opts?.silent) {
-        setMessage("บันทึกข้อมูลแล้ว")
+        setMessage(body?.warning ?? "บันทึกข้อมูลแล้ว")
       }
       router.refresh()
     },

@@ -211,19 +211,33 @@ export async function POST(request: Request) {
     insertPayload.off_days = offDays
   }
 
-  const { data, error } = await supabase
+  let { data, error } = await supabase
     .from("hr_employees")
     .insert(insertPayload)
     .select("id")
     .single()
 
-  if (error) {
+  if (
+    error &&
+    offDays !== undefined &&
+    /off_days/i.test(error.message) &&
+    /schema cache/i.test(error.message)
+  ) {
+    const { off_days: _offDays, ...rest } = insertPayload
+    ;({ data, error } = await supabase
+      .from("hr_employees")
+      .insert(rest)
+      .select("id")
+      .single())
+  }
+
+  if (error || !data) {
     const msg =
-      error.code === "23505"
+      error?.code === "23505"
         ? error.message.includes("employee_code")
           ? "รหัสพนักงานนี้มีในระบบแล้ว"
           : "LINE user ID นี้มีในระบบแล้ว"
-        : error.message
+        : error?.message ?? "create failed"
     return NextResponse.json({ error: msg }, { status: 500 })
   }
 
