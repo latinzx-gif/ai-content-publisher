@@ -58,6 +58,17 @@ export default async function NewInboundOrderPage() {
               </option>
             ))}
           </InventorySelect>
+          {activeSuppliers.length === 0 ? (
+            <p className="text-sm text-muted-foreground">
+              ยังไม่มี Supplier —{" "}
+              <Link
+                href="/admin/inventory/suppliers"
+                className="text-brand-red hover:underline"
+              >
+                ไปเพิ่มที่เมนู Supplier
+              </Link>
+            </p>
+          ) : null}
         </InventoryFormField>
         <InventoryFormField label="คลังรับเข้า" htmlFor="warehouse_id">
           <InventorySelect id="warehouse_id" name="warehouse_id" required defaultValue="">
