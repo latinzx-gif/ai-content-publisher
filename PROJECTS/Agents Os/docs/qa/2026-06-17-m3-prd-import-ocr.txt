@@ -1,0 +1,50 @@
+88 Project Dashboard
+-* Create Proiect
+59 PRD Import
+288 Agent Library
+* Skill Library
+@ Team Builder
+© Runtime Manager
+• Task Board
+• Run Log
+@ Human Request Inbox
+• Demo / Handoff Center
+Head Office Agent Studio
+suLte store reaoy
+PRD Import
+Copy the source PRD into the project folder, normalize the text, and generate structured PRD analysis artifacts.
+GenerATOO ANACTS
+Project M3 Visual Smoke
+Choose File and import...
+Open Imported Folder
+Prolect tolder: Isers/lakarinosk agentStudio Prolects/m: visual-smoke
+Original PRD: /Users/jakarinosk/AgentStudlo/Projects/m3-visual-smoke/01_PRD/
+PRO ORIGINAL. OCT
+Normalized Markdown: Ilsers/lakarinoskiagentStudio/Proiects/m3.visual-smoke/01PRD.
+PRD NORMALIZED.mol
+/Users/lakarinosk/AgentStudio/Prolects/m3-visual-smoke/02 PRD Analys|s/PRD ANALYSIS.md
+/Users/jakarinosk/AgentStudlo/Projects/m3-visual-smoke/02_PRD_Analysls/MISSING_INFO.md
+/Users/jakarinosk/AgentStudlo/Projects/m3-visual-smoke/02_PRD_Analysls/SCOPE_SUMMARY.md
+/Users/jakarinosk/AgentStudlo/Projects/m3-visual-smoke/02_PRD_Analysls/MODULE_MAP.md
+/Users/jakarinosk/AgentStudio/Projects/m3-visual-smoke/02_PRD_Analysls/ROLE_MAP.md
+/Users/jakarinosk/AgentStudio/Projects/m3-visual-smoke/02_PRD_Analysls/RISK_REPORT.md
+/Users/jakarinosk/AgentStudio/Projects/m3-visual-smoke/02_PRD_Analysis/ANALYST_CHECKLIST.md
+Status: nraanaiv?ad
+Normalized PRD Preview
+# Normalized PRD
+Imported from: sample.pdf
+Client Portal PRD
+Users: Admin, Customer, Agent
+Feature: Dashboard and notifications
+Risk: Dependency on payment gateway
+What M3 Generates
+01_PRD/PRD_ORIGINAL.(ext}
+01_PRD/PRD_NORMALIZED.md
+01_PRD/PRD_IMPORT_LOG.md
+02_PRD_Analysis/PRD_ANALYSIS.md
+02_PRD_Analysis/MISSING_INFO.md
+02_PRD_Analysis/SCOPE_SUMMARY.md
+02_PRD_Analysis/MODULE_MAP.md
+02_PRD_Analysis/ROLE_MAP.md
+02_PRD_Analysis/RISK_REPORT.md
+02_PRD_Analysis/ANALYST_CHECKLIST.md

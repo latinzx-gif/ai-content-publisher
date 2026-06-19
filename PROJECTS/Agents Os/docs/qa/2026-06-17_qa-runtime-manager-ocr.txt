@@ -1,0 +1,46 @@
+88 Project Da...
+C9 Create Proj...
+• PRD Import
+288 Agent Libr...
+‹ Skill Library
+• Team Build...
+• Runtime M...
+E Task Board
+• Run Log
+@ Human Re...
+• Demo / Ha...
+Head Office Agent Studio
+sQLite store ready
+Runtime Manager
+Track runtime readiness, default selections, and execution notes without enabling full autonomous execution yet.
+Add Runtime
+Runtime name
+mock
+manual
+Execution notes
+• Require approval
+Save Runtime
+Runtimes
+Claude Code
+coding-agent
+Manual use outside the app for now.
+Approval required before launch
+Default
+Codex CLI
+coding-agent
+Placeholder only. Real Integration after app shell milestone.
+Approval required before launch
+Default
+Gemini CLI
+analysis-agent
+Runtime Manager tracks readiness only in v1.
+Approval required before launch
+Default
+Mock Local Runtime
+planned
+planned
+planned
+planned
+planned
+planned
+ready manual

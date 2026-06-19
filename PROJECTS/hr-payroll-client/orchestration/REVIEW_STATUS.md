@@ -2,7 +2,11 @@
 
 **Batch:** T77–T108  
 **Status:** ✅ **APPROVED**  
-**Active:** **ATT-ROSTER-001** — 🟡 **APPROVED WITH CAVEATS** (2026-06-17)  
+**Active:** **HR-UI-BATCH-001** — 📋 **PLAN APPROVED → EXECUTE** (2026-06-18)  
+  - **A** EMP-LIST-TIME-001 — `/admin/employees` เวลาเข้า-ออก  
+  - **B** ATT-ROSTER-UI-001 — attendance compact cards  
+  - **C** EMP-OFF-DAYS-001 — วันหยุด profile (optional same PR)  
+**Previous:** **ATT-ROSTER-001** — 🟡 **APPROVED WITH CAVEATS** (2026-06-17)  
 **Previous:** **PERF-ADMIN-001** — 🟡 **APPROVED WITH CAVEATS** (2026-06-17)  
 **Previous:** **FEFO-001–FEFO-014** — 🟡 **APPROVED WITH CAVEATS** (2026-06-17)  
 **Previous:** T141 Stock Count Web — 🔄 EXECUTE (paused for FEFO)  
@@ -14,6 +18,22 @@
 **Date:** 2026-06-17  
 **Team:** Cursor + Codex only — Claude Code ⏸ paused  
 **Reviewed:** Cursor orchestrator
+
+## Latest — ATT-ROSTER-UI-001 Roster compact cards + employee code (IN PROGRESS 2026-06-18)
+
+**Request:** `/admin/attendance` — รหัสพนักงานข้างชื่อ, card เล็กลงสำหรับ มาสาย/ขาด/ลา/วันหยุด, แสดง ตำแหน่ง·สาขา·เวลาเข้า-ออก  
+**Task file:** `orchestration/CURRENT_TASK.md`  
+**Agent:** Codex — Phase PLAN
+
+---
+
+## Latest — EMP-OFF-DAYS-001 Employee weekly off days (QUEUED → merged into ATT-ROSTER-UI-001)
+
+**Request:** Profile พนักงาน — ติ๊กเลือกวันหยุด จ–อา (เหมือน morning-push UI)  
+**Task file:** `orchestration/CURRENT_TASK.md`  
+**Agent:** Codex — Phase PLAN
+
+---
 
 ## Latest Review — ATT-ROSTER-001 Attendance Roster + LINE (APPROVED WITH CAVEATS 2026-06-17)
 

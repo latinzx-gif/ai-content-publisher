@@ -5,6 +5,8 @@ import { AdminPageShell } from "@/components/brand/AdminPageShell"
 import { EmployeeDocumentTable } from "@/features/portal/EmployeeDocumentTable"
 import { getEmployeeDocumentRequests } from "@/features/portal/data"
 import { getCurrentEmployee } from "@/lib/auth/session"
+import { liffUrl } from "@/lib/i18n/liff-url"
+import { coerceLocale } from "@/lib/i18n/types"
 import { Button } from "@/components/ui/button"
 
 export default async function PortalDocumentsPage() {
@@ -12,6 +14,8 @@ export default async function PortalDocumentsPage() {
   if (!employee) return null
 
   const rows = await getEmployeeDocumentRequests(employee.id)
+  const locale = coerceLocale(employee.preferred_locale)
+  const liffDocumentsUrl = liffUrl("/liff/documents", locale) ?? "/liff/documents"
 
   return (
     <AdminPageShell
@@ -23,7 +27,7 @@ export default async function PortalDocumentsPage() {
           size="sm"
           nativeButton={false}
           render={
-            <Link href="/liff/documents" className="inline-flex items-center gap-1.5">
+            <Link href={liffDocumentsUrl} className="inline-flex items-center gap-1.5">
               ขอเอกสารใหม่
               <ExternalLink className="size-3.5" />
             </Link>

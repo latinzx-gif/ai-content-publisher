@@ -1,0 +1,71 @@
+88 Project Dashboard
+CP Create Project
+• PRD Import
+288 Agent Library
+* Skill Library
+@ Team Builder
+® Runtime Manager
+• Task Board
+• Run Log
+@ Human Request Inbox
+• Demo / Handoff Center
+Head Office Agent Studio
+sqLite store ready
+Demo / Handoff Center
+Prepare demo scripts, known limitations, handoff checklist templates, closure exports, and project close readiness in one place.
+Blocking Requests
+Project closes only when this reaches zero.
+Milestone 6 Actions
+Project Milestone 6 Smoke =
+Status: closed - Milestone: Closed
+8-
+Generate Checklist
+Generate Demo Script
+Handoff Checklist
+Export Summary
+Close Project
+Open Folder
+Known Limitations
+Runtime execution remains mock/manual in V1.
+Demo Items
+2
+DEMO_SCRIPT.md • 10_Demo
+Items
+Project closure gate
+Handoff. Handoff Agent
+Project closed after closure summary export and zero blocking requests.
+CLOSURE_SUMMARY.md
+11_ Handoff
+Closure package
+Handoff - Handoff Agent
+Closure summary exported with current open tasks, requests, and artifact paths.
+CLOSURE_SUMMARY.md
+11_Handoff
+Handoff checklist
+Handoff - Handoff Agent
+Generated handoff checklist template for milestone 6 packaging.
+HANDOFF_CHECKLIST.md
+11_Handoff
+Save Known Limitations
+Last closure export Open
+CLOSURE_SUMMARY.md • 11_Handoff
+Add Custom Item
+Demo script
+Demo. Demo Agent
+Generated demo walkthrough template for the milestone 6 review.
+DEMO_SCRIPT.md
+10_Demo
+Type Demo
+Known limitations
+Handoff Items
+4
+HANDOFF CHFCKLIST.ma • 11 Handoff
+done
+done
+done
+done
+done
+Open
+Open
+Open
+Open

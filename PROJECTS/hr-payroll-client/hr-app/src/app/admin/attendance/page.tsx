@@ -28,6 +28,13 @@ export default async function AdminAttendancePage({
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>
 }) {
   const rawParams = await searchParams
+  const currentParams = new URLSearchParams()
+  for (const [key, value] of Object.entries(rawParams)) {
+    if (typeof value === "string" && value) currentParams.set(key, value)
+  }
+  const currentPath = currentParams.toString()
+    ? `/admin/attendance?${currentParams.toString()}`
+    : "/admin/attendance"
   const view = typeof rawParams.view === "string" && rawParams.view === "history" ? "history" : "today"
   const params = normalizeAttendanceParams(rawParams)
   const todayParams = {
@@ -75,7 +82,20 @@ export default async function AdminAttendancePage({
               values={todayParams}
             />
           </Suspense>
-          <AttendanceTodayRoster roster={roster} />
+          <div className="rounded-[2rem] border border-border/70 bg-gradient-to-br from-background via-background to-muted/15 p-4 shadow-sm sm:p-5">
+            <div className="mb-4 flex flex-wrap items-end justify-between gap-3 border-b border-border/60 pb-4">
+              <div className="space-y-1">
+                <p className="text-sm font-semibold text-foreground">Today operations board</p>
+                <p className="text-xs text-muted-foreground">
+                  โฟกัสคนที่ยังอยู่ในรอบงานก่อน แล้วค่อยตาม incident ที่เหลือทางด้านขวา
+                </p>
+              </div>
+              <div className="rounded-full border border-brand-red/15 bg-brand-red/5 px-3 py-1.5 text-xs font-medium text-brand-red">
+                วันที่ {todayParams.date}
+              </div>
+            </div>
+            <AttendanceTodayRoster roster={roster} returnTo={currentPath} />
+          </div>
         </div>
       </AdminPageShell>
     )
@@ -125,8 +145,23 @@ export default async function AdminAttendancePage({
             }}
           />
         </Suspense>
-        <AttendanceSummaryCard summary={summary} />
-        <AttendanceTable rows={rows} canManage={canManage} />
+        <div className="rounded-[2rem] border border-border/70 bg-gradient-to-br from-background via-background to-muted/15 p-4 shadow-sm sm:p-5">
+          <div className="mb-4 flex flex-wrap items-end justify-between gap-3 border-b border-border/60 pb-4">
+            <div className="space-y-1">
+              <p className="text-sm font-semibold text-foreground">History audit ledger</p>
+              <p className="text-xs text-muted-foreground">
+                เริ่มจากช่วงเวลาและ anomaly ก่อน แล้วค่อยไล่ตรวจรายการละเอียดด้านล่าง
+              </p>
+            </div>
+            <div className="rounded-full border border-border/70 bg-background px-3 py-1.5 text-xs font-medium text-muted-foreground">
+              รวม {total} รายการ
+            </div>
+          </div>
+          <AttendanceSummaryCard summary={summary} />
+          <div className="mt-4">
+            <AttendanceTable rows={rows} canManage={canManage} returnTo={currentPath} />
+          </div>
+        </div>
         <Suspense fallback={null}>
           <AttendancePagination page={params.page} total={total} />
         </Suspense>

@@ -5,7 +5,7 @@
 
 ## Scope
 - **HR Admin web only** — Owner / Manager
-- Employee Portal deferred (LINE OA only)
+- Employee Portal deferred (CNV WorkHub on LINE only)
 
 ## Completed
 

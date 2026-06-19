@@ -8,6 +8,7 @@ function round2(n: number): number {
 export interface CalculatePayslipOptions {
   taxEnabled?: boolean
   taxRate?: number
+  ssoEnabled?: boolean
   leaveSickDeductEnabled?: boolean
 }
 
@@ -20,8 +21,6 @@ export function calculatePayslip(
   const housingAllowance = summary.housing_allowance > 0 ? summary.housing_allowance : 0
   if (!salary || salary <= 0) return null
 
-  const taxEnabled = options.taxEnabled ?? false
-  const taxRate = options.taxRate ?? 0
   const lines: PayslipCalculation["lines"] = []
 
   let gross = 0
@@ -61,7 +60,10 @@ export function calculatePayslip(
     }
   }
 
-  const ssoDeduction = round2(Math.min(config.sso_cap, gross * config.sso_rate))
+  const ssoEnabled = options.ssoEnabled ?? false
+  const taxEnabled = options.taxEnabled ?? false
+  const taxRate = options.taxRate ?? 0
+  const ssoDeduction = ssoEnabled ? round2(Math.min(config.sso_cap, gross * config.sso_rate)) : 0
   const taxDeduction = taxEnabled ? round2(gross * taxRate) : 0
   const otherDeductions = 0
   const netAmount = round2(gross - ssoDeduction - taxDeduction - otherDeductions)

@@ -1,0 +1,65 @@
+Milestone 6 QA
+Demo / Handoff Center
+Prepare demo scripts, known limitations, handoff checklist templates, closure exports, and project close readiness in one place.
+Blocking Requests
+Project closes only when this reaches zero.
+Milestone 6 Actions
+Project Milestone 6 Smoke =
+Status: closed • Milestone: Closed
+Generate Default Ch... Generate Demo Script Generate Handoff C...
+Export Closure Summary
+Close Project
+Open Project Folder
+Known Limitations
+Runtime execution remains mock/manual in V1.
+Save Known Limitations
+Last closure export: /var/folders/tc/
+q5skj88x6y9_4d_dzm8/v6r00000gn/T/head-office-
+agent-studio-m6-smoke/milestone-6-smoke/
+11_Handoff/CLOSURE_SUMMARY.md
+Add Custom Item
+Type Demo
+Title
+Details
+Documentation Agent
+Save Item
+Demo Items
+2
+/var/folders/tc/q5skj88x6y9_4d_dzm8lv6r00000gn/T/head-office-agent-studlo-m6-smoke/
+milestone-6-smoke/10_Demo/DEMO_SCRIPT.md
+Handoff Items
+4
+/var/tolders/tc/q5skj88x6y9_4d_dzm8/v6r00000gn/T/head-office-agent-studlo-m6-smoke/
+milestone-6-smoke/11_Handoff/HANDOFF_CHECKLIST.md
+Items
+Project closure gate
+Handoff • Handoff Agent
+Project closed after closure summary export and zero blocking requests.
+/var/folders/tc/q5skj88x6y9_4d_dzm8lv6r00000gn/T/head-office-agent-studlo-m6-smoke/milestone-6-smoke/11_Handoff/CLOSURE_SUMMARY.md
+Closure package
+Handoff • Handoff Agent
+Closure summary exported with current open tasks, requests, and artifact paths.
+/var/folders/tc/q5skj88x6y9_4d_dzm8lv6r00000gn/T/head-office-agent-studlo-m6-smoke/milestone-6-smoke/11_Handoff/CLOSURE_SUMMARY.md
+Known limitations
+Handoff • Documentation Agent
+Runtime execution remains mock/manual in V1.
+Handoff checklist
+Handoff . Handoff Agent
+Generated handoff checklist template for milestone 6 packaging.
+/var/folders/tc/q5skj88x6y9_4d_dzm8lv6r00000gn/T/head-office-agent-studio-m6-smoke/milestone-6-smoke/11_Handoff/HANDOFF_CHECKLIST.md
+Demo script
+Demo • Demo Agent
+Generated demo walkthrough template for the milestone 6 review.
+/var/folders/tc/q5sk|88x6y9_4d_dzm8lv6r00000gn/T/head-office-agent-studlo-m6-smoke/milestone-6-smoke/10_Demo/DEMO_SCRIPT.md
+Demo checklist
+Demo • Demo agent
+done
+done
+done
+done
+done
+Open
+Open
+Open
+Open
+pending

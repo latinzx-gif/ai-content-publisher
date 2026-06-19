@@ -1,11 +1,13 @@
 "use client"
 
+import { useEffect, useState } from "react"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
 
 import type { BranchFilterOption } from "@/features/employees/data"
+import { cn } from "@/lib/utils"
 
 const inputClassName =
-  "h-9 rounded-lg border border-border/80 bg-muted/30 px-3 text-sm outline-none focus-visible:border-brand-red/40 focus-visible:ring-2 focus-visible:ring-brand-red/20"
+  "h-11 rounded-xl border border-border/80 bg-background px-3 text-sm outline-none transition focus-visible:border-brand-red/40 focus-visible:ring-2 focus-visible:ring-brand-red/20"
 
 export function AttendanceFilters({
   departments,
@@ -16,7 +18,7 @@ export function AttendanceFilters({
 }: {
   departments: string[]
   branches?: BranchFilterOption[]
-  employees: Array<{ id: string; name: string }>
+  employees: Array<{ id: string; name: string; employeeCode: string }>
   values: {
     from: string
     to: string
@@ -30,102 +32,218 @@ export function AttendanceFilters({
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
+  const [employeeInput, setEmployeeInput] = useState(values.employee)
+
+  useEffect(() => {
+    setEmployeeInput(values.employee)
+  }, [values.employee])
+
+  useEffect(() => {
+    if (employeeInput === values.employee) return
+    const timer = window.setTimeout(() => update("employee", employeeInput), 300)
+    return () => clearTimeout(timer)
+  }, [employeeInput, values.employee])
 
   function update(key: string, value: string) {
     const params = new URLSearchParams(searchParams.toString())
     if (value) params.set(key, value)
     else params.delete(key)
     params.delete("page")
-    router.push(`${pathname}?${params.toString()}`)
+    router.replace(`${pathname}?${params.toString()}`)
+  }
+
+  function updateMany(next: Record<string, string>) {
+    const params = new URLSearchParams(searchParams.toString())
+    for (const [key, value] of Object.entries(next)) {
+      if (value) params.set(key, value)
+      else params.delete(key)
+    }
+    params.delete("page")
+    router.replace(`${pathname}?${params.toString()}`)
+  }
+
+  function formatDateInput(date: Date): string {
+    return date.toISOString().slice(0, 10)
+  }
+
+  function applyPreset(days: number) {
+    const end = values.to || formatDateInput(new Date())
+    const endDate = new Date(`${end}T00:00:00`)
+    const startDate = new Date(endDate)
+    startDate.setDate(endDate.getDate() - Math.max(days - 1, 0))
+    updateMany({
+      from: formatDateInput(startDate),
+      to: end,
+    })
+  }
+
+  function resetFilters() {
+    updateMany({
+      from: "",
+      to: "",
+      branch_id: "",
+      dept: "",
+      employee: "",
+    })
   }
 
   return (
     <div
-      className={
+      className={cn(
         mode === "employee"
-          ? "flex flex-wrap items-end gap-3 rounded-lg border border-border/60 bg-muted/20 px-3 py-2.5"
-          : "grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5"
-      }
+          ? "flex flex-wrap items-end gap-3 rounded-2xl border border-border/70 bg-muted/15 px-3 py-3"
+          : "overflow-hidden rounded-[1.75rem] border border-border/70 bg-gradient-to-br from-background via-background to-muted/15 shadow-sm"
+      )}
     >
-      <label
-        className={
-          mode === "employee"
-            ? "flex min-w-[9rem] flex-1 flex-col gap-1 text-xs sm:max-w-[11rem]"
-            : "flex flex-col gap-1 text-sm"
-        }
-      >
-        จากวันที่
-        <input
-          type="date"
-          className={inputClassName}
-          value={values.from}
-          onChange={(e) => update("from", e.target.value)}
-        />
-      </label>
-      <label
-        className={
-          mode === "employee"
-            ? "flex min-w-[9rem] flex-1 flex-col gap-1 text-xs sm:max-w-[11rem]"
-            : "flex flex-col gap-1 text-sm"
-        }
-      >
-        ถึงวันที่
-        <input
-          type="date"
-          className={inputClassName}
-          value={values.to}
-          onChange={(e) => update("to", e.target.value)}
-        />
-      </label>
       {mode === "full" ? (
-        <>
+        <div className="flex flex-wrap items-end justify-between gap-3 border-b border-border/60 px-4 py-4">
+          <div className="space-y-1">
+            <p className="text-sm font-semibold text-foreground">History command bar</p>
+            <p className="text-xs text-muted-foreground">
+              กรองช่วงเวลา พนักงาน และหน่วยงานก่อนลงดู ledger ย้อนหลัง
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-2 text-xs">
+            <span className="rounded-full border border-border/70 bg-background px-3 py-1.5 font-medium text-muted-foreground">
+              ช่วงวันที่ {values.from} ถึง {values.to}
+            </span>
+            {values.employee ? (
+              <span className="rounded-full border border-brand-red/15 bg-brand-red/5 px-3 py-1.5 font-medium text-brand-red">
+                ค้นหา {values.employee}
+              </span>
+            ) : null}
+            {values.branch_id ? (
+              <span className="rounded-full border border-border/70 bg-background px-3 py-1.5 font-medium text-muted-foreground">
+                สาขาถูกกรองแล้ว
+              </span>
+            ) : null}
+          </div>
+        </div>
+      ) : null}
+
+      <div
+        className={
+          mode === "employee"
+            ? "contents"
+            : "grid gap-3 p-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5"
+        }
+      >
+        <label
+          className={
+            mode === "employee"
+              ? "flex min-w-[9rem] flex-1 flex-col gap-1 text-xs sm:max-w-[11rem]"
+              : "flex flex-col gap-1 text-sm"
+          }
+        >
+          <span className="font-medium text-muted-foreground">จากวันที่</span>
+          <input
+            type="date"
+            className={inputClassName}
+            value={values.from}
+            onChange={(e) => update("from", e.target.value)}
+          />
+        </label>
+        <label
+          className={
+            mode === "employee"
+              ? "flex min-w-[9rem] flex-1 flex-col gap-1 text-xs sm:max-w-[11rem]"
+              : "flex flex-col gap-1 text-sm"
+          }
+        >
+          <span className="font-medium text-muted-foreground">ถึงวันที่</span>
+          <input
+            type="date"
+            className={inputClassName}
+            value={values.to}
+            onChange={(e) => update("to", e.target.value)}
+          />
+        </label>
+        {mode === "full" ? (
+          <>
+            <label className="flex flex-col gap-1 text-sm">
+              <span className="font-medium text-muted-foreground">สาขา</span>
+              <select
+                className={inputClassName}
+                value={values.branch_id}
+                onChange={(e) => update("branch_id", e.target.value)}
+              >
+                <option value="">ทุกสาขา</option>
+                <option value="__none__">รอกำหนดสาขา</option>
+                {branches.map((b) => (
+                  <option key={b.id} value={b.id}>
+                    {b.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="flex flex-col gap-1 text-sm">
+              <span className="font-medium text-muted-foreground">แผนก</span>
+              <select
+                className={inputClassName}
+                value={values.dept}
+                onChange={(e) => update("dept", e.target.value)}
+              >
+                <option value="">ทั้งหมด</option>
+                {departments.map((d) => (
+                  <option key={d} value={d}>
+                    {d}
+                  </option>
+                ))}
+              </select>
+            </label>
           <label className="flex flex-col gap-1 text-sm">
-            สาขา
-            <select
-              className={inputClassName}
-              value={values.branch_id}
-              onChange={(e) => update("branch_id", e.target.value)}
-            >
-              <option value="">ทุกสาขา</option>
-              <option value="__none__">รอกำหนดสาขา</option>
-              {branches.map((b) => (
-                <option key={b.id} value={b.id}>
-                  {b.name}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className="flex flex-col gap-1 text-sm">
-            แผนก
-            <select
-              className={inputClassName}
-              value={values.dept}
-              onChange={(e) => update("dept", e.target.value)}
-            >
-              <option value="">ทั้งหมด</option>
-              {departments.map((d) => (
-                <option key={d} value={d}>
-                  {d}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className="flex flex-col gap-1 text-sm">
-            พนักงาน
-            <select
-              className={inputClassName}
-              value={values.employee}
-              onChange={(e) => update("employee", e.target.value)}
-            >
-              <option value="">ทั้งหมด</option>
-              {employees.map((e) => (
-                <option key={e.id} value={e.id}>
-                  {e.name}
-                </option>
-              ))}
-            </select>
-          </label>
-        </>
+              <span className="font-medium text-muted-foreground">พนักงาน / รหัสพนักงาน</span>
+              <input
+                list="attendance-employee-options"
+                className={inputClassName}
+                value={employeeInput}
+                onChange={(e) => setEmployeeInput(e.target.value)}
+                placeholder="พิมพ์ชื่อหรือรหัสพนักงาน"
+              />
+              <datalist id="attendance-employee-options">
+                {employees.map((employee) => (
+                  <option
+                    key={employee.id}
+                    value={employee.employeeCode}
+                    label={`${employee.name} (${employee.employeeCode})`}
+                  />
+                ))}
+              </datalist>
+            </label>
+          </>
+        ) : null}
+      </div>
+      {mode === "full" ? (
+        <div className="flex flex-wrap gap-2 border-t border-border/60 px-4 pb-4 pt-1">
+          <button
+            type="button"
+            className="rounded-full border border-border/80 bg-background px-3 py-1.5 text-xs font-medium text-muted-foreground transition hover:border-brand-red/30 hover:bg-brand-red/5 hover:text-foreground"
+            onClick={() => applyPreset(1)}
+          >
+            วันนี้
+          </button>
+          <button
+            type="button"
+            className="rounded-full border border-border/80 bg-background px-3 py-1.5 text-xs font-medium text-muted-foreground transition hover:border-brand-red/30 hover:bg-brand-red/5 hover:text-foreground"
+            onClick={() => applyPreset(7)}
+          >
+            7 วัน
+          </button>
+          <button
+            type="button"
+            className="rounded-full border border-border/80 bg-background px-3 py-1.5 text-xs font-medium text-muted-foreground transition hover:border-brand-red/30 hover:bg-brand-red/5 hover:text-foreground"
+            onClick={() => applyPreset(30)}
+          >
+            30 วัน
+          </button>
+          <button
+            type="button"
+            className="rounded-full border border-brand-red/15 bg-brand-red/5 px-3 py-1.5 text-xs font-medium text-brand-red transition hover:border-brand-red/30 hover:bg-brand-red/10"
+            onClick={resetFilters}
+          >
+            ล้างตัวกรอง
+          </button>
+        </div>
       ) : null}
     </div>
   )

@@ -1,0 +1,226 @@
+{
+  "master": {
+    "tasks": [
+      {
+        "id": "1",
+        "title": "F1 — Project Scaffold & Database",
+        "description": "Bootstrap support-app Next.js 16 + Supabase migrations aas_clients, aas_support_contacts, aas_tickets + seed + env template",
+        "status": "completed",
+        "priority": "high",
+        "milestone": "M1",
+        "agent": "Hermes+Codex",
+        "dependencies": [],
+        "details": "✅ Done via Hermes: support-app/ scaffolded (build/typecheck/lint pass). Migrations aas_clients/aas_support_contacts/aas_tickets. Seed chinesevibe+cnv-workhub. .env.example. RUNBOOK.md.",
+        "testStrategy": "npm run build pass; migrations valid SQL",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Scaffold support-app Next.js 16",
+            "description": "Create support-app/ with App Router, TypeScript, Tailwind, shadcn/ui, npm scripts build/typecheck/lint",
+            "status": "completed",
+            "dependencies": [],
+            "details": "Done via Hermes delegate_task. Next.js 16 + TS + Tailwind + shadcn/ui. build/typecheck/lint pass.",
+            "testStrategy": "cd support-app && npm run build && npm run typecheck && npm run lint"
+          },
+          {
+            "id": 2,
+            "title": "Supabase migrations — aas_ tables",
+            "description": "Migration for aas_clients, aas_support_contacts, aas_tickets per PRD F1/F2/F5 fields",
+            "status": "completed",
+            "dependencies": [],
+            "details": "Done: 20260616000001_create_aas_tables.sql — aas_clients, aas_support_contacts, aas_tickets with triggers, indexes, RLS.",
+            "testStrategy": "SQL valid; supabase db reset or migration apply locally"
+          },
+          {
+            "id": 3,
+            "title": "Seed client chinesevibe",
+            "description": "Seed at least ChineseVibe (slug chinesevibe) with linear_project_name placeholder",
+            "status": "completed",
+            "dependencies": [],
+            "details": "Done: supabase/seed.sql — ChineseVibe + CNV WorkHub with ON CONFLICT DO NOTHING.",
+            "testStrategy": "Query aas_clients returns chinesevibe row"
+          },
+          {
+            "id": 4,
+            "title": "support-app .env.example",
+            "description": "Env template: Supabase URL/keys, LINE Support channel, Linear API key",
+            "status": "completed",
+            "dependencies": [],
+            "details": "Done: support-app/.env.example with Supabase URL/anon/service-role, LINE, Linear, LIFF endpoint.",
+            "testStrategy": "File exists with all required var names documented"
+          },
+          {
+            "id": 5,
+            "title": "docs/RUNBOOK.md stub",
+            "description": "Stub runbook listing env vars and setup steps for LINE/Linear/Supabase/Vercel",
+            "status": "completed",
+            "dependencies": [],
+            "details": "Done: docs/RUNBOOK.md with env var table, setup steps, smoke checklist.",
+            "testStrategy": "File exists; lists Supabase, LINE Support, Linear, Vercel vars"
+          }
+        ]
+      },
+      {
+        "id": "2",
+        "title": "F2 — Client Registry",
+        "description": "aas_clients CRUD read + LIFF dropdown from active clients",
+        "status": "completed",
+        "priority": "high",
+        "milestone": "M1",
+        "agent": "Codex (via Hermes)",
+        "dependencies": [
+          "1"
+        ],
+        "details": "✅ Done: /admin/clients page, /api/liff/clients endpoint, server action getActiveClients(). build+typecheck pass.",
+        "testStrategy": "LIFF shows client names from DB",
+        "subtasks": []
+      },
+      {
+        "id": "3",
+        "title": "F3 — Support Contact Binding",
+        "description": "Org code or deep link binds line_user_id to client_id in aas_support_contacts",
+        "status": "completed",
+        "priority": "high",
+        "milestone": "M1",
+        "agent": "Claude Code (via Hermes)",
+        "dependencies": [
+          "2"
+        ],
+        "details": "✅ Done: POST /api/liff/bind, GET /api/liff/me, LIFF bind page, ticket page redirect if not bound. build+typecheck pass.",
+        "testStrategy": "Same LINE user skips org code after bind",
+        "subtasks": []
+      },
+      {
+        "id": "4",
+        "title": "F4 — LINE Webhook (Support OA)",
+        "description": "POST /api/line/webhook with signature verify, Rich Menu postbacks to LIFF",
+        "status": "completed",
+        "priority": "high",
+        "milestone": "M2",
+        "agent": "Claude Code (via Hermes)",
+        "dependencies": [
+          "1"
+        ],
+        "details": "✅ Done: POST /api/line/webhook with signature verify, Rich Menu routing (open_ticket→LIFF, track_status→LIFF). LIFF stubs. build+typecheck pass.",
+        "testStrategy": "Valid signature 200; invalid 401",
+        "subtasks": []
+      },
+      {
+        "id": "5",
+        "title": "F5 — LIFF Ticket Intake",
+        "description": "/liff/ticket form: client, type, severity P0-P3, subject, body, page_url",
+        "status": "completed",
+        "priority": "high",
+        "milestone": "M2",
+        "agent": "Claude Code (via Hermes)",
+        "dependencies": [
+          "2",
+          "3",
+          "4"
+        ],
+        "details": "✅ Done: /liff/ticket form with client/type/severity/subject/body/page_url, AAS-XXXXXX code, createTicket() action. build+typecheck pass.",
+        "testStrategy": "Submit creates row with all fields",
+        "subtasks": []
+      },
+      {
+        "id": "6",
+        "title": "F6 — Linear Issue Creation",
+        "description": "On submit create Linear issue in client project with [AAS][slug] title and labels",
+        "status": "completed",
+        "priority": "high",
+        "milestone": "M2",
+        "agent": "Claude Code (via Hermes)",
+        "dependencies": [
+          "5"
+        ],
+        "details": "✅ Done: Linear API client createLinearIssue(), labels client/type/severity, [AAS][slug] title. Integrated with ticket creation (graceful fallback).",
+        "testStrategy": "Issue visible in Linear with correct labels",
+        "subtasks": []
+      },
+      {
+        "id": "7",
+        "title": "F7 — LINE Confirm on Submit",
+        "description": "Flex message to reporter after ticket created",
+        "status": "completed",
+        "priority": "medium",
+        "milestone": "M2",
+        "agent": "Codex (via Hermes)",
+        "dependencies": [
+          "5",
+          "4"
+        ],
+        "details": "✅ Done: sendConfirmFlex() Flex message with ticket code/company/type/severity + Track Status button. Integrated into ticket flow with notified_at.",
+        "testStrategy": "LINE user receives Flex after submit",
+        "subtasks": []
+      },
+      {
+        "id": "8",
+        "title": "F8 — Linear Webhook Close-Loop Notify",
+        "description": "On Linear Done push resolution Flex to reporter from [resolution] comment",
+        "status": "completed",
+        "priority": "high",
+        "milestone": "M3",
+        "agent": "Claude Code (via Hermes)",
+        "dependencies": [
+          "6",
+          "7"
+        ],
+        "details": "✅ Done: Linear webhook POST /api/linear/webhook, verifyLinearSignature(), [resolution] comment parsing, handleIssueDone(), sendResolutionFlex(). Full close-loop notify.",
+        "testStrategy": "Mark Done in Linear triggers LINE Flex within 1 min",
+        "subtasks": []
+      },
+      {
+        "id": "9",
+        "title": "F9 — Ticket Status Follow-up",
+        "description": "/liff/ticket/status lookup by AAS code for reporter",
+        "status": "completed",
+        "priority": "medium",
+        "milestone": "M3",
+        "agent": "Codex (via Hermes)",
+        "dependencies": [
+          "5"
+        ],
+        "details": "✅ Done: GET /api/liff/tickets/{code} with lineUserId guard, LIFF status page with color-coded badges, resolution summary display.",
+        "testStrategy": "Lookup own ticket returns status",
+        "subtasks": []
+      },
+      {
+        "id": "10",
+        "title": "F10 — Deploy & Runbook",
+        "description": "Vercel deploy ai-assistant-support + RUNBOOK smoke checklist",
+        "status": "completed",
+        "priority": "medium",
+        "milestone": "M3",
+        "agent": "Hermes",
+        "dependencies": [
+          "8",
+          "9"
+        ],
+        "details": "App deployed at https://support-app-brown.vercel.app. LIFF app, LINE webhook, Linear webhook, cron jobs, and LINE Rich Menu are live. Rich Menu ID `richmenu-cf569ac22e493111e6a36411071dd088` was created, image uploaded via `api-data.line.me`, default binding verified via `GET /v2/bot/user/all/richmenu`, and LIFF URLs return 200.",
+        "testStrategy": "Production webhooks verified; default Rich Menu ID verified via API; LIFF `/liff/ticket` and `/liff/ticket/status` endpoints verified 200",
+        "subtasks": []
+      },
+      {
+        "id": "11",
+        "title": "Phase 2 — AI Triage & Agent Queue (LOCKED)",
+        "description": "Auto classify, priority scoring, Hermes/agent queue picks [AAS] from Linear — DO NOT START",
+        "status": "blocked",
+        "priority": "low",
+        "milestone": "M4",
+        "agent": "Hermes",
+        "dependencies": [
+          "10"
+        ],
+        "details": "Locked until user approves Phase 2 in GROUND_TRUTH.",
+        "testStrategy": "N/A",
+        "subtasks": []
+      }
+    ],
+    "metadata": {
+      "version": "1.0.0",
+      "projectName": "AI Assistant Support",
+      "createdAt": "2026-06-16T00:00:00.000Z",
+      "updatedAt": "2026-06-16T00:00:00.000Z"
+    }
+  }
+}

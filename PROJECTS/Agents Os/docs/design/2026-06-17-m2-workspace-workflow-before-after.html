@@ -1,0 +1,247 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8" />
+  <title>M2 Workspace Workflow Mockup</title>
+  <style>
+    :root {
+      --bg: #f7f4ee;
+      --panel: #fffdf8;
+      --border: #ddd4c7;
+      --text: #2b261f;
+      --muted: #746b5f;
+      --green: #dff5e6;
+      --yellow: #fff1c9;
+      --blue: #e7f0ff;
+      --red: #fde4e4;
+      --shadow: 0 10px 30px rgba(55,42,22,.08);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
+      background: linear-gradient(180deg, #faf7f1, var(--bg));
+      color: var(--text);
+      padding: 28px;
+    }
+    h1,h2,h3,p { margin: 0; }
+    .stack { display: grid; gap: 24px; }
+    .header { display: grid; gap: 10px; }
+    .legend { display: flex; flex-wrap: wrap; gap: 10px; font-size: 13px; color: var(--muted); }
+    .chip { padding: 6px 10px; border-radius: 999px; border: 1px solid var(--border); background: white; }
+    .keep { background: var(--green); }
+    .change { background: var(--yellow); }
+    .new { background: var(--blue); }
+    .risk { background: var(--red); }
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; }
+    .panel { background: var(--panel); border: 1px solid var(--border); border-radius: 22px; box-shadow: var(--shadow); overflow: hidden; }
+    .panel-head { padding: 18px 20px; border-bottom: 1px solid var(--border); background: rgba(255,255,255,.75); }
+    .panel-body { padding: 18px 20px 22px; }
+    .window { display: grid; grid-template-columns: 220px 1fr; min-height: 720px; border: 1px solid var(--border); border-radius: 18px; overflow: hidden; background: white; }
+    .sidebar { background: #f5efe4; padding: 18px 12px; border-right: 1px solid var(--border); }
+    .side-title { font-weight: 700; font-size: 15px; margin-bottom: 12px; }
+    .nav { display: grid; gap: 8px; }
+    .nav div { padding: 10px 12px; border-radius: 12px; color: var(--muted); font-size: 14px; }
+    .nav .active { background: white; color: var(--text); border: 1px solid var(--border); }
+    .content { padding: 20px; background: #fcfaf6; }
+    .hero { display: grid; gap: 14px; margin-bottom: 18px; }
+    .stats { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 12px; }
+    .stat { border: 1px solid var(--border); border-radius: 16px; background: white; padding: 14px; }
+    .stat .k { font-size: 12px; color: var(--muted); }
+    .stat .v { font-size: 28px; font-weight: 700; margin-top: 6px; }
+    .project-list { display: grid; gap: 12px; }
+    .project-row { border: 1px solid var(--border); background: white; border-radius: 16px; padding: 14px; display: grid; gap: 10px; }
+    .row-top, .row-bottom, .filters { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+    .grow { flex: 1; }
+    .input, .btn, .pill {
+      border: 1px solid var(--border); background: white; border-radius: 12px; padding: 9px 12px; font-size: 13px;
+    }
+    .btn.primary { background: #2c6bed; color: white; border-color: #2c6bed; }
+    .btn.warn { background: #fff6da; }
+    .btn.soft { background: #f4efe7; }
+    .pill { background: #f8f3ea; color: var(--muted); }
+    .detail-card {
+      margin-top: 14px; border: 1px dashed var(--border); border-radius: 16px; padding: 14px; background: #fffdf8;
+      display: grid; grid-template-columns: 1.1fr .9fr; gap: 14px;
+    }
+    .detail-col { display: grid; gap: 10px; }
+    .mini { font-size: 12px; color: var(--muted); }
+    .health-ok { color: #18633d; font-weight: 600; }
+    .health-warn { color: #8f5d00; font-weight: 600; }
+    ul { margin: 8px 0 0 18px; color: var(--muted); }
+    .footer-note { font-size: 13px; color: var(--muted); }
+  </style>
+</head>
+<body>
+  <div class="stack">
+    <div class="header">
+      <h1>M2 — Project Workspace Workflow</h1>
+      <p>ภาพก่อน/หลังสำหรับการปรับ Dashboard + Project workflow ก่อนลงมือแก้ SwiftUI</p>
+      <div class="legend">
+        <div class="chip keep">เขียว = คงไว้</div>
+        <div class="chip change">เหลือง = ปรับ layout / interaction</div>
+        <div class="chip new">ฟ้า = เพิ่มใหม่</div>
+        <div class="chip risk">แดง = จุดเสี่ยง/ต้องระวัง</div>
+      </div>
+    </div>
+
+    <div class="grid">
+      <section class="panel">
+        <div class="panel-head">
+          <h2>Before — สภาพปัจจุบัน</h2>
+        </div>
+        <div class="panel-body">
+          <div class="window">
+            <aside class="sidebar">
+              <div class="side-title">Head Office Agent Studio</div>
+              <div class="nav">
+                <div class="active">Project Dashboard</div>
+                <div>Create Project</div>
+                <div>PRD Import</div>
+                <div>Agent Library</div>
+                <div>Skill Library</div>
+                <div>Team Builder</div>
+                <div>Runtime Manager</div>
+                <div>Task Board</div>
+                <div>Run Log</div>
+                <div>Human Request Inbox</div>
+                <div>Demo / Handoff Center</div>
+              </div>
+            </aside>
+            <main class="content">
+              <div class="hero">
+                <h3>Project Dashboard</h3>
+                <div class="stats">
+                  <div class="stat"><div class="k">Projects</div><div class="v">1</div></div>
+                  <div class="stat"><div class="k">Open Tasks</div><div class="v">12</div></div>
+                  <div class="stat"><div class="k">Open Requests</div><div class="v">2</div></div>
+                  <div class="stat"><div class="k">Pending Demo Items</div><div class="v">4</div></div>
+                </div>
+              </div>
+              <div class="project-list">
+                <div class="project-row">
+                  <div class="row-top">
+                    <strong class="grow">Milestone 6 Smoke</strong>
+                    <button class="btn soft">Open Folder</button>
+                  </div>
+                  <div class="row-bottom">
+                    <span class="pill">Internal Tool</span>
+                    <span class="pill">Internal</span>
+                    <span class="pill">medium</span>
+                    <span class="pill">demo_ready</span>
+                  </div>
+                  <div class="mini">มีแค่ status picker + path ยาว ไม่มี search/filter, ไม่มี detail panel, ไม่มี health check, ไม่มี edit/archive/delete</div>
+                </div>
+              </div>
+            </main>
+          </div>
+          <ul>
+            <li>ยังไม่มี project search/filter</li>
+            <li>ยังไม่มี detail view สำหรับ PRD paths / team / checklist summary</li>
+            <li>ยังไม่มี folder health + repair</li>
+            <li>ยังไม่มี edit/archive/delete action แบบชัดเจน</li>
+          </ul>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-head">
+          <h2>After — แผนสำหรับ M2</h2>
+        </div>
+        <div class="panel-body">
+          <div class="window">
+            <aside class="sidebar">
+              <div class="side-title">Head Office Agent Studio</div>
+              <div class="nav">
+                <div class="active">Project Dashboard</div>
+                <div>Create Project</div>
+                <div>PRD Import</div>
+                <div>Agent Library</div>
+                <div>Skill Library</div>
+                <div>Team Builder</div>
+                <div>Runtime Manager</div>
+                <div>Task Board</div>
+                <div>Run Log</div>
+                <div>Human Request Inbox</div>
+                <div>Demo / Handoff Center</div>
+              </div>
+            </aside>
+            <main class="content">
+              <div class="hero">
+                <h3>Project Dashboard</h3>
+                <div class="filters">
+                  <input class="input grow" value="Search by project / slug / client" />
+                  <div class="input">Status: All</div>
+                  <div class="input">Priority: All</div>
+                  <button class="btn primary">New Project</button>
+                </div>
+                <div class="stats">
+                  <div class="stat"><div class="k">Projects</div><div class="v">3</div></div>
+                  <div class="stat"><div class="k">Healthy Workspaces</div><div class="v">2</div></div>
+                  <div class="stat"><div class="k">Needs Repair</div><div class="v">1</div></div>
+                  <div class="stat"><div class="k">Archived</div><div class="v">1</div></div>
+                </div>
+              </div>
+              <div class="project-list">
+                <div class="project-row" style="border-color:#c7dafd; box-shadow: inset 0 0 0 1px #c7dafd;">
+                  <div class="row-top">
+                    <strong class="grow">Milestone 6 Smoke</strong>
+                    <button class="btn soft">Open Folder</button>
+                    <button class="btn soft">Edit</button>
+                    <button class="btn warn">Archive</button>
+                    <button class="btn">Delete Record</button>
+                  </div>
+                  <div class="row-bottom">
+                    <span class="pill">Internal Tool</span>
+                    <span class="pill">Internal</span>
+                    <span class="pill">medium</span>
+                    <span class="pill">demo_ready</span>
+                    <span class="pill health-warn">Workspace: Missing 1 folder</span>
+                    <button class="btn">Repair Folders</button>
+                  </div>
+                  <div class="detail-card">
+                    <div class="detail-col">
+                      <div><strong>Project Detail</strong><div class="mini">PRD paths / notes / output goal / current milestone</div></div>
+                      <div class="mini">PRD Original: 01_PRD/PRD_ORIGINAL.pdf</div>
+                      <div class="mini">PRD Normalized: 01_PRD/PRD_NORMALIZED.md</div>
+                      <div class="mini">Current milestone: Demo / Handoff Readiness</div>
+                      <div class="mini">Checklist summary: 4 demo/handoff artifacts, 0 blocking requests</div>
+                    </div>
+                    <div class="detail-col">
+                      <div><strong>Team & Workspace</strong><div class="mini">ทีมที่ assign + สุขภาพ folder</div></div>
+                      <div class="mini">Assigned team: PM Agent + QA Agent</div>
+                      <div class="mini">Workspace health: <span class="health-warn">12/13 folders</span></div>
+                      <div class="mini">Missing: 08_Audits</div>
+                      <div class="mini">Last check: just now</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </main>
+          </div>
+          <ul>
+            <li>คง sidebar และ stat cards concept เดิมไว้</li>
+            <li>เพิ่ม search/filter bar ด้านบนแบบไม่เปลี่ยน flow หลัก</li>
+            <li>เพิ่ม action ที่ระดับ project: Edit / Archive / Delete Record / Repair</li>
+            <li>เพิ่ม detail card แบบขยายใต้ project row แทนการเปิดหน้าจอใหม่</li>
+            <li>ใช้คำว่า Delete Record เพื่อลดความเสี่ยงลบโฟลเดอร์โดยไม่ตั้งใจ</li>
+          </ul>
+        </div>
+      </section>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head"><h2>ไฟล์/บรรทัดที่จะโดนใน M2</h2></div>
+      <div class="panel-body">
+        <ul>
+          <li><strong>Views.swift:92-136</strong> — เพิ่ม search/filter + stats ชุดใหม่ใน DashboardView</li>
+          <li><strong>Views.swift:139-199</strong> — ขยาย ProjectRow ให้มี action + detail card + health status</li>
+          <li><strong>Services.swift:398-467</strong> — เพิ่ม update/archive/delete/health/repair methods</li>
+          <li><strong>Models.swift:7-31</strong> — แก้เฉพาะเมื่อจำเป็นจริง เช่น metadata เพิ่มเติม</li>
+        </ul>
+        <p class="footer-note">หมายเหตุ: layout นี้จงใจเป็นการต่อยอดจากหน้าปัจจุบัน ไม่ใช่ redesign ใหญ่ เพื่อให้ M2 เดินเร็วและยังคุ้นเคยกับ flow เดิม</p>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

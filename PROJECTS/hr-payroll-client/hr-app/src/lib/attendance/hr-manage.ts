@@ -1,8 +1,8 @@
 import {
-  computeWorkHours,
   hasAttendanceOnIctDay,
   ictLocalToUtc,
 } from "@/lib/attendance/ict-datetime"
+import { computePaidWorkMinutes } from "@/lib/attendance/paid-work-time"
 import { lateMinutesAtCheckIn } from "@/lib/attendance/late"
 import { getWorkStart } from "@/lib/runtime-config"
 import { createClient } from "@/lib/supabase/server"
@@ -11,6 +11,8 @@ type HrWorkShift = {
   id: string
   start_hour: number
   start_minute: number
+  end_hour: number
+  end_minute: number
   crosses_midnight: boolean
   grace_minutes: number
 }
@@ -53,7 +55,7 @@ async function resolveShift(
 
   const query = await supabase
     .from("hr_work_shifts")
-    .select("id, start_hour, start_minute, crosses_midnight, grace_minutes")
+    .select("id, start_hour, start_minute, end_hour, end_minute, crosses_midnight, grace_minutes")
     .eq("id", shiftId)
     .eq("is_active", true)
     .maybeSingle()
@@ -84,6 +86,27 @@ async function resolveIsLate(
       defaultCheckInTime
     ) > 0
   )
+}
+
+async function findOtherOpenAttendance(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  employeeId: string,
+  excludeAttendanceId?: string
+): Promise<{ id: string } | null> {
+  let query = supabase
+    .from("hr_attendance")
+    .select("id")
+    .eq("employee_id", employeeId)
+    .is("check_out_at", null)
+    .limit(1)
+
+  if (excludeAttendanceId) {
+    query = query.neq("id", excludeAttendanceId)
+  }
+
+  const { data, error } = await query.maybeSingle()
+  if (error) throw error
+  return (data as { id: string } | null) ?? null
 }
 
 function parseInput(
@@ -119,7 +142,22 @@ function parseInput(
     }
     workHours = Math.round(parsed * 100) / 100
   } else if (checkOutAt) {
-    workHours = computeWorkHours(checkInAt, checkOutAt)
+    workHours = computePaidWorkMinutes({
+      workDate: input.date,
+      shiftDate: input.date,
+      checkInAt,
+      checkOutAt,
+      shift: shift
+        ? {
+            start_hour: shift.start_hour,
+            start_minute: shift.start_minute,
+            end_hour: shift.end_hour,
+            end_minute: shift.end_minute,
+            grace_minutes: shift.grace_minutes,
+            crosses_midnight: shift.crosses_midnight,
+          }
+        : null,
+    }).paidHours
   }
 
   return { checkInAt, checkOutAt, workHours }
@@ -146,6 +184,10 @@ export async function createAttendanceByHr(
 
   if (empError) throw empError
   if (!employee) throw new Error("ไม่พบพนักงาน")
+
+  if (!checkOutAt && (await findOtherOpenAttendance(supabase, employeeId))) {
+    throw new Error("พนักงานมีรอบเข้างานที่ยังไม่ปิดอยู่แล้ว")
+  }
 
   const isLate = await resolveIsLate(
     checkInAt,
@@ -202,6 +244,13 @@ export async function updateAttendanceByHr(
   )
   if (duplicate) {
     throw new Error("พนักงานมีบันทึกเข้างานวันนี้อยู่แล้ว")
+  }
+
+  if (
+    !checkOutAt &&
+    (await findOtherOpenAttendance(supabase, existing.employee_id, attendanceId))
+  ) {
+    throw new Error("พนักงานมีรอบเข้างานที่ยังไม่ปิดอยู่แล้ว")
   }
 
   const { data: employee, error: empError } = await supabase

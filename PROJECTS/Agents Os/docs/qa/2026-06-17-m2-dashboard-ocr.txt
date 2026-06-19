@@ -1,0 +1,49 @@
+88 Project Dashboard
+C Create Project
+59 PRD Import
+288 Agent Library
+* Skill Library
+@ Team Builder
+® Runtime Manager
+• Task Board
+• Run Log
+@ Human Request Inbox
+• Demo / Handoff Center
+Head Office Agent Studio
+Project Dashboard
+Native macOS control room for project delivery, local files, and human-approved Al task loops.
+Workspace Filters
+Search by project, slug, or client
+Showing 1 of 1 projects
+Projects
+1
+Persisted in SQLite
+Healthy Workspaces
+Needs Repair
+1
+All required folders present
+one or more reculted tolders missina
+Projects
+Milestone 6 Smoke
+milestone-6-smoke
+• Internal Tool • Internal • 17 Jun BE 2569 P High
+Status
+closed
+Workspace Healthy
+Verify milestone 6
+V1 Scope Notes
+• Runtime execution remains manual/mock in this V1 shell.
+• Project folders follow the PRD structure under~/AgentStudio/Projects/(project-slug.
+• PRD import stores original files, normalized markdown, and an analysis placeholder for planning.
+suLte store readm
+Archived
+Inactive records kepttor nistory
+Status
+All Statuses
+Priority All Priorities -
+Show Details
+Open Folder
+Edit
+Repair Folders
+Archive
+Delete Record

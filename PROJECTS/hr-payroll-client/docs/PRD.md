@@ -1,4 +1,4 @@
-# PRD — LINE OA HR & Payroll Management Platform
+# PRD — CNV WorkHub
 
 **Version:** 1.0 | **Date:** 2026-06-08 | **Source:** head-office-app.vercel.app
 
@@ -7,7 +7,7 @@
 HR/ผู้บริหารจัดการข้อมูลผ่าน Web Admin Dashboard
 
 ## Target Users
-- **พนักงาน** — ใช้ LINE OA (เช็คอิน, ลา, ขอเอกสาร, ร้องเรียน)
+- **พนักงาน** — ใช้ CNV WorkHub บน LINE (เช็คอิน, ลา, ขอเอกสาร, ร้องเรียน)
 - **HR / Admin** — ใช้ Web Dashboard (อนุมัติ, จัดการ, ดูรายงาน)
 - **ผู้บริหาร** — ดู Dashboard ภาพรวม
 
@@ -33,7 +33,7 @@ HR/ผู้บริหารจัดการข้อมูลผ่าน W
 - Profile รายบุคคล: ข้อมูลส่วนตัว, สัญญาจ้าง, เงินเดือน, วีซ่า, ทดลองงาน
 - แจ้งเตือน: ทดลองงานใกล้ครบ, วีซ่าใกล้หมด, สัญญาจ้างใกล้สิ้นสุด
 
-### F3: Check-in / Check-out (LINE OA)
+### F3: Check-in / Check-out (CNV WorkHub / LINE)
 - พนักงานเช็คอิน-เช็คเอาท์ผ่าน LINE Rich Menu
 - บันทึก Timestamp + Geo Location
 - รองรับ QR Code scan

@@ -1,0 +1,35 @@
+Head Office Agent Studio
+sQLite store ready
+88 Project Da...
+C Create Proj...
+PRD Import
+288 Agent Libr...
+* Skill Library
+Team Build...
+# Runtime M...
+• Task Board
+= Run Log
+@ Human Re...
+• Demo / Ha...
+Task Board
+Manual/mock task loop for V1: create tasks, move them through review and audit, and record run logs without autonomous execution.
+Board Controls
+Project Milestone 6 Smoke
+Seed Initial Task Board
+Generate Demo / Handoff Checklist
+New Task
+Task Columns
+Task code
+No tasks for this project
+Seed the initial board or create a manual task.
+Milestone
+Title
+Details
+Priority Medium =
+Assigned Agent Audit Agent
+Runtime
+Claude Code
+Readiness: planned • Approval required
+Acceptance criteria
+Dependencies
+Create Task

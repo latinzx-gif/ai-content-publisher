@@ -202,7 +202,7 @@ const th: MessageCatalog = {
   "line.checkout.checkOut": "เลิกงาน",
   "line.checkout.total": "รวมเวลา",
   "line.checkout.footer":
-    "บันทึกเวลาเข้า-ออกเรียบร้อยแล้ว ไม่ต้องรออนุมัติ",
+    "บันทึกเวลาเข้า-ออกเรียบร้อยแล้ว",
   "line.checkout.footerOt":
     "เกินเวลามาตรฐาน {duration} — หากต้องการขอ OT ให้ใช้เมนูขอ OT",
 
@@ -872,6 +872,29 @@ const th: MessageCatalog = {
   "complaint.form.submitFailed": "ส่งเรื่องไม่สำเร็จ",
   "complaint.form.validation.subject": "หัวข้ออย่างน้อย 3 ตัวอักษร",
   "complaint.form.validation.body": "รายละเอียดอย่างน้อย 10 ตัวอักษร",
+
+  // LIFF shell & navigation
+  "liff.nav.back": "← ย้อนกลับ",
+  "liff.nav.leaveOt": "ลา/OT",
+
+  // LIFF home page
+  "liff.home.greetingMorning": "สวัสดีตอนเช้า 👋",
+  "liff.home.greetingAfternoon": "สวัสดีตอนบ่าย 👋",
+  "liff.home.greetingEvening": "สวัสดีตอนเย็น 👋",
+  "liff.home.todayShift": "กะวันนี้",
+  "liff.home.nextDayClock": "ออกงาน: {time} น. ของวันถัดไป",
+  "liff.home.checkInLabel": "เข้างาน",
+  "liff.home.checkOutLabel": "ออกงาน",
+  "liff.home.clockInBtn": "⏰ กดเข้างาน",
+  "liff.home.clockOutBtn": "🏠 กดออกงาน",
+  "liff.home.allDoneBtn": "✓ บันทึกเวลาครบแล้ว",
+  "liff.home.menuSection": "เมนูหลัก",
+  "liff.home.historyTitle": "ประวัติคำขอ",
+  "liff.home.historyDesc": "ติดตามสถานะ",
+  "liff.home.leaveDesc": "ลาป่วย/กิจ/พักร้อน",
+  "liff.home.otDesc": "ทำงานล่วงเวลา",
+  "liff.home.docDesc": "หนังสือรับรอง/Payslip",
+  "liff.home.complaintDesc": "แจ้งปัญหา (ปิดบัง)",
 }
 
 const en: MessageCatalog = {
@@ -1740,6 +1763,29 @@ const en: MessageCatalog = {
   "complaint.form.submitFailed": "Failed to submit",
   "complaint.form.validation.subject": "Subject must be at least 3 characters",
   "complaint.form.validation.body": "Details must be at least 10 characters",
+
+  // LIFF shell & navigation
+  "liff.nav.back": "← Back",
+  "liff.nav.leaveOt": "Leave/OT",
+
+  // LIFF home page
+  "liff.home.greetingMorning": "Good morning 👋",
+  "liff.home.greetingAfternoon": "Good afternoon 👋",
+  "liff.home.greetingEvening": "Good evening 👋",
+  "liff.home.todayShift": "Today's shift",
+  "liff.home.nextDayClock": "Clock out: {time} (next day)",
+  "liff.home.checkInLabel": "Clock in",
+  "liff.home.checkOutLabel": "Clock out",
+  "liff.home.clockInBtn": "⏰ Clock in",
+  "liff.home.clockOutBtn": "🏠 Clock out",
+  "liff.home.allDoneBtn": "✓ All times recorded",
+  "liff.home.menuSection": "Main menu",
+  "liff.home.historyTitle": "Request history",
+  "liff.home.historyDesc": "Track status",
+  "liff.home.leaveDesc": "Sick/personal/annual",
+  "liff.home.otDesc": "Overtime work",
+  "liff.home.docDesc": "Certificate/Payslip",
+  "liff.home.complaintDesc": "Report issue (anonymous)",
 }
 
 const zh: MessageCatalog = {

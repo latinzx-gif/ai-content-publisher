@@ -1,0 +1,29 @@
+# Head Office Monorepo
+
+The central control center for the Head Office platform, client projects, and autonomous agent orchestration.
+
+## Repository Map
+
+### 1. Applications & Tools
+- [head-office-app/](head-office-app/) — Primary product surface (PRD `/` + Publisher `/publisher/*`, dev port: 3001)
+- [agentops-lite/](agentops-lite/) — Specialized agent monitoring and operations tool
+
+### 2. Client Projects
+- [PROJECTS/](PROJECTS/) — Client delivery artifacts and project-specific documentation
+
+### 3. Agent Orchestration
+- [orchestration/](orchestration/) — The "Control Plane" for autonomous agent loops, task management, and routing rules
+
+### 4. Knowledge Base (Future Consolidation)
+- [HERMES-BRAIN/](HERMES-BRAIN/) — Shared knowledge and SOPs
+- [OS/](OS/) — Sector-specific operating system definitions
+- [DATA/](DATA/) — Raw data and entity registries
+
+### 5. Infrastructure & History
+- [docs/](docs/) — Monorepo-level documentation
+- [reports/](reports/) — System-wide audit and status reports
+- [graphify-out/](graphify-out/) — Knowledge graph metadata
+- [archive/](archive/) — Historical documents and retired project artifacts
+
+---
+*Refer to [orchestration/README.md](orchestration/README.md) for agent loop instructions.*

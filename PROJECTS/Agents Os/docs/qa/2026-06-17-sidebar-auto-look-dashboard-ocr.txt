@@ -1,0 +1,38 @@
+88 Project Dashboard
+C Create Project
+PRD Import
+208 Agent Library
+* Skill Library
+• Team Builder
+• Runtime Manager
+• Task Board
+• Run Log
+@ Human Request Inbox
+• Demo / Handoff Center
+Head Office Agent Studio
+SQLite store ready
+Project Dashboard
+Native macOS control room for project delivery, local files, and human-approved Al task loops.
+Projects
+Open Tasks
+Open Requests
+Persisted in SQLite
+Manual/mock delivery loop
+Human decisions pending
+Pending Demo Items
+1
+Handoff readiness
+Projects
+Milestone 6 Smoke
+milestone-6-smoke
+• Internal Tool & Internal • 170.m.2569 P High
+Status
+closed
+Verify milestone 6
+Open Folder
+Milestone: Closed
+/var/folders/tc/q5skj88x6y9_4d_dzm8lv6r00000gn/T/head-office-agent-studio-m6-smoke/milestone-6-smoke
+V1 Scope Notes
+• Runtime execution remains manual/mock in this V1 shell.
+• Project folders follow the PRD structure under ~/AgentStudio/Projects/{project-slug)/
+• PRD import stores original files, normalized markdown, and an analysis placeholder for planning.

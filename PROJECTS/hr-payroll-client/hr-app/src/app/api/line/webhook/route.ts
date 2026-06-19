@@ -2,6 +2,7 @@ import type { webhook } from "@line/bot-sdk"
 
 import { getAdminClient } from "@/lib/auth/admin-client"
 import { handleEvents } from "@/lib/line/handlers"
+import { logLineWebhookEvents } from "@/lib/line/webhook-event-log"
 import { verifyLineSignature } from "@/lib/line/verify-signature"
 
 const HR_GROUP_CONFIG_KEY = "hr_line_group_id"
@@ -28,7 +29,11 @@ export async function POST(request: Request) {
   }
 
   const body = JSON.parse(rawBody) as webhook.CallbackRequest
-  for (const event of body.events ?? []) {
+  const events = body.events ?? []
+
+  const logResult = await logLineWebhookEvents(events)
+
+  for (const event of events) {
     const groupId =
       "source" in event && event.source?.type === "group"
         ? event.source.groupId
@@ -37,7 +42,25 @@ export async function POST(request: Request) {
       await captureGroupId(groupId)
     }
   }
-  await handleEvents(body.events ?? [])
+  await handleEvents(events)
 
-  return Response.json({ ok: true })
+  const response = Response.json({ ok: true })
+
+  // ponytail: temporary prod debug headers -> remove after webhook insert root cause is confirmed.
+  if (request.headers.get("x-codex-debug") === "1") {
+    response.headers.set(
+      "x-line-webhook-log-status",
+      logResult.ok ? "ok" : "error"
+    )
+    response.headers.set("x-line-webhook-log-rows", String(logResult.rowCount))
+    response.headers.set("x-line-webhook-db-host", logResult.dbHost)
+    if (logResult.errorMessage) {
+      response.headers.set(
+        "x-line-webhook-log-error",
+        encodeURIComponent(logResult.errorMessage).slice(0, 512)
+      )
+    }
+  }
+
+  return response
 }

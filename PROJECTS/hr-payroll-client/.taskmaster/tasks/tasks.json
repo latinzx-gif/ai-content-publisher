@@ -2073,12 +2073,26 @@
         "testStrategy": "No conflicting LINE-only statements in handoff; build pass",
         "subtasks": [],
         "updatedAt": "2026-06-12T21:00:00.000Z"
+      },
+      {
+        "id": "154",
+        "title": "Live location tracking — shift-bound (check-in to check-out)",
+        "description": "LIFF silent GPS pings during open shift only; stop on check-out; admin live map; no LINE spam per ping",
+        "status": "pending",
+        "priority": "medium",
+        "milestone": "M44",
+        "agent": "Claude Code",
+        "dependencies": [],
+        "details": "Client confirmed 2026-06-15. Spec: hr-app/reports/LIVE_LOCATION_TRACKING_SPEC.md. PLAN first (schema hr_location_pings, POST /api/attendance/location-ping rejects if shift closed). Split T154a/b/c for execute. Queue after T150-T153.",
+        "testStrategy": "E2E: check-in → pings accepted → check-out → pings rejected; admin map shows in-progress; build+typecheck+lint",
+        "subtasks": [],
+        "updatedAt": "2026-06-15T12:00:00.000Z"
       }
     ],
     "metadata": {
       "version": "1.0.0",
-      "lastModified": "2026-06-12T21:00:00.000Z",
-      "taskCount": 142,
+      "lastModified": "2026-06-15T12:00:00.000Z",
+      "taskCount": 143,
       "completedCount": 107,
       "tags": [
         "master"

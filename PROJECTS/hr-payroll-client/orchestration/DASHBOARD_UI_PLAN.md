@@ -1,8 +1,8 @@
-# Dashboard UI Redesign Plan — 中国名堂 ZHONGGUOMINGTANG
+# Dashboard UI Redesign Plan — CNV WorkHub
 
 **อ้างอิง:** `/Users/jakarinosk/Downloads/UI Dashboard /` (10 mockups)  
 **Brand asset:** Panda mascot logo (แดง + 云纹)  
-**โปรเจกต์:** `hr-payroll-client/hr-app` — ต่อจาก LINE OA HR Phase 1 (T01–T25 ✅)  
+**โปรเจกต์:** `hr-payroll-client/hr-app` — ต่อจาก CNV WorkHub Phase 1 (T01–T25 ✅)  
 **วันที่:** 2026-06-11
 
 ---
@@ -122,7 +122,7 @@
 ## 5. แผน Implementation — 4 Phase
 
 ### Phase UI-0: Design Foundation (1 batch)
-**เป้า:** ทุกหน้า admin ใช้ธีม 中国名堂 ได้ทันที โดยไม่เปลี่ยน business logic
+**เป้า:** ทุกหน้า admin ใช้ธีม CNV WorkHub ได้ทันที โดยไม่เปลี่ยน business logic
 
 | Task | งาน | File zone |
 |------|-----|-----------|
@@ -270,7 +270,7 @@ hr-app/public/brand/cloud-pattern.svg
 
 ---
 
-## 10. สิ่งที่ไม่ทำในรอบนี้ (ยกให้หลัง LINE OA HR delivery)
+## 10. สิ่งที่ไม่ทำในรอบนี้ (ยกให้หลัง CNV WorkHub delivery)
 
 - Payroll processing จริง
 - Recruitment pipeline

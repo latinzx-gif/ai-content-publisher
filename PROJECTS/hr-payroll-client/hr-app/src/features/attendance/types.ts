@@ -11,6 +11,8 @@ export type AttendanceRow = {
   id: string
   employeeId: string
   employeeName: string
+  employeeCode: string
+  employeeHref: string
   department: string | null
   branchName: string | null
   date: string
@@ -31,4 +33,6 @@ export type AttendanceSummary = {
   workDays: number
   totalHours: number
   lateCount: number
+  inProgressCount: number
+  estimatedEarnings?: string | number | null
 }

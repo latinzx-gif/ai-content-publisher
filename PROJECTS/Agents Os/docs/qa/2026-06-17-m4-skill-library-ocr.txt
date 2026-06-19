@@ -1,0 +1,32 @@
+Skill Library
+Store reusable capability packages for agents, workflows, reviews, and output contracts.
+Create Skill
+Skill name
+Type Workflow =
+Instruction
+Read context → produce output → hand off for review
+Checklist |
+Markdown summary
+SQLite store, local files
+Save Skill
+Available Skills
+API Design
+Reusable capability scaffold for API Design.
+Read context → produce structured output → hand off to review.
+DataClaw Research Scanner
+Reusable capability scaffold for DataClaw Research Scanner.
+Read context → produce structured output → hand off to review.
+Demo Script Writer
+Reusable capability scaffold for Demo Script Writer.
+Read context → produce structured output → hand off to review.
+Fastwork Proposal Writer
+Reusable capability scaffold for Fastwork Proposal Writer.
+Read context → produce structured output → hand off to review.
+Frontend Component Planner
+Reusable capability scaffold for Frontend Component Planner.
+Read context → produce structured output → hand off to review.
+HR Pavroll Analvet
+out
+out
+workf
+warkf

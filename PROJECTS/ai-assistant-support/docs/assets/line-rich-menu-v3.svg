@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2500" height="1686" viewBox="0 0 2500 1686">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#070F1E"/>
+      <stop offset="100%" stop-color="#111C30"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="16" stdDeviation="22" flood-color="#000000" flood-opacity="0.28"/>
+    </filter>
+  </defs>
+  <rect width="2500" height="1686" fill="url(#bg)"/>
+  <circle cx="280" cy="180" r="220" fill="#E8B54B" opacity="0.18"/>
+  <circle cx="2230" cy="190" r="220" fill="#2563EB" opacity="0.18"/>
+  <rect x="730" y="64" width="1040" height="144" rx="72" fill="#FFF9F0"/>
+  <text x="1250" y="148" text-anchor="middle" font-family="Sukhumvit Set, Thonburi, Arial Unicode MS, sans-serif" font-size="82" font-weight="700" fill="#0F172A">AI Assistant Support</text>
+  <text x="1250" y="188" text-anchor="middle" font-family="Arial Unicode MS, sans-serif" font-size="34" fill="#475569">Premium Support OA • Rich Menu</text>
+  <g filter="url(#shadow)">
+    <rect x="88" y="250" width="1138" height="1288" rx="78" fill="#FBF7F1" stroke="#FFFFFF" stroke-width="3"/>
+    <rect x="1274" y="250" width="1138" height="1288" rx="78" fill="#F5FAFF" stroke="#FFFFFF" stroke-width="3"/>
+  </g>
+  <rect x="128" y="284" width="1058" height="32" rx="16" fill="#E8B54B"/>
+  <rect x="1314" y="284" width="1058" height="32" rx="16" fill="#60A5FA"/>
+  <rect x="162" y="344" width="386" height="70" rx="35" fill="#124B2C"/>
+  <rect x="1348" y="344" width="426" height="70" rx="35" fill="#1D4ED8"/>
+  <text x="355" y="389" text-anchor="middle" font-family="Arial Unicode MS, sans-serif" font-size="28" fill="#FFFFFF">OPEN A NEW TICKET</text>
+  <text x="1561" y="389" text-anchor="middle" font-family="Arial Unicode MS, sans-serif" font-size="28" fill="#FFFFFF">CHECK CURRENT STATUS</text>
+  <rect x="1246" y="360" width="8" height="1120" rx="4" fill="#FFFFFF" opacity="0.4"/>
+  <text x="184" y="910" font-family="Sukhumvit Set, Thonburi, Arial Unicode MS, sans-serif" font-size="120" font-weight="700" fill="#0F172A">แจ้งปัญหา</text>
+  <text x="190" y="1058" font-family="Arial Unicode MS, sans-serif" font-size="54" font-weight="700" fill="#16A34A">Open Ticket</text>
+  <text x="190" y="1155" font-family="Arial Unicode MS, sans-serif" font-size="34" fill="#475569">Bug • Error • Complaint • Question</text>
+  <rect x="184" y="1302" width="530" height="140" rx="64" fill="#0F172A"/>
+  <text x="449" y="1362" text-anchor="middle" font-family="Sukhumvit Set, Thonburi, Arial Unicode MS, sans-serif" font-size="42" fill="#FFFFFF">แตะเพื่อเปิดแบบฟอร์ม</text>
+  <text x="449" y="1412" text-anchor="middle" font-family="Sukhumvit Set, Thonburi, Arial Unicode MS, sans-serif" font-size="42" fill="#FFFFFF">สร้าง Ticket ใหม่ทันที</text>
+  <text x="1370" y="910" font-family="Sukhumvit Set, Thonburi, Arial Unicode MS, sans-serif" font-size="120" font-weight="700" fill="#0F172A">ติดตามสถานะ</text>
+  <text x="1376" y="1058" font-family="Arial Unicode MS, sans-serif" font-size="54" font-weight="700" fill="#2563EB">Track Status</text>
+  <text x="1376" y="1155" font-family="Arial Unicode MS, sans-serif" font-size="34" fill="#475569">เช็กด้วยรหัส AAS-XXXXXX</text>
+  <rect x="1370" y="1302" width="550" height="140" rx="64" fill="#0F172A"/>
+  <text x="1645" y="1362" text-anchor="middle" font-family="Sukhumvit Set, Thonburi, Arial Unicode MS, sans-serif" font-size="42" fill="#FFFFFF">แตะเพื่อตรวจสอบคำร้อง</text>
+  <text x="1645" y="1412" text-anchor="middle" font-family="Sukhumvit Set, Thonburi, Arial Unicode MS, sans-serif" font-size="42" fill="#FFFFFF">ดูความคืบหน้าได้ทันที</text>
+</svg>

@@ -1,4 +1,4 @@
-# Phase 3 Plan — LINE OA HR & Payroll
+# Phase 3 Plan — CNV WorkHub
 
 **Status:** 🔄 **KICKOFF** — T46 active 2026-06-11  
 **Date:** 2026-06-11  

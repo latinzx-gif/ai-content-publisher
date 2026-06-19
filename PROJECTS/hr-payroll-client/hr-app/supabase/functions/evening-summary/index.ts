@@ -2,7 +2,7 @@
 // 1) per-employee daily attendance Flex summary
 // 2) HR group aggregate summary (check-in / absent / late / on-leave)
 import "@supabase/functions-js/edge-runtime.d.ts";
-import { withSupabase } from "@supabase/server";
+import { withSupabase, type WithSupabaseConfig } from "@supabase/server";
 
 import { buildDailyRoster, formatNameList } from "../_shared/daily-roster.ts";
 
@@ -32,6 +32,13 @@ function requireEnv(name: string): string {
   const value = Deno.env.get(name);
   if (!value) throw new Error(`${name} is not set`);
   return value;
+}
+
+function cronSecretAuthConfig(): WithSupabaseConfig {
+  const cronSecretKey = Deno.env.get("CRON_SECRET_KEY") ?? Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+  return cronSecretKey
+    ? { auth: ["secret"], env: { secretKeys: { default: cronSecretKey } } }
+    : { auth: ["secret"] };
 }
 
 type Employee = {
@@ -69,7 +76,7 @@ function employeeSummaryText(
 }
 
 const handler = {
-  fetch: withSupabase({ auth: ["secret"] }, async (_req, ctx) => {
+  fetch: withSupabase(cronSecretAuthConfig(), async (_req, ctx) => {
     const now = new Date();
     const { start, end } = ictDayRangeUtc(now);
     const today = ictDateString(now);

@@ -13,6 +13,7 @@ import {
   normalizeParams,
   PAGE_SIZE,
 } from "@/features/employees/data"
+import { listWorkShifts } from "@/features/shifts/data"
 import { isCeo, isDev } from "@/lib/auth/roles"
 import { getCurrentEmployee } from "@/lib/auth/session"
 import { EmployeeFilters } from "@/features/employees/EmployeeFilters"
@@ -24,17 +25,26 @@ export default async function AdminEmployeesPage({
 }: {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>
 }) {
+  const rawSearchParams = await searchParams
   const [employee, params] = await Promise.all([
     getCurrentEmployee(),
-    normalizeParams(await searchParams),
+    normalizeParams(rawSearchParams),
   ])
+  const currentParams = new URLSearchParams()
+  for (const [key, value] of Object.entries(rawSearchParams)) {
+    if (typeof value === "string" && value) currentParams.set(key, value)
+  }
+  const currentPath = currentParams.toString()
+    ? `/admin/employees?${currentParams.toString()}`
+    : "/admin/employees"
   const readOnly = employee ? isCeo(employee.role) && !isDev(employee.role) : false
-  const [{ employees, total }, departments, branches, onboardingPending] =
+  const [{ employees, total }, departments, branches, onboardingPending, workShifts] =
     await Promise.all([
       getEmployees(params),
       getDepartments(),
       getBranchesForFilter(),
       getOnboardingPendingCount(),
+      listWorkShifts(),
     ])
 
   return (
@@ -72,9 +82,9 @@ export default async function AdminEmployeesPage({
         }
       >
         <div className="flex h-full min-h-0 flex-col gap-3 overflow-hidden">
-          <EmployeeFilters departments={departments} branches={branches} />
+          <EmployeeFilters departments={departments} branches={branches} workShifts={workShifts} />
           <div className="min-h-0 flex-1 overflow-hidden">
-            <EmployeeTable employees={employees} scrollable />
+            <EmployeeTable employees={employees} scrollable returnTo={currentPath} />
           </div>
           <EmployeePagination
             page={params.page}

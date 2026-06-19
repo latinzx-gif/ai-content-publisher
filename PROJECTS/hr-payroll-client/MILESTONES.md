@@ -1,4 +1,4 @@
-# MILESTONES — LINE OA HR & Payroll Platform
+# MILESTONES — CNV WorkHub
 
 **อัปเดต:** 2026-06-11  
 **Production:** https://hr-app-two-iota.vercel.app  
@@ -98,7 +98,7 @@
 
 ### M40 — Employee Web Portal v2 🔜 **APPROVED (2026-06-12)**
 
-เปิด `/portal` ให้พนักงาน `employee` ใช้จริง (คู่กับ LINE OA)
+เปิด `/portal` ให้พนักงาน `employee` ใช้จริง (คู่กับ CNV WorkHub บน LINE)
 
 **Plan:** `hr-app/reports/PORTAL_ROADMAP.md`  
 **Queue:** หลัง T109 → T121 → T122 → T123 → T124

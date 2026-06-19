@@ -1,0 +1,34 @@
+Agent Library
+Manage reusable Al worker profiles, their role definitions, and their manual/mock runtime mapping.
+Create Agent
+Available Agents
+Agent name
+Role
+Goal
+Audit Agent
+Auditor
+Check scope, safety, and sign-off readiness.
+Skills: scope-analysis, review-loop, file-transparency
+Runtime
+Claude Code
+mock-v1
+Backend Agent
+Backend Developer
+Design backend logic and service contracts.
+Skills: scope-analysis, review-loop, file-transparency
+Skill names (comma-separated)
+TASK_RESULT.md, CHANGED_FILES.md, RISK_NOTES.r
+Database Architect Agent
+Database Architect
+Define entitles, storage, and data integrity rules.
+Skills: scope-analysis, review-loop, file-transparency
+Save Agent
+Demo Agent
+Demo Specialist
+Prepare demos and client walkthroughs.
+Skills: scope-analysis, review-loop, file-transparency
+...
+Mock Local Runti
+Mock Local Runti
+Mock Local Runti
+Mock Local Runti

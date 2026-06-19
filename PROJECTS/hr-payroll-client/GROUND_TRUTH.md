@@ -1,4 +1,4 @@
-# GROUND_TRUTH.md — LINE OA HR & Payroll Platform
+# GROUND_TRUTH.md — CNV WorkHub
 
 > @/Users/jakarinosk/HEAD-OFFICE/COMPANY_OS.md — กฎทั้งหมดใน COMPANY_OS.md มีผลกับ project นี้ด้วย
 > Override เฉพาะส่วนที่ระบุด้านล่างเท่านั้น
@@ -9,11 +9,11 @@
 
 ## 1. สิ่งที่กำลังสร้าง
 
-**LINE OA HR & Payroll Management Platform** — ระบบบริหารจัดการ HR ผ่าน LINE OA
+**CNV WorkHub** — ระบบบริหารจัดการ HR ผ่าน LINE Official Account
 
 เส้นทางหลัก:
 ```
-พนักงาน LINE OA: Rich Menu → เช็คอิน/เช็คเอาท์ / ขอลา / ขอเอกสาร
+พนักงาน CNV WorkHub (LINE): Rich Menu → เช็คอิน/เช็คเอาท์ / ขอลา / ขอเอกสาร
 HR Web Dashboard: อนุมัติ / ดูรายงาน / จัดการข้อมูล / รับ Alerts
 Cron Jobs: แจ้งเตือน Probation/Visa อัตโนมัติ + สรุปประจำวัน
 ```
@@ -61,26 +61,43 @@ Cron Jobs: แจ้งเตือน Probation/Visa อัตโนมัต�
 - **Attendance:** เช็คอิน/เช็คเอาท์ → **บันทึกทันที** (auto-approve + payroll hours) — ไม่ผ่าน BM
 - **Leave / OT:** พนักงานยื่น → **HR อนุมัตiคนเดียว** (`pending_hr`) — BM ไม่ใช้ขั้นอนุมัตiแล้ว
 - Payroll: **ชม.เท่านั้น** — บาทรอ M39
-- บันทึกความคืบหน้า LINE OA: `hr-app/reports/LINE_OA_WORK_LOG.md`
+- บันทึกความคืบหน้า CNV WorkHub: `hr-app/reports/LINE_OA_WORK_LOG.md`
 
 ---
 
 ## 4. Active Task
 
-**T123 — Portal v2 Widgets + LIFF (M40)** — EXECUTE
+**T155 — Morning push (HR-config Employee + Officer)** — EXECUTE
 
 | Field | Value |
 |-------|-------|
-| Delivery plan | `hr-app/reports/HR_DELIVERY_CLOSURE.md` |
-| Portal roadmap | `hr-app/reports/PORTAL_ROADMAP.md` |
-| Queue | T123–124 → T129 → T134 → T110–114 → tag v1.1 |
-| Payroll baht | **M39 onsite only** — out of HR closure |
+| Part B (now) | Codex — settings UI `/admin/settings` |
+| Part A (next) | Codex — `morning-push` edge + migration |
+| Orchestrator | Cursor only |
 
 ดูรายละเอียดเต็ม: `orchestration/CURRENT_TASK.md`
 
 ---
 
-## 5. ห้ามสร้าง (Project-specific)
+## 6. Agent Override (2026-06-15 — Cursor + Codex only)
+
+> **Claude Code พักสำหรับ project นี้** — ไม่ dispatch ไปโปรเจกต์อื่น / งาน hr-payroll จนกว่า user จะเปิดกลับ
+
+| Role | Agent | หมายเหตุ |
+|------|-------|----------|
+| **Orchestrator** | **Cursor** | set task, review, deploy, Linear |
+| **Implementer** | **Codex (GPT-5.5)** | UI, lib, i18n, edge functions, migration **files** |
+| ~~Claude Code~~ | ⏸ **PAUSED** | ไม่ใช้ใน queue จนกว่า user สั่งเปิด |
+
+| เงื่อนไข | Agent |
+|---------|-------|
+| UI, settings, i18n, isolated features | **Codex** |
+| Edge functions (`supabase/functions/*`) | **Codex** |
+| Migrations (SQL files in repo) | **Codex** |
+| Security review / delivery audit | **Cursor** orchestrates checklist — ไม่ dispatch Claude |
+| Review + deploy prod | **Cursor** (หลัง Codex STOP) |
+
+**Loop:** Cursor → `CURRENT_TASK.md` → Codex EXECUTE → `_agent/TASK_RESULT.md` → Cursor `review` → deploy
 
 เพิ่มจาก Universal DO NOT DO ใน COMPANY_OS.md:
 
@@ -95,21 +112,7 @@ Cron Jobs: แจ้งเตือน Probation/Visa อัตโนมัต�
 
 ---
 
-## 6. Agent Override
-
-| เงื่อนไข | Agent |
-|---------|-------|
-| New isolated components/pages | Codex (GPT-5.5) |
-| Database schema, RLS, migrations | Claude Code |
-| LINE Webhook logic, LIFF integration | Claude Code |
-| Auth, security | Claude Code |
-| UI components ที่ไม่แตะ logic | Codex |
-| Supabase Edge Functions (Cron) | Claude Code |
-| Delivery audit, security review | Claude Code (Opus) |
-
----
-
-## 7. Key Files
+## 5. ห้ามสร้าง (Project-specific)
 
 | ต้องการรู้เรื่อง | อ่านที่ |
 |----------------|---------|
@@ -122,7 +125,7 @@ Cron Jobs: แจ้งเตือน Probation/Visa อัตโนมัต�
 | Demo readiness | `hr-app/reports/DELIVERY_READINESS_AUDIT.md` |
 | Inventory roadmap | `hr-app/reports/INVENTORY_ROADMAP.md` |
 | Portal roadmap | `hr-app/reports/PORTAL_ROADMAP.md` |
-| **LINE OA work log (เตือนความจำ)** | `hr-app/reports/LINE_OA_WORK_LOG.md` |
+| **CNV WorkHub work log (เตือนความจำ)** | `hr-app/reports/LINE_OA_WORK_LOG.md` |
 | Phase 2 plan | `orchestration/PHASE_2_PLAN.md` |
 | Phase 3 plan | `orchestration/PHASE_3_PLAN.md` |
 | Phase 4 plan | `orchestration/PHASE_4_PLAN.md` |
@@ -154,4 +157,4 @@ WORK_START_MINUTE=0
 
 ---
 
-*Last updated: 2026-06-28 — LINE OA approval policy deployed (`c09f486`); see LINE_OA_WORK_LOG.md*
+*Last updated: 2026-06-15 — Team: Cursor + Codex only (Claude Code paused)*

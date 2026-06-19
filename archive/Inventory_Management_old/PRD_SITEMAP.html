@@ -1,0 +1,968 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PRD Sitemap — Inventory Management System V1</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800;900&family=Noto+Sans+Thai:wght@300;400;500;600;700;800&display=swap');
+  
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Noto Sans Thai', 'Inter', sans-serif;
+    background: #f4f8fc;
+    color: #123044;
+    line-height: 1.7;
+  }
+
+  /* === HERO === */
+  .hero {
+    background: linear-gradient(135deg, #073b66 0%, #082a4a 50%, #0c5a8d 100%);
+    color: white;
+    padding: 50px 40px 42px;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: '';
+    position: absolute;
+    top: -40%;
+    right: -10%;
+    width: 500px;
+    height: 500px;
+    background: radial-gradient(circle, rgba(22,148,93,0.1) 0%, transparent 70%);
+    border-radius: 50%;
+  }
+  .hero-badge {
+    display: inline-block;
+    background: #16945d;
+    color: white;
+    font-weight: 700;
+    font-size: 13px;
+    padding: 5px 14px;
+    border-radius: 20px;
+    letter-spacing: 0.5px;
+    margin-bottom: 14px;
+  }
+  .hero h1 {
+    font-size: 40px;
+    font-weight: 900;
+    margin-bottom: 6px;
+    letter-spacing: -0.5px;
+    position: relative;
+    z-index: 1;
+  }
+  .hero .subtitle {
+    font-size: 17px;
+    opacity: 0.85;
+    font-weight: 400;
+    max-width: 800px;
+    margin-bottom: 18px;
+    position: relative;
+    z-index: 1;
+  }
+  .hero-meta {
+    display: flex;
+    gap: 24px;
+    flex-wrap: wrap;
+    font-size: 13px;
+    opacity: 0.75;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* === CONTAINER === */
+  .container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 36px 22px 60px;
+  }
+
+  /* === SECTION BASE === */
+  .section-card {
+    background: white;
+    border-radius: 18px;
+    margin-bottom: 28px;
+    box-shadow: 0 1px 4px rgba(7,59,102,0.08);
+    border: 1px solid #dbe7f0;
+    overflow: hidden;
+  }
+  .section-header {
+    padding: 28px 30px 18px;
+    border-bottom: 1px solid #eef6fb;
+  }
+  .section-header h2 {
+    font-size: 22px;
+    font-weight: 800;
+    color: #073b66;
+  }
+  .section-body {
+    padding: 20px 30px 28px;
+  }
+
+  /* === OVERVIEW === */
+  .overview-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+    gap: 14px;
+  }
+  .stat-card {
+    background: #f5f9fc;
+    border-radius: 14px;
+    padding: 18px;
+    text-align: center;
+    border: 1px solid #e4eef5;
+  }
+  .stat-card .num {
+    font-size: 30px;
+    font-weight: 900;
+    color: #073b66;
+  }
+  .stat-card .label {
+    font-size: 13px;
+    color: #5b7083;
+    margin-top: 3px;
+  }
+
+  /* === SITEMAP === */
+  .sitemap-tree {
+    font-family: 'Inter', 'Noto Sans Thai', monospace;
+    font-size: 14px;
+    line-height: 2;
+  }
+  .sitemap-tree .l0 { color: #073b66; font-weight: 800; font-size: 16px; }
+  .sitemap-tree .l1 { color: #123044; padding-left: 24px; font-weight: 600; }
+  .sitemap-tree .l2 { color: #5b7083; padding-left: 48px; }
+  .sitemap-tree .l3 { color: #7a93a8; padding-left: 72px; font-size: 13px; }
+  .badge-sm {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 1px 7px;
+    border-radius: 4px;
+    margin-left: 5px;
+    vertical-align: middle;
+  }
+
+  /* === FEATURE === */
+  .feature {
+    margin-bottom: 20px;
+  }
+  .feature-title {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 18px 24px;
+    background: #f5f9fc;
+    border-radius: 14px;
+    cursor: default;
+    border: 1px solid #dbe7f0;
+  }
+  .feature-num {
+    width: 36px;
+    height: 36px;
+    min-width: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    font-size: 16px;
+    color: white;
+  }
+  .feature-num.green { background: #16945d; }
+  .feature-num.blue { background: #0f6eb8; }
+  .feature-num.purple { background: #6b46c1; }
+  .feature-num.orange { background: #e87a18; }
+  .feature-num.red { background: #d93025; }
+  
+  .feature-title h3 {
+    font-size: 19px;
+    font-weight: 800;
+    color: #073b66;
+    flex: 1;
+  }
+  .feature-tags {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+  .tag {
+    display: inline-block;
+    padding: 3px 9px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+  }
+  .tag.must { background: #e8f7ef; color: #127849; }
+  .tag.should { background: #fff1df; color: #b75508; }
+  .tag.p1 { background: #eaf5ff; color: #0c5a8d; }
+
+  .feature-content {
+    padding: 18px 24px 22px;
+  }
+
+  /* === SUB-FEATURE GRID === */
+  .sub-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 14px;
+  }
+  .sub-card {
+    background: #fafcfe;
+    border: 1px solid #e4eef5;
+    border-radius: 14px;
+    padding: 18px;
+  }
+  .sub-card h4 {
+    font-size: 15px;
+    font-weight: 700;
+    color: #073b66;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .sub-card p {
+    font-size: 14px;
+    color: #5b7083;
+    margin-bottom: 8px;
+  }
+
+  .detail-list {
+    list-style: none;
+    padding: 0;
+  }
+  .detail-list li {
+    font-size: 13px;
+    color: #344054;
+    padding: 3px 0 3px 18px;
+    position: relative;
+    line-height: 1.6;
+  }
+  .detail-list li::before {
+    content: '›';
+    position: absolute;
+    left: 2px;
+    color: #16945d;
+    font-weight: 700;
+    font-size: 16px;
+  }
+
+  /* === FLOW === */
+  .flow-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 10px;
+  }
+  .flow-step {
+    background: #f5f9fc;
+    border: 1px solid #dbe7f0;
+    border-radius: 14px;
+    padding: 14px 10px;
+    text-align: center;
+  }
+  .flow-step .circle {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: #16945d;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    font-size: 14px;
+    margin: 0 auto 8px;
+  }
+  .flow-step b { font-size: 13px; display: block; line-height: 1.3; }
+  .flow-step .small { font-size: 11px; color: #5b7083; }
+
+  /* === TABLE === */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+    border-radius: 12px;
+    overflow: hidden;
+    font-size: 14px;
+  }
+  th, td {
+    border: 1px solid #dbe7f0;
+    padding: 10px 12px;
+    text-align: left;
+    vertical-align: top;
+  }
+  th { background: #eef6fb; color: #073b66; font-weight: 800; }
+  tr:nth-child(even) td { background: #fbfdff; }
+
+  /* === TECH === */
+  .tech-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 10px;
+  }
+  .tech-item {
+    background: #f5f9fc;
+    border-radius: 10px;
+    padding: 12px 14px;
+    font-size: 13px;
+  }
+  .tech-item strong { color: #073b66; display: block; margin-bottom: 2px; }
+
+  .note-box {
+    background: #fffdf5;
+    border: 1px solid #f4d58d;
+    border-radius: 12px;
+    padding: 16px;
+    margin-top: 14px;
+    color: #614000;
+    font-size: 14px;
+  }
+  .note-box strong { display: block; margin-bottom: 4px; }
+
+  /* === RESPONSIVE === */
+  @media (max-width: 768px) {
+    .hero { padding: 30px 20px 28px; }
+    .hero h1 { font-size: 28px; }
+    .feature-title { flex-wrap: wrap; }
+    .section-body { padding: 16px 18px 22px; }
+    .sub-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-badge">📋 PRD Sitemap V1</div>
+  <h1>Inventory Management System</h1>
+  <p class="subtitle">ระบบบริหารจัดการสต๊อกสินค้าสำหรับธุรกิจร้านอาหารหลายสาขา — ครอบคลุมการรับสินค้าเข้า เบิกวัตถุดิบ ตัดสต๊อก ตรวจนับ แจ้งเตือน โอนย้าย และ Dashboard ผู้บริหาร พร้อมรองรับ Mobile / PDA Scanner</p>
+  <div class="hero-meta">
+    <span>📅 PRD V1 · 2026</span>
+    <span>🏢 ร้านอาหาร / หลายสาขา</span>
+    <span>🌐 Web Application + Mobile</span>
+    <span>👥 5 Roles</span>
+    <span>📦 10 Modules</span>
+  </div>
+</div>
+
+<div class="container">
+
+<!-- OVERVIEW -->
+<div class="section-card">
+  <div class="section-header"><h2>📊 ภาพรวมระบบ</h2></div>
+  <div class="section-body">
+    <p>ระบบ Inventory Management สำหรับควบคุมสต๊อกวัตถุดิบในธุรกิจร้านอาหาร รองรับการทำงานตั้งแต่คลังกลางถึงครัวแต่ละสาขา ครบวงจรตั้งแต่รับสินค้าเข้า → จัดเก็บ → เบิกใช้ → ตัดสต๊อก → ตรวจนับ → วิเคราะห์</p>
+    <div class="overview-grid" style="margin-top:16px;">
+      <div class="stat-card"><div class="num">10</div><div class="label">Modules หลัก</div></div>
+      <div class="stat-card"><div class="num">5</div><div class="label">Role ผู้ใช้</div></div>
+      <div class="stat-card"><div class="num">8</div><div class="label">Flow Workflow</div></div>
+      <div class="stat-card"><div class="num">Web+Mobile</div><div class="label">Platform</div></div>
+      <div class="stat-card"><div class="num">Barcode</div><div class="label">Scanner Support</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- SITEMAP -->
+<div class="section-card">
+  <div class="section-header"><h2>🗺️ Sitemap — โครงสร้างระบบ</h2></div>
+  <div class="section-body">
+    <div class="sitemap-tree">
+      <div class="l0">🖥️ Web Admin (PC / Notebook)</div>
+      <div class="l1">├── 📊 Dashboard ภาพรวม</div>
+      <div class="l2">│   ├── มูลค่าสต๊อกคงเหลือ</div>
+      <div class="l2">│   ├── สินค้าใกล้หมดอายุ / ต่ำกว่า Min</div>
+      <div class="l2">│   ├── สินค้าเสียหาย / ชำรุด / สูญเสีย</div>
+      <div class="l2">│   ├── รายการรับเข้า-เบิกออก-โอน</div>
+      <div class="l2">│   └── กราฟแนวโน้มการใช้งานและการสูญเสีย</div>
+      <div class="l1">├── 📦 การรับสินค้าเข้า (Inbound)</div>
+      <div class="l2">│   ├── สร้างรายการรับสินค้า</div>
+      <div class="l2">│   ├── เลือก Supplier + เอกสารอ้างอิง</div>
+      <div class="l2">│   ├── บันทึก Lot / วันหมดอายุ / ต้นทุน</div>
+      <div class="l2">│   └── แนบรูปสินค้า / ใบส่งของ</div>
+      <div class="l1">├── 🍳 การเบิกวัตถุดิบเข้าครัว</div>
+      <div class="l2">│   ├── สร้างใบเบิก</div>
+      <div class="l2">│   ├── อนุมัติรายการเบิก</div>
+      <div class="l2">│   ├── จ่ายสินค้า</div>
+      <div class="l2">│   └── ยืนยันรับของจากครัว</div>
+      <div class="l1">├── ✂️ การตัดสต๊อก</div>
+      <div class="l2">│   ├── ตัดจากการใช้จริง (Consumption)</div>
+      <div class="l2">│   ├── ตัดจากของชำรุด / เสียหาย / หมดอายุ</div>
+      <div class="l2">│   └── ปรับปรุงสต๊อก (Stock Adjustment)</div>
+      <div class="l1">├── 🔢 การตรวจนับสต๊อก</div>
+      <div class="l2">│   ├── สร้างแผนตรวจนับ</div>
+      <div class="l2">│   ├── บันทึกผลตรวจนับ</div>
+      <div class="l2">│   └── ปรับปรุงยอดหลังตรวจนับ</div>
+      <div class="l1">├── 🔄 การโอนสินค้าระหว่างสาขา</div>
+      <div class="l2">│   ├── สร้างใบโอน</div>
+      <div class="l2">│   └── ยืนยันรับของปลายทาง</div>
+      <div class="l1">├── ⚙️ จัดการข้อมูลหลัก (Master Data)</div>
+      <div class="l2">│   ├── สินค้า / SKU / Barcode</div>
+      <div class="l2">│   ├── Supplier</div>
+      <div class="l2">│   ├── สาขา / คลัง</div>
+      <div class="l2">│   ├── หน่วยนับ / หมวดหมู่</div>
+      <div class="l2">│   └── สูตรอาหาร / BOM (V1 พื้นฐาน)</div>
+      <div class="l1">├── 🔔 การแจ้งเตือน</div>
+      <div class="l2">│   ├── สินค้าใกล้หมดอายุ</div>
+      <div class="l2">│   ├── สินค้าต่ำกว่า Min Stock</div>
+      <div class="l2">│   └── รายการผิดปกติที่ต้องตรวจสอบ</div>
+      <div class="l1">├── 📈 รายงาน</div>
+      <div class="l2">│   ├── Stock On Hand</div>
+      <div class="l2">│   ├── Inbound / Consumption / Damage</div>
+      <div class="l2">│   ├── Transfer / Stock Count Variance</div>
+      <div class="l2">│   └── Audit Trail</div>
+      <div class="l1">└── 👥 จัดการผู้ใช้และสิทธิ์</div>
+      <div class="l2">    ├── Admin</div>
+      <div class="l2">    ├── หัวหน้าคลัง</div>
+      <div class="l2">    ├── เจ้าหน้าที่คลัง</div>
+      <div class="l2">    ├── หัวหน้าครัว</div>
+      <div class="l2">    └── ผู้บริหาร</div>
+      <div style="height:12px;"></div>
+      <div class="l0">📱 Mobile / PDA (หน้างาน)</div>
+      <div class="l1">├── สแกน Barcode / QR รับสินค้าเข้า</div>
+      <div class="l1">├── สแกน Barcode / QR เบิกจ่ายสินค้า</div>
+      <div class="l1">├── ตรวจนับสต๊อกหน้างาน</div>
+      <div class="l1">├── ถ่ายรูปแนบหลักฐานสินค้าเสียหาย</div>
+      <div class="l1">└── ยืนยันรับสินค้าโอนระหว่างสาขา</div>
+    </div>
+  </div>
+</div>
+
+<!-- ROLES -->
+<div class="section-card">
+  <div class="section-header"><h2>👥 ผู้ใช้งานและสิทธิ์</h2></div>
+  <div class="section-body">
+    <table>
+      <thead><tr><th>Role</th><th>ความรับผิดชอบ</th><th>สิทธิ์หลัก</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Admin</strong></td><td>ดูแลระบบทั้งหมด ตั้งค่า กำหนดสิทธิ์</td><td>จัดการผู้ใช้, สาขา, คลัง, Supplier, SKU, Lot, หน่วยนับ, สูตร, สิทธิ์อนุมัติ</td></tr>
+        <tr><td><strong>หัวหน้าคลัง</strong></td><td>บริหารรับสินค้า เบิกจ่าย โอน ตรวจนับ</td><td>รับเข้า, อนุมัติเบิก, โอนย้าย, ตรวจนับ, ปรับปรุงสต๊อก, ดูรายงาน</td></tr>
+        <tr><td><strong>เจ้าหน้าที่คลัง</strong></td><td>บันทึกรายการหน้างาน</td><td>สร้างรายการ, สแกนสินค้า, แนบรูป, บันทึก Lot/วันหมดอายุ, ส่งอนุมัติ</td></tr>
+        <tr><td><strong>หัวหน้าครัว</strong></td><td>ขอเบิกวัตถุดิบ ตรวจสอบ ติดตามการใช้</td><td>สร้างใบเบิก, ยืนยันรับของ, บันทึกการใช้จริง, แจ้งของเสียหาย</td></tr>
+        <tr><td><strong>ผู้บริหาร</strong></td><td>ติดตามภาพรวมสต๊อก ต้นทุน การสูญเสีย</td><td>ดู Dashboard, รายงานสรุป, Trend, Export ข้อมูล</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- WORKFLOW FLOW -->
+<div class="section-card">
+  <div class="section-header"><h2>🔄 Workflow ภาพรวมระบบ</h2></div>
+  <div class="section-body">
+    <p>ลำดับการทำงานตั้งแต่สินค้าเข้าคลัง ถึงรายงานผู้บริหาร</p>
+    <div class="flow-row" style="margin-top:14px;">
+      <div class="flow-step"><span class="circle">1</span><b>รับสินค้าเข้า</b><span class="small">Inbound</span></div>
+      <div class="flow-step"><span class="circle">2</span><b>จัดเก็บเข้าคลัง</b><span class="small">入库</span></div>
+      <div class="flow-step"><span class="circle">3</span><b>เบิกวัตถุดิบ</b><span class="small">Kitchen Requisition</span></div>
+      <div class="flow-step"><span class="circle">4</span><b>ตัดสต๊อก</b><span class="small"> Consumption / Damage</span></div>
+      <div class="flow-step"><span class="circle">5</span><b>ตรวจนับ</b><span class="small">Stock Count</span></div>
+      <div class="flow-step"><span class="circle">6</span><b>Dashboard</b><span class="small">KPI / Trend</span></div>
+      <div class="flow-step"><span class="circle">7</span><b>แจ้งเตือน</b><span class="small">Expiry / Low Stock</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- FEATURES -->
+<div class="section-card">
+  <div class="section-header"><h2>📦 รายละเอียด Features (10 Modules)</h2></div>
+  <div class="section-body">
+
+    <!-- F1: Master Data -->
+    <div class="feature">
+      <div class="feature-title">
+        <span class="feature-num green">M</span>
+        <h3>Master Data — ข้อมูลหลัก</h3>
+        <div class="feature-tags"><span class="tag must">Must Have</span><span class="tag p1">P1</span></div>
+      </div>
+      <div class="feature-content">
+        <div class="sub-grid">
+          <div class="sub-card">
+            <h4>📦 สินค้า / SKU</h4>
+            <p>ข้อมูลพื้นฐานของสินค้าหรือวัตถุดิบแต่ละรายการ</p>
+            <ul class="detail-list">
+              <li>รหัสสินค้า (SKU Code) — Auto Generate หรือกำหนดเอง</li>
+              <li>ชื่อสินค้า (ไทย/อังกฤษ)</li>
+              <li>หมวดหมู่สินค้า (ผักสด, เนื้อสัตว์, เครื่องปรุง, บรรจุภัณฑ์ ฯลฯ)</li>
+              <li>หน่วยนับหลัก (กิโลกรัม, ลิตร, ลัง, ชิ้น, ถุง ฯลฯ)</li>
+              <li>Barcode / QR Code สำหรับสแกน</li>
+              <li>Min Stock Level — จุดเตือนเมื่อสต๊อกต่ำ</li>
+              <li>Max Stock Level — สำหรับวางแผนการสั่งซื้อ</li>
+              <li>รูปภาพสินค้า (optional)</li>
+              <li>สถานะ: ใช้งาน / ระงับ / เลิกใช้</li>
+            </ul>
+          </div>
+          <div class="sub-card">
+            <h4>🏢 สาขา / คลัง</h4>
+            <p>โครงสร้างสถานที่จัดเก็บสินค้า</p>
+            <ul class="detail-list">
+              <li>จัดการสาขา (Branch) — ร้านแต่ละสาขา</li>
+              <li>จัดการคลัง (Warehouse) — แต่ละสาขามีกี่คลัง</li>
+              <li>คลังหลัก (Main Warehouse) / คลังย่อย (Sub Warehouse)</li>
+              <li>ที่อยู่คลัง / ผู้รับผิดชอบ</li>
+            </ul>
+          </div>
+          <div class="sub-card">
+            <h4>🤝 Supplier</h4>
+            <p>ข้อมูลผู้ขาย / คู่ค้า</p>
+            <ul class="detail-list">
+              <li>รหัส Supplier, ชื่อ, ที่อยู่, เบอร์โทร</li>
+              <li>เงื่อนไขการชำระเงิน</li>
+              <li>สินค้าที่ Supplier รายนี้จัดส่ง</li>
+            </ul>
+          </div>
+          <div class="sub-card">
+            <h4>📐 หน่วยนับ / Conversion</h4>
+            <p>หน่วยนับและการแปลงหน่วย</p>
+            <ul class="detail-list">
+              <li>หน่วยนับหลักและหน่วยย่อย (เช่น ลัง = 12 ชิ้น, กิโลกรัม = 1000 กรัม)</li>
+              <li>รองรับหลายหน่วยนับต่อ SKU</li>
+              <li>Conversion Rate สำหรับการตัดสต๊อกข้ามหน่วย</li>
+            </ul>
+          </div>
+          <div class="sub-card">
+            <h4>📋 สูตรอาหาร / BOM</h4>
+            <p>ส่วนประกอบของอาหารแต่ละเมนู สำหรับตัดสต๊อกอัตโนมัติ</p>
+            <ul class="detail-list">
+              <li>เมนูอาหาร (Product) → วัตถุดิบ (Component)</li>
+              <li>ปริมาณที่ใช้ต่อหน่วย (เช่น ก๋วยเตี๋ยว 1 ชาม ใช้เส้น 200g)</li>
+              <li>ของเสีย / สูญเสียระหว่างการผลิต (%)</li>
+              <li>ใช้สำหรับคำนวณการตัดสต๊อกตามจำนวนขาย</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- F2: Inbound -->
+    <div class="feature">
+      <div class="feature-title">
+        <span class="feature-num blue">1</span>
+        <h3>รับสินค้าเข้าคลัง (Inbound)</h3>
+        <div class="feature-tags"><span class="tag must">Must Have</span><span class="tag p1">P1</span></div>
+      </div>
+      <div class="feature-content">
+        <div class="sub-grid">
+          <div class="sub-card">
+            <h4>📥 สร้างรายการรับสินค้า</h4>
+            <ul class="detail-list">
+              <li>สร้างเอกสารรับสินค้าเข้า (Goods Receipt Note)</li>
+              <li>เลือก Supplier / ใบส่งของ / เลขที่เอกสารอ้างอิง</li>
+              <li>วันที่รับสินค้า, สาขา, คลังปลายทาง</li>
+              <li>ระบุ SKU, จำนวนรับจริง, หน่วยนับ</li>
+              <li>บันทึกต้นทุนต่อหน่วย (ราคาซื้อ) ถ้าต้องการ</li>
+              <li>บันทึก Lot Number และวันหมดอายุ (Expiry Date)</li>
+              <li>สแกน Barcode เพื่อเพิ่มสินค้าเร็วขึ้น</li>
+              <li>แนบรูปสินค้า / ใบส่งของ / เอกสารประกอบ</li>
+              <li>บันทึกหมายเหตุ / รายการผิดปกติ</li>
+            </ul>
+          </div>
+          <div class="sub-card">
+            <h4>✅ การยืนยันและตรวจสอบ</h4>
+            <ul class="detail-list">
+              <li>บันทึกเป็น Draft → รอตรวจสอบ → อนุมัติเข้า Stock</li>
+              <li>เมื่ออนุมัติ: อัปเดต Stock Balance + Lot Balance</li>
+              <li>สามารถยกเลิก / แก้ไขรายการก่อนอนุมัติ</li>
+              <li>ประวัติการแก้ไข (Audit Trail) ทุกครั้งที่มีการเปลี่ยนแปลง</li>
+            </ul>
+          </div>
+        </div>
+        <div class="note-box">
+          <strong>📌 Acceptance:</strong> สร้างรายการรับเข้า → ระบุ SKU, จำนวน, Lot, วันหมดอายุ, Supplier → เมื่ออนุมัติ ยอดคงเหลือเพิ่มขึ้นถูกต้อง
+        </div>
+      </div>
+    </div>
+
+    <!-- F3: Kitchen Requisition -->
+    <div class="feature">
+      <div class="feature-title">
+        <span class="feature-num green">2</span>
+        <h3>เบิกวัตถุดิบเข้าครัว (Kitchen Requisition)</h3>
+        <div class="feature-tags"><span class="tag must">Must Have</span><span class="tag p1">P1</span></div>
+      </div>
+      <div class="feature-content">
+        <div class="sub-grid">
+          <div class="sub-card">
+            <h4>📝 สร้างใบเบิก</h4>
+            <ul class="detail-list">
+              <li>หัวหน้าครัวสร้างใบเบิกวัตถุดิบ</li>
+              <li>ระบุสาขา, ผู้เบิก, วันที่ต้องการ</li>
+              <li>เลือก SKU + จำนวนที่ต้องการเบิก</li>
+              <li>ระบบแสดงยอดคงเหลือปัจจุบันขณะเบิก</li>
+              <li>บันทึกหมายเหตุ (optional)</li>
+            </ul>
+          </div>
+          <div class="sub-card">
+            <h4>✅ อนุมัติและจ่ายสินค้า</h4>
+            <ul class="detail-list">
+              <li>หัวหน้าคลัง / ผู้อนุมัติตรวจสอบรายการเบิก</li>
+              <li>อนุมัติ / อนุมัติบางส่วน / ไม่อนุมัติ</li>
+              <li>เจ้าหน้าที่คลังจ่ายสินค้าตามที่อนุมัติ</li>
+              <li>บันทึกการจ่าย: จำนวนที่จ่ายจริง, Lot ที่เบิก</li>
+              <li>อัปเดต Stock Balance ทันทีเมื่อจ่าย</li>
+            </ul>
+          </div>
+          <div class="sub-card">
+            <h4>📬 ยืนยันรับของจากครัว</h4>
+            <ul class="detail-list">
+              <li>หัวหน้าครัวยืนยันรับสินค้าที่เบิก</li>
+              <li>บันทึกจำนวนที่รับจริง (กรณีได้รับไม่ครบ)</li>
+              <li>ระบบบันทึก Movement และประวัติ</li>
+            </ul>
+          </div>
+        </div>
+        <div class="note-box">
+          <strong>📌 Acceptance:</strong> สร้างใบเบิก → อนุมัติ → จ่ายสินค้า → ครัวยืนยันรับ → ระบบบันทึก Movement ออกถูกต้อง
+        </div>
+      </div>
+    </div>
+
+    <!-- F4: Consumption & Damage -->
+    <div class="feature">
+      <div class="feature-title">
+        <span class="feature-num blue">3</span>
+        <h3>ตัดสต๊อกตามการใช้งาน (Consumption & Damage)</h3>
+        <div class="feature-tags"><span class="tag must">Must Have</span><span class="tag p1">P1</span></div>
+      </div>
+      <div class="feature-content">
+        <div class="sub-grid">
+          <div class="sub-card">
+            <h4>📊 รายงานการใช้จริง (Consumption)</h4>
+            <ul class="detail-list">
+              <li>หัวหน้าครัวรายงานการใช้วัตถุดิบจริง รายวัน / รายสัปดาห์</li>
+              <li>ระบุ SKU + จำนวนที่ใช้จริง</li>
+              <li>ระบบตัด Stock balance ตามจำนวนที่รายงาน</li>
+              <li>รองรับการตัดตามสูตรอาหาร (BOM) — ใช้จำนวนขาย x ปริมาณต่อหน่วย</li>
+              <li>บันทึกประเภทการใช้งาน: ประกอบอาหาร, ทดสอบสูตร, ของตัวอย่าง</li>
+            </ul>
+          </div>
+          <div class="sub-card">
+            <h4>⚠️ ของชำรุด / เสียหาย / หมดอายุ (Damage & Spoilage)</h4>
+            <ul class="detail-list">
+              <li>บันทึกแยกประเภท: ชำรุด, เสียหาย, หมดอายุ, สูญหาย, ปรับปรุงยอด</li>
+              <li>ระบุจำนวน สาเหตุ ผู้บันทึก วันที่เกิดเหตุ</li>
+              <li>แนบรูปหลักฐาน (ถ่ายหน้างานผ่านมือถือ)</li>
+              <li>รองรับสถานะรออนุมัติ สำหรับกรณีผิดปกติ / เกินเกณฑ์</li>
+              <li>เส้นทางอนุมัติ: เจ้าหน้าที่ → หัวหน้าคลัง → Admin (ตามมูลค่า)</li>
+            </ul>
+          </div>
+          <div class="sub-card">
+            <h4>📋 รายงานแยก: ใช้จริง vs สูญเสีย</h4>
+            <ul class="detail-list">
+              <li>รายงาน Consumption แยกจาก Damage/Spoilage</li>
+              <li>เพื่อให้ผู้บริหารวิเคราะห์ต้นทุนจริง ≠ การสูญเสีย</li>
+              <li>Stock Adjustment แต่ละประเภทมีรหัสอ้างอิงของตัวเอง</li>
+            </ul>
+          </div>
+        </div>
+        <div class="note-box">
+          <strong>📌 Acceptance:</strong> บันทึกการใช้จริง → ระบบลด Stock Balance — บันทึกชำรุด/เสียหาย แยกรายงาน พร้อมรูปหลักฐานและเส้นทางอนุมัติ
+        </div>
+      </div>
+    </div>
+
+    <!-- F5: Stock Count -->
+    <div class="feature">
+      <div class="feature-title">
+        <span class="feature-num purple">4</span>
+        <h3>ตรวจนับสต๊อก (Stock Count)</h3>
+        <div class="feature-tags"><span class="tag must">Must Have</span><span class="tag p1">P1</span></div>
+      </div>
+      <div class="feature-content">
+        <div class="sub-grid">
+          <div class="sub-card">
+            <h4>📋 สร้างแผนตรวจนับ</h4>
+            <ul class="detail-list">
+              <li>กำหนดรอบตรวจนับ: รายวัน / รายสัปดาห์ / รายเดือน / ตามต้องการ</li>
+              <li>ระบุขอบเขต: คลังเป้าหมาย, สาขา, หมวดสินค้า, เฉพาะ SKU ที่เลือก</li>
+              <li>ระบบสร้างรายการ SKU ที่ต้องนับตามขอบเขต</li>
+            </ul>
+          </div>
+          <div class="sub-card">
+            <h4>📱 บันทึกผลตรวจนับ (Mobile / PDA)</h4>
+            <ul class="detail-list">
+              <li>เจ้าหน้าที่คลังสแกน Barcode / QR เพื่อค้นหา SKU</li>
+              <li>บันทึกจำนวนที่นับได้จริง (Physical Count)</li>
+              <li>ระบุ Lot ที่พบ / วันหมดอายุ</li>
+              <li>บันทึกหมายเหตุ (optional)</li>
+            </ul>
+          </div>
+          <div class="sub-card">
+            <h4>📊 เปรียบเทียบและปรับปรุง</h4>
+            <ul class="detail-list">
+              <li>ระบบคำนวณส่วนต่าง: ยอดในระบบ — ยอดนับจริง</li>
+              <li>แสดงรายการที่เกิน / ขาด พร้อมมูลค่าส่วนต่าง</li>
+              <li>สร้างรายการปรับปรุงสต๊อก (Adjustment) อัตโนมัติเมื่อยืนยัน</li>
+              <li>บันทึก Audit Trail: ใครนับ, ใครตรวจสอบ, ใครอนุมัติปรับปรุง</li>
+            </ul>
+          </div>
+        </div>
+        <div class="note-box">
+          <strong>📌 Acceptance:</strong> สร้างแผนตรวจนับ → นับหน้างานผ่านมือถือ → ระบบเปรียบเทียบยอด → สร้าง Adjustment
+        </div>
+      </div>
+    </div>
+
+    <!-- F6: Transfer -->
+    <div class="feature">
+      <div class="feature-title">
+        <span class="feature-num orange">5</span>
+        <h3>โอนสินค้าระหว่างสาขา (Transfer)</h3>
+        <div class="feature-tags"><span class="tag must">Must Have</span><span class="tag p1">P1</span></div>
+      </div>
+      <div class="feature-content">
+        <div class="sub-grid">
+          <div class="sub-card">
+            <h4>📤 สร้างใบโอน (ต้นทาง)</h4>
+            <ul class="detail-list">
+              <li>หัวหน้าคลังสร้างใบโอนสินค้า</li>
+              <li>ระบุสาขาต้นทาง, สาขาปลายทาง, คลัง</li>
+              <li>เลือก SKU + จำนวน + Lot ที่ต้องการโอน</li>
+              <li>บันทึกวันที่โอน, ผู้ขนส่ง (option)</li>
+              <li>เมื่อสร้าง: สถานะ = "กำลังโอน" (ยอดถูกจอง)</li>
+            </ul>
+          </div>
+          <div class="sub-card">
+            <h4>📥 รับสินค้าปลายทาง</h4>
+            <ul class="detail-list">
+              <li>สาขาปลายทางยืนยันรับสินค้า</li>
+              <li>บันทึกจำนวนที่รับจริง (กรณีได้รับไม่ครบ / เสียหาย)</li>
+              <li>แนบรูปหลักฐาน (ถ้ามี)</li>
+              <li>เมื่อยืนยัน: อัปเดต Stock Balance ทั้ง 2 สาขาอัตโนมัติ</li>
+              <li>สถานะ: "กำลังโอน" → "รับแล้ว" / "ยกเลิก"</li>
+            </ul>
+          </div>
+        </div>
+        <div class="note-box">
+          <strong>📌 Acceptance:</strong> สร้างใบโอน → สาขาต้นทางตัดยอด → ปลายทางรับ → อัปเดตสต๊อกทั้ง 2 สาขา
+        </div>
+      </div>
+    </div>
+
+    <!-- F7: Alerts -->
+    <div class="feature">
+      <div class="feature-title">
+        <span class="feature-num red">6</span>
+        <h3>การแจ้งเตือน (Alerts & Notifications)</h3>
+        <div class="feature-tags"><span class="tag should">Should Have</span><span class="tag p1">P1</span></div>
+      </div>
+      <div class="feature-content">
+        <div class="sub-grid">
+          <div class="sub-card">
+            <h4>⏰ สินค้าใกล้หมดอายุ</h4>
+            <ul class="detail-list">
+              <li>แจ้งเตือนล่วงหน้า: 30 วัน / 14 วัน / 7 วัน / 1 วัน</li>
+              <li>แสดงรายการ Lot ที่กำลังจะหมดอายุ เรียงตามวันที่</li>
+              <li>กรองตามสาขา, คลัง, หมวดสินค้า, Supplier</li>
+              <li>แสดงมูลค่ารวมของ Lot ที่ใกล้หมดอายุ</li>
+            </ul>
+          </div>
+          <div class="sub-card">
+            <h4>📉 สินค้าต่ำกว่า Min Stock</h4>
+            <ul class="detail-list">
+              <li>SKU ใดที่คงเหลือ ≤ Min Stock Level</li>
+              <li>แสดงจำนวนที่ต้องสั่งซื้อเพิ่ม (Reorder Quantity)</li>
+              <li>แยกตามสาขา / คลัง</li>
+            </ul>
+          </div>
+          <div class="sub-card">
+            <h4>⚠️ รายการผิดปกติ</h4>
+            <ul class="detail-list">
+              <li>Stock Adjustment ผิดปกติที่รออนุมัติ</li>
+              <li>ส่วนต่างตรวจนับสูงเกินเกณฑ์</li>
+              <li>Damage/Spoilage มูลค่าสูงผิดปกติ</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- F8: Dashboard -->
+    <div class="feature">
+      <div class="feature-title">
+        <span class="feature-num green">7</span>
+        <h3>Dashboard ผู้บริหาร</h3>
+        <div class="feature-tags"><span class="tag must">Must Have</span><span class="tag p1">P1</span></div>
+      </div>
+      <div class="feature-content">
+        <div class="sub-grid">
+          <div class="sub-card">
+            <h4>📊 KPI หลัก</h4>
+            <ul class="detail-list">
+              <li>มูลค่าสต๊อกคงเหลือรวม (Total Inventory Value)</li>
+              <li>จำนวน SKU คงเหลือทั้งหมด</li>
+              <li>จำนวน SKU ที่ต่ำกว่า Min Stock</li>
+              <li>จำนวน SKU ที่ใกล้หมดอายุ</li>
+              <li>มูลค่าการสูญเสีย (Damage/Spoilage) รอบนี้</li>
+            </ul>
+          </div>
+          <div class="sub-card">
+            <h4>📈 กราฟแนวโน้ม</h4>
+            <ul class="detail-list">
+              <li>แนวโน้มมูลค่าสต๊อก รายวัน / รายสัปดาห์ / รายเดือน</li>
+              <li>แนวโน้มการรับเข้า vs การเบิกใช้</li>
+              <li>แนวโน้มการสูญเสีย / ชำรุด</li>
+              <li>สัดส่วนมูลค่าสินค้าแยกตามหมวดหมู่</li>
+            </ul>
+          </div>
+          <div class="sub-card">
+            <h4>🔍 รายการล่าสุด</h4>
+            <ul class="detail-list">
+              <li>รายการรับเข้าล่าสุด 10 รายการ</li>
+              <li>รายการเบิกล่าสุด 10 รายการ</li>
+              <li>รายการโอนที่กำลังดำเนินการ</li>
+              <li>รายการ Adjustment ล่าสุด</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- F9: Reports -->
+    <div class="feature">
+      <div class="feature-title">
+        <span class="feature-num blue">8</span>
+        <h3>รายงาน (Reports)</h3>
+        <div class="feature-tags"><span class="tag must">Must Have</span><span class="tag p1">P1</span></div>
+      </div>
+      <div class="feature-content">
+        <div class="sub-grid">
+          <div class="sub-card">
+            <h4>📄 ประเภทรายงาน</h4>
+            <p>รายงานหลักที่ระบบต้องรองรับ</p>
+            <ul class="detail-list">
+              <li>Stock On Hand Report — ยอดคงเหลือปัจจุบัน</li>
+              <li>Inbound Report — รายการรับเข้าตามช่วงเวลา</li>
+              <li>Kitchen Requisition Report — รายการเบิก</li>
+              <li>Consumption Report — การใช้จริง แยกตาม SKU/สาขา</li>
+              <li>Damage / Spoilage Report — การสูญเสีย แยกตามประเภท สาเหตุ</li>
+              <li>Expiry Report — สินค้าใกล้หมดอายุ</li>
+              <li>Transfer Report — การโอนระหว่างสาขา</li>
+              <li>Stock Count Variance Report — ส่วนต่างตรวจนับ</li>
+              <li>Audit Trail Report — ประวัติการเปลี่ยนแปลงทั้งหมด</li>
+            </ul>
+          </div>
+          <div class="sub-card">
+            <h4>⚙️ ฟังก์ชันรายงาน</h4>
+            <ul class="detail-list">
+              <li>กรองตาม: ช่วงเวลา, สาขา, คลัง, หมวดสินค้า, SKU</li>
+              <li>Export: รองรับไฟล์ Excel / CSV / PDF</li>
+              <li>แสดงยอดรวม และมูลค่ารวมท้ายรายงาน</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- F10: Mobile/PDA -->
+    <div class="feature">
+      <div class="feature-title">
+        <span class="feature-num orange">9</span>
+        <h3>Mobile / PDA / Barcode Support</h3>
+        <div class="feature-tags"><span class="tag should">Should Have</span><span class="tag p1">P1</span></div>
+      </div>
+      <div class="feature-content">
+        <div class="sub-grid">
+          <div class="sub-card">
+            <h4>📱 อุปกรณ์ที่รองรับ</h4>
+            <ul class="detail-list">
+              <li>Web Application (PC) สำหรับ Admin และผู้บริหาร</li>
+              <li>Mobile Web Responsive สำหรับพนักงานหน้างาน (iOS/Android)</li>
+              <li>PDA Scanner สำหรับคลังและการตรวจนับ</li>
+              <li>กล้องมือถือสำหรับสแกน Barcode / QR Code</li>
+            </ul>
+          </div>
+          <div class="sub-card">
+            <h4>🎯 Use Case บนมือถือ</h4>
+            <ul class="detail-list">
+              <li>รับสินค้าเข้าโดยสแกน Barcode</li>
+              <li>เบิกจ่ายสินค้าเข้าครัวผ่านมือถือ</li>
+              <li>ตรวจนับสต๊อกหน้างาน (Scan + นับ)</li>
+              <li>ถ่ายรูปแนบหลักฐานกรณีสินค้าเสียหาย / ชำรุด</li>
+              <li>ยืนยันรับสินค้าโอนระหว่างสาขา</li>
+              <li>ดู Dashboard และรายงานสรุป (Read-only)</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- TECH STACK -->
+<div class="section-card">
+  <div class="section-header"><h2>🛠️ Tech Stack</h2></div>
+  <div class="section-body">
+    <div class="tech-grid">
+      <div class="tech-item"><strong>Frontend</strong><span>Next.js 16, shadcn/ui, Tailwind CSS</span></div>
+      <div class="tech-item"><strong>Backend</strong><span>Next.js API Routes</span></div>
+      <div class="tech-item"><strong>Database</strong><span>PostgreSQL / Supabase</span></div>
+      <div class="tech-item"><strong>Mobile</strong><span>Web Responsive + Camera API</span></div>
+      <div class="tech-item"><strong>Barcode</strong><span>HTML5 Barcode Scanner / QuaggaJS</span></div>
+      <div class="tech-item"><strong>Auth</strong><span>Role-based (5 Roles)</span></div>
+      <div class="tech-item"><strong>Storage</strong><span>Supabase Storage (รูปหลักฐาน)</span></div>
+      <div class="tech-item"><strong>Report Export</strong><span>Excel / CSV / PDF</span></div>
+      <div class="tech-item"><strong>Deploy</strong><span>Vercel</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ACCEPTANCE -->
+<div class="section-card">
+  <div class="section-header"><h2>✅ Acceptance Criteria</h2></div>
+  <div class="section-body">
+    <table>
+      <thead><tr><th>Feature</th><th>Acceptance</th></tr></thead>
+      <tbody>
+        <tr><td>รับสินค้าเข้า</td><td>สร้างรายการ → ระบุ SKU, จำนวน, Lot, วันหมดอายุ, Supplier → อนุมัติ → ยอดคงเหลือเพิ่ม</td></tr>
+        <tr><td>เบิกเข้าครัว</td><td>สร้างใบเบิก → อนุมัติ → จ่ายสินค้า → ครัวยืนยันรับ → Movement ออกถูกต้อง</td></tr>
+        <tr><td>ตัดสต๊อกใช้จริง</td><td>บันทึกการใช้จริง → ระบบลด Stock Balance ตามจำนวนหรือสูตร</td></tr>
+        <tr><td>ชำรุด/เสียหาย</td><td>บันทึกพร้อมเหตุผล+รูป → รายงานแยกจากการใช้จริง → เส้นทางอนุมัติ</td></tr>
+        <tr><td>ตรวจนับ</td><td>สร้างแผน → นับผ่านมือถือ → เปรียบเทียบ → สร้าง Adjustment</td></tr>
+        <tr><td>แจ้งเตือน</td><td>แสดงรายการใกล้หมดอายุ + ต่ำกว่า Min Stock + รายการผิดปกติ</td></tr>
+        <tr><td>Dashboard</td><td>ผู้บริหารดูภาพรวมสต๊อก การใช้ การสูญเสีย แนวโน้ม</td></tr>
+        <tr><td>สิทธิ์ผู้ใช้</td><td>แต่ละ Role เห็นเมนูและทำรายการตามสิทธิ์ที่กำหนด</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- OUT SCOPE -->
+<div class="section-card">
+  <div class="section-header"><h2>📌 ขอบเขตนอก V1</h2></div>
+  <div class="section-body">
+    <div class="sub-grid">
+      <div class="sub-card">
+        <h4>📅 Phase ถัดไป</h4>
+        <ul class="detail-list">
+          <li>เชื่อมต่อ POS อัตโนมัติ — หักสต๊อกจากยอดขายจริง</li>
+          <li>ระบบจัดซื้อ / Purchase Order / ใบสั่งซื้อ</li>
+          <li>ระบบบัญชีต้นทุน + เชื่อมต่อโปรแกรมบัญชี</li>
+          <li>Forecast การใช้วัตถุดิบจากยอดขายย้อนหลัง</li>
+          <li>AI วิเคราะห์วัตถุดิบที่มีความเสี่ยงสูญเสียสูง</li>
+        </ul>
+      </div>
+      <div class="sub-card">
+        <h4>📋 ข้อมูลที่ลูกค้าควรเตรียม</h4>
+        <ul class="detail-list">
+          <li>รายชื่อสินค้า / SKU / หน่วยนับ / Barcode</li>
+          <li>รายชื่อคลัง / สาขา / ผู้ใช้งานแยกตาม Role</li>
+          <li>รายชื่อ Supplier</li>
+          <li>สูตรอาหาร / BOM (สำหรับตัดสต๊อกตามสูตร)</li>
+          <li>ตัวอย่างเอกสารรับเข้า เบิก โอน ตรวจนับ</li>
+          <li>เกณฑ์อนุมัติรายการชำรุด/เสียหาย/ปรับปรุงสต๊อก</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div style="text-align:center;padding:30px 0 10px;color:#5b7083;font-size:13px;">
+  Inventory Management System · PRD Sitemap V1 · Generated 2026-06-08 · Hermes PM
+</div>
+
+</div>
+</body>
+</html>

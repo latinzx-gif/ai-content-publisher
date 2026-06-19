@@ -1,4 +1,4 @@
-# Phase 2 Plan — LINE OA HR & Payroll
+# Phase 2 Plan — CNV WorkHub
 
 **Status:** 🔄 IN PROGRESS — T31 kickoff 2026-06-11 (orchestration + Linear ready)  
 **Date:** 2026-06-11  

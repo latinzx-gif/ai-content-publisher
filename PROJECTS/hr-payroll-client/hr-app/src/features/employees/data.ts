@@ -31,6 +31,7 @@ export type EmployeeListParams = {
   q?: string
   dept?: string
   branch_id?: string
+  work_shift_id?: string
   status?: EmployeeStatusFilter
   sort?: SortColumn
   dir?: "asc" | "desc"
@@ -109,6 +110,7 @@ export function normalizeParams(raw: {
   [key: string]: string | string[] | undefined
 }): Required<EmployeeListParams> {
   const get = (k: string) => (typeof raw[k] === "string" ? (raw[k] as string) : "")
+  const normalizeId = (value: string) => value.trim()
   const sort = SORT_COLUMNS.includes(get("sort") as SortColumn)
     ? (get("sort") as SortColumn)
     : "name"
@@ -118,16 +120,20 @@ export function normalizeParams(raw: {
     ? (get("status") as EmployeeStatusFilter)
     : "all"
   const page = Math.max(1, Number.parseInt(get("page"), 10) || 1)
-  const branchRaw = get("branch_id")
+  const branchRaw = normalizeId(get("branch_id"))
   const branch_id =
     branchRaw === "__none__" ||
     /^[0-9a-f-]{36}$/i.test(branchRaw)
       ? branchRaw
       : ""
+  const shiftRaw = normalizeId(get("shift_id") || get("shift"))
+  const work_shift_id =
+    shiftRaw === "__none__" || /^[0-9a-f-]{36}$/i.test(shiftRaw) ? shiftRaw : ""
   return {
     q: get("q"),
     dept: get("dept"),
     branch_id,
+    work_shift_id,
     status,
     sort,
     dir: get("dir") === "desc" ? "desc" : "asc",
@@ -162,6 +168,11 @@ export async function getEmployees(params: Required<EmployeeListParams>) {
     query = query.is("branch_id", null)
   } else if (params.branch_id) {
     query = query.eq("branch_id", params.branch_id)
+  }
+  if (params.work_shift_id === "__none__") {
+    query = query.is("work_shift_id", null)
+  } else if (params.work_shift_id) {
+    query = query.eq("work_shift_id", params.work_shift_id)
   }
   if (params.status === "active" || params.status === "inactive") {
     query = query.eq("status", params.status)

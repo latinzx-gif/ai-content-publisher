@@ -15,6 +15,22 @@ Edge functions ถูกเรียกผ่าน **pg_cron + pg_net** โด�
 | **monthly-summary** | `0 1 1 * *` | **08:00 วันที่ 1** | `monthly-summary` |
 | **announcement-scheduler** | `*/10 * * * *` | ทุก 10 นาที | `announcement-scheduler` |
 
+## Auth Model (secret mode)
+
+cron Edge Functions ใช้ `@supabase/server` ด้วย `{ auth: ["secret"] }` ซึ่งตรวจสอบ
+header **`apikey`** (ไม่ใช่ `Authorization`) กับค่าใน `secretKeys`.
+
+- pg_net ส่ง Vault `secret_key` (service-role JWT) เป็น `apikey` header
+- functions override ผ่าน `cronSecretAuthConfig()`: prefer env **`CRON_SECRET_KEY`**,
+  fall back to `SUPABASE_SERVICE_ROLE_KEY` หากไม่มี `CRON_SECRET_KEY`
+  — ค่าที่ได้จะ inject เป็น `env.secretKeys.default` เพื่อให้ JWT จาก Vault ผ่านการตรวจสอบ
+- **`CRON_SECRET_KEY` must equal Vault `secret_key`** — ถ้าไม่ตรงกัน secret mode จะปฏิเสธ request
+- ไม่ต้องส่ง `Authorization` header — secret mode อ่าน `apikey` เท่านั้น
+- `verify_jwt = false` ใน `config.toml` ปิด platform-level JWT check ก่อนถึง function
+
+> **สรุป flow:** pg_cron → pg_net HTTP POST → `apikey: <vault.secret_key>` →
+> Edge function ตรวจ `apikey` vs `CRON_SECRET_KEY` (หรือ `SUPABASE_SERVICE_ROLE_KEY`) → อนุมัติ
+
 ## Verify on remote
 
 ```sql
@@ -37,3 +53,4 @@ select cron.unschedule('weekly-summary');
 select cron.unschedule('monthly-summary');
 select cron.unschedule('announcement-scheduler');
 ```
+

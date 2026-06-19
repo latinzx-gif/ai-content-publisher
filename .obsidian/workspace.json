@@ -1,0 +1,196 @@
+{
+  "main": {
+    "id": "16a75688883c7922",
+    "type": "split",
+    "children": [
+      {
+        "id": "03ac912dfd1c3139",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "65930314d2b9ab50",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "PROJECTS/AI Content Legal System/reports/CONTENT_OPERATIONS_UX_DECISION.md",
+                "mode": "source",
+                "source": false
+              },
+              "icon": "lucide-file",
+              "title": "CONTENT_OPERATIONS_UX_DECISION"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "vertical"
+  },
+  "left": {
+    "id": "53fcf44aea293d17",
+    "type": "split",
+    "children": [
+      {
+        "id": "4dde410c0b335473",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "faa6036e2778c8ad",
+            "type": "leaf",
+            "state": {
+              "type": "file-explorer",
+              "state": {
+                "sortOrder": "alphabetical",
+                "autoReveal": false
+              },
+              "icon": "lucide-folder-closed",
+              "title": "File explorer"
+            }
+          },
+          {
+            "id": "0ca47cf2ae9f3051",
+            "type": "leaf",
+            "state": {
+              "type": "search",
+              "state": {
+                "query": "",
+                "matchingCase": false,
+                "explainSearch": false,
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical"
+              },
+              "icon": "lucide-search",
+              "title": "ค้นหา"
+            }
+          },
+          {
+            "id": "d630f954496ab703",
+            "type": "leaf",
+            "state": {
+              "type": "bookmarks",
+              "state": {},
+              "icon": "lucide-bookmark",
+              "title": "บุ๊กมาร์ก"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300
+  },
+  "right": {
+    "id": "aa82bc24237f4cbe",
+    "type": "split",
+    "children": [
+      {
+        "id": "91f55e9038588e0c",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "b4089c5e42bbb2d5",
+            "type": "leaf",
+            "state": {
+              "type": "backlink",
+              "state": {
+                "file": "PROJECTS/AI Content Legal System/reports/CONTENT_OPERATIONS_UX_DECISION.md",
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical",
+                "showSearch": false,
+                "searchQuery": "",
+                "backlinkCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-coming-in",
+              "title": "แบ็คลิงค์ของ CONTENT_OPERATIONS_UX_DECISION"
+            }
+          },
+          {
+            "id": "f7be9b2718f22586",
+            "type": "leaf",
+            "state": {
+              "type": "outgoing-link",
+              "state": {
+                "file": "PROJECTS/AI Content Legal System/reports/CONTENT_OPERATIONS_UX_DECISION.md",
+                "linksCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-going-out",
+              "title": "ลิงค์ขาออกของ CONTENT_OPERATIONS_UX_DECISION"
+            }
+          },
+          {
+            "id": "cfcbdab1e2a7f2d9",
+            "type": "leaf",
+            "state": {
+              "type": "tag",
+              "state": {
+                "sortOrder": "frequency",
+                "useHierarchy": true,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-tags",
+              "title": "แท็ก"
+            }
+          },
+          {
+            "id": "919a8e52845d40c1",
+            "type": "leaf",
+            "state": {
+              "type": "all-properties",
+              "state": {
+                "sortOrder": "frequency",
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-archive",
+              "title": "คุณสมบัติทั้งหมด"
+            }
+          },
+          {
+            "id": "cf9d928785d713e6",
+            "type": "leaf",
+            "state": {
+              "type": "outline",
+              "state": {
+                "file": "PROJECTS/AI Content Legal System/reports/CONTENT_OPERATIONS_UX_DECISION.md",
+                "followCursor": false,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-list",
+              "title": "โครงเรื่องของ CONTENT_OPERATIONS_UX_DECISION"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300,
+    "collapsed": true
+  },
+  "left-ribbon": {
+    "hiddenItems": {
+      "switcher:เปิด quick switcher": false,
+      "graph:เปิดมุมมองกราฟ": false,
+      "canvas:สร้างผืนผ้าใบใหม่": false,
+      "daily-notes:เปิดโน้ตของวันนี้": false,
+      "templates:แทรกเทมเพลต": false,
+      "command-palette:เปิดกระดานคำสั่ง": false,
+      "bases:สร้างฐานใหม่": false
+    }
+  },
+  "active": "65930314d2b9ab50",
+  "lastOpenFiles": [
+    "PROJECTS/AI Content Legal System/reports/CLIENT_READY_AUDIT.md",
+    "PROJECTS/AI Content Legal System/reports/CLIENT_READY_SCORE.md",
+    "PROJECTS/AI Content Legal System/reports/CLIENT_HANDOFF_REVIEW_FIXES.md",
+    "PROJECTS/AI Content Legal System/reports/CLIENT_CONTACT_UPDATE.md",
+    "PROJECTS/AI Content Legal System/reports/ACCOUNTING_CLIENT_JOURNEY.md",
+    "PROJECTS/AI Content Legal System/node_modules/eslint-plugin-react/README.md",
+    "OS/FASTWORK-OS/04_ASSETS/AI_CONTENT_PUBLISHER/ASSET_OVERVIEW.md"
+  ]
+}

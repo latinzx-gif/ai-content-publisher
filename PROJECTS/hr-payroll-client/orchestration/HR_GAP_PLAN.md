@@ -98,7 +98,7 @@ Web Admin: ไม่มี route
 
 ### 8. ตั้งค่าระบบ — **Missing (ไม่อยู่ใน T01–T30)**
 
-PRD ระบุ: ข้อมูลบริษัท, ประเภทการลา, ช่วงเวลาเช็คอิน, LINE OA config  
+PRD ระบุ: ข้อมูลบริษัท, ประเภทการลา, ช่วงเวลาเช็คอิน, CNV WorkHub / LINE config  
 ปัจจุบัน: work hours = env vars (`WORK_START_HOUR`) ไม่มี admin UI  
 → เสนอ **T31 Settings** หลัง Phase 1 core หรือรวมใน delivery audit scope
 

@@ -1,0 +1,102 @@
+---
+description: Workflow commands — Cursor รู้ว่าต้องทำอะไรเมื่อ user พิมพ์อะไร
+alwaysApply: true
+---
+
+# Workflow Commands
+
+## "next task" หรือ "next"
+1. อ่าน `REVIEW_STATUS.md` — previous task APPROVED แล้วหรือยัง?
+   - ยังไม่ APPROVED → แจ้ง user ให้ review ก่อน STOP
+2. รัน `task-master next` — ดู task ถัดไป
+3. อ่าน `orchestration/workflow-skills/02-cursor-set-task/SKILL.md` — ทำตาม step ครบ
+4. เลือก skills จาก routing table ใน COMPANY_OS.md Section 12
+5. เขียน `orchestration/CURRENT_TASK.md` พร้อม `## Skills to Load`
+6. อัปเดต Taskmaster: `task-master set-status --id=<id> --status=in-progress`
+7. **Sync Linear (hr-payroll — บังคับ):** `orchestration/workflow-skills/linear-mcp-sync/SKILL.md`
+8. บอก user: "Task [ID] ready — dispatch ให้ [Codex/Claude Code] ด้วย skill 03-claude-plan"
+
+---
+
+## "set task [ID]" หรือ "task [ID]"
+ทำเหมือน "next task" แต่ใช้ task ID ที่ระบุ
+
+---
+
+## "review" หรือ "review task"
+1. อ่าน `_agent/CURSOR_REVIEW_REQUEST.md` + `_agent/TASK_RESULT.md`
+2. อ่าน `orchestration/workflow-skills/06-cursor-review-task/SKILL.md` — ทำตาม step ครบ
+3. รัน `npm run build && npm run typecheck && npm run lint`
+4. ตรวจ acceptance criteria ทุกข้อ
+5. APPROVE: archive _agent/ + update Taskmaster + **sync Linear (MCP)** + commit
+6. REJECT: แจ้ง agent สิ่งที่ต้องแก้ + **sync Linear (MCP)** verdict rejected
+7. hr-payroll: `linear-mcp-sync/SKILL.md` — `save_issue` + `save_comment`
+
+---
+
+## "approve plan" หรือ "plan ok"
+1. อ่าน `_agent/TASK_PLAN.md` + `_agent/CURSOR_PLAN_REQUEST.md`
+2. อ่าน `orchestration/workflow-skills/04-cursor-review-plan/SKILL.md` — ทำตาม step ครบ
+3. เขียน `_agent/PLAN_APPROVAL.md` — status: APPROVED
+4. แก้ `CURRENT_TASK.md` → Phase: EXECUTE
+5. **Sync Linear (hr-payroll — บังคับ):** `linear-mcp-sync/SKILL.md` → `plan_approved`
+6. บอก user: "Plan approved — dispatch ให้ [Codex/Claude Code] ด้วย skill 05-claude-execute"
+
+---
+
+## "deploy" หรือ "ready to deploy"
+1. อ่าน `orchestration/workflow-skills/14-deployment-checklist/SKILL.md`
+2. ทำ checklist ทุก gate ครบก่อน push
+3. ถ้าผ่านทุก gate → `git push`
+
+---
+
+## "prep for demo" หรือ "delivery audit"
+1. อ่าน `orchestration/workflow-skills/10-security-review/SKILL.md` — ทำก่อน
+2. อ่าน `orchestration/workflow-skills/07-delivery-audit/SKILL.md` — ใช้ claude-opus-4-8
+3. เขียน `reports/DELIVERY_READINESS_AUDIT.md`
+
+---
+
+## "production พัง" หรือ "down" หรือ "ล่ม"
+1. อ่าน `orchestration/workflow-skills/13-incident-playbook/SKILL.md` ทันที
+2. ทำตาม Triage step — ตรวจ external services ก่อนเสมอ
+3. ใช้ claude-opus-4-8
+
+---
+
+## "new project [ชื่อ]"
+1. อ่าน `orchestration/workflow-skills/01-project-init/SKILL.md`
+2. สร้าง GROUND_TRUTH.md จาก template ใน COMPANY_OS.md Section 11
+3. Init Taskmaster + parse PRD
+
+---
+
+## "new client [brief]" หรือ "fastwork [brief]"
+1. อ่าน `orchestration/workflow-skills/11-client-requirements/SKILL.md`
+2. สกัด requirements + ประเมิน timeline
+3. รัน `01-project-init` ต่อ
+
+---
+
+# Dispatch Template สำหรับ Claude Code
+
+เมื่อ dispatch งานให้ Claude Code ส่ง prompt นี้:
+
+```
+อ่าน skills ต่อไปนี้ก่อนเริ่มทำงาน:
+[รายการ Skills to Load จาก CURRENT_TASK.md]
+
+จากนั้นอ่าน:
+- /Users/jakarinosk/HEAD-OFFICE/COMPANY_OS.md
+- /Users/jakarinosk/HEAD-OFFICE/orchestration/GROUND_TRUTH.md
+- /Users/jakarinosk/HEAD-OFFICE/orchestration/CURRENT_TASK.md
+
+เริ่ม [PLAN / EXECUTE] phase ตาม skill 03 / 05
+```
+
+---
+
+# Dispatch Template สำหรับ Codex
+
+เมื่อ dispatch งานให้ Codex อ่าน `orchestration/CODEX_DISPATCH.md` แล้วใช้ template ในนั้น

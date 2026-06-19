@@ -18,7 +18,9 @@ import {
   normalizeAttendanceParams,
 } from "@/features/attendance/data"
 import { getEmployeeProfile } from "@/features/employees/profile/data"
+import { getPayrollConfig } from "@/lib/payroll/config"
 import { canManageHr } from "@/lib/auth/roles"
+import { sanitizeReturnTo } from "@/lib/navigation/return-to"
 import { getCurrentEmployee } from "@/lib/auth/session"
 
 function currentMonth(): string {
@@ -48,6 +50,9 @@ export default async function EmployeeAttendancePage({
       : currentMonth()
   const highlightDate =
     typeof rawParams.date === "string" ? rawParams.date : null
+  const returnTo = sanitizeReturnTo(
+    typeof rawParams.returnTo === "string" ? rawParams.returnTo : null
+  )
 
   const listParams = normalizeAttendanceParams({
     ...rawParams,
@@ -56,26 +61,67 @@ export default async function EmployeeAttendancePage({
   const canManage = caller ? canManageHr(caller.role) : false
   const now = new Date()
 
-  const [{ rows, total, summary }, departments, employees, calendar] =
+  const [{ rows, total, summary }, departments, employees, calendar, payrollConfig] =
     await Promise.all([
       getAttendanceRecords(listParams),
       getAttendanceDepartments(),
       getAttendanceEmployees(),
       getEmployeeAttendanceCalendar(id, month, now),
+      getPayrollConfig(),
     ])
+
+  const totalHours = summary.totalHours
+  const employeeRatePerHour =
+    profile.pay_type === "monthly"
+      ? payrollConfig.monthly_std_hours > 0 && profile.salary != null
+        ? profile.salary / payrollConfig.monthly_std_hours
+        : 0
+      : profile.salary ?? 0
+
+  const estimatedEarnings =
+    profile.salary == null || employeeRatePerHour <= 0
+      ? null
+      : Math.round(totalHours * employeeRatePerHour * 100) / 100
+
+  const amountFormatter = new Intl.NumberFormat("th-TH", {
+    style: "currency",
+    currency: "THB",
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })
+
+  const attendanceSummary = {
+    ...summary,
+    estimatedEarnings:
+      estimatedEarnings == null ? null : amountFormatter.format(estimatedEarnings),
+  }
 
   const employeeCode =
     profile.employee_code?.trim() || profile.id.slice(0, 8).toUpperCase()
   const basePath = `/admin/employees/${profile.id}/attendance`
+  const backHref = returnTo ?? `/admin/employees/${profile.id}`
+  const backLabel =
+    returnTo && !returnTo.startsWith(`/admin/employees/${profile.id}`)
+      ? "← กลับหน้าก่อนหน้า"
+      : `← กลับโปรไฟล์ ${profile.name}`
+  const monthLinkQuery: Record<string, string> = {}
+  if (returnTo) monthLinkQuery.returnTo = returnTo
+  if (listParams.from) monthLinkQuery.from = listParams.from
+  if (listParams.to) monthLinkQuery.to = listParams.to
+  if (listParams.page > 1) monthLinkQuery.page = String(listParams.page)
+  if (listParams.branch_id) monthLinkQuery.branch_id = listParams.branch_id
+  if (listParams.dept) monthLinkQuery.dept = listParams.dept
+
+  const dayLinkQuery: Record<string, string> = {}
+  if (returnTo) dayLinkQuery.returnTo = returnTo
+  if (listParams.branch_id) dayLinkQuery.branch_id = listParams.branch_id
+  if (listParams.dept) dayLinkQuery.dept = listParams.dept
 
   return (
     <div className="flex h-full min-h-0 flex-1 flex-col gap-2 overflow-hidden">
       <p className="shrink-0 text-sm">
-        <Link
-          href={`/admin/employees/${profile.id}`}
-          className="text-brand-red hover:underline"
-        >
-          ← กลับโปรไฟล์ {profile.name}
+        <Link href={backHref} className="text-brand-red hover:underline">
+          {backLabel}
         </Link>
       </p>
       <AdminPageShell
@@ -101,6 +147,9 @@ export default async function EmployeeAttendancePage({
               days={calendar.days}
               basePath={basePath}
               selectedDate={highlightDate}
+              monthLinkQuery={monthLinkQuery}
+              dayLinkQuery={dayLinkQuery}
+              linkDays
               compact
             />
           </div>
@@ -120,12 +169,13 @@ export default async function EmployeeAttendancePage({
                 }}
               />
             </Suspense>
-            <AttendanceSummaryCard summary={summary} compact />
+            <AttendanceSummaryCard summary={attendanceSummary} compact />
             <div className="min-h-0 flex-1 overflow-auto rounded-lg border border-border/60 bg-muted/10">
               <AttendanceTable
                 rows={rows}
                 canManage={canManage}
                 employeeView
+                returnTo={returnTo}
               />
             </div>
             <Suspense fallback={null}>

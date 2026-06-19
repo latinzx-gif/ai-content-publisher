@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Agent Architecture — Inventory Management System on Multica</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800;900&family=Noto+Sans+Thai:wght@300;400;500;600;700;800&display=swap');
+  
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Noto Sans Thai', 'Inter', sans-serif;
+    background: #f4f8fc;
+    color: #123044;
+    line-height: 1.7;
+  }
+
+  .hero {
+    background: linear-gradient(135deg, #073b66 0%, #0a4d82 50%, #6b46c1 100%);
+    color: white;
+    padding: 50px 40px 42px;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: '';
+    position: absolute;
+    top: -30%;
+    right: -10%;
+    width: 500px;
+    height: 500px;
+    background: radial-gradient(circle, rgba(107,70,193,0.15) 0%, transparent 70%);
+    border-radius: 50%;
+  }
+  .hero-badge {
+    display: inline-block;
+    background: #6b46c1;
+    color: white;
+    font-weight: 700;
+    font-size: 13px;
+    padding: 5px 14px;
+    border-radius: 20px;
+    letter-spacing: 0.5px;
+    margin-bottom: 14px;
+  }
+  .hero h1 {
+    font-size: 38px;
+    font-weight: 900;
+    margin-bottom: 6px;
+    position: relative;
+    z-index: 1;
+  }
+  .hero .subtitle {
+    font-size: 17px;
+    opacity: 0.85;
+    max-width: 800px;
+    margin-bottom: 18px;
+    position: relative;
+    z-index: 1;
+  }
+
+  .container { max-width: 1100px; margin: 0 auto; padding: 36px 22px 60px; }
+
+  .section-card {
+    background: white;
+    border-radius: 18px;
+    margin-bottom: 28px;
+    box-shadow: 0 1px 4px rgba(7,59,102,0.08);
+    border: 1px solid #dbe7f0;
+    overflow: hidden;
+  }
+  .section-header {
+    padding: 28px 30px 18px;
+    border-bottom: 1px solid #eef6fb;
+  }
+  .section-header h2 { font-size: 22px; font-weight: 800; color: #073b66; }
+  .section-body { padding: 20px 30px 28px; }
+
+  .arch-grid {
+    display: grid;
+    gap: 20px;
+  }
+
+  .agent-card {
+    border: 1px solid #dbe7f0;
+    border-radius: 16px;
+    overflow: hidden;
+    transition: box-shadow 0.2s;
+  }
+  .agent-card:hover { box-shadow: 0 4px 12px rgba(7,59,102,0.1); }
+
+  .agent-head {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 18px 22px;
+    background: #f5f9fc;
+    border-bottom: 1px solid #eef6fb;
+  }
+  .agent-avatar {
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    color: white;
+    font-weight: 700;
+  }
+  .agent-head h3 { font-size: 18px; font-weight: 800; color: #073b66; flex: 1; }
+  .model-badge {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 700;
+    background: #eaf5ff;
+    color: #0c5a8d;
+  }
+  .model-badge.sonnet { background: #e8f7ef; color: #127849; }
+  .model-badge.gpt4o { background: #f0eafe; color: #5732a3; }
+  .model-badge.gemini { background: #fff1df; color: #b75508; }
+
+  .agent-body { padding: 18px 22px; }
+  .agent-body .duties { margin-top: 8px; }
+  .agent-body .duties li { font-size: 14px; padding: 3px 0; }
+
+  .tag {
+    display: inline-block;
+    padding: 3px 9px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 700;
+    margin: 2px 4px 2px 0;
+  }
+  .tag.pm { background: #e8f7ef; color: #127849; }
+  .tag.build { background: #eaf5ff; color: #0c5a8d; }
+  .tag.review { background: #fff1df; color: #b75508; }
+  .tag.design { background: #f0eafe; color: #5732a3; }
+  .tag.p1 { background: #e4f3ec; color: #217a58; }
+  .tag.p2 { background: #f5ead3; color: #7a5c1f; }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    border-radius: 12px;
+    overflow: hidden;
+    font-size: 14px;
+  }
+  th, td {
+    border: 1px solid #dbe7f0;
+    padding: 10px 14px;
+    text-align: left;
+    vertical-align: top;
+  }
+  th { background: #eef6fb; color: #073b66; font-weight: 800; }
+  tr:nth-child(even) td { background: #fbfdff; }
+
+  .flow-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+    gap: 10px;
+    margin: 14px 0;
+  }
+  .flow-step {
+    background: #f5f9fc;
+    border: 1px solid #dbe7f0;
+    border-radius: 14px;
+    padding: 14px 10px;
+    text-align: center;
+  }
+  .flow-step .icon { font-size: 24px; margin-bottom: 6px; }
+  .flow-step b { font-size: 13px; display: block; }
+  .flow-step .small { font-size: 11px; color: #5b7083; }
+
+  .detail-list {
+    list-style: none;
+    padding: 0;
+  }
+  .detail-list li {
+    font-size: 13px;
+    color: #344054;
+    padding: 3px 0 3px 18px;
+    position: relative;
+  }
+  .detail-list li::before {
+    content: '›';
+    position: absolute;
+    left: 2px;
+    color: #6b46c1;
+    font-weight: 700;
+    font-size: 16px;
+  }
+
+  @media (max-width: 768px) {
+    .hero { padding: 30px 20px; }
+    .section-body { padding: 16px 18px 22px; }
+    .agent-head { flex-wrap: wrap; }
+  }
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="hero-badge">🤖 Agent Architecture</div>
+  <h1>Inventory Management System<br>on Multica</h1>
+  <p class="subtitle">ออกแบบ Agent Roles, AI Models และ Workflow สำหรับสร้าง Inventory Management System ด้วย Multica Multi-Agent Runtime</p>
+</div>
+
+<div class="container">
+
+<!-- OVERVIEW -->
+<div class="section-card">
+  <div class="section-header"><h2>🎯 ภาพรวม Agent Architecture</h2></div>
+  <div class="section-body">
+    <p>จาก PRD Inventory Management System V1 ซึ่งมี <strong>10 Modules</strong> ครอบคลุม รับสินค้า → เบิก → ใช้ → ตรวจนับ → โอน → รายงาน — ควรจัด Agents เป็น <strong>7 Roles</strong> แบ่งตามความถนัดของแต่ละ Model</p>
+
+    <div class="flow-row" style="margin-top:20px;">
+      <div class="flow-step"><span class="icon">🧠</span><b>PM Orchestrator</b><span class="small">Hermes + Claude Sonnet</span></div>
+      <div class="flow-step"><span class="icon">🏗️</span><b>Master Data Agent</b><span class="small">Codex + GPT-4o</span></div>
+      <div class="flow-step"><span class="icon">📦</span><b>Ops Agent</b><span class="small">Codex + Claude Sonnet</span></div>
+      <div class="flow-step"><span class="icon">📊</span><b>Dashboard Agent</b><span class="small">Codex + Gemini</span></div>
+      <div class="flow-step"><span class="icon">📱</span><b>Mobile Agent</b><span class="small">Codex + GPT-4o</span></div>
+      <div class="flow-step"><span class="icon">🔍</span><b>QA Agent</b><span class="small">Gemini</span></div>
+      <div class="flow-step"><span class="icon">📋</span><b>Report Agent</b><span class="small">Codex + Claude</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- AGENT ROLES -->
+<div class="section-card">
+  <div class="section-header"><h2>🧠 Agent Roles & Models</h2></div>
+  <div class="section-body">
+
+    <div class="arch-grid">
+
+    <!-- Agent 1 -->
+    <div class="agent-card">
+      <div class="agent-head">
+        <div class="agent-avatar" style="background:#16945d;">🧠</div>
+        <h3>PM Orchestrator</h3>
+        <span class="tag pm">PM</span>
+        <span class="model-badge sonnet">Claude Sonnet 4</span>
+      </div>
+      <div class="agent-body">
+        <p><strong>บทบาท:</strong> วางแผน แบ่งงาน ตรวจสอบขอบเขต ประสานงานระหว่าง Agents ทั้งหมด</p>
+        <div class="duties">
+          <strong>หน้าที่:</strong>
+          <ul class="detail-list">
+            <li>อ่าน PRD → เขียน Implementation Plan → แบ่งเป็น Task ย่อย</li>
+            <li>Dispatch งานให้ Agent แต่ละตัวตามความถนัด</li>
+            <li>ตรวจสอบ Output ทุกครั้งก่อน Approve ไปยัง Task ถัดไป</li>
+            <li>Guard Scope — ป้องกัน Feature Creep, ตรวจสอบ Do Not Change</li>
+            <li>อัปเดต Project State Docs (PROJECT_STATE.md, TASK_QUEUE.md)</li>
+            <li>ตัดสินใจเมื่อ Agents มี Conflict</li>
+          </ul>
+        </div>
+        <p style="margin-top:8px;font-size:13px;color:#5b7083;">
+          <strong>Model แนะนำ:</strong> Claude Sonnet 4 — Reasoning ดีเยี่ยม, วางแผนเชิงลึกได้, ภาษาไทยเข้าใจ
+        </p>
+      </div>
+    </div>
+
+    <!-- Agent 2 -->
+    <div class="agent-card">
+      <div class="agent-head">
+        <div class="agent-avatar" style="background:#0f6eb8;">🏗️</div>
+        <h3>Master Data Agent</h3>
+        <span class="tag build">Builder</span>
+        <span class="model-badge gpt4o">GPT-4o</span>
+      </div>
+      <div class="agent-body">
+        <p><strong>บทบาท:</strong> สร้างระบบข้อมูลหลัก — SKU, Supplier, BOM, สาขา, คลัง, หน่วยนับ</p>
+        <div class="duties">
+          <strong>หน้าที่ใน Project:</strong>
+          <ul class="detail-list">
+            <li>ออกแบบ Database Schema: ตาราง sku, suppliers, branches, warehouses, boms, unit_conversions</li>
+            <li>สร้าง Master Data CRUD UI — จัดการ SKU, Supplier, สาขา, คลัง</li>
+            <li>สร้าง BOM Management — สูตรอาหาร / ส่วนประกอบ</li>
+            <li>ระบบจัดการหน่วยนับ + Conversion Rate</li>
+            <li>เชื่อมต่อ Supabase / PostgreSQL</li>
+          </ul>
+        </div>
+        <p style="margin-top:8px;font-size:13px;color:#5b7083;">
+          <strong>Model แนะนำ:</strong> GPT-4o — สร้าง CRUD ได้เร็ว, Database Schema แม่นยำ
+        </p>
+      </div>
+    </div>
+
+    <!-- Agent 3 -->
+    <div class="agent-card">
+      <div class="agent-head">
+        <div class="agent-avatar" style="background:#16945d;">📦</div>
+        <h3>Inventory Ops Agent</h3>
+        <span class="tag build">Builder</span>
+        <span class="model-badge sonnet">Claude Sonnet 4</span>
+      </div>
+      <div class="agent-body">
+        <p><strong>บทบาท:</strong> ระบบปฏิบัติการคลัง — Inbound, Kitchen Requisition, Stock Count, Transfer</p>
+        <div class="duties">
+          <strong>หน้าที่ใน Project:</strong>
+          <ul class="detail-list">
+            <li>Inbound — Goods Receipt, Lot/Expiry, Supplier Reference, Attachment</li>
+            <li>Kitchen Requisition — Request → Approve → Issue → Confirm Receive</li>
+            <li>Stock Count — Plan → Count (Mobile) → Compare → Adjust</li>
+            <li>Transfer — สร้างใบโอน → จองยอด → รับของ → อัปเดตสต๊อก 2 สาขา</li>
+            <li>Stock Movement — ทุก Transaction บันทึก Audit Trail</li>
+          </ul>
+        </div>
+        <p style="margin-top:8px;font-size:13px;color:#5b7083;">
+          <strong>Model แนะนำ:</strong> Claude Sonnet 4 — State Management ซับซ้อน, ตรรกะ Movement ต้องแม่นยำ
+        </p>
+      </div>
+    </div>
+
+    <!-- Agent 4 -->
+    <div class="agent-card">
+      <div class="agent-head">
+        <div class="agent-avatar" style="background:#6b46c1;">✂️</div>
+        <h3>Consumption & Damage Agent</h3>
+        <span class="tag build">Builder</span>
+        <span class="model-badge gemini">Gemini 2.5 Pro</span>
+      </div>
+      <div class="agent-body">
+        <p><strong>บทบาท:</strong> ตัดสต๊อกตามการใช้จริง + บันทึกของเสียหาย/ชำรุด/หมดอายุ</p>
+        <div class="duties">
+          <strong>หน้าที่ใน Project:</strong>
+          <ul class="detail-list">
+            <li>Consumption Recording — บันทึกการใช้วัตถุดิบจริง รายวัน</li>
+            <li>BOM-based Deduction — คำนวณตัดสต๊อกจากยอดขาย x สูตรอาหาร</li>
+            <li>Damage/Spoilage — บันทึกแยกประเภท พร้อมเหตุผล รูปถ่าย</li>
+            <li>Stock Adjustment — ปรับปรุงยอด พร้อม Approval Workflow</li>
+            <li>แยกรายงาน Consumption ≠ Damage เพื่อให้ผู้บริหารวิเคราะห์ต้นทุน</li>
+          </ul>
+        </div>
+        <p style="margin-top:8px;font-size:13px;color:#5b7083;">
+          <strong>Model แนะนำ:</strong> Gemini 2.5 Pro — การคำนวณปริมาณและตรรกะอนุมัติหลายขั้นตอน
+        </p>
+      </div>
+    </div>
+
+    <!-- Agent 5 -->
+    <div class="agent-card">
+      <div class="agent-head">
+        <div class="agent-avatar" style="background:#e87a18;">📊</div>
+        <h3>Dashboard & Reports Agent</h3>
+        <span class="tag build">Builder</span>
+        <span class="tag design">UI</span>
+        <span class="model-badge sonnet">Claude Sonnet 4</span>
+      </div>
+      <div class="agent-body">
+        <p><strong>บทบาท:</strong> สร้าง Dashboard ผู้บริหาร + ระบบรายงาน + Charts + Export</p>
+        <div class="duties">
+          <strong>หน้าที่ใน Project:</strong>
+          <ul class="detail-list">
+            <li>Dashboard KPI Cards — มูลค่าสต๊อก, SKU ต่ำ Min, ใกล้หมดอายุ, สูญเสีย</li>
+            <li>Charts — Trend กราฟสต๊อก, การรับ vs เบิก, การสูญเสียรายเดือน</li>
+            <li>9 รายงานหลัก — Stock On Hand, Inbound, Consumption, Damage, Transfer, Variance</li>
+            <li>Export — Excel / CSV / PDF</li>
+            <li>Filter — ช่วงเวลา, สาขา, คลัง, หมวดสินค้า</li>
+          </ul>
+        </div>
+        <p style="margin-top:8px;font-size:13px;color:#5b7083;">
+          <strong>Model แนะนำ:</strong> Claude Sonnet 4 — สร้าง Charts/UI สวย, Dashboard Logic ซับซ้อน
+        </p>
+      </div>
+    </div>
+
+    <!-- Agent 6 -->
+    <div class="agent-card">
+      <div class="agent-head">
+        <div class="agent-avatar" style="background:#d93025;">📱</div>
+        <h3>Mobile & Barcode Agent</h3>
+        <span class="tag build">Builder</span>
+        <span class="tag design">UI</span>
+        <span class="model-badge gpt4o">GPT-4o</span>
+      </div>
+      <div class="agent-body">
+        <p><strong>บทบาท:</strong> รองรับ Mobile / PDA + Barcode Scanner + Camera Integration</p>
+        <div class="duties">
+          <strong>หน้าที่ใน Project:</strong>
+          <ul class="detail-list">
+            <li>Responsive UI — รับสินค้า, เบิก, ตรวจนับ, ยืนยันรับโอน บนมือถือ</li>
+            <li>Barcode Scanner — สแกน SKU ค้นหาและบันทึกอัตโนมัติ</li>
+            <li>Camera Integration — ถ่ายรูปหลักฐานสินค้าเสียหาย / ชำรุด</li>
+            <li>PDA Support — หน้าจอ Optimized สำหรับเครื่องสแกนคลัง</li>
+            <li>Mobile Dashboard — สรุป Read-only สำหรับผู้บริหาร</li>
+          </ul>
+        </div>
+        <p style="margin-top:8px;font-size:13px;color:#5b7083;">
+          <strong>Model แนะนำ:</strong> GPT-4o — Responsive Design, Camera/Browser API, Frontend Integration
+        </p>
+      </div>
+    </div>
+
+    <!-- Agent 7 -->
+    <div class="agent-card">
+      <div class="agent-head">
+        <div class="agent-avatar" style="background:#6b46c1;">🔍</div>
+        <h3>QA / Validation Agent</h3>
+        <span class="tag review">QA</span>
+        <span class="model-badge gemini">Gemini 2.5 Pro</span>
+      </div>
+      <div class="agent-body">
+        <p><strong>บทบาท:</strong> ตรวจสอบทุก Implementation ว่าเป็นไปตาม PRD และ Acceptance Criteria</p>
+        <div class="duties">
+          <strong>หน้าที่ใน Project:</strong>
+          <ul class="detail-list">
+            <li>ตรวจสอบ Spec Compliance — Feature ตรงตาม PRD หรือไม่</li>
+            <li>Code Quality Review — Pattern, Security, Performance</li>
+            <li>Acceptance Testing — ทดสอบแต่ละ Feature ตาม Acceptance Criteria</li>
+            <li>Edge Case Detection — หาเคสที่อาจพัง เช่น ติดลบ, ซ้ำซ้อน, Concurrent</li>
+            <li>เขียน Test — Unit Test / Integration Test สำหรับ Business Logic</li>
+            <li>Data Integrity Check — Stock Balance ถูกต้อง, Audit Trail ครบ</li>
+          </ul>
+        </div>
+        <p style="margin-top:8px;font-size:13px;color:#5b7083;">
+          <strong>Model แนะนำ:</strong> Gemini 2.5 Pro — Context Window ใหญ่, ตรวจสอบโค้ดปริมาณมากได้
+        </p>
+      </div>
+    </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- WORKFLOW ON MULTICA -->
+<div class="section-card">
+  <div class="section-header"><h2>🔄 Workflow บน Multica</h2></div>
+  <div class="section-body">
+    <p>ลำดับการทำงานเมื่อใช้ Multica เป็น Multi-Agent Runtime</p>
+
+    <table>
+      <thead><tr><th>Step</th><th>Action</th><th>Agent</th><th>Model</th></tr></thead>
+      <tbody>
+        <tr><td>1</td><td>รับ User Goal → อ่าน PRD → เขียน Implementation Plan</td><td>PM Orchestrator</td><td>Claude Sonnet 4</td></tr>
+        <tr><td>2</td><td>Master Data: Schema + CRUD + Supabase Setup</td><td>Master Data Agent</td><td>GPT-4o</td></tr>
+        <tr><td>3</td><td>QA ตรวจสอบ Master Data</td><td>QA Agent</td><td>Gemini 2.5 Pro</td></tr>
+        <tr><td>4</td><td>Inbound + Requisition + Stock Count + Transfer</td><td>Inventory Ops Agent</td><td>Claude Sonnet 4</td></tr>
+        <tr><td>5</td><td>QA ตรวจสอบ Ops Logic</td><td>QA Agent</td><td>Gemini 2.5 Pro</td></tr>
+        <tr><td>6</td><td>Consumption + Damage Tracking + Stock Adjustment</td><td>Consumption Agent</td><td>Gemini 2.5 Pro</td></tr>
+        <tr><td>7</td><td>Dashboard UI + Charts + 9 Reports + Export</td><td>Dashboard Agent</td><td>Claude Sonnet 4</td></tr>
+        <tr><td>8</td><td>Mobile Responsive + Barcode + Camera</td><td>Mobile Agent</td><td>GPT-4o</td></tr>
+        <tr><td>9</td><td>QA Final: Full Integration Test + Data Integrity</td><td>QA Agent</td><td>Gemini 2.5 Pro</td></tr>
+        <tr><td>10</td><td>PM Review Scope → Update State → Next Phase</td><td>PM Orchestrator</td><td>Claude Sonnet 4</td></tr>
+      </tbody>
+    </table>
+
+    <p style="margin-top:14px;font-size:14px;color:#5b7083;">
+      <strong>หมายเหตุ:</strong> QA Agent จะทำงานหลังจากทุก Task เพื่อยืนยัน Spec Compliance ก่อน PM Approve
+    </p>
+  </div>
+</div>
+
+<!-- MODEL RECOMMENDATIONS -->
+<div class="section-card">
+  <div class="section-header"><h2>🎯 Model AI Recommendations</h2></div>
+  <div class="section-body">
+
+    <table>
+      <thead><tr><th>Model</th><th>เหมาะกับ</th><th>เหตุผล</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><strong>Claude Sonnet 4</strong></td>
+          <td>PM Orchestrator, Ops Agent, Dashboard Agent</td>
+          <td>Reasoning ดีเยี่ยม, State Management ซับซ้อน, ภาษาไทยแข็งแรง, UI/Style สวย</td>
+        </tr>
+        <tr>
+          <td><strong>GPT-4o</strong></td>
+          <td>Master Data Agent, Mobile Agent</td>
+          <td>CRUD/Schema รวดเร็ว, Frontend/Browser API แม่นยำ, Responsive Design</td>
+        </tr>
+        <tr>
+          <td><strong>Gemini 2.5 Pro</strong></td>
+          <td>Consumption Agent, QA Agent</td>
+          <td>Context Window ใหญ่ที่สุด (1M+) — ตรวจสอบโค้ดปริมาณมาก, วิเคราะห์ Data Integrity</td>
+        </tr>
+        <tr>
+          <td><strong>Codex CLI (GPT-5.4)</strong></td>
+          <td>Code Builder ทุก Agent (Backend)</td>
+          <td>Git-aware, File Editing, Sandbox — ใช้เป็น hands-on executor ให้ทุก Agent</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div style="margin-top:16px;padding:16px;background:linear-gradient(135deg,#f0eafe,#f5f0ff);border-radius:12px;border:1px solid #d4c5f0;">
+      <p style="font-weight:700;color:#6b46c1;">💡 Multica Agent Bridge Pattern</p>
+      <p style="font-size:14px;color:#344054;">Agent แต่ละตัวบน Multica จะ:</p>
+      <ul class="detail-list">
+        <li>รับ Task Brief จาก PM Orchestrator (Claude Sonnet)</li>
+        <li>ทำงานผ่าน Codex CLI (GPT-5.4) เป็น hands-on executor</li>
+        <li>ส่งผลลัพธ์ไปยัง QA Agent (Gemini 2.5 Pro) เพื่อตรวจสอบ</li>
+        <li>เมื่อ QA Pass → PM Approve → อัปเดต Project State</li>
+        <li>Multica เป็นตัวกลางส่งต่อ Context ระหว่าง Agents</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- SETUP RECOMMENDATION -->
+<div class="section-card">
+  <div class="section-header"><h2>⚙️ การตั้งค่าบน Multica</h2></div>
+  <div class="section-body">
+
+    <table>
+      <thead><tr><th>Env / Config</th><th>ค่าแนะนำ</th></tr></thead>
+      <tbody>
+        <tr><td><code>MULTICA_AGENT_BRIDGE_URL</code></td><td>URL ของ Multica Daemon (localhost หรือ remote)</td></tr>
+        <tr><td><code>MULTICA_AGENT_BRIDGE_SECRET</code></td><td>Secret สำหรับเชื่อมต่อ Agents</td></tr>
+        <tr><td><code>Agent Runtime Preference</code></td><td><code>multica</code> — ใช้ Multica เป็น Runtime หลัก</td></tr>
+        <tr><td><strong>PM Agent Model</strong></td><td>Claude Sonnet 4 — วางแผน + Review</td></tr>
+        <tr><td><strong>Builder Agent Model</strong></td><td>Codex CLI (GPT-5.4) — Execute Code</td></tr>
+        <tr><td><strong>QA Agent Model</strong></td><td>Gemini 2.5 Pro — Context ใหญ่, ตรวจสอบได้ละเอียด</td></tr>
+        <tr><td><strong>Project Root</strong></td><td><code>/Users/jakarinosk/HEAD-OFFICE/PROJECTS/Inventory_Management/</code></td></tr>
+        <tr><td><strong>Tech Stack</strong></td><td>Next.js 16 + shadcn/ui + Supabase + Tailwind</td></tr>
+      </tbody>
+    </table>
+
+  </div>
+</div>
+
+<!-- COMPARISON TABLE -->
+<div class="section-card">
+  <div class="section-header"><h2>📊 เปรียบเทียบ Agent Models</h2></div>
+  <div class="section-body">
+    <table>
+      <thead><tr><th>Criteria</th><th>Claude Sonnet 4</th><th>GPT-4o</th><th>Gemini 2.5 Pro</th><th>Codex (GPT-5.4)</th></tr></thead>
+      <tbody>
+        <tr><td>Reasoning</td><td>⭐⭐⭐⭐⭐</td><td>⭐⭐⭐⭐</td><td>⭐⭐⭐⭐⭐</td><td>⭐⭐⭐⭐</td></tr>
+        <tr><td>Code Generation</td><td>⭐⭐⭐⭐⭐</td><td>⭐⭐⭐⭐⭐</td><td>⭐⭐⭐⭐</td><td>⭐⭐⭐⭐⭐</td></tr>
+        <tr><td>UI/Style Quality</td><td>⭐⭐⭐⭐⭐</td><td>⭐⭐⭐⭐</td><td>⭐⭐⭐</td><td>⭐⭐⭐⭐</td></tr>
+        <tr><td>Context Window</td><td>200K</td><td>128K</td><td>1M+</td><td>128K</td></tr>
+        <tr><td>ภาษาไทย</td><td>⭐⭐⭐⭐⭐</td><td>⭐⭐⭐⭐⭐</td><td>⭐⭐⭐⭐</td><td>⭐⭐⭐⭐</td></tr>
+        <tr><td>Git Integration</td><td>❌ ผ่าน Hermes</td><td>❌ ผ่าน Hermes</td><td>❌ ผ่าน Hermes</td><td>✅ Native</td></tr>
+        <tr><td>Sandbox</td><td>❌</td><td>❌</td><td>❌</td><td>✅ Built-in</td></tr>
+        <tr><td>MCP Support</td><td>❌</td><td>❌</td><td>❌</td><td>✅ Yes</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- MODULE-AGENT MAPPING -->
+<div class="section-card">
+  <div class="section-header"><h2>📋 Mapping: Module → Agent</h2></div>
+  <div class="section-body">
+    <table>
+      <thead><tr><th>Module</th><th>Priority</th><th>Builder Agent</th><th>Model</th><th>QA Agent</th></tr></thead>
+      <tbody>
+        <tr><td>M — Master Data</td><td><span class="tag p1">P1</span></td><td>Master Data Agent</td><td>GPT-4o</td><td>QA Agent (Gemini)</td></tr>
+        <tr><td>1 — Inbound</td><td><span class="tag p1">P1</span></td><td>Inventory Ops Agent</td><td>Claude Sonnet 4</td><td>QA Agent (Gemini)</td></tr>
+        <tr><td>2 — Kitchen Requisition</td><td><span class="tag p1">P1</span></td><td>Inventory Ops Agent</td><td>Claude Sonnet 4</td><td>QA Agent (Gemini)</td></tr>
+        <tr><td>3 — Consumption & Damage</td><td><span class="tag p1">P1</span></td><td>Consumption Agent</td><td>Gemini 2.5 Pro</td><td>QA Agent (Gemini)</td></tr>
+        <tr><td>4 — Stock Count</td><td><span class="tag p1">P1</span></td><td>Inventory Ops Agent</td><td>Claude Sonnet 4</td><td>QA Agent (Gemini)</td></tr>
+        <tr><td>5 — Transfer</td><td><span class="tag p1">P1</span></td><td>Inventory Ops Agent</td><td>Claude Sonnet 4</td><td>QA Agent (Gemini)</td></tr>
+        <tr><td>6 — Alerts</td><td><span class="tag p2">P2</span></td><td>Dashboard Agent</td><td>Claude Sonnet 4</td><td>QA Agent (Gemini)</td></tr>
+        <tr><td>7 — Dashboard</td><td><span class="tag p1">P1</span></td><td>Dashboard Agent</td><td>Claude Sonnet 4</td><td>QA Agent (Gemini)</td></tr>
+        <tr><td>8 — Reports</td><td><span class="tag p1">P1</span></td><td>Dashboard Agent</td><td>Claude Sonnet 4</td><td>QA Agent (Gemini)</td></tr>
+        <tr><td>9 — Mobile</td><td><span class="tag p2">P2</span></td><td>Mobile Agent</td><td>GPT-4o</td><td>QA Agent (Gemini)</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div style="text-align:center;padding:30px 0 10px;color:#5b7083;font-size:13px;">
+  Agent Architecture for Inventory Management System · Designed for Multica · Hermes PM
+</div>
+
+</div>
+</body>
+</html>

@@ -1,118 +1,127 @@
-# CURRENT TASK: ATT-ROSTER-001 — Attendance Roster + LINE Shift Summary
+# CURRENT TASK: HR-UI-BATCH-001 — Employees List + Attendance Roster UI
 
 ## Phase
 
-REVIEW COMPLETE — 🟡 APPROVED WITH CAVEATS
+EXECUTE (plan approved 2026-06-18)
 
 ## Status
 
-**Review:** 2026-06-17 — test/build/typecheck pass; lint pre-existing FEFO blocker  
-**Report:** `hr-app/_agent/archive/ATT-ROSTER-001/CURSOR_REVIEW_VERDICT.md`  
-**Next:** db push migration → deploy edge → smoke → commit/deploy  
-**Plan file:** `.cursor/plans/attendance_roster_+_line_ba810253.plan.md`  
+**Updated** — 2026-06-18 (user requests batched)  
 **Agent:** Codex (GPT-5.5)  
 **Orchestrator:** Cursor only — no source edits
 
-**Previous:** PERF-ADMIN-001 — 🟡 APPROVED WITH CAVEATS (not yet deployed)
-
-## Goal
-
-HR เปิด `/admin/attendance` เห็น roster **วันนี้** (ใครมา/สาย/ขาด/ลา แยกกะ) + LINE HR Group ได้สรุปหลัง grace แต่ละกะ + EOD 18:00 พร้อมรายชื่อ
-
 **App root:** `/Users/jakarinosk/HEAD-OFFICE/PROJECTS/hr-payroll-client/hr-app/`
-
-**User choices:**
-- LINE: push หลัง `start + grace` 1 ครั้ง/กะ/วัน + evening-summary 18:00 มีรายชื่อ
-- Web: ทุกสาขา default, filter สาขา/แผนก/กะ
 
 ---
 
-## Task breakdown (implement in order)
+## Task A — EMP-LIST-TIME-001 (ทำก่อน — เล็ก)
 
-### Phase 1 — Shared roster engine
-- `src/lib/attendance/daily-roster.ts` — `buildDailyRoster()`
-- Reuse `deriveAttendanceDayStatus` from `day-status.ts`
-- Bulk queries (employees, shifts, attendance today, leaves today)
-- `supabase/functions/_shared/daily-roster.ts` — Deno copy for edge
-- `daily-roster.test.ts` — minimal self-check
+**URL:** https://hr-app-two-iota.vercel.app/admin/employees
 
-### Phase 2 — Web UI
-- `page.tsx` — tabs `?view=today` (default) / `?view=history`
-- `AttendanceTodayRoster.tsx` — KPI + accordion per shift + name lists
-- `AttendanceTodayFilters.tsx` — date, branch, dept, shift (URL query)
-- Tab ประวัติ = existing table/CSV unchanged
+**Request:** หน้ารายชื่อพนักงาน แสดง **เวลาเข้า-ออกงาน**
 
-### Phase 3 — LINE shift summary edge
-- `supabase/functions/shift-attendance-summary/index.ts`
-- Cron `*/15 * * * 1-5`; due slot `[start+grace, start+grace+15min)`
-- Dedupe via `hr_runtime_config` key `shift_summary_last_push_{shiftId}_{date}`
-- Migration for pg_cron job
+### Spec
 
-### Phase 4 — Extend evening-summary
-- Add name lists (late/absent/on leave) + truncate if > ~3500 chars
-- Keep existing aggregate numbers
+- เพิ่มคอลัมน์ **เวลาเข้า-ออก** ใน `EmployeeTable` (หลังสาขาหรือตำแหน่ง — เลือกตำแหน่งที่อ่านง่าย)
+- แสดงรูปแบบ: `09:00 – 18:00` (ICT, tabular-nums)
+- แหล่งข้อมูล (ลำดับ fallback):
+  1. `hr_employees.default_check_in_time` + `default_check_out_time` (normalize HH:MM — ใช้ `normalizeTimeToHHMM`)
+  2. ถ้าว่าง → เวลาจาก `hr_work_shifts` ที่ `work_shift_id` ชี้ (embed หรือ join — ใช้ `formatShiftTimeRange`)
+  3. ถ้ายังว่าง → `—`
 
-### Phase 5 — Verify
-- `npm run build && npm run typecheck && npm run lint`
-- Update `docs/CRON_RUNBOOK.md`
-- Note manual smoke steps in TASK_RESULT.md
+### Files
+
+```
+hr-app/src/features/employees/data.ts          — select fields + EmployeeRow type
+hr-app/src/features/employees/EmployeeTable.tsx — column header + cell
+```
+
+### Acceptance
+
+- [ ] `/admin/employees` แสดงเวลาเข้า-ออกทุกแถวที่มีข้อมูล
+- [ ] ไม่เพิ่ม query N+1 (embed shift ใน select เดียว)
+
+---
+
+## Task B — ATT-ROSTER-UI-001
+
+**URL:** https://hr-app-two-iota.vercel.app/admin/attendance (tab วันนี้)
+
+1. รหัสพนักงานข้างชื่อ
+2. Card เล็กลง สำหรับ มาสาย / ขาด / ลา / วันหยุด
+3. Card แสดง: ชื่อ · รหัส · ตำแหน่ง · สาขา · เวลาเข้า-ออก + badge สถานะ
+
+### Data
+
+- `DailyRosterEmployee`: เพิ่ม `employeeCode`, `position`
+- `getDailyRoster` select `employee_code, position`
+- Sync `_shared/daily-roster.ts` + tests
+
+### UI (`AttendanceTodayRoster.tsx`)
+
+Compact card สำหรับ `late | absent | on_leave | off`:
+
+```
+[มาสาย]
+สมชาย ใจดี (EMP-042)
+พนักงานขาย • สาขาเชียงใหม่
+เข้า 09:18 • ออก 18:02
+```
+
+### Acceptance
+
+- [ ] Roster แสดงรหัส + compact cards ตาม spec
+- [ ] KPI / badge มาสาย ขาด ลา วันหยุด
+
+---
+
+## Task C — EMP-OFF-DAYS-001 (optional same PR)
+
+- Migration `off_days smallint[]` on `hr_employees`
+- Profile checkbox วันหยุด จ–อา (เหมือน `MorningPushSettingsPanel`)
+- Roster status `off` + morning-push skip
+
+ถ้า scope บวม → ทำ A+B ก่อน, C แยก PR ได้
 
 ---
 
 ## Allowed files
 
 ```
+hr-app/src/features/employees/data.ts
+hr-app/src/features/employees/EmployeeTable.tsx
 hr-app/src/lib/attendance/daily-roster.ts
 hr-app/src/lib/attendance/daily-roster.test.ts
-hr-app/src/features/attendance/AttendanceTodayRoster.tsx
-hr-app/src/features/attendance/AttendanceTodayFilters.tsx
-hr-app/src/features/attendance/data.ts
-hr-app/src/app/admin/attendance/page.tsx
 hr-app/supabase/functions/_shared/daily-roster.ts
-hr-app/supabase/functions/shift-attendance-summary/**
-hr-app/supabase/functions/evening-summary/index.ts
-hr-app/supabase/migrations/*shift*summary*.sql
-hr-app/docs/CRON_RUNBOOK.md
+hr-app/src/features/attendance/AttendanceTodayRoster.tsx
+hr-app/supabase/migrations/*employee_off_days*.sql
+hr-app/src/lib/employees/off-days.ts
+hr-app/src/lib/employees/off-days.test.ts
+hr-app/src/features/employees/profile/data.ts
+hr-app/src/features/employees/profile/EmployeeProfileForm.tsx
+hr-app/src/features/employees/employee-form-payload.ts
+hr-app/src/app/api/employees/[id]/route.ts
+hr-app/supabase/functions/morning-push/index.ts
 hr-app/_agent/**
-```
-
-Optional (only if needed for absent consistency):
-```
-hr-app/src/features/dashboard/data.ts
 ```
 
 ## Forbidden
 
-- LIFF / LINE webhook / Rich Menu / morning-push behavior changes
-- Payroll / inventory / FEFO
-- `supabase db push` / Vercel deploy / git commit (orchestrator after review)
-- Import `src/` from edge functions (use `_shared` copy only)
-
----
-
-## Acceptance criteria
-
-- [ ] `/admin/attendance` default tab วันนี้ — KPI + รายชื่อ สาย/ขาด/ลา
-- [ ] Sections per `hr_work_shifts`; shows next shift snapshot
-- [ ] Filters: branch / dept / shift on today tab
-- [ ] History tab unchanged (log table, CSV, HR edit)
-- [ ] `shift-attendance-summary` pushes LINE group once per shift/day after grace
-- [ ] `evening-summary` 18:00 includes numbers + name lists
-- [ ] build + typecheck + lint pass
+- Payroll / inventory / FEFO / LIFF / history attendance tab
+- deploy / commit (orchestrator after review)
 
 ---
 
 ## Skills to Load
 
-- `05-claude-execute` (EXECUTE — plan pre-approved)
-- `12-supabase-migration` (cron migration)
+- `03-claude-plan`
+- `05-claude-execute`
+- `12-supabase-migration` (ถ้าทำ Task C)
 
 ## Recommended Model
 
 Codex GPT-5.5
 
-## Prod (reference)
+## Verify
 
-- Supabase: `oouswalwqhojpzqwwdvs`
-- LINE group: `hr_line_group_id` in Settings / `HR_LINE_GROUP_ID`
-- Shifts: Branch Day 10:00, Branch Manager 10:00, Office 11:00 (grace 10 min)
+`npm run build && npm run typecheck && npm run lint`

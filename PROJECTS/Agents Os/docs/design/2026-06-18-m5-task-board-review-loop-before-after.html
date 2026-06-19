@@ -1,0 +1,727 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>M5 — Task Board and Review Loop Hardening</title>
+  <style>
+    :root {
+      --bg: #f6f1ea;
+      --panel: #fffdf9;
+      --ink: #231c16;
+      --muted: #72675d;
+      --line: #ddd0c1;
+      --accent: #7d4d2d;
+      --accent-light: #f3eae1;
+      --keep: #2f6b42;
+      --keep-bg: #e2f1e6;
+      --change: #9a5d00;
+      --change-bg: #fff0d4;
+      --remove: #8d2d2d;
+      --remove-bg: #f8dede;
+      --shadow: 0 12px 40px rgba(54, 35, 18, 0.06);
+      --card-shadow: 0 2px 8px rgba(54, 35, 18, 0.04);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
+      background: var(--bg);
+      color: var(--ink);
+      line-height: 1.5;
+    }
+    .wrap {
+      max-width: 1440px;
+      margin: 0 auto;
+      padding: 32px 24px 80px;
+    }
+    .hero, .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      box-shadow: var(--shadow);
+    }
+    .hero {
+      padding: 36px;
+      margin-bottom: 24px;
+    }
+    .panel {
+      padding: 28px;
+      margin-bottom: 32px;
+    }
+    h1 {
+      margin: 0 0 12px;
+      font-size: 34px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      color: var(--accent);
+    }
+    h2 {
+      margin: 0 0 16px;
+      font-size: 24px;
+      font-weight: 700;
+      border-bottom: 2px solid var(--accent-light);
+      padding-bottom: 8px;
+      color: var(--accent);
+    }
+    h3 {
+      margin: 0 0 12px;
+      font-size: 18px;
+      font-weight: 600;
+    }
+    p {
+      margin: 0 0 16px;
+      line-height: 1.6;
+    }
+    .muted {
+      color: var(--muted);
+    }
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 20px;
+    }
+    .chip {
+      padding: 6px 14px;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 700;
+      border: 1px solid var(--line);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .keep { background: var(--keep-bg); color: var(--keep); border-color: rgba(47, 107, 66, 0.2); }
+    .change { background: var(--change-bg); color: var(--change); border-color: rgba(154, 93, 0, 0.2); }
+    .remove { background: var(--remove-bg); color: var(--remove); border-color: rgba(141, 45, 45, 0.2); }
+
+    .compare-container {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 24px;
+      margin-top: 16px;
+    }
+    @media (min-width: 1024px) {
+      .compare-container {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+
+    .compare-card {
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: #fffdfb;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      box-shadow: var(--card-shadow);
+    }
+    .compare-card.before {
+      border-left: 5px solid var(--remove);
+    }
+    .compare-card.after {
+      border-left: 5px solid var(--change);
+    }
+    .compare-card .head {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--line);
+      background: #faf3ea;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .compare-card .head strong {
+      font-size: 16px;
+      font-weight: 700;
+    }
+    .compare-card .body {
+      padding: 20px;
+      flex-grow: 1;
+      background: #fdfaf5;
+      overflow-x: auto;
+    }
+
+    /* Column Lists / Boards layouts */
+    .mini-board-before {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding-bottom: 8px;
+    }
+    .mini-column {
+      min-width: 140px;
+      background: #f3eae1;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 8px;
+      font-size: 11px;
+    }
+    .mini-column .col-title {
+      font-weight: bold;
+      margin-bottom: 6px;
+      color: var(--muted);
+      border-bottom: 1px solid var(--line);
+      padding-bottom: 4px;
+      text-transform: uppercase;
+      font-size: 9px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .mini-card {
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      padding: 8px;
+      margin-bottom: 6px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+    .mini-card .title {
+      font-weight: 600;
+      font-size: 11px;
+      margin-bottom: 4px;
+    }
+    .mini-card .btns {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 3px;
+      margin-top: 6px;
+    }
+    .mini-card .btn-x {
+      font-size: 8px;
+      padding: 2px 4px;
+      border-radius: 3px;
+      border: 1px solid var(--line);
+      background: #fafafa;
+      cursor: default;
+    }
+
+    /* Modern Board After */
+    .board-layout-after {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 16px;
+    }
+    @media (min-width: 768px) {
+      .board-layout-after {
+        grid-template-columns: 1fr 240px;
+      }
+    }
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+    .stat-card {
+      background: #fffdfb;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 8px;
+      text-align: center;
+    }
+    .stat-card .val {
+      font-size: 16px;
+      font-weight: 800;
+      color: var(--accent);
+    }
+    .stat-card .lbl {
+      font-size: 9px;
+      color: var(--muted);
+    }
+    .mini-board-five-cols {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 8px;
+    }
+    .side-rail {
+      background: #fcf8f2;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 12px;
+    }
+    .side-rail h4 {
+      margin: 0 0 8px;
+      font-size: 12px;
+      color: var(--accent);
+      border-bottom: 1px solid var(--line);
+      padding-bottom: 4px;
+    }
+
+    /* Badges */
+    .badge {
+      display: inline-block;
+      font-size: 9px;
+      font-weight: bold;
+      padding: 2px 6px;
+      border-radius: 4px;
+      text-transform: uppercase;
+      margin-bottom: 4px;
+    }
+    .badge.pending { background: #ffeeba; color: #856404; }
+    .badge.fix { background: #f8d7da; color: #721c24; }
+    .badge.blocked { background: #e2e3e5; color: #383d41; }
+    .badge.info { background: #cce5ff; color: #004085; }
+    .badge.success { background: #d4edda; color: #155724; }
+
+    /* Buttons */
+    .button-primary {
+      background: var(--accent);
+      color: #fff;
+      font-weight: 700;
+      border: none;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 10px;
+      cursor: default;
+      display: inline-block;
+      text-align: center;
+    }
+    .btn-group {
+      display: flex;
+      gap: 4px;
+    }
+    .btn-action {
+      font-size: 10px;
+      padding: 4px 8px;
+      border-radius: 4px;
+      border: 1px solid var(--line);
+      background: #fff;
+      font-weight: 600;
+    }
+    .btn-action.approve { background: #e2f1e6; color: #2f6b42; border-color: #c3e6cb; }
+    .btn-action.fix { background: #f8dede; color: #8d2d2d; border-color: #f5c6cb; }
+    .btn-action.clarify { background: #fff0d4; color: #9a5d00; border-color: #ffeeba; }
+
+    /* Tables & Lists */
+    .plain-list {
+      background: #fafafa;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 10px;
+      font-family: monospace;
+      font-size: 11px;
+      white-space: pre-wrap;
+      color: #333;
+    }
+    .structured-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 11px;
+    }
+    .structured-table th, .structured-table td {
+      border-bottom: 1px solid var(--line);
+      padding: 8px 6px;
+      text-align: left;
+    }
+    .structured-table th {
+      background: #faf3ea;
+      font-weight: 700;
+      color: var(--accent);
+    }
+    .structured-table tr:hover {
+      background: #fbf8f3;
+    }
+
+    /* Inbox items */
+    .inbox-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .inbox-item-before {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 10px;
+      background: #fff;
+    }
+    .inbox-item-after {
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 12px;
+      background: #fff;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.02);
+    }
+    .inbox-item-after .meta {
+      display: flex;
+      justify-content: space-between;
+      font-size: 10px;
+      color: var(--muted);
+      margin-top: 4px;
+      margin-bottom: 8px;
+      border-bottom: 1px solid #f3eae1;
+      padding-bottom: 4px;
+    }
+
+    /* Notes */
+    .annotation {
+      margin-top: 12px;
+      padding: 10px 14px;
+      border-radius: 8px;
+      background: #fff8f2;
+      border-left: 3px solid var(--accent);
+      font-size: 12px;
+      color: #5d4b39;
+    }
+    ul {
+      margin: 12px 0 0;
+      padding-left: 20px;
+    }
+    li {
+      margin-bottom: 8px;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    
+    <!-- Hero Section -->
+    <section class="hero">
+      <h1>M5 — Task Board and Review Loop Hardening</h1>
+      <p class="muted">เอกสาร Mockup การออกแบบนี้ใช้สำหรับขออนุมัติโครงสร้างหน้าตาและการไหลของระบบ (Visual Approval) ก่อนดำเนินการพัฒนาลงบน native macOS SwiftUI ในโครงการ <strong>Head Office Agent Studio</strong> สำหรับ Milestone 5</p>
+      
+      <div class="legend">
+        <span class="chip keep">🟢 สิ่งที่คงไว้ (Keep)</span>
+        <span class="chip change">🟡 สิ่งที่ปรับปรุง/เพิ่มใหม่ (Change)</span>
+        <span class="chip remove">🔴 จุดอ่อนเดิม/สิ่งที่เอาออก (Remove)</span>
+      </div>
+    </section>
+
+    <!-- สิ่งที่คงไว้ Section -->
+    <section class="panel">
+      <h2>สิ่งที่คงไว้ (สิ่งที่คงอยู่จากเวอร์ชันเดิม)</h2>
+      <ul>
+        <li><strong>Local-First Architecture:</strong> การทำงานแบบประมวลผลในเครื่องของผู้ใช้เป็นหลัก ปลอดภัยและรวดเร็ว</li>
+        <li><strong>Manual/Mock Execution Only:</strong> ในเฟสนี้ยังคงใช้วิธีรันแบบ manual หรือจำลองจำกัดเพื่อความเสถียร</li>
+        <li><strong>Create Task Form:</strong> ฟอร์มสำหรับการสร้าง task ใหม่ยังคงพร้อมใช้งานในระบบ</li>
+        <li><strong>Human Request Inbox Gate:</strong> กล่องรับเรื่องความช่วยเหลือและการอนุมัติจากมนุษย์ (Human approval gate) ยังคงทำหน้าที่เป็นปราการหลักในการควบคุมคุณภาพการทำงานของเอเจนต์</li>
+      </ul>
+    </section>
+
+    <!-- 1. Task Board Layout Comparison -->
+    <section class="panel">
+      <h2>1. Task Board Layout Comparison</h2>
+      <p class="muted">เปรียบเทียบการจัดวางหน้าบอร์ดงาน (Task Board) จากเดิมที่มีคอลัมน์เยอะจนล้นและปุ่มทำงานรกรุงรัง ให้กระชับขึ้นด้วยระบบ 5 Primary Columns และตัววัดสถิติแบบย่อด้านบน</p>
+      
+      <div class="compare-container">
+        
+        <!-- BEFORE -->
+        <div class="compare-card before">
+          <div class="head">
+            <strong>ก่อนปรับปรุง (BEFORE)</strong>
+            <span class="chip remove">มีคอลัมน์เยอะเกินไป &amp; รกสายตา</span>
+          </div>
+          <div class="body">
+            <div style="display: flex; gap: 10px;">
+              <!-- Left Form -->
+              <div style="width: 120px; flex-shrink: 0; background: #fff; border: 1px solid var(--line); padding: 8px; border-radius: 8px; font-size: 10px;">
+                <strong style="color:var(--muted)">Create Task</strong>
+                <div style="height:16px; background:#eee; margin:4px 0; border-radius:3px;"></div>
+                <div style="height:16px; background:#eee; margin:4px 0; border-radius:3px;"></div>
+                <div style="height:32px; background:#eee; margin:4px 0; border-radius:3px;"></div>
+                <div style="height:18px; background:var(--accent); color:#white; border-radius:3px; text-align:center; line-height:18px; font-size:8px; color:#fff;">Save</div>
+              </div>
+              
+              <!-- Many Horizontal Columns -->
+              <div class="mini-board-before">
+                <div class="mini-column">
+                  <div class="col-title">Todo</div>
+                  <div class="mini-card">
+                    <div class="title">Task #101</div>
+                    <div class="btns">
+                      <span class="btn-x">Assign</span> <span class="btn-x">Cancel</span>
+                    </div>
+                  </div>
+                </div>
+                <div class="mini-column">
+                  <div class="col-title">Assigned</div>
+                  <div class="mini-card">
+                    <div class="title">Task #102</div>
+                    <div class="btns">
+                      <span class="btn-x">Start</span> <span class="btn-x">Block</span>
+                    </div>
+                  </div>
+                </div>
+                <div class="mini-column">
+                  <div class="col-title">Awaiting Approval</div>
+                </div>
+                <div class="mini-column">
+                  <div class="col-title">Launch Blocked</div>
+                </div>
+                <div class="mini-column">
+                  <div class="col-title">Running</div>
+                </div>
+                <div class="mini-column">
+                  <div class="col-title">Review</div>
+                </div>
+                <div class="mini-column">
+                  <div class="col-title">Audit</div>
+                </div>
+                <div class="mini-column">
+                  <div class="col-title">Need Fix</div>
+                </div>
+                <div class="mini-column">
+                  <div class="col-title">Blocked</div>
+                </div>
+                <div class="mini-column">
+                  <div class="col-title">Cancelled</div>
+                </div>
+                <div class="mini-column">
+                  <div class="col-title">Done</div>
+                </div>
+              </div>
+            </div>
+            
+            <div class="annotation">
+              ⚠️ <strong>ปัญหาหลัก:</strong> หน้าจอแนวนอนล้นออกไปนอกขอบจอมากเกินไปเนื่องจากมีถึง 11 คอลัมน์สถานะ และการมีปุ่มทำงานทุกประเภทในตัวการ์ดทำให้การใช้งานสับสน
+            </div>
+          </div>
+        </div>
+
+        <!-- AFTER -->
+        <div class="compare-card after">
+          <div class="head">
+            <strong>หลังปรับปรุง (AFTER)</strong>
+            <span class="chip change">5 คอลัมน์หลัก + สถิติภาพรวม</span>
+          </div>
+          <div class="body">
+            <!-- Top Summary Cards -->
+            <div class="stats-row">
+              <div class="stat-card"><div class="val">12</div><div class="lbl">Open</div></div>
+              <div class="stat-card"><div class="val">4</div><div class="lbl">In Progress</div></div>
+              <div class="stat-card"><div class="val">3</div><div class="lbl">Review/Audit</div></div>
+              <div class="stat-card"><div class="val">25</div><div class="lbl">Done</div></div>
+            </div>
+
+            <div class="board-layout-after">
+              <!-- Main 5 Columns Board -->
+              <div>
+                <div class="mini-board-five-cols">
+                  <div class="mini-column">
+                    <div class="col-title" style="color:var(--accent)">1. Open</div>
+                    <div class="mini-card">
+                      <div class="title">Refactor Auth</div>
+                      <span class="badge blocked">Blocked</span>
+                      <div style="margin-top:6px;"><span class="button-primary">View Blockage</span></div>
+                    </div>
+                  </div>
+                  <div class="mini-column">
+                    <div class="col-title" style="color:var(--accent)">2. In Progress</div>
+                    <div class="mini-card">
+                      <div class="title">Sync Database</div>
+                      <span class="badge info">Running</span>
+                      <div style="margin-top:6px;"><span class="button-primary">Open Log</span></div>
+                    </div>
+                  </div>
+                  <div class="mini-column">
+                    <div class="col-title" style="color:var(--accent)">3. Review</div>
+                    <div class="mini-card">
+                      <div class="title">PR Integration</div>
+                      <span class="badge pending">Approval Pending</span>
+                      <div style="margin-top:6px;"><span class="button-primary">Review Request</span></div>
+                    </div>
+                  </div>
+                  <div class="mini-column">
+                    <div class="col-title" style="color:var(--accent)">4. Audit</div>
+                    <div class="mini-card">
+                      <div class="title">Security Audit</div>
+                      <span class="badge fix">Need Fix</span>
+                      <div style="margin-top:6px;"><span class="button-primary">View Audit Log</span></div>
+                    </div>
+                  </div>
+                  <div class="mini-column">
+                    <div class="col-title" style="color:var(--accent)">5. Done</div>
+                    <div class="mini-card">
+                      <div class="title">Setup CI CD</div>
+                      <span class="badge success">Success</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Side Rail -->
+              <div class="side-rail">
+                <h4>Open Requests (3)</h4>
+                <div style="font-size:10px; background:#fff; border:1px solid var(--line); border-radius:6px; padding:6px; margin-bottom:6px;">
+                  <strong>#RQ-82: Approve Merge</strong><br>
+                  <span class="muted">Task: PR Integration</span>
+                </div>
+                <div style="font-size:10px; background:#fff; border:1px solid var(--line); border-radius:6px; padding:6px;">
+                  <strong>#RQ-81: Resolve Conflict</strong><br>
+                  <span class="muted">Task: Sync Database</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="annotation">
+              ✨ <strong>สิ่งที่ปรับปรุง:</strong> ยุบรวมคอลัมน์เหลือ 5 ท่อส่งหลักเพื่อไม่ให้การ์ดกระจายเกินไป, นำปุ่มทางเลือกย่อยออกและคงเหลือเฉพาะ 1 ปุ่ม next-step หลัก, ติดป้ายสถานะละเอียด (Approval Pending, Need Fix, Blocked) และมี Side Rail แผงข้างเพื่อดูการร้องขอจากเอเจนต์ทันที
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- 2. Run Log Comparison -->
+    <section class="panel">
+      <h2>2. Run Log Comparison</h2>
+      <p class="muted">ปรับเปลี่ยนการแสดงผลล็อกการทำงาน (Run Log) จากข้อความ Plain text ดิบ ๆ ให้เป็นตารางข้อมูลที่มีโครงสร้างชัดเจนและคลิกเปิดดูผลลัพธ์ย่อยได้ง่าย</p>
+      
+      <div class="compare-container">
+        
+        <!-- BEFORE -->
+        <div class="compare-card before">
+          <div class="head">
+            <strong>ก่อนปรับปรุง (BEFORE)</strong>
+            <span class="chip remove">Plain Monospaced Text List</span>
+          </div>
+          <div class="body">
+            <div class="plain-list">[2026-06-17 13:02:11] RUNNING: Task #101 starting skill execution...
+[2026-06-17 13:02:15] ARTIFACT WRITTEN: /docs/specs/auth.md
+[2026-06-17 13:02:18] HUMAN_REQUEST: Sent approval request #RQ-402
+[2026-06-17 13:03:00] ERROR: git pull failed with status code 128</div>
+            
+            <div class="annotation">
+              ⚠️ <strong>ปัญหาหลัก:</strong> ตรวจสอบรายละเอียดได้ยาก, แยกแยะประเภทข้อมูลและข้อผิดพลาดลำบากเมื่อมีล็อกยาว ๆ, ไม่มีปุ่มกดเปิดไฟล์หรือความเชื่อมโยงโดยตรง
+            </div>
+          </div>
+        </div>
+
+        <!-- AFTER -->
+        <div class="compare-card after">
+          <div class="head">
+            <strong>หลังปรับปรุง (AFTER)</strong>
+            <span class="chip change">Structured Table Rows พร้อมลิงก์ตรง</span>
+          </div>
+          <div class="body">
+            <table class="structured-table">
+              <thead>
+                <tr>
+                  <th>Timestamp</th>
+                  <th>Stage</th>
+                  <th>Description / Error</th>
+                  <th>Related Context</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td class="muted">13:02:11</td>
+                  <td><span class="badge info">Execute</span></td>
+                  <td>Task #101 starting skill execution</td>
+                  <td class="muted">-</td>
+                  <td>-</td>
+                </tr>
+                <tr>
+                  <td class="muted">13:02:15</td>
+                  <td><span class="badge success">Artifact</span></td>
+                  <td>Written specifications for auth module</td>
+                  <td class="muted">docs/specs/auth.md</td>
+                  <td><span class="button-primary">Open File</span></td>
+                </tr>
+                <tr>
+                  <td class="muted">13:02:18</td>
+                  <td><span class="badge pending">Request</span></td>
+                  <td>Approval Request for code review generated</td>
+                  <td class="muted">Req ID: #RQ-402</td>
+                  <td><span class="button-primary">Go to Inbox</span></td>
+                </tr>
+                <tr>
+                  <td class="muted">13:03:00</td>
+                  <td><span class="badge fix">Error</span></td>
+                  <td style="color:var(--remove); font-weight:600;">git pull failed with status code 128 (merge conflict)</td>
+                  <td class="muted">Git service</td>
+                  <td><span class="button-primary">Trace Stack</span></td>
+                </tr>
+              </tbody>
+            </table>
+
+            <div class="annotation">
+              ✨ <strong>สิ่งที่ปรับปรุง:</strong> แสดงโครงสร้างเป็นคอลัมน์อย่างเป็นระเบียบ มีป้ายระบุสเตจ (Stage badge), ลิงก์เชื่อมโยงไปยัง Artifact Path และ Human Request ที่เกี่ยวข้องทันที รวมถึงสรุปเออเร่อแบบกระชับ และมีปุ่มเปิดไฟล์ปลายทางได้โดยตรง
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- 3. Human Request Inbox Comparison -->
+    <section class="panel">
+      <h2>3. Human Request Inbox Comparison</h2>
+      <p class="muted">ปรับโครงสร้างกล่องรับเรื่อง (Human Request Inbox) ให้เอื้ออำนวยต่อการตัดสินใจของนักพัฒนา มีประเภทคำร้องที่ชัดเจนและชุดปุ่มแอคชันที่ออกแบบมาเฉพาะเจาะจง</p>
+      
+      <div class="compare-container">
+        
+        <!-- BEFORE -->
+        <div class="compare-card before">
+          <div class="head">
+            <strong>ก่อนปรับปรุง (BEFORE)</strong>
+            <span class="chip remove">Generic Request List + Dropdown</span>
+          </div>
+          <div class="body">
+            <div class="inbox-list">
+              <div class="inbox-item-before">
+                <strong>Request #1025: Requesting input</strong>
+                <p class="muted" style="margin:6px 0; font-size:11px;">Agent needs review of codebase changes</p>
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-top:8px;">
+                  <span style="font-size:11px;">Status: <select disabled><option>Pending</option></select></span>
+                  <span class="button-primary">Submit</span>
+                </div>
+              </div>
+            </div>
+            
+            <div class="annotation">
+              ⚠️ <strong>ปัญหาหลัก:</strong> การร้องขอข้อมูลดูเหมือนกันไปหมด ไม่ทราบระดับความสำคัญหรือเป้าหมายถัดไป ต้องคอยกดเลือกเมนูย่อยเพื่อดำเนินการตอบรับ
+            </div>
+          </div>
+        </div>
+
+        <!-- AFTER -->
+        <div class="compare-card after">
+          <div class="head">
+            <strong>หลังปรับปรุง (AFTER)</strong>
+            <span class="chip change">จำแนกประเภทคำขอ (Request Type) + ชุดปุ่ม Quick Action</span>
+          </div>
+          <div class="body">
+            <div class="inbox-list">
+              <div class="inbox-item-after">
+                <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                  <strong style="font-size:13px; color:var(--accent);">#RQ-1025: Requesting Code Review Approval</strong>
+                  <span class="badge pending" style="background:#e8c1ff; color:#5c007a;">Review / Audit</span>
+                </div>
+                <div class="meta">
+                  <span>Linked Task: [Task-901 Setup Auth]</span>
+                  <span>Intended Next Step: Proceed to Deploy</span>
+                </div>
+                <p class="muted" style="margin:4px 0 10px; font-size:11px;">"ข้าพเจ้าทำการทดสอบและเขียนเทสผ่านหมดแล้ว ต้องการการยืนยันก่อนส่งงานเข้าระบบโปรดักชัน"</p>
+                <div class="btn-group">
+                  <span class="btn-action approve">🟢 Approve &amp; Run</span>
+                  <span class="btn-action fix">🔴 Request Fix</span>
+                  <span class="btn-action clarify">🟡 Clarify / Ask</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="annotation">
+              ✨ <strong>สิ่งที่ปรับปรุง:</strong> จำแนกประเภทการร้องขออย่างเด่นชัด (Approval / Scope / Review / Audit / Blocker) พร้อมระบุ Task และขั้นตอนถัดไปที่ระบบตั้งใจจะเดินต่อ (Intended next step) และมอบปุ่มตอบกลับหลักสามปุ่มที่กดปุ๊บทำงานทันที
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ผลลัพธ์ที่คาดหวังหลัง implement -->
+    <section class="panel">
+      <h2>ผลลัพธ์ที่คาดหวังหลัง implement (Expected Outcomes)</h2>
+      <ul>
+        <li><strong>ลดความสับสนบนกระดานบอร์ด:</strong> คอลัมน์ที่น้อยลงทำให้มองภาพรวมโปรเจกต์เสร็จสิ้นง่ายขึ้น และโฟกัสกับปัญหาที่กำลังเกิดขึ้นได้ทันที</li>
+        <li><strong>ปรับปรุงความรวดเร็วในการ Debug:</strong> ตารางล็อกสเปคช่วยให้ทีมงานทราบว่ามี Artifact หรือคำร้องใดเกิด ณ เวลาไหน และลิงก์เปิดไฟล์ได้ในคลิกเดียว</li>
+        <li><strong>ลดขั้นตอนการโต้ตอบกับเอเจนต์:</strong> ปุ่มตัดสินใจใน Inbox มีความเจาะจงต่อกระบวนการทำงาน ลดภาระความเหนื่อยล้าทางสมอง (Cognitive Load) ของมนุษย์ในการควบคุมทิศทาง</li>
+      </ul>
+    </section>
+
+  </div>
+</body>
+</html>

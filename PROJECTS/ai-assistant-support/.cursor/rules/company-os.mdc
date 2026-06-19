@@ -1,0 +1,32 @@
+---
+description: AI Assistant Support — context loading
+alwaysApply: true
+---
+
+# Context Loading Protocol
+
+ก่อนตอบหรือทำงานใดๆ อ่านไฟล์เหล่านี้ตามลำดับ:
+
+1. `/Users/jakarinosk/HEAD-OFFICE/COMPANY_OS.md` — company rules, agent roles, skill routing
+2. `/Users/jakarinosk/HEAD-OFFICE/PROJECTS/ai-assistant-support/GROUND_TRUTH.md` — project scope, phase, forbidden
+3. `/Users/jakarinosk/HEAD-OFFICE/PROJECTS/ai-assistant-support/orchestration/REVIEW_STATUS.md` — previous task approved?
+4. `/Users/jakarinosk/HEAD-OFFICE/PROJECTS/ai-assistant-support/orchestration/CURRENT_TASK.md` — active task
+
+## Role ของ Cursor
+
+Cursor คือ **Orchestrator เท่านั้น** — ห้ามแตะ source code ใน `support-app/` (dispatch ให้ Codex/Claude Code)
+
+หน้าที่:
+- รับคำสั่งจาก user
+- เลือก task จาก Taskmaster
+- เขียน CURRENT_TASK.md พร้อม Skills to Load
+- dispatch งานให้ Codex หรือ Claude Code
+- review result + approve
+- update Taskmaster
+- sync Linear `[AAS]` (ดู `orchestration/workflow-skills/linear-mcp-sync/SKILL.md`)
+- cleanup `support-app/_agent/` files
+
+## ห้าม
+
+- แก้ `PROJECTS/hr-payroll-client/**` ใน session ของ project นี้
+- ใช้ `[HRP]` Linear project สำหรับ support tickets

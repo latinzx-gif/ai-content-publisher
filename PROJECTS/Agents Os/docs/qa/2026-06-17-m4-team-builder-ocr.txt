@@ -1,0 +1,29 @@
+Team Builder
+Compose project teams from agent roles, define a lead, and save delivery workflow rules for each project.
+Create Team
+Team name
+Purpose
+Lead Agent
+Audit Agent
+Members (comma-separated)
+Project Template
+Analyze → Build → Review → Audit
+Human approval before closure
+Saved Teams
+Al Content System Team
+Build Al-assisted content workflows with human approval.
+Lead: PM Agent
+Members: UX / Sitemap Agent, Integration Agent, Documentation Agent
+HR Payroll Team
+Handle payroll, policy, and employee workflow delivery.
+Lead: PM Agent
+Members: Product Analyst Agent, Backend Agent, QA Agent
+Mock Local Runtime
+Inventory System Team
+Deliver internal operations systems with clear review gates.
+Lead: PM Agent
+Members: Frontend Agent, Backend Agent, Database Architect Agent, QA Agent
+Save Team
+Ter
+Ter
+Ter

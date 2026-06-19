@@ -103,30 +103,36 @@ Create Post → Brief Builder → Rule Loader → Content Generation (TH+EN)
 
 ---
 
-## 6. Agent Roles
+## 6. Agent Roles (Updated: 2026-06-18 — Hermes 2.0)
 
-| Agent | หน้าที่ | ห้าม |
-|-------|---------|------|
-| **Cursor** | Orchestrator — set CURRENT_TASK, approve plans, review tasks | แตะ source code |
-| **Claude Code** | Implementer — PLAN + EXECUTE per CURRENT_TASK.md | Self-approve, deviate from plan |
-| **Gemini CLI** | Audit only — large context scans, read-only | Implement features |
-| **Antigravity** | UI polish only — Tailwind/CSS in allowed paths | Auth, API, Supabase |
+> ใช้ Hermes team ตาม COMPANY_OS.md — ดูรายละเอียด: `OS/HERMES-OS/AGENT_TEAM.md`
 
-**Default model:** `claude-fable-5` — อย่า downgrade โดยไม่มี user approval
+| Agent | Runtime | Model | หน้าที่ |
+|-------|---------|-------|---------|
+| **Hermes** | — | — | Orchestrator — set task, route, review, approve |
+| **Planner** | Codex CLI | `gpt-5.4-mini` | PLAN phase ทุก task |
+| **Builder A** | Antigravity | `Gemini 3.5 Flash` | Full-stack, UI, E2E browser test |
+| **Builder B** | Codex CLI | `gpt-5.3-codex-spark` | New file, API, script (isolated) |
+| **Debugger** | Codex CLI | `gpt-5.5` | Root cause analysis |
+| **Researcher** | Gemini CLI | `gemini-3.1-pro-preview` | Large context scan, audit |
+| **Auditor** | Codex CLI | `gpt-5.5` | Pre-delivery audit |
+
+**Ponytail mindset:** เขียนน้อยที่สุดที่ยังถูกต้อง — ดู `HEAD-OFFICE/AGENTS.md`
+**Routing เต็ม:** `OS/HERMES-OS/MODEL_ROUTING.md`
 
 ---
 
 ## 7. Loop สำหรับทุก Task
 
 ```
-Cursor → CURRENT_TASK.md (Phase: PLAN)
-Claude → TASK_PLAN.md + CURSOR_PLAN_REQUEST.md → STOP
-Cursor → approve → PLAN_APPROVAL.md → Phase: EXECUTE
-Claude → implement → TASK_RESULT.md + CURSOR_REVIEW_REQUEST.md → STOP
-Cursor → review + cleanup → next task
+Hermes → CURRENT_TASK.md (Phase: PLAN)
+Planner → TASK_PLAN.md → STOP ✋
+Hermes → approve → PLAN_APPROVAL.md → Phase: EXECUTE
+Builder/Patcher → implement → TASK_RESULT.md → STOP ✋
+Hermes → quality gate → review → archive + commit
 ```
 
-กฎเหล็ก: **Claude ไม่ self-approve ไม่ start task ถัดไปเอง**
+กฎเหล็ก: **ไม่มี agent ไหน self-approve หรือ start task ถัดไปเอง**
 
 ดู loop detail: `orchestration/AGENT_LOOP.md`  
 ดู review process: `orchestration/CURSOR_REVIEW_GATE.md`

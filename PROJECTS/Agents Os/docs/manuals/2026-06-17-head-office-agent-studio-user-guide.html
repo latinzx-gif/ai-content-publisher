@@ -1,0 +1,758 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>คู่มือการใช้งาน Head Office Agent Studio V1</title>
+  <style>
+    :root {
+      --bg: #f5f1ea;
+      --panel: #fffdf9;
+      --ink: #201a15;
+      --muted: #6f655b;
+      --line: #ddd2c4;
+      --accent: #7c4d2d;
+      --accent-soft: #f0dfd1;
+      --good: #2f6b42;
+      --good-soft: #dff2e5;
+      --warn: #9a5d00;
+      --warn-soft: #fff0d4;
+      --bad: #8a2f2f;
+      --bad-soft: #f9dddd;
+      --shadow: 0 20px 60px rgba(61, 41, 24, 0.08);
+      --radius: 20px;
+      --radius-sm: 12px;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      --sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      font-family: var(--sans);
+      background: linear-gradient(180deg, #f8f4ef 0%, var(--bg) 100%);
+      color: var(--ink);
+      line-height: 1.65;
+    }
+
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .wrap {
+      max-width: 1240px;
+      margin: 0 auto;
+      padding: 32px 24px 80px;
+    }
+
+    .hero {
+      background: radial-gradient(circle at top right, rgba(124, 77, 45, 0.12), transparent 32%), var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 28px;
+      padding: 32px;
+      box-shadow: var(--shadow);
+      margin-bottom: 24px;
+    }
+
+    .hero h1 {
+      margin: 0 0 12px;
+      font-size: clamp(30px, 4vw, 48px);
+      line-height: 1.08;
+    }
+
+    .hero p {
+      margin: 0;
+      color: var(--muted);
+      max-width: 920px;
+      font-size: 17px;
+    }
+
+    .hero-grid,
+    .card-grid,
+    .screen-grid,
+    .status-grid,
+    .two-col,
+    .image-grid {
+      display: grid;
+      gap: 16px;
+    }
+
+    .hero-grid { grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); margin-top: 22px; }
+    .card-grid { grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
+    .screen-grid { grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); }
+    .status-grid { grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
+    .two-col { grid-template-columns: minmax(0, 1.3fr) minmax(0, 0.9fr); }
+    .image-grid { grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
+
+    .chip-row { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 18px; }
+    .chip, .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 600;
+      border: 1px solid var(--line);
+      background: #fffaf4;
+    }
+    .badge.good { background: var(--good-soft); color: var(--good); border-color: #b7dcc3; }
+    .badge.warn { background: var(--warn-soft); color: var(--warn); border-color: #efd499; }
+    .badge.bad { background: var(--bad-soft); color: var(--bad); border-color: #e9b8b8; }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 24px;
+      box-shadow: var(--shadow);
+      margin-bottom: 20px;
+    }
+
+    .toc ol {
+      margin: 0;
+      padding-left: 20px;
+      columns: 2;
+      column-gap: 28px;
+    }
+
+    .toc li { margin: 0 0 10px; break-inside: avoid; }
+
+    h2 {
+      font-size: 28px;
+      margin: 0 0 12px;
+    }
+
+    h3 {
+      font-size: 21px;
+      margin: 0 0 10px;
+    }
+
+    h4 {
+      margin: 0 0 8px;
+      font-size: 16px;
+    }
+
+    p.lead, .muted { color: var(--muted); }
+    .muted { font-size: 14px; }
+
+    .card, .screen, .status-card, .step, .callout {
+      border: 1px solid var(--line);
+      border-radius: var(--radius-sm);
+      background: #fffdfa;
+      padding: 18px;
+    }
+
+    .screen { padding: 20px; }
+    .screen ul, .card ul, .status-card ul, .step ul { margin: 10px 0 0; padding-left: 20px; }
+    .screen li, .card li, .status-card li, .step li { margin-bottom: 6px; }
+
+    .screen-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 12px;
+      margin-bottom: 10px;
+    }
+
+    .kpi {
+      background: #fff7ef;
+      border: 1px solid #eadbc8;
+      border-radius: 16px;
+      padding: 16px;
+    }
+    .kpi strong { display: block; font-size: 15px; margin-bottom: 8px; }
+
+    .steps {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 14px;
+    }
+
+    .step-index {
+      display: inline-flex;
+      width: 32px;
+      height: 32px;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      background: var(--accent);
+      color: white;
+      font-weight: 700;
+      margin-bottom: 10px;
+    }
+
+    code, pre {
+      font-family: var(--mono);
+      font-size: 13px;
+    }
+
+    pre {
+      background: #2a2017;
+      color: #f7ede0;
+      padding: 16px;
+      border-radius: 14px;
+      overflow: auto;
+      margin: 10px 0 0;
+      white-space: pre-wrap;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 14px;
+      font-size: 14px;
+      background: #fffdfa;
+      overflow: hidden;
+      border-radius: 14px;
+    }
+
+    th, td {
+      border-bottom: 1px solid var(--line);
+      padding: 12px 14px;
+      text-align: left;
+      vertical-align: top;
+    }
+
+    th {
+      background: #fbf4ec;
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: #6c5844;
+    }
+
+    tr:last-child td { border-bottom: none; }
+
+    figure {
+      margin: 0;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      overflow: hidden;
+      background: #fff;
+    }
+
+    figure img {
+      display: block;
+      width: 100%;
+      height: auto;
+      background: #efe7dc;
+    }
+
+    figcaption {
+      padding: 12px 14px;
+      font-size: 13px;
+      color: var(--muted);
+      border-top: 1px solid var(--line);
+      background: #fffaf4;
+    }
+
+    .callout.good { background: var(--good-soft); border-color: #b7dcc3; }
+    .callout.warn { background: var(--warn-soft); border-color: #efd499; }
+    .callout.bad { background: var(--bad-soft); border-color: #e9b8b8; }
+
+    .footer {
+      text-align: center;
+      color: var(--muted);
+      font-size: 13px;
+      margin-top: 28px;
+    }
+
+    @media (max-width: 980px) {
+      .two-col { grid-template-columns: 1fr; }
+      .toc ol { columns: 1; }
+    }
+
+    @media print {
+      body { background: white; }
+      .wrap { max-width: none; padding: 0; }
+      .panel, .hero { box-shadow: none; }
+      a { color: inherit; text-decoration: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <section class="hero">
+      <h1>คู่มือการใช้งาน Head Office Agent Studio V1</h1>
+      <p>
+        คู่มือนี้สรุปการใช้งานจริงของแอปจากโค้ดปัจจุบันในโปรเจกต์ SwiftUI ชุดนี้เท่านั้น
+        โดยเน้น workflow ตั้งแต่สร้างโปรเจกต์, นำเข้า PRD, ตั้งทีม/รันไทม์, เดิน task แบบ manual/mock,
+        จนถึงการเตรียม demo และ handoff สำหรับปิดงานภายในองค์กร.
+      </p>
+      <div class="chip-row">
+        <span class="chip">Native macOS • SwiftUI</span>
+        <span class="chip">SQLite-backed records</span>
+        <span class="chip">Local-first file workflow</span>
+        <span class="chip">V1 = manual/mock runtime loop</span>
+      </div>
+      <div class="hero-grid">
+        <div class="kpi">
+          <strong>จำนวนหน้าปัจจุบัน</strong>
+          11 หน้าหลักใน sidebar
+        </div>
+        <div class="kpi">
+          <strong>Root โฟลเดอร์โปรเจกต์เริ่มต้น</strong>
+          <code>~/AgentStudio/Projects</code>
+        </div>
+        <div class="kpi">
+          <strong>โฟลเดอร์มาตรฐานต่อโปรเจกต์</strong>
+          13 โฟลเดอร์ย่อย (00–12) + README
+        </div>
+        <div class="kpi">
+          <strong>ข้อจำกัดสำคัญ</strong>
+          ยังไม่มี autonomous CLI launch จากในแอป
+        </div>
+      </div>
+    </section>
+
+    <section class="panel callout warn" id="important">
+      <h2>ข้อสำคัญก่อนเริ่ม</h2>
+      <ul>
+        <li>แอปเวอร์ชันนี้เป็น <strong>V1 shell</strong> สำหรับการจัดการงานแบบ local-first และ file-transparent</li>
+        <li><strong>Runtime execution ยังเป็น manual/mock</strong> — แอปยังไม่ยิง Codex / Claude Code / Gemini CLI อัตโนมัติจากในแอป</li>
+        <li>Agent Library, Skill Library และ Team Builder ตอนนี้รองรับทั้ง <strong>create + edit + delete</strong> แล้ว แต่ยังเป็นการแก้ record พื้นฐานใน V1 ไม่ใช่ runtime orchestration จริง</li>
+        <li>การปิดโปรเจกต์ถูก gate ด้วย <strong>blocking human requests ต้องเหลือ 0</strong> ก่อน</li>
+      </ul>
+    </section>
+
+    <section class="panel toc" id="toc">
+      <h2>สารบัญ</h2>
+      <ol>
+        <li><a href="#overview">ภาพรวมระบบ</a></li>
+        <li><a href="#workflow">Workflow ทั้งระบบ</a></li>
+        <li><a href="#quickstart">เริ่มใช้งาน 10 นาทีแรก</a></li>
+        <li><a href="#screens">คู่มือรายหน้าทั้ง 11 หน้า</a></li>
+        <li><a href="#project-status">สถานะโปรเจกต์</a></li>
+        <li><a href="#task-status">สถานะงานบน Task Board</a></li>
+        <li><a href="#folders">โครงสร้างโฟลเดอร์ 00–12</a></li>
+        <li><a href="#artifacts">Artifacts ที่ระบบสร้าง</a></li>
+        <li><a href="#screenshots">ตัวอย่างหน้าจอ</a></li>
+        <li><a href="#tips">Tips การใช้งานจริง</a></li>
+        <li><a href="#limits">ข้อจำกัด V1</a></li>
+      </ol>
+    </section>
+
+    <section class="panel" id="overview">
+      <h2>ภาพรวมระบบ</h2>
+      <div class="two-col">
+        <div>
+          <p class="lead">
+            Head Office Agent Studio เป็นแอปควบคุมงานภายในสำหรับจัดการโปรเจกต์ AI/automation แบบ native macOS
+            โดยผูก 3 แกนเข้าด้วยกัน: ข้อมูลใน SQLite, โฟลเดอร์โปรเจกต์จริงบนเครื่อง, และการไหลงานที่ต้องผ่านคนก่อนปิดหรือยิงงานเสี่ยง.
+          </p>
+          <div class="card-grid">
+            <div class="card">
+              <h3>1) Project + Folder</h3>
+              <p>ทุกโปรเจกต์มี record และมีโฟลเดอร์จริงบนดิสก์พร้อมโครงสร้าง 00–12 สำหรับเก็บอินพุต, PRD, runs, reviews, audits, requests, demo, handoff.</p>
+            </div>
+            <div class="card">
+              <h3>2) Agent / Skill / Team / Runtime</h3>
+              <p>ใช้สำหรับกำหนดว่าใครทำอะไร, ใช้ความสามารถอะไร, อยู่ทีมไหน และจะวิ่งผ่าน runtime แบบใด แม้ V1 ยังเป็น planning/manual เป็นหลัก.</p>
+            </div>
+            <div class="card">
+              <h3>3) Task / Request / Demo Handoff</h3>
+              <p>ใช้ขับงานจริงแบบมีร่องรอย ตั้งแต่สร้าง task, ขออนุมัติ, บันทึก log, ขอ input จากคน, ไปจนถึง export เอกสารปิดงาน.</p>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <h3>ข้อมูล seed เริ่มต้นที่มีให้</h3>
+          <ul>
+            <li>Runtime เริ่มต้น: Mock Local Runtime, Codex CLI, Claude Code, Gemini CLI</li>
+            <li>Agent seed 12 ตัว เช่น PM Agent, Product Analyst Agent, Frontend Agent, QA Agent, Audit Agent, Documentation Agent</li>
+            <li>Skill seed หลายประเภท เช่น PRD Writer, Scope Analyzer, Task Breakdown, QA Checklist, Security Audit</li>
+            <li>Team template 3 ชุด: HR Payroll Team, Inventory System Team, AI Content System Team</li>
+          </ul>
+          <p class="muted">หมายเหตุ: Runtime ที่เป็น CLI ตอนนี้ยังอยู่ในสถานะ planned/track readiness ยังไม่ execute อัตโนมัติจากแอป</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel" id="workflow">
+      <h2>Workflow ทั้งระบบ</h2>
+      <div class="steps">
+        <div class="step"><div class="step-index">1</div><h3>Create Project</h3><p>สร้าง project record + โฟลเดอร์จริง พร้อม preview โครงสร้างไฟล์ที่ระบบจะใช้ต่อ.</p></div>
+        <div class="step"><div class="step-index">2</div><h3>Import PRD</h3><p>คัดลอกไฟล์ต้นฉบับเข้า workspace, normalize เป็น markdown, และสร้างไฟล์วิเคราะห์ PRD 7 ชนิด.</p></div>
+        <div class="step"><div class="step-index">3</div><h3>Set Team / Agent / Runtime</h3><p>เลือกบทบาท, ความสามารถ, ทีม, และ runtime mapping ที่จะใช้กับงาน.</p></div>
+        <div class="step"><div class="step-index">4</div><h3>Seed / Create Tasks</h3><p>สร้างบอร์ดงานเบื้องต้นหรือเพิ่ม task เอง แล้วกำหนด agent, runtime, acceptance criteria, dependencies.</p></div>
+        <div class="step"><div class="step-index">5</div><h3>Manual/Mock Delivery Loop</h3><p>เดิน task ผ่าน approval gate, running, review, audit, blocked, done โดยไม่ launch CLI จริงอัตโนมัติ.</p></div>
+        <div class="step"><div class="step-index">6</div><h3>Run Logs + Human Requests</h3><p>ทุก transition สำคัญถูกบันทึกเป็น log และสิ่งที่ต้องรอคนจะเข้า Human Request Inbox.</p></div>
+        <div class="step"><div class="step-index">7</div><h3>Demo / Handoff</h3><p>สร้าง checklist, demo script, handoff checklist, closure summary และปิดโปรเจกต์เมื่อไม่มี blocking requests.</p></div>
+      </div>
+    </section>
+
+    <section class="panel" id="quickstart">
+      <h2>Checklist เริ่มใช้งาน 10 นาทีแรก</h2>
+      <ol>
+        <li>เปิดแอปและเริ่มจากหน้า <strong>Create Project</strong></li>
+        <li>ตั้งชื่อโปรเจกต์, project type, owner/client, deadline, priority</li>
+        <li>ยืนยัน root path หรือเปลี่ยน root ด้วยปุ่ม <strong>Choose…</strong></li>
+        <li>กด <strong>Create Project</strong> เพื่อสร้าง record และโฟลเดอร์</li>
+        <li>ไปหน้า <strong>Project Dashboard</strong> เพื่อตรวจว่าโปรเจกต์แสดงและ health ปกติ</li>
+        <li>ไปหน้า <strong>PRD Import</strong> แล้วนำเข้าไฟล์ PRD</li>
+        <li>ดูว่าเกิดไฟล์ normalized + analysis artifacts ครบ</li>
+        <li>ไปหน้า <strong>Task Board</strong> แล้วกด <strong>Seed Initial Task Board</strong></li>
+        <li>ลองเปิด task ใด task หนึ่ง แล้วกด <strong>Prepare Runtime Brief</strong></li>
+        <li>ถ้าต้อง demo/handoff ให้ไปหน้า <strong>Demo / Handoff Center</strong> เพื่อสร้าง script/checklist/export</li>
+      </ol>
+    </section>
+
+    <section class="panel" id="screens">
+      <h2>คู่มือรายหน้าทั้ง 11 หน้า</h2>
+      <div class="screen-grid">
+        <article class="screen" id="screen-dashboard">
+          <div class="screen-header">
+            <h3>1. Project Dashboard</h3>
+            <span class="badge good">ใช้งานได้จริง</span>
+          </div>
+          <p><strong>หน้าที่:</strong> มองภาพรวมโปรเจกต์ทั้งหมด, ค้นหา/กรอง, เช็กสุขภาพโฟลเดอร์, ดูรายละเอียด, แก้ไขโปรเจกต์, archive และลบ record</p>
+          <ul>
+            <li><strong>ใช้เมื่อไร:</strong> ต้องการดูสถานะรวม, ตรวจ workspace, แก้ข้อมูลโปรเจกต์</li>
+            <li><strong>ปุ่ม/ช่องสำคัญ:</strong> Search, Status filter, Priority filter, Show Details, Edit, Repair Folders, Archive, Delete Record</li>
+            <li><strong>ขั้นตอนสั้น:</strong> ค้นหาโปรเจกต์ → กด Show Details → ถ้า missing folders ให้กด Repair Folders → ถ้าข้อมูลงานเปลี่ยนให้กด Edit</li>
+            <li><strong>ข้อควรระวัง:</strong> Archive คือเก็บ record ไว้แต่เปลี่ยนสถานะเป็น archived; Delete Record คือลบออกจากฐานข้อมูล</li>
+          </ul>
+        </article>
+
+        <article class="screen" id="screen-create-project">
+          <div class="screen-header">
+            <h3>2. Create Project</h3>
+            <span class="badge good">ใช้งานได้จริง</span>
+          </div>
+          <p><strong>หน้าที่:</strong> สร้าง project record ใหม่และสร้างโครงสร้างโฟลเดอร์จริงบนเครื่อง</p>
+          <ul>
+            <li><strong>ใช้เมื่อไร:</strong> เริ่มโปรเจกต์ใหม่</li>
+            <li><strong>ปุ่ม/ช่องสำคัญ:</strong> Project name, Project type, Client/Internal label, Deadline, Priority, Output goal, Base folder path, Choose…, Create Project, Open Root</li>
+            <li><strong>ขั้นตอนสั้น:</strong> กรอกข้อมูล → ตรวจ Folder Structure Preview → กด Create Project → เปิด root เพื่อตรวจโฟลเดอร์จริง</li>
+            <li><strong>ข้อควรระวัง:</strong> Project name ห้ามว่าง; slug จะถูกสร้างจากชื่อโปรเจกต์</li>
+          </ul>
+        </article>
+
+        <article class="screen" id="screen-prd-import">
+          <div class="screen-header">
+            <h3>3. PRD Import</h3>
+            <span class="badge good">ใช้งานได้จริง</span>
+          </div>
+          <p><strong>หน้าที่:</strong> คัดลอก PRD เข้า workspace, normalize เป็น markdown, และสร้าง artifacts วิเคราะห์ PRD</p>
+          <ul>
+            <li><strong>ใช้เมื่อไร:</strong> หลังสร้างโปรเจกต์และพร้อมเริ่มตีความ requirement</li>
+            <li><strong>ปุ่ม/ช่องสำคัญ:</strong> Project picker, Choose File and Import…, Open Imported Folder, Generated Artifacts, Normalized PRD Preview</li>
+            <li><strong>ขั้นตอนสั้น:</strong> เลือกโปรเจกต์ → เลือกไฟล์ PRD → ตรวจ original path, normalized path และ artifact list</li>
+            <li><strong>รองรับไฟล์:</strong> md, txt, html, docx, pdf</li>
+            <li><strong>ข้อควรระวัง:</strong> ต้องมี project folder ก่อน import; หลัง import สถานะจะขยับเป็น <code>prd_analyzed</code></li>
+          </ul>
+        </article>
+
+        <article class="screen" id="screen-agents">
+          <div class="screen-header">
+            <h3>4. Agent Library</h3>
+            <span class="badge good">create + edit + delete</span>
+          </div>
+          <p><strong>หน้าที่:</strong> เก็บ reusable AI worker profiles และ runtime mapping ของแต่ละบทบาท</p>
+          <ul>
+            <li><strong>ใช้เมื่อไร:</strong> ต้องการเพิ่ม agent profile ใหม่สำหรับใช้ใน task/team</li>
+            <li><strong>ปุ่ม/ช่องสำคัญ:</strong> Agent name, Role, Goal, Runtime, Model, Skill names, Output contract, Save Agent</li>
+            <li><strong>ขั้นตอนสั้น:</strong> กรอกแบบฟอร์ม → กด Save Agent → ตรวจในรายการ Available Agents</li>
+            <li><strong>ข้อควรระวัง:</strong> การแก้ไขตอนนี้ครอบคลุมข้อมูล profile หลัก เช่น name/role/goal/runtime/model/output contract แต่ยังไม่ใช่การควบคุม runtime จริง</li>
+          </ul>
+        </article>
+
+        <article class="screen" id="screen-skills">
+          <div class="screen-header">
+            <h3>5. Skill Library</h3>
+            <span class="badge good">create + edit + delete</span>
+          </div>
+          <p><strong>หน้าที่:</strong> เก็บ capability package แบบ reusable เช่น workflow, review checklist, output contract</p>
+          <ul>
+            <li><strong>ใช้เมื่อไร:</strong> ต้องการนิยามทักษะที่ agent จะอ้างอิง</li>
+            <li><strong>ปุ่ม/ช่องสำคัญ:</strong> Skill name, Type, Instruction, Workflow, Checklist, Output contract, Required tools, Save Skill</li>
+            <li><strong>ขั้นตอนสั้น:</strong> กรอกข้อมูล skill → Save → ตรวจว่า skill ปรากฏในรายการ</li>
+            <li><strong>ข้อควรระวัง:</strong> ตอนนี้แก้ไข skill เดิมได้แล้วจากปุ่ม Edit ในรายการ แต่ยังเป็นการแก้ metadata ของ skill ไม่ใช่การรัน skill จริง</li>
+          </ul>
+        </article>
+
+        <article class="screen" id="screen-teams">
+          <div class="screen-header">
+            <h3>6. Team Builder</h3>
+            <span class="badge good">create + edit + delete</span>
+          </div>
+          <p><strong>หน้าที่:</strong> ประกอบทีมจาก agents, ระบุ lead, workflow และผูกกับโปรเจกต์หรือ template</p>
+          <ul>
+            <li><strong>ใช้เมื่อไร:</strong> ต้องการกำหนดชุดคน/บทบาทที่จะใช้กับโปรเจกต์</li>
+            <li><strong>ปุ่ม/ช่องสำคัญ:</strong> Team name, Purpose, Lead Agent, Members, Project, Workflow, Review rules, Runtime preference, Save Team</li>
+            <li><strong>ขั้นตอนสั้น:</strong> เลือก lead + members → ผูก project/template → Save Team</li>
+            <li><strong>ข้อควรระวัง:</strong> ตอนนี้สามารถแก้ lead, members, workflow, runtime preference และ project assignment ได้แล้ว แต่ยังเป็น team configuration ของ V1 ไม่ใช่ execution routing จริง</li>
+          </ul>
+        </article>
+
+        <article class="screen" id="screen-runtimes">
+          <div class="screen-header">
+            <h3>7. Runtime Manager</h3>
+            <span class="badge good">ใช้งานได้จริง</span>
+          </div>
+          <p><strong>หน้าที่:</strong> เก็บรายการ runtime, readiness, integration mode, execution notes และ default runtime</p>
+          <ul>
+            <li><strong>ใช้เมื่อไร:</strong> ต้องการบอกว่าทีมใช้ runtime อะไร และ runtime ไหนเป็นค่าปริยาย</li>
+            <li><strong>ปุ่ม/ช่องสำคัญ:</strong> Runtime name, Runtime type, Integration mode, Execution notes, Require approval, Save Runtime, Toggle Default</li>
+            <li><strong>ขั้นตอนสั้น:</strong> เพิ่ม runtime ใหม่ → กำหนด requires approval → ตั้ง default ถ้าจำเป็น</li>
+            <li><strong>ข้อควรระวัง:</strong> readiness ในหน้านี้ยังเป็นการ track ความพร้อม ไม่ใช่การ launch runtime จริง</li>
+          </ul>
+        </article>
+
+        <article class="screen" id="screen-task-board">
+          <div class="screen-header">
+            <h3>8. Task Board</h3>
+            <span class="badge good">ใช้งานได้จริง</span>
+          </div>
+          <p><strong>หน้าที่:</strong> ขับ manual/mock delivery loop ตั้งแต่สร้าง task ไปจนถึง review/audit/done</p>
+          <ul>
+            <li><strong>ใช้เมื่อไร:</strong> ต้องการเริ่มวิ่งงาน, สร้าง acceptance criteria, หรือทดลอง runtime planning flow</li>
+            <li><strong>ปุ่ม/ช่องสำคัญ:</strong> Seed Initial Task Board, Generate Demo / Handoff Checklist, Create Task, Prepare Runtime Brief, Create Approval Request, Create Scope Request, Create Auth Request, Queue Launch Approval, Start Mock Run</li>
+            <li><strong>ขั้นตอนสั้น:</strong> เลือกโปรเจกต์ → seed board หรือสร้าง task → เปิดการ์ดงาน → ใช้ปุ่ม transition ตามสถานะ</li>
+            <li><strong>ข้อควรระวัง:</strong> Task transitions มีผลต่อ Run Log และ Human Request Inbox; การกด Start Mock Run คือเปลี่ยนสถานะ ไม่ได้ execute CLI จริง</li>
+          </ul>
+        </article>
+
+        <article class="screen" id="screen-run-log">
+          <div class="screen-header">
+            <h3>9. Run Log</h3>
+            <span class="badge good">ใช้งานได้จริง</span>
+          </div>
+          <p><strong>หน้าที่:</strong> แสดง execution trace ของ task transitions และการเตรียม runtime brief</p>
+          <ul>
+            <li><strong>ใช้เมื่อไร:</strong> ต้องการย้อนดูว่า task เคยผ่านสถานะอะไร หรือมีไฟล์ brief/log อะไรถูกเตรียมไว้</li>
+            <li><strong>ปุ่ม/ช่องสำคัญ:</strong> Project filter, list ของ logs, logText แบบ monospaced</li>
+            <li><strong>ขั้นตอนสั้น:</strong> เลือกโปรเจกต์ → เปิดอ่าน log ล่าสุด → ใช้เป็นหลักฐานตรวจสอบกระบวนการ</li>
+            <li><strong>ข้อควรระวัง:</strong> log นี้สะท้อน planning/mock events ไม่ใช่ stdout จาก agent จริงใน V1 ปัจจุบัน</li>
+          </ul>
+        </article>
+
+        <article class="screen" id="screen-requests">
+          <div class="screen-header">
+            <h3>10. Human Request Inbox</h3>
+            <span class="badge good">ใช้งานได้จริง</span>
+          </div>
+          <p><strong>หน้าที่:</strong> เก็บ approval gates, blocked launches, manual requests และการตอบกลับจากมนุษย์</p>
+          <ul>
+            <li><strong>ใช้เมื่อไร:</strong> เมื่อ runtime ต้องรออนุมัติ, ต้องยืนยัน scope, auth หรือมีคำถามบล็อกการทำงาน</li>
+            <li><strong>ปุ่ม/ช่องสำคัญ:</strong> Create Request, Status picker, Response / decision note, Approve, Need Clarification, Cancel Request, Reopen</li>
+            <li><strong>ขั้นตอนสั้น:</strong> สร้าง request ใหม่หรือรับ request จาก Task Board → ใส่ response → กด action ที่เหมาะสม</li>
+            <li><strong>ข้อควรระวัง:</strong> request ที่เป็น blocking และยังไม่ resolved/cancelled จะกันการปิดโปรเจกต์</li>
+          </ul>
+        </article>
+
+        <article class="screen" id="screen-demo-handoff">
+          <div class="screen-header">
+            <h3>11. Demo / Handoff Center</h3>
+            <span class="badge good">ใช้งานได้จริง</span>
+          </div>
+          <p><strong>หน้าที่:</strong> รวมทุกอย่างสำหรับ milestone demo/handoff เช่น checklist, demo script, handoff checklist, closure summary, known limitations, close project</p>
+          <ul>
+            <li><strong>ใช้เมื่อไร:</strong> ใกล้ส่งมอบ, ต้องเตรียมเอกสารสาธิต หรือปิดโปรเจกต์</li>
+            <li><strong>ปุ่ม/ช่องสำคัญ:</strong> Generate Checklist, Generate Demo Script, Handoff Checklist, Export Summary, Close Project, Open Folder, Save Known Limitations, Save Item</li>
+            <li><strong>ขั้นตอนสั้น:</strong> เลือกโปรเจกต์ → บันทึก known limitations → สร้าง demo/handoff artifacts → export summary → ปิดโปรเจกต์ถ้าไม่มี blocking requests</li>
+            <li><strong>ข้อควรระวัง:</strong> <strong>Close Project</strong> จะไม่สำเร็จถ้ายังมี blocking requests เปิดอยู่</li>
+          </ul>
+        </article>
+      </div>
+    </section>
+
+    <section class="panel" id="project-status">
+      <h2>สถานะโปรเจกต์</h2>
+      <div class="status-grid">
+        <div class="status-card"><h3>draft</h3><p>เพิ่งสร้างโปรเจกต์ ยังไม่ได้ผูก PRD หรือเริ่ม workflow ต่อ</p></div>
+        <div class="status-card"><h3>prd_uploaded</h3><p>มีการอ้างถึงช่วง PRD uploaded ในระบบ แต่ flow ปัจจุบันหลัง import จะขยับไป <code>prd_analyzed</code> เป็นหลัก</p></div>
+        <div class="status-card"><h3>prd_analyzed</h3><p>นำเข้า PRD แล้ว และสร้าง normalized markdown + analysis artifacts แล้ว</p></div>
+        <div class="status-card"><h3>team_selected</h3><p>มีการเลือกทีม/โครงสร้างทีมแล้ว</p></div>
+        <div class="status-card"><h3>task_generated</h3><p>มี task board หรือ seed task เกิดขึ้นแล้ว</p></div>
+        <div class="status-card"><h3>in_progress</h3><p>กำลังวิ่งงานจริงในระดับ workflow แม้ V1 ยังเป็น mock/manual loop</p></div>
+        <div class="status-card"><h3>review / revision</h3><p>งานอยู่ในช่วง review หรือถูกตีกลับไปแก้</p></div>
+        <div class="status-card"><h3>demo_ready / demo_sent</h3><p>พร้อมสาธิตหรือส่งออกสำหรับเดโมแล้ว</p></div>
+        <div class="status-card"><h3>handoff_ready</h3><p>ใกล้พร้อมส่งมอบ package</p></div>
+        <div class="status-card"><h3>closed</h3><p>ปิดโปรเจกต์แล้วหลังผ่าน closure gate</p></div>
+        <div class="status-card"><h3>archived</h3><p>เก็บ record ไว้เป็นประวัติ แต่ไม่ใช่งาน active</p></div>
+      </div>
+    </section>
+
+    <section class="panel" id="task-status">
+      <h2>สถานะบน Task Board</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>สถานะ</th>
+            <th>ความหมาย</th>
+            <th>ปุ่มที่มักใช้ต่อ</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td><code>todo</code></td><td>เพิ่งสร้างงาน ยังไม่เริ่ม</td><td>Prepare Runtime Brief / Queue Launch Approval / Start Mock Run</td></tr>
+          <tr><td><code>assigned</code></td><td>มอบหมายแล้วแต่ยังไม่วิ่ง</td><td>เหมือน todo</td></tr>
+          <tr><td><code>awaiting_approval</code></td><td>รอคนอนุมัติก่อนเริ่ม</td><td>Approval Received / Mark Launch Blocked / Cancel Launch Plan</td></tr>
+          <tr><td><code>launch_blocked</code></td><td>เริ่มไม่ได้เพราะ scope/auth/approval ติด</td><td>Retry Approval Gate / Cancel Launch Plan</td></tr>
+          <tr><td><code>running</code></td><td>อยู่ในช่วงจำลอง execution</td><td>Send to Review / Need Human Input</td></tr>
+          <tr><td><code>review</code></td><td>กำลัง review ผลงาน</td><td>Send to Audit / Request Fix</td></tr>
+          <tr><td><code>audit</code></td><td>ตรวจความพร้อมปิดงาน/ส่งมอบ</td><td>Pass Audit / Need Human Input</td></tr>
+          <tr><td><code>need_fix</code></td><td>ต้องแก้ไขก่อนเดินต่อ</td><td>Queue Launch Approval / Start Mock Run</td></tr>
+          <tr><td><code>blocked</code></td><td>ติด input จากคนหรือเงื่อนไขภายนอก</td><td>Reset</td></tr>
+          <tr><td><code>cancelled</code></td><td>ยกเลิกแผนวิ่งงาน</td><td>Reset</td></tr>
+          <tr><td><code>done</code></td><td>งานผ่าน audit แล้ว</td><td>Reset (ถ้าต้องเริ่มใหม่)</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="panel" id="folders">
+      <h2>โครงสร้างโฟลเดอร์ 00–12</h2>
+      <p class="lead">ทุกโปรเจกต์ใหม่จะสร้างใต้ <code>~/AgentStudio/Projects/{project-slug}/</code> พร้อมโครงสร้างมาตรฐานดังนี้</p>
+      <pre>~/AgentStudio/Projects/{project-slug}/
+├── 00_Input/
+├── 01_PRD/
+├── 02_PRD_Analysis/
+├── 03_Taskmaster/
+├── 04_Teams/
+├── 05_Current_Task/
+├── 06_Runs/
+├── 07_Reviews/
+├── 08_Audits/
+├── 09_Requests/
+├── 10_Demo/
+├── 11_Handoff/
+└── 12_Archive/</pre>
+      <table>
+        <thead>
+          <tr><th>โฟลเดอร์</th><th>ใช้เก็บอะไร</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>00_Input</td><td>ไฟล์อินพุตประกอบอื่น ๆ นอกเหนือจาก PRD</td></tr>
+          <tr><td>01_PRD</td><td>PRD ต้นฉบับ, normalized markdown, import log</td></tr>
+          <tr><td>02_PRD_Analysis</td><td>scope summary, role map, risk report และ artifacts วิเคราะห์ PRD</td></tr>
+          <tr><td>03_Taskmaster</td><td>ไฟล์ task planning/board ที่เกี่ยวข้อง</td></tr>
+          <tr><td>04_Teams</td><td>ข้อมูลทีมและการจัด agent</td></tr>
+          <tr><td>05_Current_Task</td><td>brief ล่าสุดของ task ที่กำลังทำ</td></tr>
+          <tr><td>06_Runs</td><td>reserve path สำหรับ stdout/stderr/result และ run outputs</td></tr>
+          <tr><td>07_Reviews</td><td>ไฟล์ประกอบการ review</td></tr>
+          <tr><td>08_Audits</td><td>ไฟล์ audit และหลักฐานยืนยัน</td></tr>
+          <tr><td>09_Requests</td><td>human requests / approval / scope clarification</td></tr>
+          <tr><td>10_Demo</td><td>demo script และเอกสารเตรียมสาธิต</td></tr>
+          <tr><td>11_Handoff</td><td>handoff checklist, closure summary และไฟล์ส่งมอบ</td></tr>
+          <tr><td>12_Archive</td><td>เก็บของเก่าหรือผลลัพธ์ที่ต้องเก็บแยก</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="panel" id="artifacts">
+      <h2>Artifacts ที่ระบบสร้าง</h2>
+      <div class="card-grid">
+        <div class="card">
+          <h3>PRD Import</h3>
+          <ul>
+            <li><code>01_PRD/PRD_ORIGINAL.{ext}</code></li>
+            <li><code>01_PRD/PRD_NORMALIZED.md</code></li>
+            <li><code>01_PRD/PRD_IMPORT_LOG.md</code></li>
+            <li><code>02_PRD_Analysis/PRD_ANALYSIS.md</code></li>
+            <li><code>02_PRD_Analysis/MISSING_INFO.md</code></li>
+            <li><code>02_PRD_Analysis/SCOPE_SUMMARY.md</code></li>
+            <li><code>02_PRD_Analysis/MODULE_MAP.md</code></li>
+            <li><code>02_PRD_Analysis/ROLE_MAP.md</code></li>
+            <li><code>02_PRD_Analysis/RISK_REPORT.md</code></li>
+            <li><code>02_PRD_Analysis/ANALYST_CHECKLIST.md</code></li>
+          </ul>
+        </div>
+
+        <div class="card">
+          <h3>Task Board / Runtime Planning</h3>
+          <ul>
+            <li><code>05_Current_Task/TASK_BRIEF.md</code></li>
+            <li><code>06_Runs/{timestamp}-stdout.log</code></li>
+            <li><code>06_Runs/{timestamp}-stderr.log</code></li>
+            <li><code>06_Runs/{timestamp}-RESULT.md</code></li>
+            <li><code>09_Requests/{timestamp}-HUMAN_REQUEST.md</code></li>
+          </ul>
+          <p class="muted">ไฟล์เหล่านี้ถูกเตรียมไว้สำหรับ planning/mock flow แม้ยังไม่มี real agent launch ใน V1</p>
+        </div>
+
+        <div class="card">
+          <h3>Demo / Handoff</h3>
+          <ul>
+            <li><code>10_Demo/DEMO_SCRIPT.md</code></li>
+            <li><code>11_Handoff/HANDOFF_CHECKLIST.md</code></li>
+            <li><code>11_Handoff/CLOSURE_SUMMARY.md</code></li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel" id="screenshots">
+      <h2>ตัวอย่างหน้าจอ</h2>
+      <div class="image-grid">
+        <figure>
+          <img src="../qa/2026-06-17-m2-dashboard.png" alt="Project Dashboard" />
+          <figcaption>Project Dashboard — overview, filters, health, actions</figcaption>
+        </figure>
+        <figure>
+          <img src="../qa/2026-06-17-m3-prd-import.png" alt="PRD Import" />
+          <figcaption>PRD Import — generated artifacts และ normalized preview</figcaption>
+        </figure>
+        <figure>
+          <img src="../qa/2026-06-17_qa-task-board.png" alt="Task Board" />
+          <figcaption>Task Board — board controls, new task form, task columns</figcaption>
+        </figure>
+        <figure>
+          <img src="../qa/2026-06-17_qa-human-request-inbox.png" alt="Human Request Inbox" />
+          <figcaption>Human Request Inbox — response workflow และ approval actions</figcaption>
+        </figure>
+        <figure>
+          <img src="../qa/2026-06-17-milestone-6-demo-handoff.png" alt="Demo Handoff Center" />
+          <figcaption>Demo / Handoff Center — generate artifacts, known limitations, close project</figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <section class="panel" id="tips">
+      <h2>Tips การใช้งานจริง</h2>
+      <div class="card-grid">
+        <div class="callout good">
+          <h3>Tip 1 — เริ่มจาก Dashboard ทุกครั้ง</h3>
+          <p>ถ้าคุณกลับมาทำงานต่อหลังพัก ให้เริ่มจาก Dashboard เพื่อเช็กว่า project ไหนยัง active, ไหน archived, และ workspace ไหนมี missing folders</p>
+        </div>
+        <div class="callout good">
+          <h3>Tip 2 — ใช้ PRD Import ให้ครบก่อนสร้าง task เอง</h3>
+          <p>การ import PRD ก่อนจะช่วยให้ normalized path และ analysis artifacts พร้อมใช้งานสำหรับทีมและงานต่อไป</p>
+        </div>
+        <div class="callout good">
+          <h3>Tip 3 — ใช้ Seed Initial Task Board เป็น baseline</h3>
+          <p>หากยังไม่มี task setup ให้ใช้ seed board ก่อน แล้วค่อยแตกงานเพิ่มเองตาม acceptance criteria จริง</p>
+        </div>
+        <div class="callout warn">
+          <h3>Tip 4 — อย่าสับสนว่า Start Mock Run = launch agent จริง</h3>
+          <p>ปุ่มนี้แค่เปลี่ยนสถานะและบันทึก workflow ภายใน V1 ไม่ได้สั่ง Codex/Claude/Gemini ให้ทำงานจริง</p>
+        </div>
+        <div class="callout warn">
+          <h3>Tip 5 — ถ้าจะ close project ให้เคลียร์ Inbox ก่อน</h3>
+          <p>Human Request ที่เป็น blocking และยังไม่ resolved/cancelled จะทำให้ปิดโปรเจกต์ไม่ผ่าน</p>
+        </div>
+        <div class="callout good">
+          <h3>Tip 6 — ใช้ Edit ก่อนค่อยลบ</h3>
+          <p>ตอนนี้ Agent/Skill/Team รองรับการแก้ไขจากรายการแล้ว ถ้าต้องการปรับชื่อ, workflow หรือ project assignment ให้กด Edit ก่อน เพื่อลดการสร้าง record ซ้ำโดยไม่จำเป็น</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel" id="limits">
+      <h2>ข้อจำกัด V1</h2>
+      <ul>
+        <li>ยังไม่มีการ launch agent CLI จริงจากในแอป</li>
+        <li>Runtime Manager เป็นการ track ความพร้อม/นโยบาย ไม่ใช่ execution engine</li>
+        <li>Agent Library, Skill Library, Team Builder ยังไม่มี edit flow แบบเต็ม</li>
+        <li>Task Board เป็น manual/mock state machine มากกว่าระบบ orchestration จริง</li>
+        <li>Run Log ตอนนี้สะท้อน workflow events และการเตรียม artifacts มากกว่าผลลัพธ์จาก subprocess จริง</li>
+        <li>การปิดโปรเจกต์ขึ้นกับ Human Request gates และ closure summary export</li>
+      </ul>
+    </section>
+
+    <p class="footer">
+      จัดทำจากโค้ดปัจจุบันของ Head Office Agent Studio V1 • เอกสารนี้เป็นคู่มือใช้งาน HTML แบบเปิดจากไฟล์ได้โดยตรง
+    </p>
+  </div>
+</body>
+</html>

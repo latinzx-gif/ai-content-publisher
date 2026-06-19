@@ -24,6 +24,9 @@ type ComplianceNote = {
   category: string
   note: string
   created_at: string
+  attachment_file_name?: string | null
+  attachment_uploaded_at?: string | null
+  attachment_url?: string | null
 }
 
 export function EmployeeProfilePageClient({
@@ -35,6 +38,7 @@ export function EmployeeProfilePageClient({
   workShifts,
   readOnly = false,
   canViewSalary = false,
+  attendanceHref,
 }: {
   profile: EmployeeProfile
   notes: ComplianceNote[]
@@ -44,6 +48,7 @@ export function EmployeeProfilePageClient({
   workShifts: WorkShiftSummary[]
   readOnly?: boolean
   canViewSalary?: boolean
+  attendanceHref: string
 }) {
   const isPendingRegistration =
     profile.status === "inactive" && profile.role === "employee"
@@ -87,6 +92,7 @@ export function EmployeeProfilePageClient({
       <EmployeeProfileView
         profile={profile}
         canViewSalary={canViewSalary}
+        attendanceHref={attendanceHref}
         actions={
           readOnly ? null : (
             <Button
@@ -102,16 +108,16 @@ export function EmployeeProfilePageClient({
           )
         }
       />
-      <section className="shrink-0 rounded-xl border border-border/80 bg-card p-4">
-        <h2 className="mb-3 text-sm font-semibold">วงจรพนักงาน</h2>
-        <LifecyclePanel profile={profile} notes={notes} />
-      </section>
       {!readOnly ? (
         <OfficerPortalPasswordPanel
           employeeId={profile.id}
           department={profile.department}
         />
       ) : null}
+      <section className="shrink-0 rounded-xl border border-border/80 bg-card p-4">
+        <h2 className="mb-3 text-sm font-semibold">วงจรพนักงาน</h2>
+        <LifecyclePanel profile={profile} notes={notes} />
+      </section>
       {!readOnly ? <EmployeeDangerZone profile={profile} /> : null}
     </div>
   )

@@ -1,0 +1,32 @@
+---
+description: AI Assistant Support workflow commands
+alwaysApply: true
+---
+
+# Workflow Commands
+
+ใช้ skill กลางจาก `/Users/jakarinosk/HEAD-OFFICE/orchestration/workflow-skills/`  
+Linear sync: `PROJECTS/ai-assistant-support/orchestration/workflow-skills/linear-mcp-sync/SKILL.md`  
+Issue pattern: `[AAS] T{id}` · Project: `AI Assistant Support`
+
+## "next task" / "next"
+
+1. อ่าน `orchestration/REVIEW_STATUS.md`
+2. `task-master next` ใน project root
+3. อ่าน `02-cursor-set-task/SKILL.md`
+4. เขียน `orchestration/CURRENT_TASK.md` + Skills to Load
+5. `task-master set-status --id=<id> --status=in-progress`
+6. Sync Linear MCP
+
+## Dispatch Template
+
+```
+อ่าน skills จาก CURRENT_TASK.md ## Skills to Load
+
+จากนั้นอ่าน:
+- /Users/jakarinosk/HEAD-OFFICE/COMPANY_OS.md
+- /Users/jakarinosk/HEAD-OFFICE/PROJECTS/ai-assistant-support/GROUND_TRUTH.md
+- /Users/jakarinosk/HEAD-OFFICE/PROJECTS/ai-assistant-support/orchestration/CURRENT_TASK.md
+
+เริ่ม [PLAN / EXECUTE] phase ตาม skill 03 / 05
+```

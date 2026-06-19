@@ -36,6 +36,7 @@ export async function createOrRefreshRun(
     .from("hr_payroll_runs")
     .select("id, status")
     .eq("period", input.period)
+    .eq("cutoff_day", cutoffDay)
     .maybeSingle()
 
   if (existingRun?.status === "locked" || existingRun?.status === "paid") {
@@ -50,6 +51,7 @@ export async function createOrRefreshRun(
 
   const taxEnabled = config.tax_enabled
   const taxRate = config.tax_rate
+  const ssoEnabled = config.sso_enabled
 
   const skipped: string[] = []
   let totalGross = 0
@@ -96,7 +98,7 @@ export async function createOrRefreshRun(
       continue
     }
 
-    const calc = calculatePayslip(summary, config, { taxEnabled, taxRate })
+    const calc = calculatePayslip(summary, config, { taxEnabled, taxRate, ssoEnabled })
     if (!calc) {
       skipped.push(`${summary.employee_name}: ไม่สามารถคำนวณได้`)
       continue
@@ -272,13 +274,24 @@ export async function getRunWithPayslips(runId: string): Promise<PayrollRunWithP
   }
 }
 
-export async function getRunByPeriod(period: string): Promise<PayrollRunWithPayslips | null> {
+export async function getRunByPeriod(
+  period: string,
+  cutoffDay?: number
+): Promise<PayrollRunWithPayslips | null> {
   const admin = getAdminClient()
-  const { data: run } = await admin
+  let query = admin
     .from("hr_payroll_runs")
     .select("id")
     .eq("period", period)
-    .maybeSingle()
+    .order("updated_at", { ascending: false })
+    .limit(1)
+
+  if (typeof cutoffDay === "number" && Number.isFinite(cutoffDay)) {
+    query = query.eq("cutoff_day", cutoffDay)
+  }
+
+  const { data: rows } = await query
+  const run = rows?.[0]
   if (!run?.id) return null
   return getRunWithPayslips(run.id as string)
 }

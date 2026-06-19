@@ -1,0 +1,37 @@
+{
+  "size": {
+    "width": 2500,
+    "height": 1686
+  },
+  "selected": false,
+  "name": "AI Assistant Support Rich Menu v3",
+  "chatBarText": "Support Menu",
+  "areas": [
+    {
+      "bounds": {
+        "x": 0,
+        "y": 0,
+        "width": 1250,
+        "height": 1686
+      },
+      "action": {
+        "type": "uri",
+        "label": "Open Ticket",
+        "uri": "https://liff.line.me/2010416723-q3dOdIyS/liff/ticket"
+      }
+    },
+    {
+      "bounds": {
+        "x": 1250,
+        "y": 0,
+        "width": 1250,
+        "height": 1686
+      },
+      "action": {
+        "type": "uri",
+        "label": "Track Status",
+        "uri": "https://liff.line.me/2010416723-q3dOdIyS/liff/ticket/status"
+      }
+    }
+  ]
+}

@@ -1,4 +1,4 @@
-# LINE OA HR — Phase 1 Feature Complete
+# CNV WorkHub — Phase 1 Feature Complete
 
 **วันที่:** 2026-06-10  
 **สถานะ:** Feature scope ครบ — พร้อมเริ่มโปรเจกต์ Dashboard ถัดไป
@@ -65,6 +65,6 @@
 
 ## เริ่ม Dashboard ถัดไปได้
 
-LINE OA HR Phase 1 **feature-complete** แล้ว — งานที่เหลือเป็น delivery/QA และ Phase 2 (locked)
+CNV WorkHub Phase 1 **feature-complete** แล้ว — งานที่เหลือเป็น delivery/QA และ Phase 2 (locked)
 
 *Orchestrator note: โปรเจกต์ head-office dashboard แยกจาก hr-payroll-client*
