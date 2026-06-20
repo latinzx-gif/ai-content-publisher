@@ -4,7 +4,6 @@
 import { getAdminClient } from "@/lib/auth/admin-client"
 import { ictDateFromUtc } from "@/lib/attendance/ict-datetime"
 import {
-  ictDayRangeUtc,
   lateMinutesAtCheckIn,
   type ShiftLateSchedule,
 } from "@/lib/attendance/late"
@@ -115,13 +114,33 @@ export async function checkIn({
     }
   }
 
-  const { start, end } = ictDayRangeUtc(now)
+  const { hour, minute } = await getWorkStart()
+  const shift = await loadEmployeeWorkShift(admin, employee.id as string)
+
+  // Use shift session window (same logic as today-state.ts) so phantom records
+  // from a different shift period don't block this shift's check-in.
+  const ICT_OFFSET_MS = 7 * 60 * 60 * 1000
+  const ictNowMs = now.getTime() + ICT_OFFSET_MS
+  const ictDayStartMs = Math.floor(ictNowMs / 86_400_000) * 86_400_000
+  let sessionWindowStart: Date
+  if (shift) {
+    const shiftStartMsToday = ictDayStartMs + (shift.start_hour * 60 + shift.start_minute) * 60_000
+    if (ictNowMs >= shiftStartMsToday) {
+      sessionWindowStart = new Date(shiftStartMsToday - ICT_OFFSET_MS)
+    } else {
+      sessionWindowStart = new Date(shiftStartMsToday - 86_400_000 - ICT_OFFSET_MS)
+    }
+  } else {
+    sessionWindowStart = new Date(ictDayStartMs - ICT_OFFSET_MS)
+  }
+
   const { data: existing, error: existingError } = await admin
     .from("hr_attendance")
     .select("check_in_at")
     .eq("employee_id", employee.id)
-    .gte("check_in_at", start.toISOString())
-    .lt("check_in_at", end.toISOString())
+    .gte("check_in_at", sessionWindowStart.toISOString())
+    .lte("check_in_at", now.toISOString())
+    .order("check_in_at", { ascending: false })
     .limit(1)
     .maybeSingle()
 
@@ -149,9 +168,6 @@ export async function checkIn({
       limitM: locationDecision.limitM,
     }
   }
-
-  const { hour, minute } = await getWorkStart()
-  const shift = await loadEmployeeWorkShift(admin, employee.id as string)
   const late = lateMinutesAtCheckIn(
     now,
     shift,
