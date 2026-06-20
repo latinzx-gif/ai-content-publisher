@@ -7,6 +7,7 @@ import {
   menuGuideBubble,
 } from "@/lib/line/flex/base"
 import { BRAND_RED } from "@/lib/line/brand"
+import { liffUrl as buildLiffUrl } from "@/lib/i18n/liff-url"
 import { t } from "@/lib/i18n/translate"
 import { DEFAULT_LOCALE, type AppLocale } from "@/lib/i18n/types"
 
@@ -126,6 +127,7 @@ function menuItemRow(
 }
 
 export function attendancePickerFlex(
+  clockUrl: string | undefined,
   locale: AppLocale = DEFAULT_LOCALE
 ): messagingApi.FlexMessage {
   return flexMessage(t("line.attendancePicker.alt", locale), {
@@ -226,22 +228,18 @@ export function attendancePickerFlex(
           style: "primary",
           color: "#06C755",
           height: "sm",
-          action: {
-            type: "postback",
-            label: t("line.attendancePicker.btnCheckin", locale),
-            data: "action=checkin_in",
-          },
+          action: clockUrl
+            ? ({ type: "uri", label: t("line.attendancePicker.btnCheckin", locale), uri: clockUrl } as messagingApi.URIAction)
+            : ({ type: "postback", label: t("line.attendancePicker.btnCheckin", locale), data: "action=checkin_in" } as messagingApi.PostbackAction),
         },
         {
           type: "button",
           style: "primary",
           color: "#1E6FD9",
           height: "sm",
-          action: {
-            type: "postback",
-            label: t("line.attendancePicker.btnCheckout", locale),
-            data: "action=checkout",
-          },
+          action: clockUrl
+            ? ({ type: "uri", label: t("line.attendancePicker.btnCheckout", locale), uri: clockUrl } as messagingApi.URIAction)
+            : ({ type: "postback", label: t("line.attendancePicker.btnCheckout", locale), data: "action=checkout" } as messagingApi.PostbackAction),
         },
       ],
     },
@@ -324,8 +322,8 @@ export function notCheckedInFlex(
   locale: AppLocale = DEFAULT_LOCALE,
   retroLiffUrl?: string
 ): messagingApi.FlexMessage {
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL?.replace(/\/$/, "") ?? ""
-  const liffUrl = retroLiffUrl ?? `${baseUrl}/liff/attendance`
+  const liffUrl =
+    retroLiffUrl ?? buildLiffUrl("/liff/attendance", locale) ?? "/liff/attendance"
 
   return guide(
     t("line.notCheckedIn.alt", locale),
@@ -659,15 +657,16 @@ export function inventoryGuideFlex(
   )
 }
 
-function lineRegisterUrl(): string {
+function lineRegisterUrl(locale: AppLocale): string {
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL?.trim() ?? ""
-  return baseUrl
-    ? `${baseUrl}/api/auth/line/start`
-    : "/api/auth/line/start"
+  const params = new URLSearchParams({ lang: locale })
+  const query = params.toString()
+  const path = `/api/auth/line/start${query ? `?${query}` : ""}`
+  return baseUrl ? `${baseUrl}${path}` : path
 }
 
 export function notRegisteredFlex(locale: AppLocale = DEFAULT_LOCALE): messagingApi.FlexMessage {
-  const registerUrl = lineRegisterUrl()
+  const registerUrl = lineRegisterUrl(locale)
   return guide(t("line.notRegistered.alt", locale), {
     emoji: "⚠️",
     title: t("line.notRegistered.title", locale),
@@ -719,7 +718,7 @@ export function menuHintFlex(locale: AppLocale = DEFAULT_LOCALE): messagingApi.F
 export function contactHrGuideFlex(
   locale: AppLocale = DEFAULT_LOCALE
 ): messagingApi.FlexMessage {
-  const registerUrl = lineRegisterUrl()
+  const registerUrl = lineRegisterUrl(locale)
   return guide(t("line.contactHrGuide.alt", locale), {
     emoji: "🎧",
     title: t("line.contactHrGuide.title", locale),
