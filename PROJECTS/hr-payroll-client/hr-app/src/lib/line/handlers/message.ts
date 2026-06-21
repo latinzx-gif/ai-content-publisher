@@ -77,6 +77,8 @@ function checkInMessages(
       ]
     case "already_checked_in":
       return [alreadyCheckedInFlex(formatIctTime(result.checkInAt), locale)]
+    case "requires_retro_checkout":
+      return [notCheckedInFlex(locale)]
     case "outside_geofence":
       return [
         outsideGeofenceFlex({
@@ -97,6 +99,8 @@ function checkInMessages(
       return [pendingApprovalFlex(locale)]
     case "not_registered":
       return [notRegisteredFlex(locale)]
+    case "too_soon_after_checkout":
+      return [notCheckedInFlex(locale)]
   }
 }
 
