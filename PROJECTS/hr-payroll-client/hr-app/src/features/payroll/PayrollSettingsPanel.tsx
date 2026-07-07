@@ -9,6 +9,35 @@ import type { PayrollConfig } from "@/lib/payroll/config"
 import { salaryFieldLabel } from "@/lib/payroll/pay-type"
 import { NATIONALITY_OPTIONS, payDayLabel } from "@/lib/payroll/pay-day"
 
+type BoolToggleProps = {
+  value: "true" | "false"
+  field: keyof FormState
+  trueLabel: string
+  falseLabel: string
+  setField: (key: keyof FormState, value: string) => void
+}
+
+function BoolToggle({ value, field, trueLabel, falseLabel, setField }: BoolToggleProps) {
+  return (
+    <div className="inline-flex rounded-md border p-1">
+      <button
+        type="button"
+        className={`rounded-md px-3 py-1 text-xs ${value === "true" ? "bg-brand-red text-white" : "hover:bg-muted"}`}
+        onClick={() => setField(field, "true")}
+      >
+        {trueLabel}
+      </button>
+      <button
+        type="button"
+        className={`rounded-md px-3 py-1 text-xs ${value !== "true" ? "bg-brand-red text-white" : "hover:bg-muted"}`}
+        onClick={() => setField(field, "false")}
+      >
+        {falseLabel}
+      </button>
+    </div>
+  )
+}
+
 type FormState = {
   monthly_std_hours: string
   ot_multiplier: string
@@ -19,12 +48,20 @@ type FormState = {
   work_entry_ot: string
   work_entry_sick: string
   work_entry_annual: string
-  odoo_monthly_struct_name: string
-  odoo_hourly_struct_name: string
   payroll_cutoff_day: string
   tax_enabled: string
   tax_rate: string
   leave_sick_deduct_enabled: string
+  company_name: string
+  company_legal_name: string
+  company_tax_id: string
+  company_address: string
+  payslip_default_lang: string
+  payslip_show_department: string
+  payslip_show_branch: string
+  payslip_show_ytd: string
+  payslip_show_signature: string
+  payslip_show_hours: string
 }
 
 function toFormState(config: PayrollConfig): FormState {
@@ -38,12 +75,20 @@ function toFormState(config: PayrollConfig): FormState {
     work_entry_ot: config.work_entry_ot,
     work_entry_sick: config.work_entry_sick,
     work_entry_annual: config.work_entry_annual,
-    odoo_monthly_struct_name: config.odoo_monthly_struct_name,
-    odoo_hourly_struct_name: config.odoo_hourly_struct_name,
     payroll_cutoff_day: String(config.payroll_cutoff_day),
     tax_enabled: config.tax_enabled ? "true" : "false",
     tax_rate: String(config.tax_rate),
     leave_sick_deduct_enabled: config.leave_sick_deduct_enabled ? "true" : "false",
+    company_name: config.company_name,
+    company_legal_name: config.company_legal_name,
+    company_tax_id: config.company_tax_id,
+    company_address: config.company_address,
+    payslip_default_lang: config.payslip_default_lang,
+    payslip_show_department: config.payslip_show_department ? "true" : "false",
+    payslip_show_branch: config.payslip_show_branch ? "true" : "false",
+    payslip_show_ytd: config.payslip_show_ytd ? "true" : "false",
+    payslip_show_signature: config.payslip_show_signature ? "true" : "false",
+    payslip_show_hours: config.payslip_show_hours ? "true" : "false",
   }
 }
 
@@ -80,6 +125,8 @@ export function PayrollSettingsPanel({ initialConfig }: { initialConfig: Payroll
 
   const inputClass =
     "mt-1 h-9 w-full max-w-xs rounded-lg border border-input bg-transparent px-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+  const textAreaClass =
+    "mt-1 min-h-24 w-full rounded-lg border border-input bg-transparent px-3 py-2 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
 
   return (
     <div className="flex flex-col gap-6">
@@ -212,6 +259,121 @@ export function PayrollSettingsPanel({ initialConfig }: { initialConfig: Payroll
               />
             </label>
           </div>
+
+          <div className="mt-6 rounded-xl border border-dashed border-muted-foreground/40 p-4">
+            <h4 className="text-sm font-semibold">ข้อมูลบริษัทที่แสดงในสลิป</h4>
+            <p className="mt-1 text-xs text-muted-foreground">
+              ตั้งชื่อบริษัทและที่อยู่บริษัทที่ต้องการให้ขึ้นใน PDF
+            </p>
+            <div className="mt-4 grid gap-4 sm:grid-cols-2">
+              <label className="block text-sm">
+                <span className="text-muted-foreground">ชื่อบริษัท</span>
+                <input
+                  className={inputClass}
+                  value={form.company_name}
+                  onChange={(e) => setField("company_name", e.target.value)}
+                />
+              </label>
+              <label className="block text-sm">
+                <span className="text-muted-foreground">ชื่อทางกฎหมาย</span>
+                <input
+                  className={inputClass}
+                  value={form.company_legal_name}
+                  onChange={(e) => setField("company_legal_name", e.target.value)}
+                />
+              </label>
+              <label className="block text-sm">
+                <span className="text-muted-foreground">Tax ID / เลขประจำตัวผู้เสียภาษี</span>
+                <input
+                  className={inputClass}
+                  value={form.company_tax_id}
+                  onChange={(e) => setField("company_tax_id", e.target.value)}
+                />
+              </label>
+              <label className="col-span-full block text-sm">
+                <span className="text-muted-foreground">ที่อยู่บริษัท</span>
+                <textarea
+                  className={textAreaClass}
+                  value={form.company_address}
+                  onChange={(e) => setField("company_address", e.target.value)}
+                />
+              </label>
+            </div>
+          </div>
+
+          <div className="mt-6 rounded-xl border border-dashed border-muted-foreground/40 p-4">
+            <h4 className="text-sm font-semibold">เลย์เอาท์สลิปเงินเดือน</h4>
+            <div className="mt-3 space-y-3">
+              <label className="block text-sm">
+                <span className="text-muted-foreground">ภาษา default ของสลิป</span>
+                <select
+                  className={`${inputClass} max-w-xs`}
+                  value={form.payslip_default_lang}
+                  onChange={(e) => setField("payslip_default_lang", e.target.value)}
+                >
+                  <option value="th">ไทย</option>
+                  <option value="zh">中文</option>
+                  <option value="en">English</option>
+                </select>
+              </label>
+              <div className="rounded-lg border p-3">
+                <p className="mb-3 text-sm">เลือกเฉพาะข้อมูลที่ต้องการแสดง</p>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div className="flex items-center justify-between gap-3">
+                    <span>แสดงแผนก</span>
+                    <BoolToggle
+                      field="payslip_show_department"
+                      value={form.payslip_show_department as "true" | "false"}
+                      trueLabel="แสดง"
+                      falseLabel="ซ่อน"
+                      setField={setField}
+                    />
+                  </div>
+                  <div className="flex items-center justify-between gap-3">
+                    <span>แสดงสาขา</span>
+                    <BoolToggle
+                      field="payslip_show_branch"
+                      value={form.payslip_show_branch as "true" | "false"}
+                      trueLabel="แสดง"
+                      falseLabel="ซ่อน"
+                      setField={setField}
+                    />
+                  </div>
+                  <div className="flex items-center justify-between gap-3">
+                    <span>แสดง YTD</span>
+                    <BoolToggle
+                      field="payslip_show_ytd"
+                      value={form.payslip_show_ytd as "true" | "false"}
+                      trueLabel="แสดง"
+                      falseLabel="ซ่อน"
+                      setField={setField}
+                    />
+                  </div>
+                  <div className="flex items-center justify-between gap-3">
+                    <span>แสดงลายเซ็นต์</span>
+                    <BoolToggle
+                      field="payslip_show_signature"
+                      value={form.payslip_show_signature as "true" | "false"}
+                      trueLabel="แสดง"
+                      falseLabel="ซ่อน"
+                      setField={setField}
+                    />
+                  </div>
+                  <div className="flex items-center justify-between gap-3">
+                    <span>แสดงชม.ใน pay type</span>
+                    <BoolToggle
+                      field="payslip_show_hours"
+                      value={form.payslip_show_hours as "true" | "false"}
+                      trueLabel="แสดง"
+                      falseLabel="ซ่อน"
+                      setField={setField}
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
           <div className="mt-6 rounded-xl border border-dashed border-muted-foreground/40 p-4">
             <h4 className="text-sm font-semibold">เปิดใช้งานการหักเงิน</h4>
             <p className="mt-1 text-xs text-muted-foreground">

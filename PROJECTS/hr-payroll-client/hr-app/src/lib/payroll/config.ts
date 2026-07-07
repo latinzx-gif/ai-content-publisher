@@ -1,5 +1,7 @@
 import { getAdminClient } from "@/lib/auth/admin-client"
 
+import type { PdfLang } from "@/lib/payroll/payslip-pdf-types"
+
 const CACHE_MS = 60_000
 
 export type PayrollConfig = {
@@ -12,12 +14,22 @@ export type PayrollConfig = {
   work_entry_ot: string
   work_entry_sick: string
   work_entry_annual: string
-  odoo_monthly_struct_name: string
-  odoo_hourly_struct_name: string
   payroll_cutoff_day: number
   tax_enabled: boolean
   tax_rate: number
   leave_sick_deduct_enabled: boolean
+
+  company_name: string
+  company_legal_name: string
+  company_tax_id: string
+  company_address: string
+
+  payslip_default_lang: PdfLang
+  payslip_show_department: boolean
+  payslip_show_branch: boolean
+  payslip_show_ytd: boolean
+  payslip_show_signature: boolean
+  payslip_show_hours: boolean
 }
 
 export const PAYROLL_CONFIG_KEYS = [
@@ -30,12 +42,22 @@ export const PAYROLL_CONFIG_KEYS = [
   "work_entry_ot",
   "work_entry_sick",
   "work_entry_annual",
-  "odoo_monthly_struct_name",
-  "odoo_hourly_struct_name",
   "payroll_cutoff_day",
   "tax_enabled",
   "tax_rate",
   "leave_sick_deduct_enabled",
+
+  "company_name",
+  "company_legal_name",
+  "company_tax_id",
+  "company_address",
+
+  "payslip_default_lang",
+  "payslip_show_department",
+  "payslip_show_branch",
+  "payslip_show_ytd",
+  "payslip_show_signature",
+  "payslip_show_hours",
 ] as const
 
 export type PayrollConfigKey = (typeof PAYROLL_CONFIG_KEYS)[number]
@@ -50,12 +72,27 @@ const DEFAULTS: Record<PayrollConfigKey, string> = {
   work_entry_ot: "OT",
   work_entry_sick: "LEAVE110",
   work_entry_annual: "LEAVE120",
-  odoo_monthly_struct_name: "Monthly Salary - Thailand",
-  odoo_hourly_struct_name: "Hourly Wage - Thailand",
   payroll_cutoff_day: "31",
   tax_enabled: "false",
   tax_rate: "0",
   leave_sick_deduct_enabled: "false",
+  company_name: "ChineseVibe",
+  company_legal_name: "บริษัท ไชนีส ไวบ์ จำกัด",
+  company_tax_id: "0105565142805",
+  company_address:
+    "99/15 ซอยเนียมอุทิศ ถนนรัชดาภิเษก แขวงดินแดง เขตดินแดง กรุงเทพมหานคร 10400",
+
+  payslip_default_lang: "en",
+  payslip_show_department: "true",
+  payslip_show_branch: "true",
+  payslip_show_ytd: "true",
+  payslip_show_signature: "true",
+  payslip_show_hours: "true",
+}
+
+function coercePayslipLang(raw: string): PdfLang {
+  if (raw === "th" || raw === "en" || raw === "zh") return raw
+  return "en"
 }
 
 let cache: { at: number; map: Map<string, string> } | null = null
@@ -102,12 +139,22 @@ function parseConfig(map: Map<string, string>): PayrollConfig {
     work_entry_ot: str("work_entry_ot"),
     work_entry_sick: str("work_entry_sick"),
     work_entry_annual: str("work_entry_annual"),
-    odoo_monthly_struct_name: str("odoo_monthly_struct_name"),
-    odoo_hourly_struct_name: str("odoo_hourly_struct_name"),
     payroll_cutoff_day: num("payroll_cutoff_day", 31),
     tax_enabled: bool("tax_enabled", false),
     tax_rate: num("tax_rate", 0),
     leave_sick_deduct_enabled: bool("leave_sick_deduct_enabled", false),
+
+    company_name: str("company_name"),
+    company_legal_name: str("company_legal_name"),
+    company_tax_id: str("company_tax_id"),
+    company_address: str("company_address"),
+
+    payslip_default_lang: coercePayslipLang(str("payslip_default_lang")),
+    payslip_show_department: bool("payslip_show_department", true),
+    payslip_show_branch: bool("payslip_show_branch", true),
+    payslip_show_ytd: bool("payslip_show_ytd", true),
+    payslip_show_signature: bool("payslip_show_signature", true),
+    payslip_show_hours: bool("payslip_show_hours", true),
   }
 }
 

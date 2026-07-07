@@ -69,15 +69,30 @@ export async function PATCH(request: NextRequest) {
       continue
     }
 
-    if (
-      (key as PayrollConfigKey) === "sso_enabled" ||
-      (key as PayrollConfigKey) === "tax_enabled" ||
-      (key as PayrollConfigKey) === "leave_sick_deduct_enabled"
-    ) {
-      if (!["true", "false", "1", "0"].includes(trimmed.toLowerCase())) {
-        return NextResponse.json({ error: `invalid boolean for ${key}` }, { status: 400 })
-      }
+  if (
+    (key as PayrollConfigKey) === "sso_enabled" ||
+    (key as PayrollConfigKey) === "tax_enabled" ||
+    (key as PayrollConfigKey) === "leave_sick_deduct_enabled" ||
+    (key as PayrollConfigKey) === "payslip_show_department" ||
+    (key as PayrollConfigKey) === "payslip_show_branch" ||
+    (key as PayrollConfigKey) === "payslip_show_ytd" ||
+    (key as PayrollConfigKey) === "payslip_show_signature" ||
+    (key as PayrollConfigKey) === "payslip_show_hours"
+  ) {
+    if (!["true", "false", "1", "0"].includes(trimmed.toLowerCase())) {
+      return NextResponse.json({ error: `invalid boolean for ${key}` }, { status: 400 })
     }
+    continue
+  }
+
+  if ((key as PayrollConfigKey) === "payslip_default_lang") {
+    if (!["zh", "th", "en"].includes(trimmed.toLowerCase())) {
+      return NextResponse.json(
+        { error: `invalid language for ${key}` },
+        { status: 400 }
+      )
+    }
+  }
 
     const { error } = await supabase
       .from("hr_payroll_config")
